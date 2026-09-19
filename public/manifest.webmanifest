@@ -1,19 +1,19 @@
 {
-  "name": "RUXS — Everyday Life, on Autopilot",
+  "name": "RUXS — Recurring household life, quietly handled",
   "short_name": "RUXS",
-  "description": "The hyper-local operating system for recurring household services.",
+  "description": "A simple operating layer for recurring local household services in India.",
   "start_url": "/",
   "id": "/",
   "display": "standalone",
-  "background_color": "#090d16",
-  "theme_color": "#090d16",
+  "background_color": "#0b0d0c",
+  "theme_color": "#0b0d0c",
   "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
