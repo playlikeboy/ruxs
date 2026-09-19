@@ -37,7 +37,41 @@ const steps = [
 ];
 
 export default function Home() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://ruxs.in/#organization",
+        name: "RUXS",
+        url: "https://ruxs.in/",
+        logo: "https://ruxs.in/favicon.svg",
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://ruxs.in/#website",
+        url: "https://ruxs.in/",
+        name: "RUXS",
+        publisher: { "@id": "https://ruxs.in/#organization" },
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "RUXS",
+        applicationCategory: "ProductivityApplication",
+        operatingSystem: "Web",
+        url: "https://ruxs.in/",
+        description:
+          "A simple operating layer for recurring local household services in India.",
+      },
+    ],
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
     <main className="bg-background text-foreground">
       <section className="ds-muted-grid border-b border-border">
         <div className="ds-container grid min-h-[calc(100vh-64px)] items-center gap-14 py-20 lg:grid-cols-[1.05fr_.95fr] lg:py-24">
@@ -208,5 +242,6 @@ export default function Home() {
         </div>
       </section>
     </main>
+    </>
   );
 }
