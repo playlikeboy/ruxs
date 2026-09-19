@@ -331,4 +331,56 @@ export class DisputeService {
     }
     return all;
   }
+
+  /**
+   * Lists all disputes across the platform from Neon DB
+   */
+  static async listAllAsync(status?: string): Promise<Dispute[]> {
+    if (!isTestEnv) {
+      try {
+        const rows = await db
+          .select()
+          .from(disputesTable)
+          .orderBy(desc(disputesTable.createdAt));
+
+        if (rows && rows.length > 0) {
+          const mapped: Dispute[] = rows.map((d) => ({
+            id: d.id,
+            tenantId: d.tenantId,
+            customerId: d.customerId,
+            customerName: d.customerName,
+            customerPhone: d.customerPhone,
+            fulfillmentId: d.fulfillmentId,
+            reason: d.reason as any,
+            disputedAmountPaise: d.disputedAmountPaise as Paise,
+            status: d.status as any,
+            evidence: {
+              driverDeliveredAt: d.driverDeliveredAt ?? undefined,
+              driverDropNotes: d.driverDropNotes ?? undefined,
+              customerComment: d.customerComment || "No comment provided",
+            },
+            resolution: d.decision
+              ? {
+                  decision: d.decision as any,
+                  refundPaise: d.refundPaise ?? 0,
+                  resolutionNotes: d.resolutionNotes ?? "",
+                  resolvedBy: d.resolvedBy ?? "",
+                  resolvedAt: d.resolvedAt ? d.resolvedAt.toISOString() : new Date().toISOString(),
+                }
+              : undefined,
+            createdAt: d.createdAt.toISOString(),
+            updatedAt: d.updatedAt.toISOString(),
+          }));
+
+          if (status) {
+            return mapped.filter((d) => d.status === status);
+          }
+          return mapped;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    return this.listAll(status);
+  }
 }

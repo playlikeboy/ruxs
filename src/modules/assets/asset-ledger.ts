@@ -7,6 +7,8 @@ import {
 } from "./asset-schema";
 import { KhataLedgerService } from "../khata/khata-ledger";
 import { Paise, addPaise, subtractPaise } from "../../shared/types/money";
+import { db, isTestEnv } from "../../shared/db";
+import { assetHoldings as assetHoldingsTable } from "../../shared/db/schema";
 
 const holdingsStore = new Map<string, AssetHolding>();
 const ledgerStore = new Map<string, AssetLedgerEntry[]>();
@@ -172,6 +174,31 @@ export class AssetLedgerService {
   static listAllHoldings(): AssetHolding[] {
     this.seedDefaultHoldingsIfEmpty();
     return Array.from(holdingsStore.values());
+  }
+
+  /**
+   * Lists all physical asset container holdings from Neon DB
+   */
+  static async listAllHoldingsAsync(): Promise<AssetHolding[]> {
+    if (!isTestEnv) {
+      try {
+        const rows = await db.select().from(assetHoldingsTable);
+        if (rows && rows.length > 0) {
+          return rows.map((r) => ({
+            tenantId: r.tenantId,
+            customerId: r.customerId,
+            assetType: r.assetType as any,
+            holdingCount: r.holdingCount,
+            depositPerUnitPaise: r.depositPerUnitPaise as Paise,
+            totalDepositHeldPaise: r.totalDepositHeldPaise as Paise,
+            updatedAt: r.updatedAt.toISOString(),
+          }));
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    return this.listAllHoldings();
   }
 
   static clearStore(): void {

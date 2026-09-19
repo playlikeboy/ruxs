@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useUser, useHexclaveApp } from "@hexclave/next";
 import { formatINR, Paise } from "@/src/shared/types/money";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { LogIn, LogOut, User } from "lucide-react";
 
 interface FulfillmentItem {
   id: string;
@@ -57,6 +59,8 @@ interface InvoiceItem {
 }
 
 export default function CustomerDashboardClient() {
+  const user = useUser();
+  const hexclaveApp = useHexclaveApp();
   const [customerId] = useState("usr_priya");
   const [tenantId] = useState("ten_sharma_tiffin");
   const [loading, setLoading] = useState(true);
@@ -262,17 +266,24 @@ export default function CustomerDashboardClient() {
       <Card className="bg-card border-border">
         <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider text-primary border-primary/40">
-                Household Member
+                {user ? "Hexclave Authenticated" : "Household Member"}
               </Badge>
               <span className="text-xs text-muted-foreground font-mono">Sobha Classic, B-402</span>
+              {user && (
+                <span className="text-[11px] text-muted-foreground font-mono bg-muted/60 px-2 py-0.5 rounded border border-border">
+                  {user.primaryEmail || (user as any).email}
+                </span>
+              )}
             </div>
-            <h1 className="text-2xl font-black text-foreground">Priya Sundaram</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Automated Everyday Operations</p>
+            <h1 className="text-2xl font-black text-foreground">
+              {user ? ((user as any).name || user.primaryEmail || (user as any).email || "Resident Member") : "Priya Sundaram"}
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Automated Everyday Operations • Centralized Khata</p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Link href="/subscribe" className={buttonVariants({ variant: "outline", size: "sm" })}>
               + Add Service
             </Link>
@@ -283,6 +294,25 @@ export default function CustomerDashboardClient() {
             >
               ⚡ Pay Khata via UPI
             </Button>
+            {user ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={async () => {
+                  await hexclaveApp.signOut();
+                  window.location.href = "/login";
+                }}
+              >
+                <LogOut className="w-3.5 h-3.5 mr-1" />
+                Sign Out
+              </Button>
+            ) : (
+              <Link href="/login?redirect=/customer/dashboard" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                <LogIn className="w-3.5 h-3.5 mr-1" />
+                Sign In
+              </Link>
+            )}
           </div>
         </CardContent>
       </Card>
