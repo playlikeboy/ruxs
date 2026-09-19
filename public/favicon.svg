@@ -1,13 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="16" fill="#090d16"/>
-  <path d="M18 16H34C41.732 16 48 21.3726 48 28C48 34.6274 41.732 40 34 40H26V48H18V16Z" fill="url(#ruxs-gradient)"/>
-  <circle cx="34" cy="28" r="5" fill="#090d16"/>
-  <path d="M32 38L46 50H36L26 40H32Z" fill="#10B981"/>
-  <defs>
-    <linearGradient id="ruxs-gradient" x1="18" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#10B981"/>
-      <stop offset="0.5" stop-color="#3B82F6"/>
-      <stop offset="1" stop-color="#8B5CF6"/>
-    </linearGradient>
-  </defs>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#0B0D0C"/><path fill="#E24A3B" d="M14 14h48c17 0 29 11 29 27 0 14-9 24-23 27l22 18H67L50 69H38v17H14V14Zm24 19v18h21c7 0 11-3 11-9s-4-9-11-9H38Z"/><path fill="#0B0D0C" d="M38 33h21c7 0 11 3 11 9s-4 9-11 9H38V33Z"/><path fill="#0B0D0C" d="M45 67h5l17 19H52L38 69v-2h7Z"/></svg>
