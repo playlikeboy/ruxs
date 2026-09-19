@@ -125,6 +125,55 @@ export class AssetLedgerService {
     return holdingsStore.get(this.getKey(tenantId, customerId, assetType)) || null;
   }
 
+  /**
+   * Seeds default demo asset container holdings if store is empty
+   */
+  static seedDefaultHoldingsIfEmpty(): void {
+    if (holdingsStore.size > 0) return;
+
+    const sample1: AssetHolding = {
+      tenantId: "ten_pureaqua_water",
+      customerId: "usr_priya",
+      assetType: "WATER_JAR_20L",
+      holdingCount: 2,
+      depositPerUnitPaise: 15000 as Paise,
+      totalDepositHeldPaise: 30000 as Paise,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const sample2: AssetHolding = {
+      tenantId: "ten_sharma_tiffin",
+      customerId: "usr_priya",
+      assetType: "TIFFIN_BOX_STEEL",
+      holdingCount: 1,
+      depositPerUnitPaise: 30000 as Paise,
+      totalDepositHeldPaise: 30000 as Paise,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const sample3: AssetHolding = {
+      tenantId: "ten_pureaqua_water",
+      customerId: "usr_verma",
+      assetType: "WATER_JAR_20L",
+      holdingCount: 3,
+      depositPerUnitPaise: 15000 as Paise,
+      totalDepositHeldPaise: 45000 as Paise,
+      updatedAt: new Date().toISOString(),
+    };
+
+    holdingsStore.set(this.getKey(sample1.tenantId, sample1.customerId, sample1.assetType), sample1);
+    holdingsStore.set(this.getKey(sample2.tenantId, sample2.customerId, sample2.assetType), sample2);
+    holdingsStore.set(this.getKey(sample3.tenantId, sample3.customerId, sample3.assetType), sample3);
+  }
+
+  /**
+   * Lists all physical asset container holdings across households
+   */
+  static listAllHoldings(): AssetHolding[] {
+    this.seedDefaultHoldingsIfEmpty();
+    return Array.from(holdingsStore.values());
+  }
+
   static clearStore(): void {
     holdingsStore.clear();
     ledgerStore.clear();

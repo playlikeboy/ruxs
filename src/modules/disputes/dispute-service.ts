@@ -273,4 +273,62 @@ export class DisputeService {
     }
     return this.listByCustomer(customerId);
   }
+
+  /**
+   * Seeds realistic demo disputes if store is empty
+   */
+  static seedDefaultDisputesIfEmpty(): void {
+    if (disputesStore.size > 0) return;
+
+    const sample1: Dispute = {
+      id: "dsp_demo_01",
+      tenantId: "ten_sharma_tiffin",
+      customerId: "usr_patel",
+      customerName: "Amit Patel (Prestige Falcon C-305)",
+      customerPhone: "+919876543214",
+      fulfillmentId: "ful_demo_05",
+      reason: "LATE_DELIVERY",
+      disputedAmountPaise: 16000 as Paise,
+      evidence: {
+        driverDeliveredAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+        driverDropNotes: "Heavy rain in Bellandur caused delivery delay",
+        customerComment: "Lunch arrived 1 hour past the office break cutoff window. Container was cold.",
+      },
+      status: "OPEN",
+      createdAt: new Date(Date.now() - 7200 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 7200 * 1000).toISOString(),
+    };
+
+    const sample2: Dispute = {
+      id: "dsp_demo_02",
+      tenantId: "ten_pureaqua_water",
+      customerId: "usr_priya",
+      customerName: "Priya Sharma (Sobha Classic B-402)",
+      customerPhone: "+919876543212",
+      fulfillmentId: "ful_demo_03",
+      reason: "DAMAGED_OR_LEAKING",
+      disputedAmountPaise: 8000 as Paise,
+      evidence: {
+        customerComment: "The tamper-proof neck seal of the 20L water can was already opened on delivery drop.",
+      },
+      status: "OPEN",
+      createdAt: new Date(Date.now() - 14400 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 14400 * 1000).toISOString(),
+    };
+
+    disputesStore.set(sample1.id, sample1);
+    disputesStore.set(sample2.id, sample2);
+  }
+
+  /**
+   * Lists all disputes across the platform
+   */
+  static listAll(status?: string): Dispute[] {
+    this.seedDefaultDisputesIfEmpty();
+    const all = Array.from(disputesStore.values());
+    if (status) {
+      return all.filter((d) => d.status === status);
+    }
+    return all;
+  }
 }

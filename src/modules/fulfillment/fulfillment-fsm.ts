@@ -347,6 +347,149 @@ export class FulfillmentStateMachine {
     return this.listByCustomer(customerId);
   }
 
+  /**
+   * Seeds default demo fulfillments for today if store is empty
+   */
+  static seedDefaultFulfillmentsIfEmpty(): void {
+    if (fulfillmentStore.size > 0) return;
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const cutoffMorning = `${todayStr}T06:30:00.000Z`;
+    const cutoffLunch = `${todayStr}T10:00:00.000Z`;
+
+    const sampleFulfillments: DailyFulfillment[] = [
+      {
+        id: "ful_demo_01",
+        tenantId: "ten_sharma_tiffin",
+        subscriptionId: "sub_sharma_01",
+        customerId: "usr_priya",
+        serviceDate: todayStr,
+        shift: "LUNCH",
+        status: "IN_PREPARATION",
+        items: [
+          {
+            productId: "prod_veg_thali",
+            productName: "Standard North Indian Veg Thali",
+            quantity: 1,
+            unitPricePaise: 12000 as Paise,
+            totalPricePaise: 12000 as Paise,
+          },
+        ],
+        totalPricePaise: 12000 as Paise,
+        cutoffTime: cutoffLunch,
+        notes: "No onions in dal requested",
+        createdAt: `${todayStr}T00:01:00Z`,
+        updatedAt: `${todayStr}T09:00:00Z`,
+      },
+      {
+        id: "ful_demo_02",
+        tenantId: "ten_fresh_dairy",
+        subscriptionId: "sub_dairy_02",
+        customerId: "usr_verma",
+        serviceDate: todayStr,
+        shift: "MORNING",
+        status: "DELIVERED",
+        items: [
+          {
+            productId: "prod_cow_milk",
+            productName: "A2 Farm Fresh Cow Milk 1L",
+            quantity: 1,
+            unitPricePaise: 7500 as Paise,
+            totalPricePaise: 7500 as Paise,
+          },
+        ],
+        totalPricePaise: 7500 as Paise,
+        cutoffTime: cutoffMorning,
+        deliveredAt: `${todayStr}T06:45:00Z`,
+        notes: "Dropped into doorstep insulated milk bag",
+        createdAt: `${todayStr}T00:01:00Z`,
+        updatedAt: `${todayStr}T06:45:00Z`,
+      },
+      {
+        id: "ful_demo_03",
+        tenantId: "ten_pureaqua_water",
+        subscriptionId: "sub_water_03",
+        customerId: "usr_priya",
+        serviceDate: todayStr,
+        shift: "MORNING",
+        status: "OUT_FOR_DELIVERY",
+        items: [
+          {
+            productId: "prod_water_20l",
+            productName: "20-Liter RO Mineral Water Can",
+            quantity: 2,
+            unitPricePaise: 8000 as Paise,
+            totalPricePaise: 16000 as Paise,
+          },
+        ],
+        totalPricePaise: 16000 as Paise,
+        cutoffTime: cutoffMorning,
+        notes: "Exchange 2 empty jars upon delivery",
+        createdAt: `${todayStr}T00:01:00Z`,
+        updatedAt: `${todayStr}T07:15:00Z`,
+      },
+      {
+        id: "ful_demo_04",
+        tenantId: "ten_pooja_express",
+        subscriptionId: "sub_pooja_04",
+        customerId: "usr_patel",
+        serviceDate: todayStr,
+        shift: "MORNING",
+        status: "DELIVERED",
+        items: [
+          {
+            productId: "prod_pooja_flowers",
+            productName: "Fresh Morning Temple Pooja Flowers",
+            quantity: 1,
+            unitPricePaise: 3500 as Paise,
+            totalPricePaise: 3500 as Paise,
+          },
+        ],
+        totalPricePaise: 3500 as Paise,
+        cutoffTime: cutoffMorning,
+        deliveredAt: `${todayStr}T06:10:00Z`,
+        notes: "Doorstep hook drop completed",
+        createdAt: `${todayStr}T00:01:00Z`,
+        updatedAt: `${todayStr}T06:10:00Z`,
+      },
+      {
+        id: "ful_demo_05",
+        tenantId: "ten_sharma_tiffin",
+        subscriptionId: "sub_sharma_05",
+        customerId: "usr_patel",
+        serviceDate: todayStr,
+        shift: "LUNCH",
+        status: "CONFIRMATION_REQUIRED",
+        items: [
+          {
+            productId: "prod_special_thali",
+            productName: "Executive Paneer Meal Box",
+            quantity: 1,
+            unitPricePaise: 16000 as Paise,
+            totalPricePaise: 16000 as Paise,
+          },
+        ],
+        totalPricePaise: 16000 as Paise,
+        cutoffTime: cutoffLunch,
+        notes: "Awaiting WhatsApp cutoff response",
+        createdAt: `${todayStr}T00:01:00Z`,
+        updatedAt: `${todayStr}T00:01:00Z`,
+      },
+    ];
+
+    for (const f of sampleFulfillments) {
+      fulfillmentStore.set(f.id, f);
+    }
+  }
+
+  /**
+   * Returns all fulfillments currently loaded in state machine
+   */
+  static listAll(): DailyFulfillment[] {
+    this.seedDefaultFulfillmentsIfEmpty();
+    return Array.from(fulfillmentStore.values());
+  }
+
   static clearStore(): void {
     fulfillmentStore.clear();
   }

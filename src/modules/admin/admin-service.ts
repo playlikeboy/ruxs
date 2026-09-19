@@ -242,9 +242,100 @@ export class AdminService {
   }
 
   /**
+   * Seeds realistic demo vendors and audit logs if in-memory store is empty
+   */
+  static seedDefaultVendorsIfEmpty() {
+    if (vendorsStore.size > 0) return;
+    const initial = [
+      {
+        id: "ten_sharma_tiffin",
+        businessName: "Sharma Homestyle Tiffin Hub",
+        slug: "sharma-tiffin",
+        phone: "+91 98765 43210",
+        serviceCategories: ["TIFFIN", "SNACKS"],
+        coveredSocieties: ["Sobha Classic", "Purva Fairmont"],
+        tier: "PRO" as VendorPlanTier,
+        status: "VERIFIED" as VendorApprovalStatus,
+      },
+      {
+        id: "ten_fresh_dairy",
+        businessName: "Gokul Farm Fresh A2 Milk",
+        slug: "gokul-fresh-milk",
+        phone: "+91 98765 43215",
+        serviceCategories: ["MILK", "CURD"],
+        coveredSocieties: ["Sobha Classic", "Purva Fairmont", "Prestige Falcon"],
+        tier: "GROWTH" as VendorPlanTier,
+        status: "VERIFIED" as VendorApprovalStatus,
+      },
+      {
+        id: "ten_pureaqua_water",
+        businessName: "PureAqua 20L Can Systems",
+        slug: "pureaqua-water",
+        phone: "+91 98765 43216",
+        serviceCategories: ["WATER_JAR"],
+        coveredSocieties: ["Sobha Classic", "Purva Fairmont"],
+        tier: "STARTER" as VendorPlanTier,
+        status: "VERIFIED" as VendorApprovalStatus,
+      },
+      {
+        id: "ten_pooja_express",
+        businessName: "Sri Lakshmi Fresh Morning Flowers",
+        slug: "lakshmi-pooja-flowers",
+        phone: "+91 98765 43217",
+        serviceCategories: ["POOJA_FLOWERS"],
+        coveredSocieties: ["Sobha Classic"],
+        tier: "STARTER" as VendorPlanTier,
+        status: "PENDING_VERIFICATION" as VendorApprovalStatus,
+      },
+      {
+        id: "ten_green_scrap",
+        businessName: "EcoClean Society Scrap & Dry Waste",
+        slug: "ecoclean-scrap",
+        phone: "+91 98765 43218",
+        serviceCategories: ["SCRAP_COLLECTION"],
+        coveredSocieties: ["Sobha Classic", "Purva Fairmont"],
+        tier: "STARTER" as VendorPlanTier,
+        status: "SUSPENDED" as VendorApprovalStatus,
+      },
+    ];
+
+    for (const v of initial) {
+      this.registerVendor(v);
+    }
+
+    if (auditLogsStore.length === 0) {
+      this.logAction({
+        adminUserId: "usr_admin_ops",
+        adminEmail: "ops@ruxs.in",
+        action: "VENDOR_APPROVED",
+        targetType: "VENDOR",
+        targetId: "ten_sharma_tiffin",
+        details: "Vendor 'Sharma Homestyle Tiffin Hub' verified and approved for society onboarding",
+      });
+      this.logAction({
+        adminUserId: "usr_admin_ops",
+        adminEmail: "ops@ruxs.in",
+        action: "VENDOR_APPROVED",
+        targetType: "VENDOR",
+        targetId: "ten_fresh_dairy",
+        details: "Vendor 'Gokul Farm Fresh A2 Milk' verified and approved for society onboarding",
+      });
+      this.logAction({
+        adminUserId: "usr_admin_ops",
+        adminEmail: "ops@ruxs.in",
+        action: "VENDOR_SUSPENDED",
+        targetType: "VENDOR",
+        targetId: "ten_green_scrap",
+        details: "Vendor 'EcoClean Society Scrap' suspended due to compliance audit failure",
+      });
+    }
+  }
+
+  /**
    * Lists all vendors with optional status filter (synchronous / memory)
    */
   static listVendors(status?: string): AdminVendorProfile[] {
+    this.seedDefaultVendorsIfEmpty();
     const all = Array.from(vendorsStore.values());
     if (status) {
       return all.filter((v) => v.status === status);
