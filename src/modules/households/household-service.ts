@@ -292,4 +292,113 @@ export class HouseholdService {
 
     return household;
   }
+
+  /**
+   * Seeds default demo households if empty
+   */
+  static seedDefaultHouseholdsIfEmpty() {
+    if (householdStore.size > 0) return;
+
+    const sample1: Household = {
+      id: "hh_sobha_402",
+      name: "Sharma Family Flat",
+      primaryOwnerId: "usr_priya",
+      societyName: "Sobha Classic",
+      towerWing: "Tower B",
+      floor: "4",
+      flatNumber: "402",
+      city: "Bangalore",
+      members: [
+        {
+          id: "hm_priya_1",
+          householdId: "hh_sobha_402",
+          userId: "usr_priya",
+          name: "Priya Sharma",
+          phone: "+919876543212",
+          role: "PRIMARY_OWNER",
+          canManageSubscriptions: true,
+          canSkipDeliveries: true,
+          joinedAt: new Date().toISOString(),
+        },
+        {
+          id: "hm_rohit_2",
+          householdId: "hh_sobha_402",
+          userId: "usr_rohit",
+          name: "Rohit Sharma",
+          phone: "+919876543299",
+          role: "ADMIN",
+          canManageSubscriptions: true,
+          canSkipDeliveries: true,
+          joinedAt: new Date().toISOString(),
+        },
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const sample2: Household = {
+      id: "hh_purva_101",
+      name: "Verma Flat 101",
+      primaryOwnerId: "usr_verma",
+      societyName: "Purva Fairmont",
+      towerWing: "Wing A",
+      floor: "1",
+      flatNumber: "101",
+      city: "Bangalore",
+      members: [
+        {
+          id: "hm_verma_1",
+          householdId: "hh_purva_101",
+          userId: "usr_verma",
+          name: "Rahul Verma",
+          phone: "+919876543213",
+          role: "PRIMARY_OWNER",
+          canManageSubscriptions: true,
+          canSkipDeliveries: true,
+          joinedAt: new Date().toISOString(),
+        },
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const sample3: Household = {
+      id: "hh_prestige_305",
+      name: "Patel Flat 305",
+      primaryOwnerId: "usr_patel",
+      societyName: "Prestige Falcon",
+      towerWing: "Tower C",
+      floor: "3",
+      flatNumber: "305",
+      city: "Bangalore",
+      members: [
+        {
+          id: "hm_patel_1",
+          householdId: "hh_prestige_305",
+          userId: "usr_patel",
+          name: "Amit Patel",
+          phone: "+919876543214",
+          role: "PRIMARY_OWNER",
+          canManageSubscriptions: true,
+          canSkipDeliveries: true,
+          joinedAt: new Date().toISOString(),
+        },
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    for (const h of [sample1, sample2, sample3]) {
+      householdStore.set(h.id, h);
+      userHouseholdIndex.set(h.primaryOwnerId, h.id);
+    }
+  }
+
+  /**
+   * Returns all registered households
+   */
+  static listHouseholds(): Household[] {
+    this.seedDefaultHouseholdsIfEmpty();
+    return Array.from(householdStore.values());
+  }
 }

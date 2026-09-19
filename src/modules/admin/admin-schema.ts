@@ -22,6 +22,15 @@ export const PlatformAuditActionSchema = z.enum([
   "PLAN_UPGRADED",
   "DISPUTE_ESCALATED",
   "SETTING_CHANGED",
+  "OVERNIGHT_RUN_TRIGGERED",
+  "FULFILLMENT_TRANSITIONED",
+  "CUTOFF_LOCKED",
+  "DISPUTE_REFUNDED",
+  "DISPUTE_UPHELD",
+  "ASSET_EXCHANGE_RECORDED",
+  "KHATA_ADJUSTMENT_POSTED",
+  "NOTIFICATION_DISPATCHED",
+  "VENDOR_CREATED",
 ]);
 
 export type PlatformAuditAction = z.infer<typeof PlatformAuditActionSchema>;
