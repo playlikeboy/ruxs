@@ -2,26 +2,24 @@ import type { Metadata } from "next";
 import VendorDashboardClient from "./VendorDashboardClient";
 
 export const metadata: Metadata = {
-  title: "Kitchen Prep & Delivery Counter | Vendor Hub | RUXS",
-  description:
-    "Real-time kitchen production batches, cutoff locking engine, subscriber roster, and Digital Khata balances for recurring service vendors.",
-  alternates: {
-    canonical: "https://ruxs.in/vendor/dashboard",
-  },
+  title: "Vendor operations · RUXS",
+  description: "Run daily recurring-service preparation, subscriber and cutoff operations.",
+  alternates: { canonical: "https://ruxs.in/vendor/dashboard" },
+  robots: { index: false, follow: false },
   openGraph: {
-    title: "Vendor Kitchen Prep Counter — RUXS",
-    description: "Live kitchen batch aggregation, strict 10:00 AM cutoff locking, and driver run sheet coordination.",
+    title: "Vendor operations · RUXS",
+    description: "Run daily recurring-service preparation, subscriber and cutoff operations.",
     url: "https://ruxs.in/vendor/dashboard",
     siteName: "RUXS",
     type: "website",
   },
   twitter: {
-    card: "summary",
-    title: "Vendor Command Center — RUXS",
-    description: "Real-time kitchen prep counter and automated cutoff engine.",
+    card: "summary_large_image",
+    title: "Vendor operations · RUXS",
+    description: "Run daily recurring-service preparation, subscriber and cutoff operations.",
   },
 };
 
-export default function VendorDashboardPage() {
+export default function Page() {
   return <VendorDashboardClient />;
 }
