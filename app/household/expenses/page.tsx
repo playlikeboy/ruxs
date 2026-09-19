@@ -2,26 +2,24 @@ import type { Metadata } from "next";
 import HouseholdExpensesClient from "./HouseholdExpensesClient";
 
 export const metadata: Metadata = {
-  title: "Roommate Expense Splitting | RUXS",
-  description:
-    "Automated expense splitting for flatmates sharing recurring milk, water, and domestic bills with zero penny drift and instant P2P UPI settlements.",
-  alternates: {
-    canonical: "https://ruxs.in/household/expenses",
-  },
+  title: "Household expenses · RUXS",
+  description: "Manage shared household expense workflows.",
+  alternates: { canonical: "https://ruxs.in/household/expenses" },
+  robots: { index: false, follow: false },
   openGraph: {
-    title: "Roommate Expense Splitting — RUXS",
-    description: "Integer paise expense division and instant peer-to-peer UPI settlements between flatmates.",
+    title: "Household expenses · RUXS",
+    description: "Manage shared household expense workflows.",
     url: "https://ruxs.in/household/expenses",
     siteName: "RUXS",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Household Expense Splitting — RUXS",
-    description: "Automatic bill splitting and peer-to-peer UPI settlements.",
+    title: "Household expenses · RUXS",
+    description: "Manage shared household expense workflows.",
   },
 };
 
-export default function RoommateExpensesPage() {
+export default function Page() {
   return <HouseholdExpensesClient />;
 }
