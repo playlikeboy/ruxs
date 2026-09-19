@@ -2,26 +2,24 @@ import type { Metadata } from "next";
 import LoginClient from "./LoginClient";
 
 export const metadata: Metadata = {
-  title: "Sign In | RUXS — Everyday Life on Autopilot",
-  description:
-    "Secure, passwordless mobile sign in to your RUXS domestic command center. Coordinate your household recurring services, subscriptions, and digital Khata.",
-  alternates: {
-    canonical: "https://ruxs.in/login",
-  },
+  title: "Sign in · RUXS",
+  description: "Sign in to manage recurring household services, vendor operations or delivery work.",
+  alternates: { canonical: "https://ruxs.in/login" },
+  robots: { index: false, follow: false },
   openGraph: {
-    title: "Sign In to RUXS — Everyday Life on Autopilot",
-    description: "Access your daily domestic recurring services, digital Khata, and subscriptions.",
+    title: "Sign in · RUXS",
+    description: "Sign in to manage recurring household services, vendor operations or delivery work.",
     url: "https://ruxs.in/login",
     siteName: "RUXS",
     type: "website",
   },
   twitter: {
-    card: "summary",
-    title: "Sign In to RUXS",
-    description: "Passwordless OTP login for customers, vendors, and delivery staff.",
+    card: "summary_large_image",
+    title: "Sign in · RUXS",
+    description: "Sign in to manage recurring household services, vendor operations or delivery work.",
   },
 };
 
-export default function LoginPage() {
+export default function Page() {
   return <LoginClient />;
 }
