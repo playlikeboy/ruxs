@@ -22,10 +22,8 @@ export default function Image() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 46, height: 46, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", background: DS.colors.brand, color: "#fff", fontSize: 26, fontWeight: 800 }}>
-            R
-          </div>
-          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "0.14em" }}>RUXS</div>
+          <div style={{ width: 46, height: 46, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", background: DS.colors.brand, color: "#fff", fontSize: 26, fontWeight: 800 }}>R</div>
+          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.14em" }}>RUXS</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", maxWidth: 930 }}>
