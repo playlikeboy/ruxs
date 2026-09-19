@@ -2,26 +2,24 @@ import type { Metadata } from "next";
 import AdminClient from "./AdminClient";
 
 export const metadata: Metadata = {
-  title: "Platform Admin Console | RUXS",
-  description:
-    "Global operational oversight, local vendor verification, SaaS subscription tier management, and tamper-evident platform audit logs.",
-  alternates: {
-    canonical: "https://ruxs.in/admin",
-  },
+  title: "Platform admin · RUXS",
+  description: "Internal platform administration and vendor oversight.",
+  alternates: { canonical: "https://ruxs.in/admin" },
+  robots: { index: false, follow: false },
   openGraph: {
-    title: "Global Platform Oversight — RUXS Admin Console",
-    description: "Vendor verification, plan tier allocation, and immutable audit logging for hyper-local operations.",
+    title: "Platform admin · RUXS",
+    description: "Internal platform administration and vendor oversight.",
     url: "https://ruxs.in/admin",
     siteName: "RUXS",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Platform Admin Console — RUXS",
-    description: "Global operational oversight and immutable audit logs.",
+    title: "Platform admin · RUXS",
+    description: "Internal platform administration and vendor oversight.",
   },
 };
 
-export default function AdminPage() {
+export default function Page() {
   return <AdminClient />;
 }
