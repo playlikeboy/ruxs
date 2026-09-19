@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "Offline mode · RUXS",
   description: "Offline shell for RUXS. Live actions require an active connection.",
