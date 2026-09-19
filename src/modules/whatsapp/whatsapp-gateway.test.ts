@@ -42,19 +42,21 @@ describe("WhatsApp Cloud API & Interactive Gateway", () => {
 
   it("routes interactive SKIP button tap directly to fulfillment state machine", async () => {
     const fulfillmentId = "ful_whatsapp_skip";
+    const now = new Date();
+    const futureCutoff = new Date(now.getTime() + 3600 * 1000).toISOString();
     const fulfillment: DailyFulfillment = {
       id: fulfillmentId,
       tenantId: "ten_sharma_tiffin",
       subscriptionId: "sub_1",
       customerId: "usr_priya",
-      serviceDate: "2026-09-12",
+      serviceDate: now.toISOString().split("T")[0],
       shift: "LUNCH",
       status: "CONFIRMATION_REQUIRED",
       items: [],
       totalPricePaise: 12000 as Paise,
-      cutoffTime: "2026-09-12T10:00:00.000Z",
-      createdAt: "2026-09-12T00:01:00Z",
-      updatedAt: "2026-09-12T00:01:00Z",
+      cutoffTime: futureCutoff,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
     };
     FulfillmentStateMachine.save(fulfillment);
 
