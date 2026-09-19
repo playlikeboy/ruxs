@@ -2,26 +2,24 @@ import type { Metadata } from "next";
 import SubscribeClient from "./SubscribeClient";
 
 export const metadata: Metadata = {
-  title: "Subscribe to Recurring Services | RUXS — Everyday Life on Autopilot",
-  description:
-    "Choose your recurring household services: tiffin meals, 20L water cans, fresh cow milk, and more. Set daily, weekday, or alternate-day delivery cadences with one tap.",
-  alternates: {
-    canonical: "https://ruxs.in/subscribe",
-  },
+  title: "Start a recurring service · RUXS",
+  description: "Set up recurring household deliveries such as meals, water or milk with a default cadence you can pause or change.",
+  alternates: { canonical: "https://ruxs.in/subscribe" },
+  robots: { index: true, follow: true },
   openGraph: {
-    title: "Subscribe to Recurring Services | RUXS",
-    description: "Automate daily domestic deliveries with flexible cadences, pause for vacations, and digital Khata.",
+    title: "Start a recurring service · RUXS",
+    description: "Set up recurring household deliveries such as meals, water or milk with a default cadence you can pause or change.",
     url: "https://ruxs.in/subscribe",
     siteName: "RUXS",
     type: "website",
   },
   twitter: {
-    card: "summary",
-    title: "Subscribe to Recurring Services | RUXS",
-    description: "Daily tiffin, water jars, and milk subscriptions on autopilot.",
+    card: "summary_large_image",
+    title: "Start a recurring service · RUXS",
+    description: "Set up recurring household deliveries such as meals, water or milk with a default cadence you can pause or change.",
   },
 };
 
-export default function SubscribePage() {
+export default function Page() {
   return <SubscribeClient />;
 }
