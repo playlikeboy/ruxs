@@ -8,7 +8,7 @@ describe("Progressive Web App (PWA) Assets & Manifest", () => {
     expect(existsSync(manifestPath)).toBe(true);
 
     const content = JSON.parse(readFileSync(manifestPath, "utf-8"));
-    expect(content.name).toBe("RUXS — Everyday Life, on Autopilot");
+    expect(content.name).toBe("RUXS — Recurring household life, quietly handled");
     expect(content.short_name).toBe("RUXS");
     expect(content.display).toBe("standalone");
     expect(content.start_url).toBe("/");
