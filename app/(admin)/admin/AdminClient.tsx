@@ -2,9 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useUser, useHexclaveApp } from "@hexclave/next";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Lock, AlertCircle, ShieldCheck } from "lucide-react";
 
 interface AdminOverview {
   totalVendors: number;
@@ -108,6 +111,14 @@ interface KitchenBatches {
 }
 
 export default function AdminClient() {
+  const router = useRouter();
+  const user = useUser();
+  const hexclaveApp = useHexclaveApp();
+
+  const isSuperAdmin = Boolean(
+    user && (user.primaryEmail === "sh20raj@gmail.com" || (user as any).email === "sh20raj@gmail.com")
+  );
+
   const [activeTab, setActiveTab] = useState<
     "overview" | "vendors" | "households" | "fulfillments" | "kitchen" | "assets" | "disputes" | "audit"
   >("overview");
@@ -302,6 +313,85 @@ export default function AdminClient() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center p-4">
+        <Card className="max-w-md w-full border-border bg-card shadow-2xl p-6 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto text-primary">
+            <Lock className="w-7 h-7" />
+          </div>
+          <CardHeader className="p-0 space-y-1.5">
+            <Badge variant="outline" className="mx-auto uppercase tracking-wider text-[10px] border-primary/30 text-primary">
+              Mission Control Security
+            </Badge>
+            <CardTitle className="text-xl font-bold text-foreground">Platform Admin Restricted</CardTitle>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Access to the RUXS Platform Control Cockpit is strictly restricted to <span className="font-mono text-primary font-semibold">sh20raj@gmail.com</span>. Please authenticate with Hexclave.
+            </p>
+          </CardHeader>
+          <CardContent className="p-0 pt-2 space-y-2">
+            <Button
+              className="w-full font-semibold text-xs h-11"
+              onClick={() => {
+                window.location.href = "/login?redirect=/admin";
+              }}
+            >
+              Sign In with Hexclave (sh20raj@gmail.com)
+            </Button>
+            <Link
+              href="/"
+              className="inline-block text-xs text-muted-foreground hover:text-foreground pt-1"
+            >
+              ← Return to Consumer Home
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center p-4">
+        <Card className="max-w-md w-full border-destructive/40 bg-card shadow-2xl p-6 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mx-auto text-destructive">
+            <AlertCircle className="w-7 h-7" />
+          </div>
+          <CardHeader className="p-0 space-y-1.5">
+            <Badge variant="destructive" className="mx-auto uppercase tracking-wider text-[10px]">
+              403 Access Forbidden
+            </Badge>
+            <CardTitle className="text-xl font-bold text-foreground">Unauthorized Account</CardTitle>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This console is exclusively restricted to <strong className="font-mono text-primary">sh20raj@gmail.com</strong>.
+            </p>
+            <div className="p-2.5 rounded-xl bg-muted/60 border border-border text-xs text-muted-foreground mt-2 font-mono">
+              Signed in as: <span className="text-foreground font-medium">{user.primaryEmail || (user as any).email || user.id}</span>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 pt-2 space-y-2">
+            <Button
+              variant="outline"
+              className="w-full text-xs h-10 border-border"
+              onClick={async () => {
+                await hexclaveApp.signOut();
+                window.location.href = "/login?redirect=/admin";
+              }}
+            >
+              Sign Out & Switch to sh20raj@gmail.com
+            </Button>
+            <Link
+              href="/"
+              className="inline-block text-xs text-muted-foreground hover:text-foreground pt-1"
+            >
+              ← Return to Consumer Home
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen py-6 px-4 max-w-7xl mx-auto space-y-6">
       {/* Top Admin Header Bar */}
@@ -312,8 +402,11 @@ export default function AdminClient() {
               <Badge variant="destructive" className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5">
                 👑 Super Admin Console
               </Badge>
-              <span className="text-xs text-muted-foreground font-mono">
-                ruxs.in • Cloudflare Worker Edge • Neon DB Active
+              <Badge variant="outline" className="text-[10px] font-mono border-amber-500/30 text-amber-500 bg-amber-500/10">
+                🛡️ {user.primaryEmail || (user as any).email}
+              </Badge>
+              <span className="text-xs text-muted-foreground font-mono hidden sm:inline">
+                • Neon DB Active
               </span>
             </div>
             <h1 className="text-2xl font-black text-foreground tracking-tight">
@@ -346,9 +439,17 @@ export default function AdminClient() {
             <Link href="/disputes" className={buttonVariants({ variant: "outline", size: "sm" })}>
               ⚖️ Disputes
             </Link>
-            <Link href="/login" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-              🚪 Exit
-            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                await hexclaveApp.signOut();
+                router.push("/login");
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Sign Out
+            </Button>
           </div>
         </CardContent>
       </Card>

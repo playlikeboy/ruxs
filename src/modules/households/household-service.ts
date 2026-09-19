@@ -401,4 +401,56 @@ export class HouseholdService {
     this.seedDefaultHouseholdsIfEmpty();
     return Array.from(householdStore.values());
   }
+
+  /**
+   * Returns all registered households from Neon DB
+   */
+  static async listHouseholdsAsync(): Promise<Household[]> {
+    if (!isTestEnv) {
+      try {
+        const hRows = await db.select().from(householdsTable);
+        if (hRows && hRows.length > 0) {
+          const list: Household[] = [];
+          for (const hRow of hRows) {
+            const mRows = await db
+              .select({
+                member: householdMembersTable,
+                user: usersTable,
+              })
+              .from(householdMembersTable)
+              .leftJoin(usersTable, eq(householdMembersTable.userId, usersTable.id))
+              .where(eq(householdMembersTable.householdId, hRow.id));
+
+            list.push({
+              id: hRow.id,
+              name: hRow.name,
+              primaryOwnerId: hRow.primaryOwnerId,
+              societyName: hRow.societyName,
+              towerWing: hRow.towerWing,
+              floor: String(hRow.floor),
+              flatNumber: hRow.flatNumber,
+              city: hRow.city,
+              createdAt: hRow.createdAt.toISOString(),
+              updatedAt: hRow.createdAt.toISOString(),
+              members: mRows.map(({ member: m, user: u }) => ({
+                id: m.id,
+                householdId: m.householdId,
+                userId: m.userId,
+                name: u?.fullName || "Member",
+                phone: u?.phone || "+91 98765 43210",
+                role: m.role as any,
+                canManageSubscriptions: m.role === "PRIMARY_OWNER" || m.role === "ADMIN",
+                canSkipDeliveries: true,
+                joinedAt: m.createdAt.toISOString(),
+              })),
+            });
+          }
+          return list;
+        }
+      } catch (err) {
+        console.error("Failed to query households from Neon DB:", err);
+      }
+    }
+    return this.listHouseholds();
+  }
 }

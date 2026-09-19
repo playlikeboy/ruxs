@@ -7,27 +7,56 @@ import { CutoffEngine } from "@/src/modules/cutoff/cutoff-engine";
 import { AssetLedgerService } from "@/src/modules/assets/asset-ledger";
 import { KhataLedgerService } from "@/src/modules/khata/khata-ledger";
 import { NotificationService } from "@/src/modules/notifications/notification-service";
+import { hexclaveServerApp } from "@/src/hexclave/server";
+import { isTestEnv } from "@/src/shared/db";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { Paise } from "@/src/shared/types/money";
 
 export async function GET(request: Request) {
   try {
+    // Authorization Check: Strict restriction to sh20raj@gmail.com
+    if (!isTestEnv) {
+      try {
+        const authUser = await hexclaveServerApp.getUser({ tokenStore: request });
+        const email = authUser?.primaryEmail || (authUser as any)?.email;
+        if (!authUser || email !== "sh20raj@gmail.com") {
+          return NextResponse.json(
+            createErrorResponse("FORBIDDEN", "Only sh20raj@gmail.com is authorized to access platform administration data"),
+            { status: 403 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          createErrorResponse("UNAUTHORIZED", "Authentication with sh20raj@gmail.com is required to access admin data"),
+          { status: 401 }
+        );
+      }
+    }
+
     const todayStr = new Date().toISOString().split("T")[0];
 
-    const [vendors, auditLogs] = await Promise.all([
+    // Live queries directly from Neon PostgreSQL
+    const [vendors, auditLogs, rawHouseholds, disputes, assetHoldings] = await Promise.all([
       AdminService.listVendorsAsync(),
       AdminService.getAuditLogsAsync(40),
+      HouseholdService.listHouseholdsAsync(),
+      DisputeService.listAllAsync(),
+      AssetLedgerService.listAllHoldingsAsync(),
     ]);
 
-    const households = HouseholdService.listHouseholds().map((h, idx) => ({
-      ...h,
-      khataBalancePaise: idx === 0 ? (-34000 as Paise) : idx === 1 ? (12000 as Paise) : (-16000 as Paise),
-      activeSubscriptionsCount: idx === 0 ? 3 : idx === 1 ? 2 : 1,
-    }));
+    // Compute live real khata balance dynamically per household
+    const households = await Promise.all(
+      rawHouseholds.map(async (h) => {
+        const balancePaise = await KhataLedgerService.getBalance(h.primaryOwnerId);
+        return {
+          ...h,
+          khataBalancePaise: balancePaise,
+          activeSubscriptionsCount: 2,
+        };
+      })
+    );
 
     const fulfillments = FulfillmentStateMachine.listAll();
-    const disputes = DisputeService.listAll();
-    const assetHoldings = AssetLedgerService.listAllHoldings();
 
     // Default kitchen batch aggregation for lunch shift
     const kitchenBatches = CutoffEngine.getKitchenBatchCounter(
@@ -75,9 +104,33 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Authorization Check: Strict restriction to sh20raj@gmail.com
+    let adminEmail = "sh20raj@gmail.com";
+    let adminUserId = "usr_super_admin";
+
+    if (!isTestEnv) {
+      try {
+        const authUser = await hexclaveServerApp.getUser({ tokenStore: request });
+        const email = authUser?.primaryEmail || (authUser as any)?.email;
+        if (!authUser || email !== "sh20raj@gmail.com") {
+          return NextResponse.json(
+            createErrorResponse("FORBIDDEN", "Only sh20raj@gmail.com is authorized to execute platform administration operations"),
+            { status: 403 }
+          );
+        }
+        adminEmail = email;
+        adminUserId = authUser.id;
+      } catch {
+        return NextResponse.json(
+          createErrorResponse("UNAUTHORIZED", "Authentication with sh20raj@gmail.com is required"),
+          { status: 401 }
+        );
+      }
+    }
+
     const body = ((await request.json().catch(() => ({}))) || {}) as any;
     const { action, payload } = body;
-    const adminUser = { userId: "usr_super_admin", email: "commander@ruxs.in" };
+    const adminUser = { userId: adminUserId, email: adminEmail };
 
     if (!action) {
       return NextResponse.json(createErrorResponse("VALIDATION_FAILED", "Action is required"), { status: 400 });

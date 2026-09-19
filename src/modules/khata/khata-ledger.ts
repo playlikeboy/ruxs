@@ -187,6 +187,51 @@ export class KhataLedgerService {
     return true;
   }
 
+  /**
+   * Retrieves net outstanding khata balance for a customer
+   */
+  static async getBalance(customerId: string): Promise<number> {
+    if (!isTestEnv) {
+      try {
+        const dbRows = await db
+          .select({
+            direction: khataEntriesTable.direction,
+            amountPaise: khataEntriesTable.amountPaise,
+          })
+          .from(khataEntriesTable)
+          .where(eq(khataEntriesTable.customerId, customerId));
+
+        if (dbRows && dbRows.length > 0) {
+          let bal = 0;
+          for (const r of dbRows) {
+            if (r.direction === "DEBIT") {
+              bal += Number(r.amountPaise);
+            } else {
+              bal -= Number(r.amountPaise);
+            }
+          }
+          return bal;
+        }
+      } catch {
+        // Fallback to in-memory store
+      }
+    }
+
+    let bal = 0;
+    for (const [key, entries] of ledgerStore.entries()) {
+      if (key.endsWith(`:${customerId}`)) {
+        for (const e of entries) {
+          if (e.direction === "DEBIT") {
+            bal += Number(e.amountPaise);
+          } else {
+            bal -= Number(e.amountPaise);
+          }
+        }
+      }
+    }
+    return bal;
+  }
+
   static clearStore(): void {
     ledgerStore.clear();
   }

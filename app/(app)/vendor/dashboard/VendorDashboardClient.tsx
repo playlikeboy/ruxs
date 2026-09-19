@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useUser, useHexclaveApp } from "@hexclave/next";
 import { KitchenPrepBatch } from "@/src/modules/cutoff/cutoff-engine";
 import { formatINR, Paise } from "@/src/shared/types/money";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { LogIn, LogOut } from "lucide-react";
 
 interface VendorSubscriber {
   id: string;
@@ -22,6 +24,8 @@ interface VendorSubscriber {
 }
 
 export default function VendorDashboardClient() {
+  const user = useUser();
+  const hexclaveApp = useHexclaveApp();
   const [tenantId] = useState("ten_sharma_tiffin");
   const [batch, setBatch] = useState<KitchenPrepBatch | null>(null);
   const [customers, setCustomers] = useState<VendorSubscriber[]>([]);
@@ -91,11 +95,16 @@ export default function VendorDashboardClient() {
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider text-primary border-primary/40">
               Live Operations
             </Badge>
             <span className="text-xs text-muted-foreground font-mono">Today: {todayStr} (Lunch Shift)</span>
+            {user && (
+              <span className="text-[11px] text-muted-foreground font-mono bg-muted/60 px-2 py-0.5 rounded border border-border">
+                {user.primaryEmail || (user as any).email}
+              </span>
+            )}
           </div>
           <h1 className="text-2xl font-black tracking-tight text-foreground">Kitchen Prep & Delivery Counter</h1>
         </div>
@@ -115,6 +124,25 @@ export default function VendorDashboardClient() {
           >
             {locking ? "Locking..." : "🔒 Lock Cutoff Now"}
           </Button>
+          {user ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={async () => {
+                await hexclaveApp.signOut();
+                window.location.href = "/login";
+              }}
+            >
+              <LogOut className="w-3.5 h-3.5 mr-1" />
+              Sign Out
+            </Button>
+          ) : (
+            <Link href="/login?redirect=/vendor/dashboard" className={buttonVariants({ variant: "outline", size: "sm" })}>
+              <LogIn className="w-3.5 h-3.5 mr-1" />
+              Sign In
+            </Link>
+          )}
         </div>
       </div>
 

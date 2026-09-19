@@ -62,74 +62,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={cn("dark", geist.variable)}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <PwaManager />
-
-        <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
-          <div className="ds-container flex h-16 items-center justify-between">
-            <Link href="/" aria-label="RUXS home" className="group flex items-center">
-              <BrandLogo priority />
-            </Link>
-
-            <nav aria-label="Primary" className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-              <Link className="transition hover:text-foreground" href="/#services">Services</Link>
-              <Link className="transition hover:text-foreground" href="/#how-it-works">How it works</Link>
-              <Link className="transition hover:text-foreground" href="/#ledger">Account</Link>
-              <Link className="transition hover:text-foreground" href="/vendor/onboard">For vendors</Link>
-            </nav>
-
-            <div className="flex items-center gap-2">
-              <Link href="/login" className="hidden rounded-xl px-3.5 py-2 text-sm font-medium text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground sm:inline-flex">Sign in</Link>
-              <Link href="/subscribe" className="ds-button min-h-10 px-4 text-xs">Get started</Link>
-            </div>
-          </div>
-        </header>
-
         <HexclaveProvider app={hexclaveServerApp}>
           <HexclaveTheme>
-            <main>{children}</main>
+            {children}
           </HexclaveTheme>
         </HexclaveProvider>
-
-        <footer className="border-t border-border bg-background">
-          <div className="ds-container py-12">
-            <div className="grid gap-10 sm:grid-cols-[1.2fr_.8fr_.8fr]">
-              <div className="max-w-sm">
-                <BrandLogo className="w-[112px]" />
-                <p className="mt-4 text-sm leading-6 text-muted-foreground">The quiet operating layer for recurring local household services.</p>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-subtle">Explore</p>
-                <div className="mt-4 grid gap-2.5 text-sm">
-                  <Link href="/#services" className="text-muted-foreground transition hover:text-foreground">Services</Link>
-                  <Link href="/#how-it-works" className="text-muted-foreground transition hover:text-foreground">How it works</Link>
-                  <Link href="/subscribe" className="text-muted-foreground transition hover:text-foreground">Get started</Link>
-                  <Link href="/vendor/onboard" className="text-muted-foreground transition hover:text-foreground">For vendors</Link>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-subtle">Product</p>
-                <div className="mt-4 grid gap-2.5 text-sm">
-                  <Link href="/login" className="text-muted-foreground transition hover:text-foreground">Sign in</Link>
-                  <a href="https://github.com/SH20RAJ/ruxs" className="text-muted-foreground transition hover:text-foreground">GitHub</a>
-                  <a href="mailto:hello@ruxs.in" className="text-muted-foreground transition hover:text-foreground">Contact</a>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-10 border-t border-border pt-6 text-[11px] text-subtle">
-              © {new Date().getFullYear()} RUXS. Built for recurring local life.
-            </div>
-          </div>
-        </footer>
-
-        <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-xl md:hidden">
-          <Link href="/" className="text-xs font-medium text-muted-foreground">Home</Link>
-          <Link href="/#services" className="text-xs font-medium text-muted-foreground">Services</Link>
-          <Link href="/subscribe" className="rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground">Start</Link>
-          <Link href="/#ledger" className="text-xs font-medium text-muted-foreground">Account</Link>
-          <Link href="/vendor/onboard" className="text-xs font-medium text-muted-foreground">Vendors</Link>
-        </nav>
       </body>
     </html>
   );
