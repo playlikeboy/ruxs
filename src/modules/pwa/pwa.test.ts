@@ -12,8 +12,8 @@ describe("Progressive Web App (PWA) Assets & Manifest", () => {
     expect(content.short_name).toBe("RUXS");
     expect(content.display).toBe("standalone");
     expect(content.start_url).toBe("/");
-    expect(content.theme_color).toBe("#090d16");
-    expect(content.background_color).toBe("#090d16");
+    expect(content.theme_color).toBe("#0b0d0c");
+    expect(content.background_color).toBe("#0b0d0c");
     expect(content.icons.length).toBeGreaterThanOrEqual(1);
   });
 
