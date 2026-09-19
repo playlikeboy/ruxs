@@ -139,7 +139,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-[#0e1210]">
+      <section className="border-y border-border bg-surface-band">
         <div className="ds-container grid gap-10 py-14 lg:grid-cols-3">
           {[
             ["01", "A default you can trust", "Households should not need to repeat the same instruction every morning."],
