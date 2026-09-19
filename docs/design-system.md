@@ -25,6 +25,7 @@ RUXS uses a single visual language called **Editorial Utility**: quiet, precise,
 | Brand | `#e24a3b` | RUXS identity |
 | Signal | `#9fc58f` | CTA and positive state |
 | Cream | `#e7dfc8` | Editorial highlight |
+| Surface band | `#0e1210` | Section background |
 | Line | `rgba(244, 242, 236, 0.10)` | Borders/dividers |
 
 ## Typography
