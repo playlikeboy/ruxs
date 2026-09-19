@@ -252,7 +252,7 @@ export class AdminService {
         businessName: "Sharma Homestyle Tiffin Hub",
         slug: "sharma-tiffin",
         phone: "+91 98765 43210",
-        serviceCategories: ["TIFFIN", "SNACKS"],
+        serviceCategories: ["TIFFIN"],
         coveredSocieties: ["Sobha Classic", "Purva Fairmont"],
         tier: "PRO" as VendorPlanTier,
         status: "VERIFIED" as VendorApprovalStatus,
@@ -262,7 +262,7 @@ export class AdminService {
         businessName: "Gokul Farm Fresh A2 Milk",
         slug: "gokul-fresh-milk",
         phone: "+91 98765 43215",
-        serviceCategories: ["MILK", "CURD"],
+        serviceCategories: ["MILK"],
         coveredSocieties: ["Sobha Classic", "Purva Fairmont", "Prestige Falcon"],
         tier: "GROWTH" as VendorPlanTier,
         status: "VERIFIED" as VendorApprovalStatus,
@@ -272,30 +272,10 @@ export class AdminService {
         businessName: "PureAqua 20L Can Systems",
         slug: "pureaqua-water",
         phone: "+91 98765 43216",
-        serviceCategories: ["WATER_JAR"],
+        serviceCategories: ["WATER"],
         coveredSocieties: ["Sobha Classic", "Purva Fairmont"],
         tier: "STARTER" as VendorPlanTier,
         status: "VERIFIED" as VendorApprovalStatus,
-      },
-      {
-        id: "ten_pooja_express",
-        businessName: "Sri Lakshmi Fresh Morning Flowers",
-        slug: "lakshmi-pooja-flowers",
-        phone: "+91 98765 43217",
-        serviceCategories: ["POOJA_FLOWERS"],
-        coveredSocieties: ["Sobha Classic"],
-        tier: "STARTER" as VendorPlanTier,
-        status: "PENDING_VERIFICATION" as VendorApprovalStatus,
-      },
-      {
-        id: "ten_green_scrap",
-        businessName: "EcoClean Society Scrap & Dry Waste",
-        slug: "ecoclean-scrap",
-        phone: "+91 98765 43218",
-        serviceCategories: ["SCRAP_COLLECTION"],
-        coveredSocieties: ["Sobha Classic", "Purva Fairmont"],
-        tier: "STARTER" as VendorPlanTier,
-        status: "SUSPENDED" as VendorApprovalStatus,
       },
     ];
 
@@ -323,10 +303,10 @@ export class AdminService {
       this.logAction({
         adminUserId: "usr_admin_ops",
         adminEmail: "ops@ruxs.in",
-        action: "VENDOR_SUSPENDED",
+        action: "VENDOR_APPROVED",
         targetType: "VENDOR",
-        targetId: "ten_green_scrap",
-        details: "Vendor 'EcoClean Society Scrap' suspended due to compliance audit failure",
+        targetId: "ten_pureaqua_water",
+        details: "Vendor 'PureAqua 20L Can Systems' verified and approved for society onboarding",
       });
     }
   }

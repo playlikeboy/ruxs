@@ -132,10 +132,6 @@ export default function VendorServicesClient() {
                   <option value="TIFFIN">🍱 Tiffin / Daily Meals</option>
                   <option value="WATER">💧 20L Water Jars</option>
                   <option value="MILK">🥛 Fresh Milk Delivery</option>
-                  <option value="FLOWERS">🌸 Pooja Flowers</option>
-                  <option value="NEWSPAPER">📰 Newspapers</option>
-                  <option value="LAUNDRY">🧺 Laundry & Dhobi</option>
-                  <option value="CAR_CLEANING">🚗 Daily Car Cleaning</option>
                 </select>
               </div>
 

@@ -5,20 +5,12 @@ export const ServiceCategoryEnum = z.enum([
   "TIFFIN",
   "WATER",
   "MILK",
-  "NEWSPAPER",
-  "FLOWERS",
-  "LAUNDRY",
-  "CAR_CLEANING",
-  "WASTE_SCRAP",
 ]);
 
 export const ProductUnitTypeEnum = z.enum([
   "MEAL",
   "LITER",
   "JAR",
-  "PIECE",
-  "KG",
-  "VISIT",
 ]);
 
 export const CreateServiceInputSchema = z.object({
