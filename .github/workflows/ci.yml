@@ -1,14 +1,15 @@
-name: RUXS CI Quality Gates
+name: RUXS CI/CD Quality Gates & Deploy
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
-  validate:
-    name: Typecheck, Test & Edge Build
+  validate-and-deploy:
+    name: Typecheck, Test, Build & Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -31,3 +32,10 @@ jobs:
 
       - name: Compile Edge Production Build
         run: bun run build
+
+      - name: Deploy to Cloudflare Workers
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        run: bun run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
