@@ -2,18 +2,42 @@
   "name": "RUXS — Recurring household life, quietly handled",
   "short_name": "RUXS",
   "description": "A simple operating layer for recurring local household services in India.",
-  "start_url": "/",
+  "lang": "en-IN",
+  "dir": "ltr",
   "id": "/",
+  "scope": "/",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0d0c",
   "theme_color": "#0b0d0c",
   "orientation": "portrait-primary",
+  "categories": ["productivity", "lifestyle", "utilities"],
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/pwa/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa/maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start a service",
+      "short_name": "Start",
+      "url": "/subscribe",
+      "icons": [{ "src": "/pwa/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Vendor onboarding",
+      "short_name": "Vendors",
+      "url": "/vendor/onboard",
+      "icons": [{ "src": "/pwa/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
     }
   ]
 }
