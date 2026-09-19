@@ -9,6 +9,7 @@ export const RUXS_DESIGN_SYSTEM = {
     subtle: "#777d77",
     line: "rgba(244, 242, 236, 0.10)",
     brand: "#e24a3b",
+    surfaceBand: "#0e1210",
     signal: "#9fc58f",
     cream: "#e7dfc8",
   },
