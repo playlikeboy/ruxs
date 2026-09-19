@@ -2,26 +2,24 @@ import type { Metadata } from "next";
 import OnboardClient from "./OnboardClient";
 
 export const metadata: Metadata = {
-  title: "Household Onboarding | RUXS — Everyday Life on Autopilot",
-  description:
-    "Register your domestic address and delivery preferences on RUXS. Seamlessly configure tiffin, 20L water, milk, and local subscriptions with one-tap digital Khata.",
-  alternates: {
-    canonical: "https://ruxs.in/onboard",
-  },
+  title: "Household setup · RUXS",
+  description: "Set up household details and delivery preferences before starting recurring services.",
+  alternates: { canonical: "https://ruxs.in/onboard" },
+  robots: { index: false, follow: false },
   openGraph: {
-    title: "Household Onboarding | RUXS",
-    description: "Register your domestic address and setup automated recurring doorstep services.",
+    title: "Household setup · RUXS",
+    description: "Set up household details and delivery preferences before starting recurring services.",
     url: "https://ruxs.in/onboard",
     siteName: "RUXS",
     type: "website",
   },
   twitter: {
-    card: "summary",
-    title: "Household Onboarding | RUXS",
-    description: "Configure apartment hierarchy and doorstep drop preferences on RUXS.",
+    card: "summary_large_image",
+    title: "Household setup · RUXS",
+    description: "Set up household details and delivery preferences before starting recurring services.",
   },
 };
 
-export default function CustomerOnboardPage() {
+export default function Page() {
   return <OnboardClient />;
 }
