@@ -62,7 +62,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
           <div className="ds-container flex h-16 items-center justify-between">
             <Link href="/" className="group flex items-center gap-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#e24a3b] text-sm font-black text-white transition-transform duration-150 group-hover:-rotate-3">R</span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-brand text-sm font-black text-white transition-transform duration-150 group-hover:-rotate-3">R</span>
               <span className="text-sm font-semibold tracking-[0.08em] text-foreground">RUXS</span>
             </Link>
 
@@ -91,7 +91,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <div className="grid gap-10 sm:grid-cols-[1.2fr_.8fr_.8fr]">
               <div className="max-w-sm">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-[9px] bg-[#e24a3b] text-xs font-black text-white">R</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-[9px] bg-brand text-xs font-black text-white">R</span>
                   <span className="text-sm font-semibold tracking-[0.08em]">RUXS</span>
                 </div>
                 <p className="mt-4 text-sm leading-6 text-muted-foreground">The quiet operating layer for recurring local household services.</p>
