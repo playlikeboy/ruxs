@@ -2,27 +2,24 @@ import type { Metadata } from "next";
 import VendorServicesClient from "./VendorServicesClient";
 
 export const metadata: Metadata = {
-  title: "Service Catalog & Pricing | Vendor Command Center | RUXS",
-  description:
-    "Configure hyper-local recurring services, pricing in integer paise, strict morning cutoff deadlines, and returnable container asset deposits.",
-  alternates: {
-    canonical: "https://ruxs.in/vendor/services",
-  },
+  title: "Vendor services · RUXS",
+  description: "Configure recurring services, pricing and operational cutoffs.",
+  alternates: { canonical: "https://ruxs.in/vendor/services" },
+  robots: { index: false, follow: false },
   openGraph: {
-    title: "Service Catalog & Pricing — RUXS Vendor Hub",
-    description:
-      "Manage meal plans, water cans, dairy subscriptions, cutoffs, and delivery schedules.",
+    title: "Vendor services · RUXS",
+    description: "Configure recurring services, pricing and operational cutoffs.",
     url: "https://ruxs.in/vendor/services",
     siteName: "RUXS",
     type: "website",
   },
   twitter: {
-    card: "summary",
-    title: "Service Catalog & Pricing — RUXS",
-    description: "Manage hyper-local recurring services, cutoff schedules, and container deposits.",
+    card: "summary_large_image",
+    title: "Vendor services · RUXS",
+    description: "Configure recurring services, pricing and operational cutoffs.",
   },
 };
 
-export default function VendorServicesPage() {
+export default function Page() {
   return <VendorServicesClient />;
 }
