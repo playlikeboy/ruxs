@@ -1193,13 +1193,9 @@ export default function AdminClient() {
                   onChange={(e) => setNewVendorForm({ ...newVendorForm, serviceCategories: e.target.value })}
                   className="w-full bg-background border border-input rounded-lg px-3 py-2 text-foreground"
                 >
-                  <option value="TIFFIN">Tiffin & Meals</option>
-                  <option value="MILK">Fresh Dairy Milk</option>
-                  <option value="WATER_JAR">20L Water Cans</option>
-                  <option value="POOJA_FLOWERS">Morning Temple Flowers</option>
-                  <option value="LAUNDRY">Society Dhobi & Laundry</option>
-                  <option value="CAR_CLEANING">Daily Car Cleaning</option>
-                  <option value="SCRAP_COLLECTION">Dry Scrap / Carton Pickup</option>
+                  <option value="TIFFIN">🍱 Tiffin & Meals Delivery</option>
+                  <option value="MILK">🥛 Fresh Cow Milk Delivery</option>
+                  <option value="WATER">💧 20L Water Jar Delivery</option>
                 </select>
               </div>
               <div className="space-y-1">

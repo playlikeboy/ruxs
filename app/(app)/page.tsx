@@ -23,10 +23,9 @@ export const metadata: Metadata = {
 };
 
 const services = [
-  { name: "Meals & tiffin", detail: "Daily plans, skips, extras and cutoff control." },
-  { name: "20L water", detail: "Scheduled drops, container tracking and reorder flows." },
-  { name: "Milk & dairy", detail: "Simple recurring quantities with pause and resume." },
-  { name: "More local services", detail: "Laundry, newspapers, cleaning and other routines can share the same operating layer." },
+  { name: "Meals & tiffin", detail: "Daily homestyle lunch and dinner plans, automatic skips, and cutoff control." },
+  { name: "20L water", detail: "Scheduled doorstep jar drops, empty container tracking and reorder flows." },
+  { name: "Milk & dairy", detail: "Simple recurring morning milk delivery with 1-tap pause and resume." },
 ];
 
 const steps = [
@@ -157,13 +156,9 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="mt-14 grid border-t border-border sm:grid-cols-2">
+          <div className="mt-14 grid border-t border-border sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
             {services.map((service, index) => (
-              <article key={service.name} className={[
-                "py-7 sm:pr-8",
-                index === 1 || index === 3 ? "sm:border-l sm:border-border sm:pl-8" : "",
-                index >= 2 ? "border-t border-border" : "",
-              ].join(" ")}>
+              <article key={service.name} className="py-7 sm:px-8 first:pl-0 last:pr-0">
                 <p className="text-xs font-mono text-subtle">0{index + 1}</p>
                 <h3 className="mt-3 text-lg font-semibold text-foreground">{service.name}</h3>
                 <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">{service.detail}</p>

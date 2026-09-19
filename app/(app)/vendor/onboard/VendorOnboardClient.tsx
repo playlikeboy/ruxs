@@ -233,11 +233,6 @@ export default function VendorOnboardClient() {
                   <option value="TIFFIN">🍱 Tiffin & Meals</option>
                   <option value="WATER">💧 20L Water Jars</option>
                   <option value="MILK">🥛 Milk & Dairy</option>
-                  <option value="FLOWERS">🌸 Pooja Flowers</option>
-                  <option value="NEWSPAPERS">📰 Newspapers</option>
-                  <option value="LAUNDRY">🧺 Laundry & Dhobi</option>
-                  <option value="CAR_CLEANING">🚗 Car & Bike Wash</option>
-                  <option value="DRY_WASTE">📦 Scrap & Carton Collection</option>
                 </select>
               </div>
 
