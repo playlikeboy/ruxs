@@ -3,5 +3,13 @@ Allow: /
 
 Disallow: /api/
 Disallow: /admin/
+Disallow: /customer/
+Disallow: /delivery/
+Disallow: /disputes/
+Disallow: /household/
+Disallow: /login
+Disallow: /onboard
+Disallow: /vendor/dashboard
+Disallow: /vendor/services
 
 Sitemap: https://ruxs.in/sitemap.xml
