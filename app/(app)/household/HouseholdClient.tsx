@@ -2,14 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useUser } from "@hexclave/next";
 import { Household, HouseholdMember } from "@/src/modules/households/household-schema";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Lock, LogIn } from "lucide-react";
 
 export default function HouseholdClient() {
+  const user = useUser();
   const [household, setHousehold] = useState<Household | null>(null);
   const [loading, setLoading] = useState(true);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -32,8 +35,44 @@ export default function HouseholdClient() {
   };
 
   useEffect(() => {
-    fetchHousehold();
-  }, []);
+    if (user) {
+      fetchHousehold();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
+        <div className="max-w-md w-full rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-2xl text-center space-y-6">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto text-primary">
+            <Lock className="w-7 h-7" />
+          </div>
+
+          <div className="space-y-2">
+            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider text-primary border-primary/30">
+              Hexclave Auth Required
+            </Badge>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Shared Household Account</h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Sign in with your Hexclave account to manage your household flatmates, shared delivery permissions, and collective pause controls.
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <Link
+              href="/login?redirect=/household"
+              className={buttonVariants({ variant: "default", size: "lg", className: "w-full shadow-lg font-bold gap-2" })}
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Sign In with Hexclave</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading || !household) {
     return (
@@ -94,7 +133,9 @@ export default function HouseholdClient() {
             <h1 className="text-2xl font-bold text-foreground">{household.name}</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
               Primary Owner & Billing Liable:{" "}
-              <span className="text-foreground font-semibold">Priya Sundaram</span>
+              <span className="text-foreground font-semibold">
+                {user.displayName || (user as any).name || user.primaryEmail || (user as any).email || "Primary Resident"}
+              </span>
             </p>
           </div>
 

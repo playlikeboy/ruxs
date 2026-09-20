@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { AppHeaderUserNav } from "@/components/navigation/AppHeaderUserNav";
 import { Home, Layers, PlayCircle, Wallet, Store, Truck } from "lucide-react";
 
 export default function AppLayout({
@@ -24,17 +25,7 @@ export default function AppLayout({
             <Link className="transition hover:text-foreground" href="/vendor/onboard">For vendors</Link>
           </nav>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="rounded-xl px-3.5 py-2 text-sm font-medium text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground"
-            >
-              Sign in
-            </Link>
-            <Link href="/subscribe" className="ds-button min-h-10 px-4 text-xs font-semibold">
-              Get started
-            </Link>
-          </div>
+          <AppHeaderUserNav />
         </div>
       </header>
 

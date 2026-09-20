@@ -2,18 +2,23 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useUser } from "@hexclave/next";
+import { Lock, LogIn, Sparkles } from "lucide-react";
 import { Subscription } from "@/src/modules/subscriptions/subscription-schema";
 
 export default function SubscribeClient() {
-  const [customerId] = useState("usr_priya");
+  const router = useRouter();
+  const user = useUser();
+  const customerId = user?.id || "";
   const [tenantId] = useState("ten_sharma_tiffin");
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Form states
-  const [productName, setProductName] = useState("Standard Veg Thali");
+  const [productName, setProductName] = useState("Standard Veg Thali (Lunch)");
   const [productId, setProductId] = useState("prd_thali");
   const [unitPricePaise, setUnitPricePaise] = useState(12000);
   const [cadence, setCadence] = useState<"DAILY" | "WEEKDAYS" | "ALTERNATE_DAYS">("DAILY");
@@ -21,25 +26,45 @@ export default function SubscribeClient() {
   const [autopilotDefault, setAutopilotDefault] = useState<"CONFIRMED" | "SKIPPED">("CONFIRMED");
 
   const fetchSubscriptions = async () => {
+    if (!customerId) {
+      setSubscriptions([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await fetch(`/api/subscriptions?customerId=${customerId}`);
       const data = (await res.json()) as { success: boolean; data?: Subscription[] };
       if (data.success && data.data) {
         setSubscriptions(data.data);
+      } else {
+        setSubscriptions([]);
       }
     } catch (err: unknown) {
       console.error(err);
+      setSubscriptions([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSubscriptions();
+    if (customerId) {
+      fetchSubscriptions();
+    } else {
+      setSubscriptions([]);
+      setLoading(false);
+    }
   }, [customerId]);
 
   const handleCreateSubscription = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      router.push("/login?redirect=/subscribe");
+      return;
+    }
+
     setError(null);
     setSubmitting(true);
 
@@ -92,7 +117,7 @@ export default function SubscribeClient() {
 
   return (
     <div className="min-h-screen py-8 px-4 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-border">
         <div>
           <Link href="/customer/dashboard" className="text-xs text-primary hover:underline mb-1 block">
             ← Back to Customer Dashboard
@@ -102,10 +127,21 @@ export default function SubscribeClient() {
             Automate daily delivery cadences, pause for vacations, and inspect monthly spend.
           </p>
         </div>
-        <div className="text-right">
-          <span className="text-[11px] font-mono text-muted-foreground bg-muted border border-border px-2.5 py-1 rounded-lg">
-            User: Priya Sundaram
-          </span>
+        <div>
+          {user ? (
+            <span className="text-[11px] font-mono text-muted-foreground bg-muted border border-border px-2.5 py-1.5 rounded-lg inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+              {user.displayName || user.primaryEmail || (user as any).email || user.id}
+            </span>
+          ) : (
+            <Link
+              href="/login?redirect=/subscribe"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-primary text-primary-foreground shadow-sm hover:opacity-95 transition-all"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign in with Hexclave</span>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -220,7 +256,11 @@ export default function SubscribeClient() {
               disabled={submitting}
               className="w-full bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 rounded-xl text-xs transition-all shadow-md disabled:opacity-50"
             >
-              {submitting ? "Creating Subscription..." : "+ Start Subscription"}
+              {submitting
+                ? "Creating Subscription..."
+                : user
+                ? "+ Start Subscription"
+                : "Sign in to Subscribe"}
             </button>
           </form>
         </div>
@@ -229,16 +269,38 @@ export default function SubscribeClient() {
         <div className="lg:col-span-7 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-base font-bold text-foreground">Your Active Subscriptions</h2>
-            <span className="text-xs text-muted-foreground">{subscriptions.length} active</span>
+            {user && <span className="text-xs text-muted-foreground">{subscriptions.length} active</span>}
           </div>
 
-          {loading ? (
-            <div className="p-8 text-center text-xs text-muted-foreground">Loading subscriptions...</div>
+          {!user ? (
+            <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-4 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto text-primary">
+                <Lock className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-foreground">Hexclave Sign In Required</h3>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                  Sign in with your Hexclave account to view your active recurring subscriptions and automate daily delivery schedules.
+                </p>
+              </div>
+              <div>
+                <Link
+                  href="/login?redirect=/subscribe"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-xs shadow-md shadow-primary/20 hover:opacity-95 transition-all"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In with Hexclave</span>
+                </Link>
+              </div>
+            </div>
+          ) : loading ? (
+            <div className="p-8 text-center text-xs text-muted-foreground">Loading your subscriptions...</div>
           ) : subscriptions.length === 0 ? (
-            <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-2">
+            <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-2 shadow-sm">
+              <Sparkles className="w-6 h-6 mx-auto text-muted-foreground/60" />
               <p className="text-sm font-semibold text-foreground">No active subscriptions yet</p>
               <p className="text-xs text-muted-foreground">
-                Set up your first subscription on the left to start recurring deliveries.
+                Set up your first delivery on the left to start your automated household routine.
               </p>
             </div>
           ) : (

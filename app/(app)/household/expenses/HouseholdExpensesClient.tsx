@@ -2,14 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useUser } from "@hexclave/next";
 import { HouseholdExpense } from "@/src/modules/expenses/expense-schema";
 import { formatINR, Paise } from "@/src/shared/types/money";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Lock, LogIn } from "lucide-react";
 
 export default function HouseholdExpensesClient() {
-  const [currentUserId] = useState("usr_ananya");
+  const user = useUser();
+  const currentUserId = user?.id || "";
   const [expenses, setExpenses] = useState<HouseholdExpense[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,8 +31,44 @@ export default function HouseholdExpensesClient() {
   };
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    if (user) {
+      fetchExpenses();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
+        <div className="max-w-md w-full rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-2xl text-center space-y-6">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto text-primary">
+            <Lock className="w-7 h-7" />
+          </div>
+
+          <div className="space-y-2">
+            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider text-primary border-primary/30">
+              Hexclave Auth Required
+            </Badge>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Roommate Expense Splitting</h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Sign in with your Hexclave account to inspect split household bills, view penny-accurate shares, and settle balances.
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <Link
+              href="/login?redirect=/household/expenses"
+              className={buttonVariants({ variant: "default", size: "lg", className: "w-full shadow-lg font-bold gap-2" })}
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Sign In with Hexclave</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -100,9 +139,9 @@ export default function HouseholdExpensesClient() {
               <span className="text-3xl font-black text-destructive font-mono">
                 {formatINR(owesPriya as Paise)}
               </span>
-              <span className="text-xs text-muted-foreground">to Priya Sundaram</span>
+              <span className="text-xs text-muted-foreground">to {firstExpense?.paidByName || "Flatmate"}</span>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-1">Priya covered the RUXS monthly invoice</p>
+            <p className="text-[11px] text-muted-foreground mt-1">{firstExpense?.paidByName || "Flatmate"} covered the RUXS monthly invoice</p>
           </CardContent>
         </Card>
 
