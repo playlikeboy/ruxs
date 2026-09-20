@@ -71,19 +71,19 @@ interface InvoiceItem {
   dueDate: string;
 }
 
-const customerId = "usr_priya";
 const tenantId = "ten_sharma_tiffin";
 
 export default function CustomerDashboardClient() {
   const user = useUser();
   const hexclaveApp = useHexclaveApp();
+  const customerId = user?.id || "";
 
   const [loading, setLoading] = useState(true);
   const [todayFulfillment, setTodayFulfillment] = useState<FulfillmentItem | null>(null);
   const [subscriptions, setSubscriptions] = useState<SubscriptionItem[]>([]);
   const [khataStatement, setKhataStatement] = useState<KhataStatement>({
     tenantId,
-    customerId,
+    customerId: user?.id || "",
     runningBalancePaise: 0,
     entries: [],
   });
@@ -96,13 +96,17 @@ export default function CustomerDashboardClient() {
   });
 
   const loadData = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const [fulRes, subRes, khataRes, invRes] = await Promise.all([
-        fetch(`/api/fulfillments?customerId=${customerId}`),
-        fetch(`/api/subscriptions?customerId=${customerId}`),
-        fetch(`/api/khata?tenantId=${tenantId}&customerId=${customerId}`),
-        fetch(`/api/billing/invoices?customerId=${customerId}`),
+        fetch(`/api/fulfillments?customerId=${user.id}`),
+        fetch(`/api/subscriptions?customerId=${user.id}`),
+        fetch(`/api/khata?tenantId=${tenantId}&customerId=${user.id}`),
+        fetch(`/api/billing/invoices?customerId=${user.id}`),
       ]);
 
       const fulData = (await fulRes.json()) as { success: boolean; data?: any[] };
@@ -121,6 +125,8 @@ export default function CustomerDashboardClient() {
           cutoffTime: match.cutoffTime || "10:00 AM",
           notes: match.notes,
         });
+      } else {
+        setTodayFulfillment(null);
       }
 
       const subData = (await subRes.json()) as { success: boolean; data?: any[] };
@@ -136,6 +142,8 @@ export default function CustomerDashboardClient() {
             startDate: s.startDate,
           }))
         );
+      } else {
+        setSubscriptions([]);
       }
 
       const khataData = (await khataRes.json()) as { success: boolean; data?: KhataStatement };
@@ -154,6 +162,8 @@ export default function CustomerDashboardClient() {
             dueDate: i.dueDate,
           }))
         );
+      } else {
+        setInvoices([]);
       }
     } catch (error) {
       console.error("Failed to load customer portal data:", error);
@@ -163,8 +173,41 @@ export default function CustomerDashboardClient() {
   };
 
   useEffect(() => {
-    void loadData();
-  }, []);
+    if (user) {
+      void loadData();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-xl items-center justify-center px-6 py-12">
+        <div className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.025] p-8 text-center shadow-2xl space-y-6">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+            <CreditCard className="h-7 w-7" />
+          </div>
+          <div className="space-y-2">
+            <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
+              Hexclave Auth Required
+            </span>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Domestic Account Portal</h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Sign in with your Hexclave account to access your household recurring deliveries, manage daily autopilot cutoffs, and review digital khata statements.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/login?redirect=/customer/dashboard"
+              className={buttonVariants({ variant: "default", size: "lg", className: "w-full shadow-lg font-bold gap-2" })}
+            >
+              Sign In with Hexclave
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleTodayAction = async (action: "CONFIRM" | "SKIP") => {
     if (!todayFulfillment) return;
@@ -210,6 +253,7 @@ export default function CustomerDashboardClient() {
   };
 
   const handlePayUPI = async (amountPaise: number) => {
+    if (!user) return;
     setActionLoading(true);
     try {
       const res = await fetch("/api/payments/create-order", {
@@ -217,7 +261,7 @@ export default function CustomerDashboardClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tenantId,
-          customerId,
+          customerId: user.id,
           amountPaise,
           upiId: "sharmatiffin@okaxis",
           merchantName: "Sharma Tiffin Services",

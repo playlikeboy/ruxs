@@ -69,10 +69,43 @@ export default function VendorDashboardClient() {
   };
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     void fetchOperationalData();
     const interval = window.setInterval(() => void fetchOperationalData(), 15000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-xl items-center justify-center px-6 py-12">
+        <div className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.025] p-8 text-center shadow-2xl space-y-6">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+            <ChefHat className="h-7 w-7" />
+          </div>
+          <div className="space-y-2">
+            <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
+              Hexclave Auth Required
+            </span>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Vendor Operations Hub</h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Sign in with your Hexclave account to inspect real-time batch counts, lock delivery cutoffs, and manage subscriber orders.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/login?redirect=/vendor/dashboard"
+              className={buttonVariants({ variant: "default", size: "lg", className: "w-full shadow-lg font-bold gap-2" })}
+            >
+              Sign In with Hexclave
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const filteredCustomers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();

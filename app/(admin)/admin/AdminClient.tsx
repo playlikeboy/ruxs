@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertCircle, ArrowUpRight, BarChart3, ChevronRight, Database, Gavel, Lock, RefreshCw, ShieldCheck, Store, UsersRound, WalletCards } from "lucide-react";
+import { formatINR, Paise } from "@/src/shared/types/money";
 
 interface AdminOverview {
   totalVendors: number;
