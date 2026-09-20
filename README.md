@@ -50,15 +50,16 @@ Shared semantic styles: app/globals.css
 | Route | Purpose |
 | --- | --- |
 | / | Marketing homepage |
-| /subscribe | Household service setup |
+| /customer/subscribe | Household service setup |
 | /vendor/onboard | Vendor onboarding |
 | /login | Authentication |
 | /vendor/dashboard | Vendor operations |
 | /vendor/services | Vendor service catalog |
 | /customer/dashboard | Household operations |
+| /customer/onboard | Household profile setup |
 | /delivery | Driver run sheet |
-| /household | Household management |
-| /household/expenses | Shared expense workflows |
+| /customer/household | Household management |
+| /customer/expenses | Shared expense workflows |
 | /disputes | Dispute management |
 | /admin | Platform administration |
 
