@@ -7,7 +7,7 @@ import { useUser, useHexclaveApp } from "@hexclave/next";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Lock, AlertCircle, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowUpRight, BarChart3, ChevronRight, Database, Gavel, Lock, RefreshCw, ShieldCheck, Store, UsersRound, WalletCards } from "lucide-react";
 
 interface AdminOverview {
   totalVendors: number;
@@ -393,768 +393,459 @@ export default function AdminClient() {
   }
 
   return (
-    <div className="min-h-screen py-6 px-4 max-w-7xl mx-auto space-y-6">
-      {/* Top Admin Header Bar */}
-      <Card className="bg-card border-border shadow-sm">
-        <CardContent className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="min-h-screen lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
+      <aside className="hidden border-r border-white/[0.08] bg-[#0d100e] lg:flex lg:flex-col">
+        <div className="flex h-16 items-center gap-3 border-b border-white/[0.08] px-5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#e24a3b] text-sm font-black text-white">R</div>
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="destructive" className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5">
-                👑 Super Admin Console
-              </Badge>
-              <Badge variant="outline" className="text-[10px] font-mono border-amber-500/30 text-amber-500 bg-amber-500/10">
-                🛡️ {user.primaryEmail || (user as any).email}
-              </Badge>
-              <span className="text-xs text-muted-foreground font-mono hidden sm:inline">
-                • Neon DB Active
-              </span>
+            <p className="text-sm font-semibold">RUXS</p>
+            <p className="text-[9px] uppercase tracking-[0.16em] text-subtle">Platform control</p>
+          </div>
+        </div>
+
+        <div className="px-3 py-4">
+          <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-subtle">Workspace</p>
+          <nav className="space-y-1">
+            {[
+              { id: "overview", label: "Overview", icon: BarChart3 },
+              { id: "vendors", label: "Vendors", icon: Store },
+              { id: "households", label: "Households", icon: UsersRound },
+              { id: "fulfillments", label: "Fulfillments", icon: ArrowUpRight },
+              { id: "kitchen", label: "Kitchen", icon: Database },
+              { id: "assets", label: "Assets", icon: WalletCards },
+              { id: "disputes", label: "Disputes", icon: Gavel },
+              { id: "audit", label: "Audit log", icon: ShieldCheck },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={activeTab === tab.id
+                  ? "flex w-full items-center gap-3 rounded-xl bg-primary/10 px-3 py-2.5 text-left text-xs font-semibold text-primary"
+                  : "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground"}
+              >
+                <tab.icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+                {tab.id === "disputes" && overview?.openDisputesCount ? (
+                  <span className="ml-auto rounded-full bg-amber-400/10 px-1.5 py-0.5 text-[9px] text-amber-300">{overview.openDisputesCount}</span>
+                ) : null}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="mt-auto border-t border-white/[0.08] p-3">
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
+            <div className="flex items-center gap-2">
+              <Database className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-xs font-semibold">Platform data</p>
+                <p className="text-[10px] text-muted-foreground">{overview?.dbConnected ? "Connected" : "Unavailable"}</p>
+              </div>
             </div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight">
-              Global Platform Oversight & Control
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Live vendor verification, dispute arbitration, fulfillment engines & digital khata ledger
-            </p>
           </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchDashboard}
-              disabled={actionLoading}
-              className="text-xs font-semibold"
-            >
-              🔄 Refresh Data
-            </Button>
-            <Link href="/customer/dashboard" className={buttonVariants({ variant: "outline", size: "sm" })}>
-              🏠 Household
-            </Link>
-            <Link href="/vendor/dashboard" className={buttonVariants({ variant: "outline", size: "sm" })}>
-              🏪 Vendor Hub
-            </Link>
-            <Link href="/delivery" className={buttonVariants({ variant: "outline", size: "sm" })}>
-              🛵 Driver Sheet
-            </Link>
-            <Link href="/disputes" className={buttonVariants({ variant: "outline", size: "sm" })}>
-              ⚖️ Disputes
-            </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                await hexclaveApp.signOut();
-                router.push("/login");
-              }}
-              className="text-xs text-muted-foreground hover:text-foreground"
-            >
-              Sign Out
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Action Feedback Banner */}
-      {feedback && (
-        <div
-          className={`p-4 rounded-xl border text-xs font-semibold flex items-center justify-between shadow-sm ${
-            feedback.type === "success"
-              ? "bg-primary/10 border-primary/40 text-primary"
-              : "bg-destructive/10 border-destructive/40 text-destructive"
-          }`}
-        >
-          <span>{feedback.message}</span>
-          <button onClick={() => setFeedback(null)} className="opacity-70 hover:opacity-100">
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* KPI Cockpit Metrics */}
-      {overview && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Card className="bg-card border-border">
-            <CardContent className="p-3.5">
-              <span className="text-[11px] font-semibold text-muted-foreground block">Active Vendors</span>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-2xl font-black text-foreground font-mono">{overview.verifiedVendors}</span>
-                <span className="text-[10px] text-muted-foreground">/{overview.totalVendors}</span>
-              </div>
-              <span className="text-[10px] text-amber-500 font-semibold mt-1 block">
-                {overview.pendingVendors} pending review
-              </span>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-3.5">
-              <span className="text-[11px] font-semibold text-muted-foreground block">Households</span>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-2xl font-black text-primary font-mono">{overview.totalHouseholds}</span>
-                <span className="text-[10px] text-muted-foreground">flats</span>
-              </div>
-              <span className="text-[10px] text-muted-foreground mt-1 block">3 societies connected</span>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-3.5">
-              <span className="text-[11px] font-semibold text-muted-foreground block">Today Drops</span>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-2xl font-black text-foreground font-mono">{overview.todayDeliveriesCount}</span>
-                <span className="text-[10px] text-primary font-medium">{overview.deliveredCount} done</span>
-              </div>
-              <span className="text-[10px] text-muted-foreground mt-1 block">{overview.inPrepCount} in preparation</span>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-3.5">
-              <span className="text-[11px] font-semibold text-muted-foreground block">Open Disputes</span>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span
-                  className={`text-2xl font-black font-mono ${
-                    overview.openDisputesCount > 0 ? "text-destructive" : "text-foreground"
-                  }`}
-                >
-                  {overview.openDisputesCount}
-                </span>
-                <span className="text-[10px] text-muted-foreground">cases</span>
-              </div>
-              <span className="text-[10px] text-muted-foreground mt-1 block">Compensating refunds</span>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-3.5">
-              <span className="text-[11px] font-semibold text-muted-foreground block">Asset Cans / Tiffins</span>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-2xl font-black text-foreground font-mono">{overview.totalAssetHoldingsCount}</span>
-                <span className="text-[10px] text-muted-foreground">held</span>
-              </div>
-              <span className="text-[10px] text-muted-foreground mt-1 block">₹1,050 deposits locked</span>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-3.5">
-              <span className="text-[11px] font-semibold text-muted-foreground block">Monthly GMV</span>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-2xl font-black text-primary font-mono">₹18.4L</span>
-              </div>
-              <span className="text-[10px] text-primary font-semibold mt-1 block">● 98.2% auto-settled</span>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Navigation Tab Bar */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-muted/50 border border-border">
-        {[
-          { id: "overview", label: "📊 Cockpit Overview" },
-          { id: "vendors", label: `🏪 Vendors (${vendors.length})` },
-          { id: "households", label: `🏠 Households (${households.length})` },
-          { id: "fulfillments", label: `📦 Fulfillments (${fulfillments.length})` },
-          { id: "kitchen", label: "🍳 Kitchen Batches" },
-          { id: "assets", label: `🛢️ Assets (${assetHoldings.length})` },
-          { id: "disputes", label: `⚖️ Disputes (${disputes.length})` },
-          { id: "audit", label: `📜 Audit Log (${auditLogs.length})` },
-        ].map((tab) => (
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`px-3.5 py-2 rounded-lg text-xs font-bold transition ${
-              activeTab === tab.id
-                ? "bg-primary text-primary-foreground shadow"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+            type="button"
+            onClick={async () => {
+              await hexclaveApp.signOut();
+              router.push("/login");
+            }}
+            className="mt-2 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-xs text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
           >
-            {tab.label}
+            Sign out
           </button>
-        ))}
-      </div>
-
-      {/* TAB 1: COCKPIT OVERVIEW */}
-      {activeTab === "overview" && (
-        <div className="space-y-6">
-          {/* Quick Trigger Operations Bar */}
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                ⚡ Emergency & Autopilot Operational Controls
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <button
-                onClick={handleTriggerOvernight}
-                disabled={actionLoading}
-                className="p-4 rounded-xl border border-border bg-muted/20 hover:border-primary/50 hover:bg-muted/40 transition text-left space-y-1.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-foreground">🌙 Overnight Run</span>
-                  <Badge variant="secondary" className="text-[10px]">Generate</Badge>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Triggers daily fulfillment snapshots for all active subscriptions.
-                </p>
-                <span className="text-[10px] text-primary font-bold block pt-1">Execute Engine →</span>
-              </button>
-
-              <button
-                onClick={handleLockCutoff}
-                disabled={actionLoading}
-                className="p-4 rounded-xl border border-border bg-muted/20 hover:border-primary/50 hover:bg-muted/40 transition text-left space-y-1.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-foreground">🔒 Cutoff Lock</span>
-                  <Badge variant="secondary" className="text-[10px]">Freeze</Badge>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Sweeps pending morning/lunch cutoffs and locks kitchen cooking batches.
-                </p>
-                <span className="text-[10px] text-primary font-bold block pt-1">Lock Batches →</span>
-              </button>
-
-              <button
-                onClick={handleDispatchNotification}
-                disabled={actionLoading}
-                className="p-4 rounded-xl border border-border bg-muted/20 hover:border-primary/50 hover:bg-muted/40 transition text-left space-y-1.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-foreground">💬 WhatsApp Poll</span>
-                  <Badge variant="secondary" className="text-[10px]">Simulate</Badge>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Dispatches interactive morning cutoff poll with Skip/Deliver buttons.
-                </p>
-                <span className="text-[10px] text-primary font-bold block pt-1">Dispatch Test →</span>
-              </button>
-
-              <button
-                onClick={() => setShowNewVendorModal(true)}
-                className="p-4 rounded-xl border border-dashed border-primary/50 bg-primary/5 hover:bg-primary/10 transition text-left space-y-1.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-primary">➕ Onboard Vendor</span>
-                  <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Quick</Badge>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Directly onboard a local tiffin cook, milk vendor or water supplier.
-                </p>
-                <span className="text-[10px] text-primary font-bold block pt-1">Add Vendor →</span>
-              </button>
-            </CardContent>
-          </Card>
-
-          {/* Quick Summaries Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Urgent Items: Pending Vendors & Open Disputes */}
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                  ⚠️ Items Requiring Action
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {vendors.filter((v) => v.status === "PENDING_VERIFICATION").map((v) => (
-                  <div key={v.id} className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/5 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-foreground">{v.businessName}</span>
-                        <Badge variant="secondary" className="text-[9px]">PENDING VERIFICATION</Badge>
-                      </div>
-                      <span className="text-[11px] text-muted-foreground block mt-0.5">{v.phone} • {v.serviceCategories.join(", ")}</span>
-                    </div>
-                    <Button size="sm" onClick={() => handleVerifyVendor(v.id)} className="text-xs font-bold">
-                      Verify & Activate
-                    </Button>
-                  </div>
-                ))}
-
-                {disputes.filter((d) => d.status === "OPEN").map((d) => (
-                  <div key={d.id} className="p-3 rounded-xl border border-destructive/30 bg-destructive/5 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-foreground">{d.customerName}</span>
-                        <Badge variant="destructive" className="text-[9px]">OPEN DISPUTE</Badge>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{d.evidence.customerComment}</p>
-                      <span className="text-[10px] font-mono text-primary font-bold">₹{d.disputedAmountPaise / 100}</span>
-                    </div>
-                    <Button size="sm" variant="destructive" onClick={() => handleResolveDispute(d.id, "FULL_REFUND", d.disputedAmountPaise)} className="text-xs font-bold">
-                      Full Refund
-                    </Button>
-                  </div>
-                ))}
-
-                {vendors.filter((v) => v.status === "PENDING_VERIFICATION").length === 0 &&
-                  disputes.filter((d) => d.status === "OPEN").length === 0 && (
-                    <div className="py-8 text-center text-xs text-muted-foreground">
-                      🎉 All vendor queues and disputes are currently clear!
-                    </div>
-                  )}
-              </CardContent>
-            </Card>
-
-            {/* Today's Live Production & Kitchen Counter */}
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                  🍳 Live Kitchen Cooking Batches
-                </CardTitle>
-                <Badge variant="secondary" className="text-[10px] font-mono">Lunch Shift</Badge>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {kitchenBatches && Object.keys(kitchenBatches.skuBreakdown).length > 0 ? (
-                  Object.entries(kitchenBatches.skuBreakdown).map(([sku, item]) => (
-                    <div key={sku} className="p-3 rounded-xl border border-border bg-muted/20 flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-bold text-foreground">{item.productName}</span>
-                        <span className="text-[10px] text-muted-foreground font-mono block">SKU: {sku}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-lg font-mono font-black text-primary">{item.quantity}</span>
-                        <span className="text-[10px] text-muted-foreground block font-mono">₹{item.totalPaise / 100}</span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="space-y-2">
-                    <div className="p-3 rounded-xl border border-border bg-muted/20 flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground">Standard Vegetarian Lunch Thali</span>
-                      <span className="text-base font-mono font-black text-primary">142 portions</span>
-                    </div>
-                    <div className="p-3 rounded-xl border border-border bg-muted/20 flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground">A2 Farm Fresh Cow Milk 1L</span>
-                      <span className="text-base font-mono font-black text-primary">210 pouches</span>
-                    </div>
-                    <div className="p-3 rounded-xl border border-border bg-muted/20 flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground">20L RO Mineral Water Can</span>
-                      <span className="text-base font-mono font-black text-primary">86 cans</span>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
         </div>
-      )}
+      </aside>
 
-      {/* TAB 2: VENDORS MANAGEMENT */}
-      {activeTab === "vendors" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">Local Vendor Network Directory</h2>
-            <Button onClick={() => setShowNewVendorModal(true)} size="sm" className="font-bold text-xs">
-              ➕ Onboard New Vendor
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {vendors.map((vendor) => {
-              const isVerified = vendor.status === "VERIFIED";
-              const isPending = vendor.status === "PENDING_VERIFICATION";
-              const isSuspended = vendor.status === "SUSPENDED";
-
-              return (
-                <Card key={vendor.id} className="bg-card border-border shadow-sm">
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="text-base font-bold text-foreground block">{vendor.businessName}</span>
-                        <span className="text-xs text-muted-foreground font-mono">{vendor.phone} • /{vendor.slug}</span>
-                      </div>
-                      <Badge
-                        variant={isVerified ? "default" : isPending ? "secondary" : "destructive"}
-                        className="text-[10px] font-black uppercase"
-                      >
-                        {vendor.status.replace("_", " ")}
-                      </Badge>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {vendor.serviceCategories.map((c) => (
-                        <span key={c} className="bg-muted text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded">
-                          {c}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="text-[11px] text-muted-foreground space-y-0.5 border-t border-border/50 pt-2 font-mono">
-                      <div>Societies: {vendor.coveredSocieties.join(", ")}</div>
-                      <div>Active Subscribers: <strong className="text-foreground">{vendor.subscriberCount}</strong> flats</div>
-                    </div>
-
-                    {/* Operational Action Controls */}
-                    <div className="flex items-center justify-between border-t border-border/50 pt-3 gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] text-muted-foreground font-semibold">Tier:</span>
-                        <select
-                          value={vendor.tier}
-                          onChange={(e) => handleTierChange(vendor.id, e.target.value as any)}
-                          className="bg-background border border-input text-xs rounded-md px-2 py-1 text-foreground"
-                        >
-                          <option value="STARTER">Starter</option>
-                          <option value="GROWTH">Growth</option>
-                          <option value="PRO">Pro</option>
-                        </select>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        {isPending && (
-                          <Button size="sm" onClick={() => handleVerifyVendor(vendor.id)} className="text-xs font-bold">
-                            ✓ Approve
-                          </Button>
-                        )}
-                        {isVerified && (
-                          <Button size="sm" variant="destructive" onClick={() => handleSuspendVendor(vendor.id)} className="text-xs font-semibold">
-                            Suspend
-                          </Button>
-                        )}
-                        {isSuspended && (
-                          <Button size="sm" variant="outline" onClick={() => handleReactivateVendor(vendor.id)} className="text-xs font-semibold">
-                            Re-activate
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: HOUSEHOLDS & DIGITAL KHATA */}
-      {activeTab === "households" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">Households & Digital Khata Balances</h2>
-            <Button onClick={() => setShowKhataModal(true)} size="sm" className="font-bold text-xs">
-              💳 Add Manual Khata Adjustment
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {households.map((h) => {
-              const isDebt = h.khataBalancePaise < 0;
-              const absRupees = Math.abs(h.khataBalancePaise) / 100;
-
-              return (
-                <Card key={h.id} className="bg-card border-border shadow-sm">
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <span className="text-sm font-bold text-foreground block">{h.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {h.societyName} • {h.towerWing}-{h.flatNumber}
-                        </span>
-                      </div>
-                      <Badge variant="outline" className="text-[10px] font-mono">
-                        Floor {h.floor}
-                      </Badge>
-                    </div>
-
-                    {/* Members List */}
-                    <div className="space-y-1 bg-muted/20 p-2 rounded-lg border border-border/40 text-[11px]">
-                      <span className="text-muted-foreground font-semibold block text-[10px] uppercase">Registered Residents</span>
-                      {h.members.map((m) => (
-                        <div key={m.id} className="flex justify-between items-center text-foreground">
-                          <span>{m.name} ({m.role.replace("_", " ")})</span>
-                          <span className="text-muted-foreground font-mono text-[10px]">{m.phone}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Khata Balance */}
-                    <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs">
-                      <span className="text-muted-foreground font-semibold">Khata Net Balance:</span>
-                      <span
-                        className={`font-mono font-black text-sm ${
-                          isDebt ? "text-amber-500" : "text-primary"
-                        }`}
-                      >
-                        {isDebt ? `-₹${absRupees} (Owes)` : `+₹${absRupees} (Prepaid)`}
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2 pt-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setKhataForm({ ...khataForm, customerId: h.members[0]?.userId || "usr_priya" });
-                          setShowKhataModal(true);
-                        }}
-                        className="w-full text-xs font-semibold"
-                      >
-                        Adjust Khata
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 4: TODAY'S FULFILLMENTS */}
-      {activeTab === "fulfillments" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">Today's Daily Delivery Fulfillments</h2>
-            <Button size="sm" onClick={handleTriggerOvernight} className="font-bold text-xs">
-              🌙 Trigger Overnight Sweep
-            </Button>
-          </div>
-
-          <div className="space-y-2.5">
-            {fulfillments.map((f) => (
-              <Card key={f.id} className="bg-card border-border shadow-sm">
-                <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-foreground">{f.items[0]?.productName || "Essential Service"}</span>
-                      <Badge
-                        variant={
-                          f.status === "DELIVERED"
-                            ? "default"
-                            : f.status === "IN_PREPARATION" || f.status === "OUT_FOR_DELIVERY"
-                            ? "secondary"
-                            : f.status.includes("SKIP")
-                            ? "destructive"
-                            : "outline"
-                        }
-                        className="text-[10px] font-black uppercase"
-                      >
-                        {f.status.replace("_", " ")}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground font-mono">{f.shift} Shift</span>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Customer: <strong className="text-foreground">{f.customerId}</strong> • Total:{" "}
-                      <strong className="text-primary font-mono">₹{f.totalPricePaise / 100}</strong>
-                    </p>
-                    {f.notes && <p className="text-[11px] text-amber-500/90 mt-0.5">Note: {f.notes}</p>}
-                  </div>
-
-                  {/* Transition State Actions */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {f.status !== "IN_PREPARATION" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleTransitionFulfillment(f.id, "IN_PREPARATION")}
-                        className="text-xs"
-                      >
-                        In Prep
-                      </Button>
-                    )}
-                    {f.status !== "OUT_FOR_DELIVERY" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleTransitionFulfillment(f.id, "OUT_FOR_DELIVERY")}
-                        className="text-xs"
-                      >
-                        Dispatch
-                      </Button>
-                    )}
-                    {f.status !== "DELIVERED" && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleTransitionFulfillment(f.id, "DELIVERED")}
-                        className="text-xs font-bold"
-                      >
-                        ✓ Mark Delivered
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 5: KITCHEN BATCHES */}
-      {activeTab === "kitchen" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+      <div className="min-w-0">
+        <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#090b0a]/90 backdrop-blur-xl">
+          <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <div>
-              <h2 className="text-lg font-bold text-foreground">Kitchen Batch Cooking & Packing Breakdown</h2>
-              <p className="text-xs text-muted-foreground">Aggregated SKU requirements for the lunch service shift</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Platform control center</p>
+              <h1 className="mt-1 text-sm font-semibold sm:text-base">
+                {activeTab === "overview" ? "Overview" : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+              </h1>
             </div>
-            <Button size="sm" onClick={handleLockCutoff} className="font-bold text-xs">
-              🔒 Force Cutoff Lock
-            </Button>
+            <div className="flex items-center gap-2">
+              <span className="hidden items-center gap-1.5 rounded-full border border-emerald-400/15 bg-emerald-400/5 px-2.5 py-1 text-[10px] font-semibold text-emerald-300 sm:flex">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Live
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchDashboard}
+                disabled={actionLoading}
+                className="h-9 rounded-xl border-white/[0.1] bg-white/[0.02] text-xs"
+              >
+                <RefreshCw className={actionLoading ? "mr-2 h-3.5 w-3.5 animate-spin" : "mr-2 h-3.5 w-3.5"} />
+                Refresh
+              </Button>
+              <Link href="/" className="hidden h-9 items-center rounded-xl border border-white/[0.1] px-3 text-xs text-muted-foreground hover:bg-white/[0.03] hover:text-foreground sm:flex">
+                Home
+              </Link>
+            </div>
           </div>
+        </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 text-center space-y-1">
-                <span className="text-xs text-muted-foreground font-semibold">Standard Veg Thalis</span>
-                <span className="text-3xl font-black font-mono text-primary block">142</span>
-                <span className="text-[11px] text-muted-foreground">Sharma Homestyle Kitchen</span>
-              </CardContent>
-            </Card>
+        <main className="mx-auto max-w-[1380px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+          {feedback && (
+            <div className={feedback.type === "success"
+              ? "mb-5 flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-xs text-primary"
+              : "mb-5 flex items-center justify-between rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-xs text-destructive"}
+            >
+              <span>{feedback.message}</span>
+              <button type="button" onClick={() => setFeedback(null)} className="text-current opacity-70 hover:opacity-100">×</button>
+            </div>
+          )}
 
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 text-center space-y-1">
-                <span className="text-xs text-muted-foreground font-semibold">Farm Fresh Milk 1L</span>
-                <span className="text-3xl font-black font-mono text-primary block">210</span>
-                <span className="text-[11px] text-muted-foreground">Gokul Farm Dairy</span>
-              </CardContent>
-            </Card>
+          <section className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-5">
+            {[
+              ["Vendors", overview ? String(overview.verifiedVendors) + "/" + String(overview.totalVendors) : "—", overview ? String(overview.pendingVendors) + " pending" : "—"],
+              ["Households", String(overview?.totalHouseholds || 0), "active records"],
+              ["Today", String(overview?.todayDeliveriesCount || 0), String(overview?.deliveredCount || 0) + " delivered"],
+              ["Disputes", String(overview?.openDisputesCount || 0), "open cases"],
+              ["GMV", overview ? formatINR((overview.monthlyGmvPaise || 0) as Paise) : "₹0", "current window"],
+            ].map(([label, value, detail]) => (
+              <div key={label} className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-5">
+                <p className="text-[10px] font-medium text-muted-foreground">{label}</p>
+                <p className="mt-3 text-xl font-semibold tracking-tight">{value}</p>
+                <p className="mt-1 text-[10px] text-subtle">{detail}</p>
+              </div>
+            ))}
+          </section>
 
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 text-center space-y-1">
-                <span className="text-xs text-muted-foreground font-semibold">20L RO Water Jars</span>
-                <span className="text-3xl font-black font-mono text-primary block">86</span>
-                <span className="text-[11px] text-muted-foreground">PureAqua Systems</span>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 6: ASSETS & CONTAINERS */}
-      {activeTab === "assets" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">High-Value Circulating Asset Tracking</h2>
-            <Button size="sm" onClick={() => setShowExchangeModal(true)} className="font-bold text-xs">
-              🛢️ Record Doorstep Container Swap
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {assetHoldings.map((a, idx) => (
-              <Card key={idx} className="bg-card border-border shadow-sm">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-xs font-bold text-foreground block">{a.assetType.replace(/_/g, " ")}</span>
-                      <span className="text-[11px] text-muted-foreground font-mono">Holder: {a.customerId}</span>
-                    </div>
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {a.holdingCount} units
-                    </Badge>
-                  </div>
-
-                  <div className="border-t border-border/50 pt-2 text-xs flex justify-between font-mono">
-                    <span className="text-muted-foreground">Deposit Liability:</span>
-                    <strong className="text-primary font-bold">₹{a.totalDepositHeldPaise / 100}</strong>
-                  </div>
-
-                  <div className="text-[10px] text-muted-foreground">
-                    Exit Reconcile Guard: Security deposit refundable only when container count reaches 0.
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-white/[0.08] bg-white/[0.02] p-1">
+            {[
+              ["overview", "Overview"],
+              ["vendors", "Vendors"],
+              ["households", "Households"],
+              ["fulfillments", "Fulfillments"],
+              ["kitchen", "Kitchen"],
+              ["assets", "Assets"],
+              ["disputes", "Disputes"],
+              ["audit", "Audit"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id as any)}
+                className={activeTab === id
+                  ? "rounded-xl bg-primary px-3 py-2 text-[11px] font-semibold text-primary-foreground"
+                  : "rounded-xl px-3 py-2 text-[11px] font-medium text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"}
+              >
+                {label}
+              </button>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* TAB 7: DISPUTE QUEUE */}
-      {activeTab === "disputes" && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-foreground">Customer Dispute Resolution & Khata Refunds</h2>
+          {activeTab === "overview" && (
+            <div className="grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
+              <section className="rounded-3xl border border-white/[0.08] bg-[radial-gradient(circle_at_top_right,rgba(159,197,143,0.08),transparent_34%),rgba(16,20,18,0.76)] p-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Global oversight</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">Run the platform, not the tabs.</h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Vendor review, household activity, delivery state, kitchen demand, disputes and the audit trail are one controlled workflow.
+                </p>
 
-          <div className="space-y-3">
-            {disputes.map((d) => (
-              <Card key={d.id} className="bg-card border-border shadow-sm">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">{d.customerName}</span>
-                        <Badge
-                          variant={d.status === "OPEN" ? "destructive" : "secondary"}
-                          className="text-[10px] font-black uppercase"
-                        >
-                          {d.status}
-                        </Badge>
+                <div className="mt-7 grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={handleTriggerOvernight}
+                    className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 text-left transition hover:bg-white/[0.04]"
+                  >
+                    <p className="text-xs font-semibold">Generate overnight fulfillment</p>
+                    <p className="mt-1 text-[10px] leading-5 text-muted-foreground">Create daily snapshots for active recurring subscriptions.</p>
+                    <span className="mt-3 inline-flex text-[10px] font-semibold text-primary">Run engine <ChevronRight className="ml-1 h-3.5 w-3.5" /></span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={handleLockCutoff}
+                    className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 text-left transition hover:bg-white/[0.04]"
+                  >
+                    <p className="text-xs font-semibold">Lock expired cutoffs</p>
+                    <p className="mt-1 text-[10px] leading-5 text-muted-foreground">Freeze kitchen quantities after the operational window.</p>
+                    <span className="mt-3 inline-flex text-[10px] font-semibold text-primary">Lock batches <ChevronRight className="ml-1 h-3.5 w-3.5" /></span>
+                  </button>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-white/[0.08] bg-white/[0.025] p-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-subtle">Attention</p>
+                <h2 className="mt-3 text-xl font-semibold">Open disputes</h2>
+                <div className="mt-5 space-y-2">
+                  {disputes.filter((item) => item.status === "OPEN").slice(0, 5).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveTab("disputes")}
+                      className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-black/10 px-4 py-3 text-left hover:bg-white/[0.03]"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold">{item.customerName}</p>
+                        <p className="mt-1 truncate text-[10px] text-muted-foreground">{item.reason}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground font-mono">{d.customerPhone} • Reason: {d.reason}</span>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-sm font-bold font-mono text-primary">₹{d.disputedAmountPaise / 100}</span>
-                      <span className="text-[10px] text-muted-foreground block font-mono">Order {d.fulfillmentId}</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-muted/20 rounded-xl border border-border/50 text-xs space-y-1">
-                    <span className="font-semibold text-foreground block">Customer Explanation:</span>
-                    <p className="text-muted-foreground">{d.evidence.customerComment}</p>
-                    {d.evidence.driverDropNotes && (
-                      <p className="text-amber-500/90 text-[11px] pt-1">Driver Note: {d.evidence.driverDropNotes}</p>
-                    )}
-                  </div>
-
-                  {d.status === "OPEN" && (
-                    <div className="flex items-center justify-end gap-2 pt-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleResolveDispute(d.id, "UPHELD_NO_REFUND", d.disputedAmountPaise)}
-                        className="text-xs"
-                      >
-                        Dismiss Dispute
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleResolveDispute(d.id, "FULL_REFUND", d.disputedAmountPaise)}
-                        className="text-xs font-bold bg-primary text-primary-foreground"
-                      >
-                        ✓ Grant Full Refund (+Credit Khata)
-                      </Button>
-                    </div>
+                      <span className="shrink-0 text-xs font-semibold text-primary">{formatINR(item.disputedAmountPaise as Paise)}</span>
+                    </button>
+                  ))}
+                  {disputes.filter((item) => item.status === "OPEN").length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-white/[0.1] p-8 text-center text-xs text-muted-foreground">No open disputes.</div>
                   )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
+                </div>
+              </section>
+            </div>
+          )}
 
-      {/* TAB 8: AUDIT TRAIL */}
-      {activeTab === "audit" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">Tamper-Evident Platform Audit Trail</h2>
-            <Badge variant="outline" className="text-[10px] text-primary border-primary/40 font-mono">
-              ● Cryptographically Verified
-            </Badge>
-          </div>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-0 divide-y divide-border">
-              {auditLogs.map((log) => (
-                <div key={log.id} className="p-3.5 space-y-1 text-xs">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-[9px] font-black uppercase">
-                        {log.action.replace(/_/g, " ")}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground font-mono">Target: {log.targetType} ({log.targetId})</span>
+          {activeTab === "vendors" && (
+            <section className="rounded-3xl border border-white/[0.08] bg-white/[0.025]">
+              <div className="flex flex-col gap-3 border-b border-white/[0.08] px-5 py-5 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-subtle">Network</p>
+                  <h2 className="mt-2 text-xl font-semibold">Vendor operations</h2>
+                </div>
+                <Button size="sm" className="h-9 rounded-xl text-xs" onClick={() => setShowNewVendorModal(true)}>Add vendor</Button>
+              </div>
+              <div className="divide-y divide-white/[0.07]">
+                {vendors.map((vendor) => (
+                  <div key={vendor.id} className="grid gap-4 px-5 py-5 lg:grid-cols-[1.35fr_.7fr_.7fr_auto] lg:items-center">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-sm font-semibold">{vendor.businessName}</p>
+                        <span className="rounded-full border border-white/[0.1] bg-white/[0.02] px-2 py-0.5 text-[9px] text-muted-foreground">{vendor.status.replaceAll("_", " ")}</span>
+                      </div>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">{vendor.serviceCategories.join(" · ")} · {vendor.coveredSocieties.join(", ")}</p>
                     </div>
-                    <span className="text-[10px] text-muted-foreground font-mono">{log.createdAt}</span>
+                    <div>
+                      <p className="text-xs font-semibold">{vendor.subscriberCount} subscribers</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">{formatINR(vendor.monthlyVolumePaise as Paise)}</p>
+                    </div>
+                    <select
+                      value={vendor.tier}
+                      onChange={(event) => handleTierChange(vendor.id, event.target.value as any)}
+                      className="h-9 rounded-xl border border-white/[0.1] bg-white/[0.02] px-3 text-xs"
+                    >
+                      <option value="STARTER">Starter</option>
+                      <option value="GROWTH">Growth</option>
+                      <option value="PRO">Pro</option>
+                    </select>
+                    <div className="flex gap-2 lg:justify-end">
+                      {vendor.status === "PENDING_VERIFICATION" && (
+                        <Button size="sm" className="h-8 rounded-lg text-[10px]" onClick={() => handleVerifyVendor(vendor.id)}>Verify</Button>
+                      )}
+                      {vendor.status === "VERIFIED" && (
+                        <Button size="sm" variant="outline" className="h-8 rounded-lg border-white/[0.1] text-[10px]" onClick={() => handleSuspendVendor(vendor.id)}>Suspend</Button>
+                      )}
+                      {vendor.status === "SUSPENDED" && (
+                        <Button size="sm" variant="outline" className="h-8 rounded-lg border-white/[0.1] text-[10px]" onClick={() => handleReactivateVendor(vendor.id)}>Reactivate</Button>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-foreground leading-snug">{log.details}</p>
-                  <span className="text-[10px] text-muted-foreground block font-mono">Actor: {log.adminEmail}</span>
+                ))}
+                {vendors.length === 0 && <div className="p-10 text-center text-xs text-muted-foreground">No vendor records.</div>}
+              </div>
+            </section>
+          )}
+
+          {activeTab === "households" && (
+            <section className="rounded-3xl border border-white/[0.08] bg-white/[0.025]">
+              <div className="border-b border-white/[0.08] px-5 py-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-subtle">Household network</p>
+                <h2 className="mt-2 text-xl font-semibold">Households</h2>
+              </div>
+              <div className="divide-y divide-white/[0.07]">
+                {households.map((household) => (
+                  <div key={household.id} className="grid gap-4 px-5 py-5 md:grid-cols-[1.4fr_.7fr_.7fr] md:items-center">
+                    <div>
+                      <p className="text-sm font-semibold">{household.name}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{household.societyName} · {household.towerWing} · {household.flatNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold">{household.activeSubscriptionsCount} active</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">{household.members.length} members</p>
+                    </div>
+                    <div className="md:text-right">
+                      <p className="text-xs font-semibold text-primary">{formatINR(household.khataBalancePaise as Paise)}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">Khata</p>
+                    </div>
+                  </div>
+                ))}
+                {households.length === 0 && <div className="p-10 text-center text-xs text-muted-foreground">No household records.</div>}
+              </div>
+            </section>
+          )}
+
+          {activeTab === "fulfillments" && (
+            <section className="rounded-3xl border border-white/[0.08] bg-white/[0.025]">
+              <div className="border-b border-white/[0.08] px-5 py-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-subtle">Daily flow</p>
+                <h2 className="mt-2 text-xl font-semibold">Fulfillments</h2>
+              </div>
+              <div className="divide-y divide-white/[0.07]">
+                {fulfillments.map((item) => (
+                  <div key={item.id} className="grid gap-4 px-5 py-5 lg:grid-cols-[1.2fr_.6fr_.6fr_auto] lg:items-center">
+                    <div>
+                      <p className="text-sm font-semibold">{item.items?.[0]?.productName || "Recurring service"}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{item.serviceDate} · {item.shift} · {item.customerId}</p>
+                    </div>
+                    <span className="w-fit rounded-full border border-white/[0.1] bg-white/[0.02] px-2.5 py-1 text-[9px] font-semibold text-muted-foreground">{item.status.replaceAll("_", " ")}</span>
+                    <div>
+                      <p className="text-xs font-semibold">{formatINR(item.totalPricePaise as Paise)}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">Cutoff {item.cutoffTime}</p>
+                    </div>
+                    <select
+                      value={item.status}
+                      onChange={(event) => handleTransitionFulfillment(item.id, event.target.value)}
+                      className="h-8 rounded-lg border border-white/[0.1] bg-white/[0.02] px-2 text-[10px]"
+                    >
+                      <option value="SCHEDULED">Scheduled</option>
+                      <option value="CONFIRMED">Confirmed</option>
+                      <option value="IN_PREPARATION">In preparation</option>
+                      <option value="DELIVERED">Delivered</option>
+                      <option value="SKIPPED">Skipped</option>
+                    </select>
+                  </div>
+                ))}
+                {fulfillments.length === 0 && <div className="p-10 text-center text-xs text-muted-foreground">No fulfillment records.</div>}
+              </div>
+            </section>
+          )}
+
+          {activeTab === "kitchen" && (
+            <div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
+              <section className="rounded-3xl border border-white/[0.08] bg-white/[0.025] p-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-subtle">Production snapshot</p>
+                <h2 className="mt-2 text-xl font-semibold">Kitchen batch</h2>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  {[
+                    ["Scheduled", kitchenBatches?.totalScheduled || 0],
+                    ["Confirmed", kitchenBatches?.totalConfirmed || 0],
+                    ["In prep", kitchenBatches?.totalInPrep || 0],
+                    ["Delivered", kitchenBatches?.totalDelivered || 0],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-2xl border border-white/[0.07] p-4">
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-subtle">{label}</p>
+                      <p className="mt-3 text-xl font-semibold">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <section className="rounded-3xl border border-white/[0.08] bg-white/[0.025] p-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-subtle">SKU mix</p>
+                <h2 className="mt-2 text-xl font-semibold">Production breakdown</h2>
+                <div className="mt-5 space-y-3">
+                  {Object.entries(kitchenBatches?.skuBreakdown || {}).map(([id, item]) => (
+                    <div key={id} className="rounded-2xl border border-white/[0.07] p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">{item.productName}</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">{formatINR(item.totalPaise as Paise)}</p>
+                        </div>
+                        <p className="text-lg font-semibold text-primary">{item.quantity}</p>
+                      </div>
+                      <div className="mt-3 h-1.5 rounded-full bg-white/[0.06]">
+                        <div className="h-1.5 rounded-full bg-primary" style={{ width: Math.min((item.quantity / Math.max(kitchenBatches?.totalScheduled || 1, 1)) * 100, 100) + "%" }} />
+                      </div>
+                    </div>
+                  ))}
+                  {Object.keys(kitchenBatches?.skuBreakdown || {}).length === 0 && <div className="p-10 text-center text-xs text-muted-foreground">No kitchen batch data.</div>}
+                </div>
+              </section>
+            </div>
+          )}
+
+          {activeTab === "assets" && (
+            <section className="rounded-3xl border border-white/[0.08] bg-white/[0.025]">
+              <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-5">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-subtle">Asset ledger</p>
+                  <h2 className="mt-2 text-xl font-semibold">Containers & deposits</h2>
+                </div>
+                <Button size="sm" className="h-9 rounded-xl text-xs" onClick={() => setShowExchangeModal(true)}>Record exchange</Button>
+              </div>
+              <div className="divide-y divide-white/[0.07]">
+                {assetHoldings.map((asset) => (
+                  <div key={asset.customerId + asset.assetType} className="grid gap-4 px-5 py-5 md:grid-cols-[1.2fr_.7fr_.7fr] md:items-center">
+                    <div>
+                      <p className="text-sm font-semibold">{asset.assetType}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{asset.customerId}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold">{asset.holdingCount} units</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">held</p>
+                    </div>
+                    <div className="md:text-right">
+                      <p className="text-xs font-semibold text-primary">{formatINR(asset.totalDepositHeldPaise as Paise)}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">deposit</p>
+                    </div>
+                  </div>
+                ))}
+                {assetHoldings.length === 0 && <div className="p-10 text-center text-xs text-muted-foreground">No asset holdings.</div>}
+              </div>
+            </section>
+          )}
+
+          {activeTab === "disputes" && (
+            <section className="space-y-3">
+              {disputes.map((dispute) => (
+                <div key={dispute.id} className="rounded-3xl border border-white/[0.08] bg-white/[0.025] p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-white/[0.1] bg-white/[0.02] px-2 py-1 text-[9px] font-semibold text-muted-foreground">{dispute.status}</span>
+                        <p className="text-sm font-semibold">{dispute.customerName}</p>
+                      </div>
+                      <h3 className="mt-3 text-base font-semibold">{dispute.reason}</h3>
+                      <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">{dispute.evidence.customerComment || "No customer comment provided."}</p>
+                      <p className="mt-3 text-[10px] text-subtle">{dispute.createdAt}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/[0.07] p-4 lg:min-w-[210px]">
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-subtle">Disputed amount</p>
+                      <p className="mt-2 text-2xl font-semibold text-primary">{formatINR(dispute.disputedAmountPaise as Paise)}</p>
+                      {dispute.status === "OPEN" && (
+                        <div className="mt-4 flex gap-2">
+                          <Button size="sm" className="h-8 rounded-lg text-[10px]" onClick={() => handleResolveDispute(dispute.id, "FULL_REFUND", dispute.disputedAmountPaise)}>Refund</Button>
+                          <Button size="sm" variant="outline" className="h-8 rounded-lg border-white/[0.1] text-[10px]" onClick={() => handleResolveDispute(dispute.id, "UPHELD_NO_REFUND", dispute.disputedAmountPaise)}>Uphold</Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              {disputes.length === 0 && <div className="rounded-3xl border border-dashed border-white/[0.1] p-12 text-center text-xs text-muted-foreground">No disputes.</div>}
+            </section>
+          )}
 
+          {activeTab === "audit" && (
+            <section className="rounded-3xl border border-white/[0.08] bg-white/[0.025]">
+              <div className="border-b border-white/[0.08] px-5 py-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-subtle">Governance</p>
+                <h2 className="mt-2 text-xl font-semibold">Audit log</h2>
+              </div>
+              <div className="divide-y divide-white/[0.07]">
+                {auditLogs.map((log) => (
+                  <div key={log.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[1fr_.7fr_.7fr]">
+                    <div>
+                      <p className="text-xs font-semibold">{log.action}</p>
+                      <p className="mt-1 text-[10px] leading-5 text-muted-foreground">{log.details}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-subtle">{log.targetType}</p>
+                      <p className="mt-1 break-all font-mono text-[10px] text-muted-foreground">{log.targetId}</p>
+                    </div>
+                    <div className="lg:text-right">
+                      <p className="text-[10px] text-muted-foreground">{log.adminEmail}</p>
+                      <p className="mt-1 text-[10px] text-subtle">{log.createdAt}</p>
+                    </div>
+                  </div>
+                ))}
+                {auditLogs.length === 0 && <div className="p-10 text-center text-xs text-muted-foreground">No audit events.</div>}
+              </div>
+            </section>
+          )}
+        </main>
+      </div>
       {/* MODAL 1: Onboard Vendor */}
       {showNewVendorModal && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
