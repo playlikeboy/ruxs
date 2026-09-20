@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertCircle, ArrowUpRight, BarChart3, ChevronRight, Database, Gavel, Lock, RefreshCw, ShieldCheck, Store, UsersRound, WalletCards } from "lucide-react";
 import { formatINR, Paise } from "@/src/shared/types/money";
+import { RuxsPageLoading } from "@/components/ui/LoadingState";
 
 interface AdminOverview {
   totalVendors: number;
@@ -307,10 +308,12 @@ export default function AdminClient() {
 
   if (loading && !overview) {
     return (
-      <div className="min-h-screen py-16 px-4 max-w-7xl mx-auto flex flex-col items-center justify-center space-y-3">
-        <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-muted-foreground text-sm font-mono">Loading RUXS Platform Control Cockpit...</p>
-      </div>
+      <RuxsPageLoading
+        badge="Mission Control Telemetry"
+        title="Loading Platform Operations Cockpit"
+        description="Syncing real-time ledger records, verified vendors, and automated delivery runs from Neon DB…"
+        fullPage={true}
+      />
     );
   }
 

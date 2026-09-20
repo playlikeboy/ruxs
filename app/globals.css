@@ -208,6 +208,45 @@ textarea {
   background-size: 48px 48px;
 }
 
+@keyframes ruxs-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-pulse {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.075) 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  background-size: 200% 100%;
+  animation: ruxs-shimmer 2.2s infinite ease-in-out;
+}
+
+@keyframes indeterminate-bar {
+  0% {
+    transform: translateX(-100%);
+    width: 30%;
+  }
+  50% {
+    transform: translateX(100%);
+    width: 60%;
+  }
+  100% {
+    transform: translateX(300%);
+    width: 30%;
+  }
+}
+
+.animate-indeterminate {
+  animation: indeterminate-bar 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 @media (max-width: 640px) {
   .ds-container {
     width: min(100% - 28px, 1180px);
