@@ -316,8 +316,26 @@ export class DisputeService {
       updatedAt: new Date(Date.now() - 14400 * 1000).toISOString(),
     };
 
+    const sample3: Dispute = {
+      id: "dsp_demo_03",
+      tenantId: "ten_gupta_dairy",
+      customerId: "usr_rahul",
+      customerName: "Rahul Verma (Sobha Classic B-101)",
+      customerPhone: "+919876543211",
+      fulfillmentId: "ful_milk_02",
+      reason: "WRONG_ITEM",
+      disputedAmountPaise: 4200 as Paise,
+      evidence: {
+        customerComment: "Received Buffalo milk packet instead of A2 Desi Cow Milk ordered in routine subscription.",
+      },
+      status: "OPEN",
+      createdAt: new Date(Date.now() - 10000 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 10000 * 1000).toISOString(),
+    };
+
     disputesStore.set(sample1.id, sample1);
     disputesStore.set(sample2.id, sample2);
+    disputesStore.set(sample3.id, sample3);
   }
 
   /**

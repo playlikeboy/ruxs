@@ -332,6 +332,46 @@ export class SubscriptionEngine {
     return Array.from(subscriptionsStore.values()).filter((s) => s.tenantId === tenantId);
   }
 
+  static async listAllAsync(): Promise<Subscription[]> {
+    if (!isTestEnv) {
+      try {
+        const rows = await db
+          .select({
+            sub: subscriptionsTable,
+            productName: productsTable.name,
+            productPrice: productsTable.basePricePaise,
+          })
+          .from(subscriptionsTable)
+          .leftJoin(productsTable, eq(subscriptionsTable.productId, productsTable.id));
+
+        if (rows.length > 0) {
+          return rows.map((r) => ({
+            id: r.sub.id,
+            tenantId: r.sub.tenantId,
+            customerId: r.sub.customerId,
+            householdId: r.sub.householdId || undefined,
+            productId: r.sub.productId,
+            productName: r.productName || "Subscription Service",
+            unitPricePaise: (r.productPrice || 0) as Paise,
+            cadence: r.sub.cadence as any,
+            selectedDays: r.sub.selectedDays ? r.sub.selectedDays.split(",").map(Number) : undefined,
+            defaultQuantity: r.sub.defaultQuantity,
+            autopilotDefault: r.sub.autopilotDefault as any,
+            status: r.sub.status as any,
+            startDate: r.sub.startDate,
+            endDate: r.sub.endDate || undefined,
+            createdAt: r.sub.createdAt ? r.sub.createdAt.toISOString() : new Date().toISOString(),
+            updatedAt: r.sub.createdAt ? r.sub.createdAt.toISOString() : new Date().toISOString(),
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to list all subscriptions from Neon DB:", err);
+      }
+    }
+
+    return Array.from(subscriptionsStore.values());
+  }
+
   static clearStore(): void {
     subscriptionsStore.clear();
   }

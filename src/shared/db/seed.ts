@@ -3,6 +3,16 @@ import {
   tenants as tenantsTable,
   services as servicesTable,
   products as productsTable,
+  users as usersTable,
+  households as householdsTable,
+  householdMembers as householdMembersTable,
+  subscriptions as subscriptionsTable,
+  deliveryRuns as deliveryRunsTable,
+  deliveryStops as deliveryStopsTable,
+  disputes as disputesTable,
+  householdExpenses as householdExpensesTable,
+  householdExpenseParticipants as householdExpenseParticipantsTable,
+  khataEntries as khataEntriesTable,
 } from "./schema";
 import { eq } from "drizzle-orm";
 
@@ -570,6 +580,389 @@ export async function seedDatabase(force: boolean = false): Promise<{ count: num
           }
         }
       }
+
+      const todayStr = new Date().toISOString().split("T")[0];
+
+      // 1. Seed Core Users
+      await db
+        .insert(usersTable)
+        .values([
+          {
+            id: "drv_ramesh",
+            phone: "+919876543299",
+            fullName: "Ramesh Kumar (Driver)",
+            email: "ramesh.kumar@ruxs.in",
+            role: "DRIVER",
+            tenantId: "ten_sharma_tiffin",
+            whatsappOptIn: true,
+            status: "ACTIVE",
+          },
+          {
+            id: "usr_priya",
+            phone: "+919876543210",
+            fullName: "Priya Sundaram",
+            email: "priya.sundaram@gmail.com",
+            role: "CUSTOMER",
+            tenantId: "ten_sharma_tiffin",
+            whatsappOptIn: true,
+            status: "ACTIVE",
+          },
+          {
+            id: "usr_rahul",
+            phone: "+919876543211",
+            fullName: "Rahul Verma",
+            email: "rahul.verma@gmail.com",
+            role: "CUSTOMER",
+            tenantId: "ten_sharma_tiffin",
+            whatsappOptIn: true,
+            status: "ACTIVE",
+          },
+          {
+            id: "usr_ananya",
+            phone: "+919876543217",
+            fullName: "Ananya Deshmukh",
+            email: "ananya.d@gmail.com",
+            role: "CUSTOMER",
+            tenantId: "ten_deshmukh_tiffin",
+            whatsappOptIn: true,
+            status: "ACTIVE",
+          },
+          {
+            id: "usr_suresh",
+            phone: "+919876543288",
+            fullName: "Suresh Nair",
+            email: "suresh.nair@gmail.com",
+            role: "CUSTOMER",
+            tenantId: "ten_sharma_tiffin",
+            whatsappOptIn: true,
+            status: "ACTIVE",
+          },
+        ])
+        .onConflictDoNothing();
+
+      // 2. Seed Households
+      await db
+        .insert(householdsTable)
+        .values([
+          {
+            id: "hh_sobha_b402",
+            name: "Sobha Classic B-402",
+            societyName: "Sobha Classic",
+            towerWing: "Tower B",
+            floor: "4",
+            flatNumber: "B-402",
+            city: "Bengaluru",
+            primaryOwnerId: "usr_priya",
+          },
+          {
+            id: "hh_prestige_a104",
+            name: "Prestige Falcon A-104",
+            societyName: "Prestige Falcon",
+            towerWing: "Tower A",
+            floor: "1",
+            flatNumber: "A-104",
+            city: "Bengaluru",
+            primaryOwnerId: "usr_ananya",
+          },
+        ])
+        .onConflictDoNothing();
+
+      // 3. Seed Household Members
+      await db
+        .insert(householdMembersTable)
+        .values([
+          {
+            id: "hm_priya",
+            householdId: "hh_sobha_b402",
+            userId: "usr_priya",
+            role: "PRIMARY_OWNER",
+          },
+          {
+            id: "hm_rahul",
+            householdId: "hh_sobha_b402",
+            userId: "usr_rahul",
+            role: "MEMBER",
+          },
+          {
+            id: "hm_ananya",
+            householdId: "hh_prestige_a104",
+            userId: "usr_ananya",
+            role: "PRIMARY_OWNER",
+          },
+        ])
+        .onConflictDoNothing();
+
+      // 4. Seed Subscriptions Across Milk, Water, and Tiffin
+      await db
+        .insert(subscriptionsTable)
+        .values([
+          {
+            id: "sub_priya_tiffin",
+            tenantId: "ten_sharma_tiffin",
+            customerId: "usr_priya",
+            householdId: "hh_sobha_b402",
+            productId: "prod_sharma_lunch_thali",
+            defaultQuantity: 1,
+            shift: "LUNCH",
+            instructions: "Leave dabba on shoe rack outside door, ring bell once",
+            status: "ACTIVE",
+            cadence: "DAILY",
+            startDate: todayStr,
+          },
+          {
+            id: "sub_priya_milk",
+            tenantId: "ten_gupta_dairy",
+            customerId: "usr_priya",
+            householdId: "hh_sobha_b402",
+            productId: "prod_gupta_cow_milk",
+            defaultQuantity: 2,
+            shift: "MORNING",
+            instructions: "Drop glass bottles in insulated bag",
+            status: "ACTIVE",
+            cadence: "DAILY",
+            startDate: todayStr,
+          },
+          {
+            id: "sub_priya_water",
+            tenantId: "ten_aquapure_water",
+            customerId: "usr_priya",
+            householdId: "hh_sobha_b402",
+            productId: "prod_aqua_20l_can",
+            defaultQuantity: 1,
+            shift: "MORNING",
+            instructions: "Collect empty 20L bubbletop can from foyer",
+            status: "ACTIVE",
+            cadence: "CUSTOM",
+            startDate: todayStr,
+          },
+          {
+            id: "sub_rahul_tiffin",
+            tenantId: "ten_sharma_tiffin",
+            customerId: "usr_rahul",
+            householdId: "hh_sobha_b402",
+            productId: "prod_sharma_dinner_thali",
+            defaultQuantity: 1,
+            shift: "EVENING",
+            instructions: "Deliver hot between 7:30 PM and 8:30 PM",
+            status: "ACTIVE",
+            cadence: "DAILY",
+            startDate: todayStr,
+          },
+        ])
+        .onConflictDoNothing();
+
+      // 5. Seed Delivery Runs & Stops
+      await db
+        .insert(deliveryRunsTable)
+        .values([
+          {
+            id: "run_2026-09-12_lunch_drv_ramesh",
+            tenantId: "ten_sharma_tiffin",
+            driverId: "drv_ramesh",
+            driverName: "Ramesh Kumar",
+            date: todayStr,
+            shift: "LUNCH",
+            totalStops: 4,
+            completedStops: 1,
+            skippedStops: 0,
+            failedStops: 0,
+            status: "IN_PROGRESS",
+          },
+        ])
+        .onConflictDoNothing();
+
+      await db
+        .insert(deliveryStopsTable)
+        .values([
+          {
+            id: "stop_run_lunch_01",
+            runId: "run_2026-09-12_lunch_drv_ramesh",
+            fulfillmentId: "ful_run_lunch_01",
+            customerId: "usr_priya",
+            customerName: "Priya Sundaram",
+            customerPhone: "+91 98765 43210",
+            society: "Sobha Classic",
+            tower: "Tower B",
+            floor: 4,
+            flat: "B-402",
+            serviceName: "Daily Executive Veg Lunch",
+            quantity: 1,
+            status: "DELIVERED",
+            dropPreference: "DOORSTEP",
+            notes: "Ring doorbell once, leave on shoe rack",
+            deliveredAt: "12:15 PM",
+            assetDelivered: 1,
+            assetCollected: 1,
+          },
+          {
+            id: "stop_run_lunch_02",
+            runId: "run_2026-09-12_lunch_drv_ramesh",
+            fulfillmentId: "ful_run_lunch_02",
+            customerId: "usr_rahul",
+            customerName: "Rahul Verma",
+            customerPhone: "+91 98765 43211",
+            society: "Sobha Classic",
+            tower: "Tower B",
+            floor: 1,
+            flat: "B-101",
+            serviceName: "Daily Executive Veg Lunch",
+            quantity: 1,
+            status: "PENDING",
+            dropPreference: "HANDOVER",
+            notes: "Hand over directly to security if flat bell unacknowledged",
+          },
+          {
+            id: "stop_run_lunch_03",
+            runId: "run_2026-09-12_lunch_drv_ramesh",
+            fulfillmentId: "ful_run_lunch_03",
+            customerId: "usr_ananya",
+            customerName: "Ananya Deshmukh",
+            customerPhone: "+91 98765 43217",
+            society: "Sobha Classic",
+            tower: "Tower A",
+            floor: 8,
+            flat: "A-804",
+            serviceName: "Jain Satvik Thali",
+            quantity: 1,
+            status: "PENDING",
+            dropPreference: "DOORSTEP",
+          },
+          {
+            id: "stop_run_lunch_04",
+            runId: "run_2026-09-12_lunch_drv_ramesh",
+            fulfillmentId: "ful_run_lunch_04",
+            customerId: "usr_suresh",
+            customerName: "Suresh Nair",
+            customerPhone: "+91 98765 43288",
+            society: "Sobha Classic",
+            tower: "Tower C",
+            floor: 2,
+            flat: "C-203",
+            serviceName: "Homestyle Dal Roti",
+            quantity: 2,
+            status: "PENDING",
+            dropPreference: "SECURITY_GATE",
+          },
+        ])
+        .onConflictDoNothing();
+
+      // 6. Seed Disputes
+      await db
+        .insert(disputesTable)
+        .values([
+          {
+            id: "dsp_demo_01",
+            tenantId: "ten_sharma_tiffin",
+            customerId: "usr_rahul",
+            customerName: "Rahul Verma (Sobha Classic B-101)",
+            customerPhone: "+91 98765 43211",
+            fulfillmentId: "ful_run_lunch_02",
+            reason: "LATE_DELIVERY",
+            disputedAmountPaise: 16000,
+            status: "OPEN",
+            customerComment: "Lunch arrived 1 hour past the office break cutoff window. Container was cold.",
+          },
+          {
+            id: "dsp_demo_02",
+            tenantId: "ten_aquapure_water",
+            customerId: "usr_priya",
+            customerName: "Priya Sundaram (Sobha Classic B-402)",
+            customerPhone: "+91 98765 43210",
+            fulfillmentId: "ful_demo_water_01",
+            reason: "DAMAGED_OR_LEAKING",
+            disputedAmountPaise: 8000,
+            status: "OPEN",
+            customerComment: "The tamper-proof neck seal of the 20L water can was broken on arrival.",
+          },
+          {
+            id: "dsp_demo_03",
+            tenantId: "ten_gupta_dairy",
+            customerId: "usr_rahul",
+            customerName: "Rahul Verma (Sobha Classic B-101)",
+            customerPhone: "+91 98765 43211",
+            fulfillmentId: "ful_demo_milk_01",
+            reason: "WRONG_ITEM",
+            disputedAmountPaise: 4200,
+            status: "OPEN",
+            customerComment: "Received Buffalo milk packet instead of A2 Desi Cow Milk ordered.",
+          },
+        ])
+        .onConflictDoNothing();
+
+      // 7. Seed Household Expenses
+      await db
+        .insert(householdExpensesTable)
+        .values([
+          {
+            id: "exp_sobha_groceries",
+            householdId: "hh_sobha_b402",
+            description: "Sobha B-402 Monthly Dairy & Water Pool",
+            totalAmountPaise: 240000,
+            paidByUserId: "usr_priya",
+            paidByName: "Priya Sundaram",
+            paidByUpi: "priya@okaxis",
+            strategy: "EQUAL",
+            isFullySettled: false,
+          },
+        ])
+        .onConflictDoNothing();
+
+      await db
+        .insert(householdExpenseParticipantsTable)
+        .values([
+          {
+            id: "exp_part_priya",
+            expenseId: "exp_sobha_groceries",
+            userId: "usr_priya",
+            name: "Priya Sundaram",
+            phone: "+919876543210",
+            sharePaise: 120000,
+            isSettled: true,
+            upiId: "priya@okaxis",
+          },
+          {
+            id: "exp_part_rahul",
+            expenseId: "exp_sobha_groceries",
+            userId: "usr_rahul",
+            name: "Rahul Verma",
+            phone: "+919876543211",
+            sharePaise: 120000,
+            isSettled: false,
+            upiId: "rahul@oksbi",
+          },
+        ])
+        .onConflictDoNothing();
+
+      // 8. Seed Digital Khata Ledger
+      await db
+        .insert(khataEntriesTable)
+        .values([
+          {
+            id: "kht_priya_credit_01",
+            tenantId: "ten_sharma_tiffin",
+            customerId: "usr_priya",
+            entryType: "PAYMENT",
+            direction: "CREDIT",
+            amountPaise: 300000,
+            runningBalancePaise: -300000,
+            referenceType: "PAYMENT",
+            referenceId: "upi_tx_seed_01",
+            description: "Monthly advance deposit for Executive Veg Lunch",
+          },
+          {
+            id: "kht_priya_debit_01",
+            tenantId: "ten_sharma_tiffin",
+            customerId: "usr_priya",
+            entryType: "FULFILLMENT_CHARGE",
+            direction: "DEBIT",
+            amountPaise: 12000,
+            runningBalancePaise: -288000,
+            referenceType: "FULFILLMENT",
+            referenceId: "ful_run_lunch_01",
+            description: "Daily Executive Veg Lunch fulfilled",
+          },
+        ])
+        .onConflictDoNothing();
     } catch (error) {
       console.warn("Neon DB seed skipped or failed, fallback to memory:", error);
     }

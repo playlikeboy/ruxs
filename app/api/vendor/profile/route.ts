@@ -8,7 +8,13 @@ export async function GET(request: Request) {
     const slug = searchParams.get("slug");
     const tenantId = searchParams.get("tenantId") || searchParams.get("id");
 
-    const identifier = slug || tenantId || "ten_sharma_tiffin";
+    const adminVendors = await AdminService.listVendorsAsync();
+    const defaultVendor = adminVendors[0];
+    const identifier = slug || tenantId || defaultVendor?.slug || defaultVendor?.id;
+
+    if (!identifier) {
+      return Response.json(createErrorResponse("NOT_FOUND", "No vendors found in system"), { status: 404 });
+    }
 
     // 1. Try VendorService
     let vendor = await VendorService.getVendorBySlug(identifier);
@@ -18,7 +24,6 @@ export async function GET(request: Request) {
 
     // 2. If not found, check AdminService list
     if (!vendor) {
-      const adminVendors = await AdminService.listVendorsAsync();
       const match = adminVendors.find((v) => v.slug === identifier || v.id === identifier);
       if (match) {
         vendor = {

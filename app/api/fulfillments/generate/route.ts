@@ -11,9 +11,19 @@ export async function POST(request: Request) {
     };
 
     const serviceDate = body.serviceDate || new Date().toISOString().split("T")[0];
-    const tenantId = body.tenantId || "ten_sharma_tiffin";
+    const requestedTenantId = body.tenantId;
 
-    const subscriptions = await SubscriptionEngine.listByTenant(tenantId);
+    if (!requestedTenantId || requestedTenantId === "ALL") {
+      const allSubscriptions = await SubscriptionEngine.listAllAsync();
+      const generated = FulfillmentGenerator.generateForDate(allSubscriptions, {
+        serviceDate,
+        cutoffTimeStr: body.cutoffTimeStr || "10:00",
+        shift: "LUNCH",
+      });
+      return Response.json(createSuccessResponse(generated), { status: 201 });
+    }
+
+    const subscriptions = await SubscriptionEngine.listByTenant(requestedTenantId);
     const generated = FulfillmentGenerator.generateForDate(subscriptions, {
       serviceDate,
       cutoffTimeStr: body.cutoffTimeStr || "10:00",

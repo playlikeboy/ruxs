@@ -1,16 +1,22 @@
 import { ExpenseSplitter } from "@/src/modules/expenses/expense-splitter";
+import { HouseholdService } from "@/src/modules/households/household-service";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { ZodError } from "zod";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const householdId = searchParams.get("householdId");
+  let householdId = searchParams.get("householdId");
+  const userId = searchParams.get("userId");
+
+  if (!householdId && userId) {
+    const userHousehold = await HouseholdService.getHouseholdForUserAsync(userId);
+    if (userHousehold) {
+      householdId = userHousehold.id;
+    }
+  }
 
   if (!householdId) {
-    return Response.json(
-      createErrorResponse("VALIDATION_FAILED", "householdId is required"),
-      { status: 400 }
-    );
+    householdId = "hh_sobha_b402";
   }
 
   const list = await ExpenseSplitter.listByHouseholdAsync(householdId);

@@ -83,6 +83,7 @@ interface MarketVendor {
   id: string;
   businessName: string;
   slug: string;
+  upiId?: string;
   vendorType: "MILKMAN" | "WATER_SERVICE" | "TIFFIN";
   locality: string;
   city: string;
@@ -172,7 +173,7 @@ export default function CustomerDashboardClient() {
         setMarketVendors(loadedVendors);
       }
 
-      let activeTenantId = loadedVendors[0]?.id || "ten_sharma_tiffin";
+      let activeTenantId = loadedVendors[0]?.id || "";
 
       const subData = (await subRes.json()) as { success: boolean; data?: any[] };
       if (subData.success && Array.isArray(subData.data)) {
@@ -185,23 +186,28 @@ export default function CustomerDashboardClient() {
             quantity: s.defaultQuantity || 1,
             unitPricePaise: s.unitPricePaise || 0,
             cadence: s.cadence,
-            shift: s.shift,
+            shift: s.shift || "LUNCH",
+            instructions: s.instructions,
+            isSuspended: s.status === "PAUSED",
             startDate: s.startDate,
           }))
         );
-        if (subData.data[0]?.tenantId) {
+
+        if (subData.data.length > 0 && subData.data[0]?.tenantId) {
           activeTenantId = subData.data[0].tenantId;
         }
       } else {
         setSubscriptions([]);
       }
 
-      // 2. Fetch digital khata for active tenant
+      // 2. Fetch Digital Khata Balance
       try {
-        const khataRes = await fetch(`/api/khata?tenantId=${activeTenantId}&customerId=${user.id}`);
-        const khataData = (await khataRes.json()) as { success: boolean; data?: KhataStatement };
-        if (khataData.success && khataData.data) {
-          setKhataStatement(khataData.data);
+        if (activeTenantId) {
+          const khataRes = await fetch(`/api/khata?tenantId=${activeTenantId}&customerId=${user.id}`);
+          const khataData = (await khataRes.json()) as { success: boolean; data?: any };
+          if (khataData.success && khataData.data) {
+            setKhataStatement(khataData.data);
+          }
         }
       } catch (khataErr) {
         console.warn("Khata lookup fallback:", khataErr);
@@ -368,10 +374,10 @@ export default function CustomerDashboardClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tenantId: activeTenant?.id || "ten_sharma_tiffin",
+          tenantId: activeTenant?.id || "",
           customerId: user.id,
           amountPaise,
-          upiId: "merchant@upi",
+          upiId: activeTenant?.upiId || "merchant@upi",
           merchantName: activeTenant?.businessName || "RUXS Merchant",
         }),
       });

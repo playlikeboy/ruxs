@@ -303,8 +303,8 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
   };
 
   const handleLockCutoff = () => {
-    if (confirm("Force lock expired cutoffs and freeze kitchen cooking batch counts?")) {
-      executeAction("LOCK_CUTOFF", { tenantId: "ten_sharma_tiffin", serviceDate: overview?.serviceDate });
+    if (confirm("Force lock expired cutoffs and freeze kitchen cooking batch counts for all active vendors?")) {
+      executeAction("LOCK_CUTOFF", { tenantId: "ALL", serviceDate: overview?.serviceDate });
     }
   };
 

@@ -1,4 +1,5 @@
 import { CutoffEngine } from "@/src/modules/cutoff/cutoff-engine";
+import { AdminService } from "@/src/modules/admin/admin-service";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 
 export async function POST(request: Request) {
@@ -9,11 +10,25 @@ export async function POST(request: Request) {
       evaluationTime?: string;
     };
 
-    const tenantId = body.tenantId || "ten_sharma_tiffin";
+    const requestedTenantId = body.tenantId;
     const serviceDate = body.serviceDate || new Date().toISOString().split("T")[0];
 
+    if (!requestedTenantId || requestedTenantId === "ALL") {
+      const allTenants = await AdminService.listVendorsAsync();
+      let totalLocked = 0;
+      const allUpdated: any[] = [];
+
+      for (const t of allTenants) {
+        const res = CutoffEngine.lockExpiredCutoffs(t.id, serviceDate, body.evaluationTime);
+        totalLocked += res.lockedCount;
+        allUpdated.push(...res.updatedFulfillments);
+      }
+
+      return Response.json(createSuccessResponse({ lockedCount: totalLocked, updatedFulfillments: allUpdated }));
+    }
+
     const result = CutoffEngine.lockExpiredCutoffs(
-      tenantId,
+      requestedTenantId,
       serviceDate,
       body.evaluationTime
     );
