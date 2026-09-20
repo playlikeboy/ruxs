@@ -5,6 +5,7 @@
     "": {
       "name": "ruxx",
       "dependencies": {
+        "@animateicons/react": "^0.3.3",
         "@base-ui/react": "^1.8.0",
         "@hexclave/next": "^1.0.121",
         "@neondatabase/serverless": "^1.1.0",
@@ -46,6 +47,8 @@
     "@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@4.0.51", "", { "dependencies": { "@ai-sdk/provider": "3.0.16", "@standard-schema/spec": "^1.1.0", "eventsource-parser": "^3.0.8", "undici": "^6.28.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-ukLTs9x1Xm6lxSIwbJIxYQxbZHmVeIczNntARZrBcOa6pjdBhqeZnATNnJMHa7M9dZ8Ji5NJbpKpvz7o5XyBtg=="],
 
     "@ai-sdk/react": ["@ai-sdk/react@3.0.283", "", { "dependencies": { "@ai-sdk/provider-utils": "4.0.51", "ai": "6.0.280", "swr": "^2.2.5", "throttleit": "2.1.0" }, "peerDependencies": { "react": "^18 || ~19.0.1 || ~19.1.2 || ^19.2.1" } }, "sha512-47b59257v/PkUHfr/GBi9P2fqimbSIqhwAUKZWFgO9b40iMEJCwbNhlx1INyDzrn3gTf/k3S8clu24O0akazdg=="],
+
+    "@animateicons/react": ["@animateicons/react@0.3.3", "", { "peerDependencies": { "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0" } }, "sha512-18w3igRcp+dj+okHWAERIZZvZ2beKYPQDgRwpKk4TZA3SIm8+gwQI6UzioRN5oZnNQqy4A7r4xwRObu8WbqriA=="],
 
     "@alloc/quick-lru": ["@alloc/quick-lru@5.3.0", "", {}, "sha512-U4+70Pc5ZS9osnCBCE5Jha/ciHM+Yp+CNMNC/7HvYbNRk1Ldd+f7qO65W5qfhu/TCv+/ozljlXXe9Nj8419DMA=="],
 
