@@ -11,7 +11,7 @@ export const hexclaveClientApp = new HexclaveClientApp({
       type: "hosted",
     },
     signIn: "/login",
-    afterSignIn: "/customer/dashboard",
+    afterSignIn: "/login?oauth=complete",
     afterSignOut: "/login",
   },
 });
