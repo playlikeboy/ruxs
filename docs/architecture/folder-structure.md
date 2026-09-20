@@ -11,19 +11,24 @@ RUXS follows a domain-oriented modular Next.js App Router structure:
 ```
 ruxx/
 ├── app/                              # Next.js App Router Entry Points
-│   ├── (auth)/                       # Authentication Route Group
-│   │   ├── login/page.tsx            # Phone OTP Login Page
-│   │   └── verify/page.tsx           # OTP Verification Screen
-│   ├── (customer)/                   # Customer Route Group
-│   │   ├── dashboard/page.tsx        # Customer Command Center
-│   │   ├── khata/page.tsx            # Digital Khata Ledger View
-│   │   └── pay/[id]/page.tsx         # Direct UPI Payment Link Screen
-│   ├── (vendor)/                     # Vendor Portal Route Group
-│   │   ├── vendor/page.tsx           # Live Kitchen Batch Prep Dashboard
-│   │   ├── vendor/customers/page.tsx # Customer Roster Management
-│   │   └── vendor/services/page.tsx  # Service & Cutoff Configuration
-│   ├── (driver)/                     # Driver Route Group
-│   │   └── driver/run/page.tsx       # Live Sequenced Delivery Run Sheet
+│   ├── (app)/                         # Marketing + public application shell
+│   │   ├── page.tsx                  # Public landing page
+│   │   ├── login/                    # Shared authentication entry
+│   │   ├── subscribe/                # Customer service setup
+│   │   └── ...                       # Public/secondary application pages
+│   ├── (portal)/                      # Isolated authenticated operational workspaces
+│   │   ├── customer/
+│   │   │   └── dashboard/            # Customer household command center
+│   │   └── vendor/
+│   │       ├── dashboard/            # Vendor operations command center
+│   │       ├── services/             # Service & pricing configuration
+│   │       └── onboard/              # Customer invite/onboarding
+│   ├── (admin)/                       # Isolated platform administration workspace
+│   │   └── admin/                    # Platform control center
+│   ├── api/                           # HTTP Route Handlers
+│   │   ├── auth/                     # Auth, session and role destination handlers
+│   │   ├── webhooks/                 # Ingress Webhooks (WhatsApp, Payments)
+│   │   └── crons/                    # Scheduled Worker Triggers
 │   ├── api/                          # HTTP Route Handlers
 │   │   ├── auth/                     # OTP Request & Verification Handlers
 │   │   ├── webhooks/                 # Ingress Webhooks (WhatsApp, Payments)
