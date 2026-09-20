@@ -8,7 +8,6 @@ import {
   ArrowRight,
   Calendar,
   Check,
-  CircleAlert,
   Home,
   Link2,
   Lock,
@@ -119,7 +118,7 @@ export default function HouseholdClient() {
   if (!household) {
     return (
       <div className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-6">
-        <CircleAlert size={22} className="mx-auto text-subtle" />
+        <X size={22} className="mx-auto text-subtle" />
         <h1 className="mt-4 text-xl font-semibold">Household details are unavailable</h1>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">Refresh the workspace or complete household setup before inviting members.</p>
         <div className="mt-5 flex justify-center gap-2">
