@@ -30,7 +30,7 @@
     {
       "name": "Start a service",
       "short_name": "Start",
-      "url": "/subscribe",
+      "url": "/customer/subscribe",
       "icons": [{ "src": "/pwa/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
     },
     {
