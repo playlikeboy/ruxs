@@ -128,8 +128,8 @@ export default function OnboardClient() {
               </div>
 
               <div className="mt-6 space-y-4">
-                <Field label="Full name"><input required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Sh Raj" className="input" /></Field>
-                <Field label="Mobile number"><input required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="9876543210" className="input" /></Field>
+                <Field label="Full name"><input required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Sh Raj" className="h-11 w-full rounded-xl border border-white/[0.09] bg-white/[0.02] px-3 text-sm text-foreground outline-none placeholder:text-subtle focus:border-ring" /></Field>
+                <Field label="Mobile number"><input required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="9876543210" className="h-11 w-full rounded-xl border border-white/[0.09] bg-white/[0.02] px-3 text-sm text-foreground outline-none placeholder:text-subtle focus:border-ring" /></Field>
 
                 <label className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-black/10 p-4">
                   <input type="checkbox" checked={whatsappOptIn} onChange={(e) => setWhatsappOptIn(e.target.checked)} className="h-4 w-4 accent-primary" />
@@ -151,11 +151,11 @@ export default function OnboardClient() {
               </div>
 
               <div className="mt-6 space-y-4">
-                <Field label="Society / layout"><input required value={societyName} onChange={(e) => setSocietyName(e.target.value)} placeholder="Sobha Classic" className="input" /></Field>
+                <Field label="Society / layout"><input required value={societyName} onChange={(e) => setSocietyName(e.target.value)} placeholder="Sobha Classic" className="h-11 w-full rounded-xl border border-white/[0.09] bg-white/[0.02] px-3 text-sm text-foreground outline-none placeholder:text-subtle focus:border-ring" /></Field>
                 <div className="grid grid-cols-3 gap-2">
-                  <Field label="Tower"><input required value={towerWing} onChange={(e) => setTowerWing(e.target.value)} placeholder="B" className="input" /></Field>
-                  <Field label="Floor"><input required value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="4" className="input" /></Field>
-                  <Field label="Flat"><input required value={flatNumber} onChange={(e) => setFlatNumber(e.target.value)} placeholder="402" className="input" /></Field>
+                  <Field label="Tower"><input required value={towerWing} onChange={(e) => setTowerWing(e.target.value)} placeholder="B" className="h-11 w-full rounded-xl border border-white/[0.09] bg-white/[0.02] px-3 text-sm text-foreground outline-none placeholder:text-subtle focus:border-ring" /></Field>
+                  <Field label="Floor"><input required value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="4" className="h-11 w-full rounded-xl border border-white/[0.09] bg-white/[0.02] px-3 text-sm text-foreground outline-none placeholder:text-subtle focus:border-ring" /></Field>
+                  <Field label="Flat"><input required value={flatNumber} onChange={(e) => setFlatNumber(e.target.value)} placeholder="402" className="h-11 w-full rounded-xl border border-white/[0.09] bg-white/[0.02] px-3 text-sm text-foreground outline-none placeholder:text-subtle focus:border-ring" /></Field>
                 </div>
 
                 <div>
@@ -182,7 +182,7 @@ export default function OnboardClient() {
                   </div>
                 </div>
 
-                <Field label="Optional delivery note"><input value={deliveryNotes} onChange={(e) => setDeliveryNotes(e.target.value)} placeholder="Leave the tiffin on the wooden hook" className="input" /></Field>
+                <Field label="Optional delivery note"><input value={deliveryNotes} onChange={(e) => setDeliveryNotes(e.target.value)} placeholder="Leave the tiffin on the wooden hook" className="h-11 w-full rounded-xl border border-white/[0.09] bg-white/[0.02] px-3 text-sm text-foreground outline-none placeholder:text-subtle focus:border-ring" /></Field>
               </div>
             </section>
 
