@@ -17,8 +17,12 @@ ruxx/
 │   │   ├── subscribe/                # Customer service setup
 │   │   └── ...                       # Public/secondary application pages
 │   ├── (portal)/                      # Isolated authenticated operational workspaces
-│   │   ├── customer/
-│   │   │   └── dashboard/            # Customer household command center
+│   │   ├── customer/                  # Shared customer workspace chrome
+│   │   │   ├── dashboard/             # Customer household command center
+│   │   │   ├── subscribe/             # Recurring services workspace
+│   │   │   ├── household/             # Flatmates & permissions
+│   │   │   ├── expenses/              # Shared expense settlement
+│   │   │   └── onboard/               # Household profile setup
 │   │   └── vendor/
 │   │       ├── dashboard/            # Vendor operations command center
 │   │       ├── services/             # Service & pricing configuration
