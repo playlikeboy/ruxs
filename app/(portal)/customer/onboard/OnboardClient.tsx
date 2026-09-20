@@ -8,7 +8,7 @@ import {
   Home,
   MessageCircle,
   Package,
-  Shield,
+  Lock,
 } from "@/components/icons/animated";
 
 interface CustomerCreatedState {
@@ -188,7 +188,7 @@ export default function OnboardClient() {
 
             <div className="lg:col-span-2 rounded-3xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6">
               <div className="flex items-start gap-3">
-                <Shield size={16} className="mt-0.5 text-primary" />
+                <Lock size={16 className="mt-0.5 text-primary" />
                 <p className="text-[10px] leading-5 text-muted-foreground">RUXS uses the household details above to keep recurring deliveries consistent. You can change service settings later without rebuilding your household.</p>
               </div>
               <button type="submit" disabled={loading} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-xs font-semibold text-primary-foreground disabled:opacity-50">
