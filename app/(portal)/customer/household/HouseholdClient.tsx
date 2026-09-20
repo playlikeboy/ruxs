@@ -12,10 +12,10 @@ import {
   Home,
   Link2,
   Lock,
-  Plus,
   Settings,
   UserPlus,
   Users,
+  Wallet,
   X,
 } from "@/components/icons/animated";
 
