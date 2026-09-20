@@ -23,6 +23,7 @@ const items = [
 
 export default function CustomerPortalNav({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const today = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short" }).format(new Date());
 
   return (
     <div className="min-h-screen bg-[#0b0d0c] text-foreground">
@@ -92,7 +93,7 @@ export default function CustomerPortalNav({ children }: { children: ReactNode })
               <div className="flex items-center gap-2">
                 <span className="hidden items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.025] px-2.5 py-1 text-[9px] text-muted-foreground sm:flex">
                   <Calendar size={12} />
-                  Sunday, 20 Sep
+                  {today}
                 </span>
                 <Link href="/customer/dashboard" className="rounded-xl border border-white/[0.08] px-3 py-2 text-[10px] font-semibold text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground">My overview</Link>
               </div>
