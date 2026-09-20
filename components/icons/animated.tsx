@@ -1,0 +1,28 @@
+"use client";
+
+export { default as ArrowRight } from "@animateicons/react/lucide/arrow-right-icon";
+export { default as Calendar } from "@animateicons/react/lucide/calendar-icon";
+export { default as Check } from "@animateicons/react/lucide/check-icon";
+export { default as ChevronRight } from "@animateicons/react/lucide/chevron-right-icon";
+export { default as ChefHat } from "@animateicons/react/lucide/chef-hat-icon";
+export { default as CircleAlert } from "@animateicons/react/lucide/circle-alert-icon";
+export { default as Clock } from "@animateicons/react/lucide/clock-icon";
+export { default as CreditCard } from "@animateicons/react/lucide/credit-card-icon";
+export { default as Home } from "@animateicons/react/lucide/house-icon";
+export { default as Link2 } from "@animateicons/react/lucide/link-icon";
+export { default as Lock } from "@animateicons/react/lucide/lock-icon";
+export { default as LogOut } from "@animateicons/react/lucide/log-out-icon";
+export { default as Package } from "@animateicons/react/lucide/package-icon";
+export { default as Pause } from "@animateicons/react/lucide/pause-icon";
+export { default as Play } from "@animateicons/react/lucide/play-icon";
+export { default as Plus } from "@animateicons/react/lucide/plus-icon";
+export { default as Receipt } from "@animateicons/react/lucide/receipt-icon";
+export { default as RefreshCw } from "@animateicons/react/lucide/refresh-cw-icon";
+export { default as Search } from "@animateicons/react/lucide/search-icon";
+export { default as Settings } from "@animateicons/react/lucide/settings-icon";
+export { default as Sparkles } from "@animateicons/react/lucide/sparkles-icon";
+export { default as Utensils } from "@animateicons/react/lucide/utensils-icon";
+export { default as Users } from "@animateicons/react/lucide/users-icon";
+export { default as UserPlus } from "@animateicons/react/lucide/user-plus-icon";
+export { default as Wallet } from "@animateicons/react/lucide/wallet-icon";
+export { default as X } from "@animateicons/react/lucide/x-icon";
