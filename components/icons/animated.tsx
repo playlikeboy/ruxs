@@ -4,8 +4,6 @@ export { ArrowRightIcon as ArrowRight } from "@animateicons/react/lucide/arrow-r
 export { CalendarIcon as Calendar } from "@animateicons/react/lucide/calendar-icon";
 export { CheckIcon as Check } from "@animateicons/react/lucide/check-icon";
 export { ChevronRightIcon as ChevronRight } from "@animateicons/react/lucide/chevron-right-icon";
-export { ChefHatIcon as ChefHat } from "@animateicons/react/lucide/chef-hat-icon";
-export { CircleAlertIcon as CircleAlert } from "@animateicons/react/lucide/circle-alert-icon";
 export { ClockIcon as Clock } from "@animateicons/react/lucide/clock-icon";
 export { CreditCardIcon as CreditCard } from "@animateicons/react/lucide/credit-card-icon";
 export { HouseIcon as Home } from "@animateicons/react/lucide/house-icon";
