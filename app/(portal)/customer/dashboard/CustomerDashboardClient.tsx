@@ -4,11 +4,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useHexclaveApp, useUser } from "@hexclave/next";
 import {
-  ArrowDownRight,
   ArrowRight,
   CalendarDays,
   Check,
-  ChevronRight,
   CreditCard,
   LogOut,
   Pause,
@@ -18,7 +16,7 @@ import {
   Utensils,
   WalletCards,
   X,
-} from "lucide-react";
+} from "@/components/icons/animated";
 import { formatINR, Paise } from "@/src/shared/types/money";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
