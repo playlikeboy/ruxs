@@ -25,7 +25,7 @@ function isDestinationAllowed(role: Role, path: string) {
   if (role === "PLATFORM_ADMIN") return path.startsWith("/");
   if (role === "VENDOR_ADMIN") return path.startsWith("/vendor/");
   if (role === "DELIVERY_STAFF") return path.startsWith("/delivery");
-  return path.startsWith("/customer/") || path === "/subscribe";
+  return path.startsWith("/customer/");
 }
 
 export default function LoginClient() {
