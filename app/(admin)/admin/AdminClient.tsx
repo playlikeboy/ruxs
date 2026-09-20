@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertCircle, ArrowUpRight, BarChart3, ChevronRight, Database, Gavel, Lock, RefreshCw, ShieldCheck, Store, UsersRound, WalletCards } from "lucide-react";
 import { formatINR, Paise } from "@/src/shared/types/money";
-import { RuxsPageLoading } from "@/components/ui/LoadingState";
+import { RuxsAdminSkeleton, RuxsPageLoading } from "@/components/ui/LoadingState";
 
 interface AdminOverview {
   totalVendors: number;
@@ -307,14 +307,7 @@ export default function AdminClient() {
   };
 
   if (loading && !overview) {
-    return (
-      <RuxsPageLoading
-        badge="Mission Control Telemetry"
-        title="Loading Platform Operations Cockpit"
-        description="Syncing real-time ledger records, verified vendors, and automated delivery runs from Neon DB…"
-        fullPage={true}
-      />
-    );
+    return <RuxsAdminSkeleton />;
   }
 
   if (!user) {

@@ -1,23 +1,39 @@
 "use client";
 
-export { CheckIcon as Check } from "@animateicons/react/lucide/check-icon";
-export { ChevronRightIcon as ArrowRight, ChevronRightIcon as ChevronRight } from "@animateicons/react/lucide/chevron-right-icon";
-export { CreditCardIcon as CreditCard, CreditCardIcon as Receipt, CreditCardIcon as ReceiptText } from "@animateicons/react/lucide/credit-card-icon";
-export { HouseIcon as Home } from "@animateicons/react/lucide/house-icon";
-export { LinkIcon as Link2 } from "@animateicons/react/lucide/link-icon";
-export { LockIcon as Lock } from "@animateicons/react/lucide/lock-icon";
-export { LogoutIcon as LogOut } from "@animateicons/react/lucide/logout-icon";
-export { BoxIcon as Package } from "@animateicons/react/lucide/box-icon";
-export { PauseIcon as Pause } from "@animateicons/react/lucide/pause-icon";
-export { PlayIcon as Play } from "@animateicons/react/lucide/play-icon";
-export { PlusIcon as Plus } from "@animateicons/react/lucide/plus-icon";
-export { SparklesIcon as Calendar, SparklesIcon as CalendarDays, SparklesIcon as Sparkles } from "@animateicons/react/lucide/sparkles-icon";
-export { SearchIcon as Search } from "@animateicons/react/lucide/search-icon";
-export { SettingsIcon as Settings } from "@animateicons/react/lucide/settings-icon";
-export { UserPlusIcon as UserPlus } from "@animateicons/react/lucide/user-plus-icon";
-export { UsersIcon as Users } from "@animateicons/react/lucide/users-icon";
-export { MessageCircleIcon as MessageCircle } from "@animateicons/react/lucide/message-circle-icon";
-export { TriangleAlertIcon as CircleAlert } from "@animateicons/react/lucide/triangle-alert-icon";
-export { CoffeeIcon as Utensils } from "@animateicons/react/lucide/coffee-icon";
-export { WalletIcon as Wallet, WalletIcon as WalletCards } from "@animateicons/react/lucide/wallet-icon";
-export { XIcon as X } from "@animateicons/react/lucide/x-icon";
+// Icons available in @animateicons/react/lucide
+export {
+  CheckIcon as Check,
+  ChevronRightIcon as ChevronRight,
+  CreditCardIcon as CreditCard,
+  HouseIcon as Home,
+  LinkIcon as Link2,
+  LockIcon as Lock,
+  LogoutIcon as LogOut,
+  PauseIcon as Pause,
+  PlayIcon as Play,
+  PlusIcon as Plus,
+  SearchIcon as Search,
+  SettingsIcon as Settings,
+  SparklesIcon as Sparkles,
+  UsersIcon as Users,
+  UserPlusIcon as UserPlus,
+  WalletIcon as Wallet,
+  XIcon as X,
+} from "@animateicons/react/lucide";
+
+// Icons from lucide-react with full type safety
+export {
+  ArrowRight,
+  Calendar,
+  CalendarDays,
+  ChefHat,
+  CircleAlert,
+  Clock,
+  MessageCircle,
+  Package,
+  Receipt,
+  ReceiptText,
+  RefreshCw,
+  Utensils,
+  WalletCards,
+} from "lucide-react";
