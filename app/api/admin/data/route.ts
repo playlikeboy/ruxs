@@ -68,7 +68,7 @@ export async function GET(request: Request) {
     const overview = {
       totalVendors: vendors.length,
       verifiedVendors: vendors.filter((v) => v.status === "VERIFIED").length,
-      pendingVendors: vendors.filter((v) => v.status === "PENDING_VERIFICATION").length,
+      pendingVendors: vendors.filter((v) => v.status === "PENDING_VERIFICATION" || v.status === "PENDING_APPROVAL").length,
       suspendedVendors: vendors.filter((v) => v.status === "SUSPENDED").length,
       totalHouseholds: households.length,
       todayDeliveriesCount: fulfillments.length,

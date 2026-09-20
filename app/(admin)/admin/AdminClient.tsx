@@ -7,7 +7,7 @@ import { useUser, useHexclaveApp } from "@hexclave/next";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { AlertCircle, ArrowUpRight, BarChart3, ChevronRight, Database, Gavel, Lock, RefreshCw, ShieldCheck, Store, UsersRound, WalletCards } from "lucide-react";
+import { AlertCircle, ArrowUpRight, BarChart3, CheckCircle2, ChevronRight, Copy, Database, ExternalLink, Gavel, Lock, RefreshCw, ShieldCheck, Store, UsersRound, WalletCards } from "lucide-react";
 import { formatINR, Paise } from "@/src/shared/types/money";
 import { RuxsAdminSkeleton, RuxsPageLoading } from "@/components/ui/LoadingState";
 
@@ -33,12 +33,14 @@ interface Vendor {
   businessName: string;
   slug: string;
   phone: string;
+  vendorType?: "MILKMAN" | "WATER_SERVICE" | "TIFFIN";
   serviceCategories: string[];
   coveredSocieties: string[];
-  status: "PENDING_VERIFICATION" | "VERIFIED" | "SUSPENDED";
+  status: "PENDING_VERIFICATION" | "PENDING_APPROVAL" | "VERIFIED" | "SUSPENDED";
   tier: "STARTER" | "GROWTH" | "PRO";
   subscriberCount: number;
   monthlyVolumePaise: number;
+  credentials?: { loginToken: string; accessPin: string; directUrl: string };
   createdAt: string;
 }
 
@@ -142,7 +144,9 @@ export default function AdminClient() {
   const [newVendorForm, setNewVendorForm] = useState({
     businessName: "",
     phone: "",
+    vendorType: "TIFFIN" as "MILKMAN" | "WATER_SERVICE" | "TIFFIN",
     serviceCategories: "TIFFIN",
+    locality: "HSR Layout Sector 2",
     coveredSocieties: "Sobha Classic, Purva Fairmont",
     tier: "STARTER" as "STARTER" | "GROWTH" | "PRO",
   });
@@ -231,23 +235,65 @@ export default function AdminClient() {
     executeAction("CHANGE_TIER", { vendorId, tier });
   };
 
-  const handleCreateVendor = (e: React.FormEvent) => {
+  const handleCopyCreds = (vendor: Vendor) => {
+    const creds = vendor.credentials;
+    const typeEmoji = vendor.vendorType === "MILKMAN" ? "🥛" : vendor.vendorType === "WATER_SERVICE" ? "💧" : "🍱";
+    const directUrl = creds?.directUrl || `https://ruxs.in/login?vendorToken=vtok_${vendor.slug}&slug=${vendor.slug}`;
+    const pin = creds?.accessPin || "849201";
+    const text = `${typeEmoji} RUXS Merchant Access: ${vendor.businessName}
+Your merchant operations cockpit is live.
+Direct Login: ${directUrl}
+Access PIN: ${pin}
+Manage society deliveries, daily cutoffs, and digital khata.`;
+
+    navigator.clipboard.writeText(text);
+    setFeedback({ message: `Copied WhatsApp login card for '${vendor.businessName}'!`, type: "success" });
+  };
+
+  const handleCreateVendor = async (e: React.FormEvent) => {
     e.preventDefault();
-    executeAction("CREATE_VENDOR", {
-      businessName: newVendorForm.businessName,
-      phone: newVendorForm.phone,
-      serviceCategories: [newVendorForm.serviceCategories],
-      coveredSocieties: newVendorForm.coveredSocieties.split(",").map((s) => s.trim()),
-      tier: newVendorForm.tier,
-    });
-    setShowNewVendorModal(false);
-    setNewVendorForm({
-      businessName: "",
-      phone: "",
-      serviceCategories: "TIFFIN",
-      coveredSocieties: "Sobha Classic, Purva Fairmont",
-      tier: "STARTER",
-    });
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/admin/vendors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "PROVISION_DIRECT",
+          adminUser: { userId: user?.id || "usr_admin", email: user?.primaryEmail || "sh20raj@gmail.com" },
+          directProvision: {
+            businessName: newVendorForm.businessName,
+            phone: newVendorForm.phone,
+            vendorType: newVendorForm.vendorType,
+            locality: newVendorForm.locality,
+            coveredSocieties: newVendorForm.coveredSocieties.split(",").map((s) => s.trim()),
+            tier: newVendorForm.tier,
+          },
+        }),
+      });
+      const data = (await res.json()) as any;
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || "Failed to provision vendor");
+      }
+      setFeedback({
+        message: `Vendor '${newVendorForm.businessName}' authorized and auto-approved! Direct credentials created.`,
+        type: "success",
+      });
+      setShowNewVendorModal(false);
+      setNewVendorForm({
+        businessName: "",
+        phone: "",
+        vendorType: "TIFFIN",
+        serviceCategories: "TIFFIN",
+        locality: "HSR Layout Sector 2",
+        coveredSocieties: "Sobha Classic, Purva Fairmont",
+        tier: "STARTER",
+      });
+      await fetchDashboard();
+    } catch (err: any) {
+      setFeedback({ message: err.message || "Failed to provision vendor", type: "error" });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleTriggerOvernight = () => {
@@ -605,41 +651,114 @@ export default function AdminClient() {
                 <Button size="sm" className="h-9 rounded-xl text-xs" onClick={() => setShowNewVendorModal(true)}>Add vendor</Button>
               </div>
               <div className="divide-y divide-white/[0.07]">
-                {vendors.map((vendor) => (
-                  <div key={vendor.id} className="grid gap-4 px-5 py-5 lg:grid-cols-[1.35fr_.7fr_.7fr_auto] lg:items-center">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-semibold">{vendor.businessName}</p>
-                        <span className="rounded-full border border-white/[0.1] bg-white/[0.02] px-2 py-0.5 text-[9px] text-muted-foreground">{vendor.status.replaceAll("_", " ")}</span>
+                {vendors.map((vendor) => {
+                  const isPending = vendor.status === "PENDING_VERIFICATION" || vendor.status === "PENDING_APPROVAL";
+                  const typeLabel =
+                    vendor.vendorType === "MILKMAN"
+                      ? "🥛 Milkman"
+                      : vendor.vendorType === "WATER_SERVICE"
+                      ? "💧 Water Service"
+                      : "🍱 Tiffin Service";
+
+                  return (
+                    <div key={vendor.id} className="grid gap-4 px-5 py-5 lg:grid-cols-[1.35fr_.7fr_.7fr_auto] lg:items-center">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Link
+                            href={`/admin/${vendor.slug}`}
+                            className="group flex items-center gap-1.5 truncate text-sm font-semibold hover:text-primary transition"
+                          >
+                            <span className="truncate">{vendor.businessName}</span>
+                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-70 transition group-hover:translate-x-0.5 group-hover:text-primary" />
+                          </Link>
+                          <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">
+                            {typeLabel}
+                          </span>
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[9px] font-medium ${
+                              vendor.status === "VERIFIED"
+                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                : isPending
+                                ? "border-amber-500/20 bg-amber-500/10 text-amber-400"
+                                : "border-rose-500/20 bg-rose-500/10 text-rose-400"
+                            }`}
+                          >
+                            {vendor.status.replaceAll("_", " ")}
+                          </span>
+                        </div>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
+                          {vendor.serviceCategories.join(" · ")} · {vendor.coveredSocieties.join(", ")}
+                        </p>
                       </div>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">{vendor.serviceCategories.join(" · ")} · {vendor.coveredSocieties.join(", ")}</p>
+
+                      <div>
+                        <p className="text-xs font-semibold">{vendor.subscriberCount} subscribers</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">{formatINR(vendor.monthlyVolumePaise as Paise)}</p>
+                      </div>
+
+                      <select
+                        value={vendor.tier}
+                        onChange={(event) => handleTierChange(vendor.id, event.target.value as any)}
+                        className="h-9 rounded-xl border border-white/[0.1] bg-white/[0.02] px-3 text-xs"
+                      >
+                        <option value="STARTER">Starter</option>
+                        <option value="GROWTH">Growth</option>
+                        <option value="PRO">Pro</option>
+                      </select>
+
+                      <div className="flex flex-wrap gap-2 lg:justify-end">
+                        {isPending && (
+                          <Button
+                            size="sm"
+                            className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-semibold"
+                            onClick={() => handleVerifyVendor(vendor.id)}
+                            disabled={actionLoading}
+                          >
+                            <CheckCircle2 className="mr-1 h-3 w-3" />
+                            Approve
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 rounded-lg border-white/[0.1] text-[10px]"
+                          onClick={() => handleCopyCreds(vendor)}
+                          title="Copy WhatsApp merchant login credentials"
+                        >
+                          <Copy className="mr-1 h-3 w-3" />
+                          Creds
+                        </Button>
+                        <Link
+                          href={`/admin/${vendor.slug}`}
+                          className="inline-flex h-8 items-center rounded-lg border border-white/[0.1] bg-white/[0.02] px-2.5 text-[10px] text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
+                        >
+                          <ExternalLink className="mr-1 h-3 w-3" />
+                          Dossier
+                        </Link>
+                        {vendor.status === "VERIFIED" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 rounded-lg border-white/[0.1] text-[10px] text-rose-400 hover:text-rose-300"
+                            onClick={() => handleSuspendVendor(vendor.id)}
+                          >
+                            Suspend
+                          </Button>
+                        )}
+                        {vendor.status === "SUSPENDED" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 rounded-lg border-white/[0.1] text-[10px] text-emerald-400"
+                            onClick={() => handleReactivateVendor(vendor.id)}
+                          >
+                            Reactivate
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold">{vendor.subscriberCount} subscribers</p>
-                      <p className="mt-1 text-[10px] text-muted-foreground">{formatINR(vendor.monthlyVolumePaise as Paise)}</p>
-                    </div>
-                    <select
-                      value={vendor.tier}
-                      onChange={(event) => handleTierChange(vendor.id, event.target.value as any)}
-                      className="h-9 rounded-xl border border-white/[0.1] bg-white/[0.02] px-3 text-xs"
-                    >
-                      <option value="STARTER">Starter</option>
-                      <option value="GROWTH">Growth</option>
-                      <option value="PRO">Pro</option>
-                    </select>
-                    <div className="flex gap-2 lg:justify-end">
-                      {vendor.status === "PENDING_VERIFICATION" && (
-                        <Button size="sm" className="h-8 rounded-lg text-[10px]" onClick={() => handleVerifyVendor(vendor.id)}>Verify</Button>
-                      )}
-                      {vendor.status === "VERIFIED" && (
-                        <Button size="sm" variant="outline" className="h-8 rounded-lg border-white/[0.1] text-[10px]" onClick={() => handleSuspendVendor(vendor.id)}>Suspend</Button>
-                      )}
-                      {vendor.status === "SUSPENDED" && (
-                        <Button size="sm" variant="outline" className="h-8 rounded-lg border-white/[0.1] text-[10px]" onClick={() => handleReactivateVendor(vendor.id)}>Reactivate</Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {vendors.length === 0 && <div className="p-10 text-center text-xs text-muted-foreground">No vendor records.</div>}
               </div>
             </section>
@@ -848,59 +967,121 @@ export default function AdminClient() {
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 text-card-foreground">
             <div className="flex justify-between items-center">
-              <h3 className="text-base font-bold text-foreground">Onboard Local Vendor</h3>
-              <button onClick={() => setShowNewVendorModal(false)} className="text-muted-foreground hover:text-foreground">✕</button>
+              <div>
+                <h3 className="text-base font-bold text-foreground">Provision Local Merchant</h3>
+                <p className="text-[11px] text-muted-foreground">Directly issues verified merchant credentials</p>
+              </div>
+              <button onClick={() => setShowNewVendorModal(false)} className="text-muted-foreground hover:text-foreground text-sm">✕</button>
             </div>
-            <form onSubmit={handleCreateVendor} className="space-y-3 text-xs">
+            <form onSubmit={handleCreateVendor} className="space-y-3.5 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-foreground">Business Name</label>
+                <label className="font-semibold text-foreground">Vendor Category & Service Type</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { type: "MILKMAN" as const, label: "Milkman", emoji: "🥛" },
+                    { type: "WATER_SERVICE" as const, label: "Water 20L", emoji: "💧" },
+                    { type: "TIFFIN" as const, label: "Tiffin Hub", emoji: "🍱" },
+                  ].map((item) => {
+                    const isSelected = newVendorForm.vendorType === item.type;
+                    return (
+                      <button
+                        key={item.type}
+                        type="button"
+                        onClick={() =>
+                          setNewVendorForm({
+                            ...newVendorForm,
+                            vendorType: item.type,
+                            serviceCategories: item.type === "MILKMAN" ? "MILK" : item.type === "WATER_SERVICE" ? "WATER" : "TIFFIN",
+                          })
+                        }
+                        className={`rounded-xl border p-2.5 text-center transition ${
+                          isSelected
+                            ? "border-primary bg-primary/10 text-primary font-semibold"
+                            : "border-white/[0.08] bg-white/[0.02] text-muted-foreground hover:bg-white/[0.05]"
+                        }`}
+                      >
+                        <div className="text-base mb-1">{item.emoji}</div>
+                        <div className="text-[11px]">{item.label}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-semibold text-foreground">Business / Shop Name</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Bangalore Organic Milk Supply"
+                  placeholder={
+                    newVendorForm.vendorType === "MILKMAN"
+                      ? "e.g. Bangalore Farm Fresh Dairy"
+                      : newVendorForm.vendorType === "WATER_SERVICE"
+                      ? "e.g. BlueSpring 20L Water Suppliers"
+                      : "e.g. Annapurna Ghar Rasoi Tiffin"
+                  }
                   value={newVendorForm.businessName}
                   onChange={(e) => setNewVendorForm({ ...newVendorForm, businessName: e.target.value })}
                   className="w-full bg-background border border-input rounded-lg px-3 py-2 text-foreground"
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="font-semibold text-foreground">Phone Number</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98765 43210"
+                    value={newVendorForm.phone}
+                    onChange={(e) => setNewVendorForm({ ...newVendorForm, phone: e.target.value })}
+                    className="w-full bg-background border border-input rounded-lg px-3 py-2 text-foreground font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-semibold text-foreground">Plan Tier</label>
+                  <select
+                    value={newVendorForm.tier}
+                    onChange={(e) => setNewVendorForm({ ...newVendorForm, tier: e.target.value as any })}
+                    className="w-full bg-background border border-input rounded-lg px-3 py-2 text-foreground"
+                  >
+                    <option value="STARTER">Starter</option>
+                    <option value="GROWTH">Growth</option>
+                    <option value="PRO">Pro</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="space-y-1">
-                <label className="font-semibold text-foreground">Phone Number</label>
+                <label className="font-semibold text-foreground">Locality / Hub Base</label>
                 <input
-                  type="tel"
+                  type="text"
                   required
-                  placeholder="+91 98765 43210"
-                  value={newVendorForm.phone}
-                  onChange={(e) => setNewVendorForm({ ...newVendorForm, phone: e.target.value })}
-                  className="w-full bg-background border border-input rounded-lg px-3 py-2 text-foreground font-mono"
+                  placeholder="e.g. HSR Layout Sector 2, 14th Main"
+                  value={newVendorForm.locality}
+                  onChange={(e) => setNewVendorForm({ ...newVendorForm, locality: e.target.value })}
+                  className="w-full bg-background border border-input rounded-lg px-3 py-2 text-foreground"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Primary Category</label>
-                <select
-                  value={newVendorForm.serviceCategories}
-                  onChange={(e) => setNewVendorForm({ ...newVendorForm, serviceCategories: e.target.value })}
-                  className="w-full bg-background border border-input rounded-lg px-3 py-2 text-foreground"
-                >
-                  <option value="TIFFIN">🍱 Tiffin & Meals Delivery</option>
-                  <option value="MILK">🥛 Fresh Cow Milk Delivery</option>
-                  <option value="WATER">💧 20L Water Jar Delivery</option>
-                </select>
-              </div>
+
               <div className="space-y-1">
                 <label className="font-semibold text-foreground">Covered Societies (comma-separated)</label>
                 <input
                   type="text"
+                  required
+                  placeholder="e.g. Sobha Classic, Purva Fairmont, Prestige Falcon"
                   value={newVendorForm.coveredSocieties}
                   onChange={(e) => setNewVendorForm({ ...newVendorForm, coveredSocieties: e.target.value })}
                   className="w-full bg-background border border-input rounded-lg px-3 py-2 text-foreground"
                 />
               </div>
+
               <div className="flex gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setShowNewVendorModal(false)} className="w-1/2">
                   Cancel
                 </Button>
-                <Button type="submit" className="w-1/2 font-bold">
-                  Create Vendor
+                <Button type="submit" disabled={actionLoading} className="w-1/2 font-bold bg-primary hover:bg-primary/90 text-primary-foreground">
+                  {actionLoading ? "Authorizing..." : "Authorize & Issue Access"}
                 </Button>
               </div>
             </form>

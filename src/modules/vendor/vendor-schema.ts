@@ -3,6 +3,29 @@ import { isValidIndianPhone, normalizeIndianPhone } from "../../shared/auth/phon
 
 export const UPI_ID_REGEX = /^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,64}$/;
 
+export type VendorType = "MILKMAN" | "WATER_SERVICE" | "TIFFIN";
+export type VendorApprovalStatus = "PENDING_APPROVAL" | "VERIFIED" | "SUSPENDED";
+
+export const MilkmanConfigSchema = z.object({
+  shifts: z.array(z.enum(["MORNING", "EVENING"])).min(1, "Select at least one delivery shift"),
+  varieties: z.array(z.string()).min(1, "Select at least one milk variety"),
+  packaging: z.enum(["GLASS_BOTTLES", "POUCHES", "BOTH"]).default("GLASS_BOTTLES"),
+  bottleDepositPaise: z.number().default(5000),
+});
+
+export const WaterServiceConfigSchema = z.object({
+  canCapacities: z.array(z.string()).default(["20L"]),
+  depositPaisePerCan: z.number().default(15000),
+  floorDeliveryStairsChargePaise: z.number().default(1000),
+});
+
+export const TiffinConfigSchema = z.object({
+  shifts: z.array(z.enum(["MORNING", "AFTERNOON", "EVENING", "NIGHT"])).min(1, "Select at least one meal shift"),
+  dietOptions: z.array(z.enum(["PURE_VEG", "JAIN", "NON_VEG"])).min(1, "Select at least one diet option"),
+  packaging: z.enum(["STEEL_DABBA", "ECO_DISPOSABLE", "BOTH"]).default("STEEL_DABBA"),
+  todayMenuPreview: z.string().optional(),
+});
+
 export const VendorOnboardingSchema = z.object({
   businessName: z
     .string()
@@ -20,11 +43,9 @@ export const VendorOnboardingSchema = z.object({
     .string()
     .regex(UPI_ID_REGEX, "Please enter a valid UPI ID (e.g., merchant@okhdfcbank or 9876543210@paytm)")
     .trim(),
-  primaryCategory: z.enum([
-    "TIFFIN",
-    "WATER",
-    "MILK",
-  ]),
+  vendorType: z.enum(["MILKMAN", "WATER_SERVICE", "TIFFIN"]).default("TIFFIN"),
+  primaryCategory: z.enum(["TIFFIN", "WATER", "MILK"]).optional(),
+  typeConfig: z.record(z.string(), z.any()).optional().default({}),
   locality: z.string().min(2, "Locality/Area name is required").trim(),
   city: z.string().min(2, "City name is required").trim().default("Bengaluru"),
   pincode: z
@@ -42,20 +63,31 @@ export const VendorOnboardingSchema = z.object({
 
 export type VendorOnboardingInput = z.infer<typeof VendorOnboardingSchema>;
 
+export interface VendorCredentials {
+  loginToken: string;
+  accessPin: string;
+  directUrl: string;
+  generatedAt: string;
+}
+
 export interface VendorProfile {
   id: string;
   businessName: string;
   slug: string;
   phone: string;
   upiId: string;
+  vendorType: VendorType;
   primaryCategory: string;
+  typeConfig: Record<string, any>;
   locality: string;
   city: string;
   coveredSocieties: string[];
   inviteUrl: string;
   qrPayload: string;
-  status: "ACTIVE" | "PENDING";
+  status: VendorApprovalStatus;
+  credentials?: VendorCredentials;
   createdAt: string;
+  verifiedAt?: string;
 }
 
 /**

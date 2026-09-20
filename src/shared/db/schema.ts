@@ -146,9 +146,11 @@ export const subscriptions = pgTable(
     householdId: varchar("household_id", { length: 36 }).references(() => households.id),
     productId: varchar("product_id", { length: 36 }).references(() => products.id).notNull(),
     cadence: varchar("cadence", { length: 30 }).default("DAILY").notNull(), // DAILY, WEEKDAYS, ALTERNATE_DAYS, CUSTOM
+    shift: varchar("shift", { length: 30 }).default("MORNING").notNull(),
     selectedDays: text("selected_days"), // Comma-separated ISO weekday numbers "1,2,3,4,5"
     defaultQuantity: integer("default_quantity").default(1).notNull(),
     autopilotDefault: varchar("autopilot_default", { length: 20 }).default("CONFIRMED").notNull(),
+    instructions: text("instructions"),
     status: varchar("status", { length: 20 }).default("ACTIVE").notNull(), // ACTIVE, PAUSED, CANCELLED
     startDate: varchar("start_date", { length: 10 }).notNull(), // YYYY-MM-DD
     endDate: varchar("end_date", { length: 10 }), // YYYY-MM-DD (null for perpetual)

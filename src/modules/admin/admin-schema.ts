@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const VendorApprovalStatusSchema = z.enum([
+  "PENDING_APPROVAL",
   "PENDING_VERIFICATION",
   "VERIFIED",
   "SUSPENDED",
@@ -31,6 +32,8 @@ export const PlatformAuditActionSchema = z.enum([
   "KHATA_ADJUSTMENT_POSTED",
   "NOTIFICATION_DISPATCHED",
   "VENDOR_CREATED",
+  "VENDOR_PROVISIONED_DIRECT",
+  "CREDENTIALS_GENERATED",
 ]);
 
 export type PlatformAuditAction = z.infer<typeof PlatformAuditActionSchema>;
@@ -54,12 +57,22 @@ export const AdminVendorProfileSchema = z.object({
   businessName: z.string(),
   slug: z.string(),
   phone: z.string(),
+  vendorType: z.enum(["MILKMAN", "WATER_SERVICE", "TIFFIN"]).default("TIFFIN"),
   serviceCategories: z.array(z.string()),
   coveredSocieties: z.array(z.string()),
-  status: VendorApprovalStatusSchema.default("PENDING_VERIFICATION"),
+  status: VendorApprovalStatusSchema.default("PENDING_APPROVAL"),
   tier: VendorPlanTierSchema.default("STARTER"),
   subscriberCount: z.number().int().nonnegative().default(0),
   monthlyVolumePaise: z.number().int().nonnegative().default(0),
+  typeConfig: z.record(z.string(), z.any()).optional().default({}),
+  credentials: z
+    .object({
+      loginToken: z.string(),
+      accessPin: z.string(),
+      directUrl: z.string(),
+      generatedAt: z.string().optional(),
+    })
+    .optional(),
   verifiedAt: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),

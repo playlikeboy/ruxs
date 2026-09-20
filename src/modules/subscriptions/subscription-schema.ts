@@ -27,9 +27,11 @@ export const CreateSubscriptionSchema = z.object({
   productName: z.string().min(1),
   unitPricePaise: z.number().int().positive(),
   cadence: SubscriptionCadenceEnum.default("DAILY"),
+  shift: z.string().optional().default("MORNING"),
   selectedDays: z.array(z.number().int().min(1).max(7)).optional(), // 1=Monday, 7=Sunday (ISO)
   defaultQuantity: z.number().int().positive().default(1),
   autopilotDefault: AutopilotDefaultEnum.default("CONFIRMED"),
+  instructions: z.string().optional(),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be YYYY-MM-DD"),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be YYYY-MM-DD").optional(),
 });
@@ -45,9 +47,11 @@ export interface Subscription {
   productName: string;
   unitPricePaise: Paise;
   cadence: z.infer<typeof SubscriptionCadenceEnum>;
+  shift?: string;
   selectedDays?: number[];
   defaultQuantity: number;
   autopilotDefault: z.infer<typeof AutopilotDefaultEnum>;
+  instructions?: string;
   status: z.infer<typeof SubscriptionStatusEnum>;
   startDate: string;
   endDate?: string;

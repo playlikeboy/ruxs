@@ -86,14 +86,14 @@ export default function OnboardClient() {
 
           <div className="mt-7 grid gap-3 text-left sm:grid-cols-3">
             {[
-              ["Home", createdCustomer.societyName + " · " + createdCustomer.flatNumber, Home],
-              ["Drop", createdCustomer.deliveryDropPreference.replace("_", " "), Package],
-              ["WhatsApp", whatsappOptIn ? "Morning polls on" : "Optional", MessageCircle],
-            ].map(([label, value, Icon]) => (
-              <div key={String(label)} className="rounded-2xl border border-white/[0.08] bg-black/10 p-4">
+              { label: "Home", value: createdCustomer.societyName + " · " + createdCustomer.flatNumber, icon: Home },
+              { label: "Drop", value: createdCustomer.deliveryDropPreference.replace("_", " "), icon: Package },
+              { label: "WhatsApp", value: whatsappOptIn ? "Morning polls on" : "Optional", icon: MessageCircle },
+            ].map(({ label, value, icon: Icon }) => (
+              <div key={label} className="rounded-2xl border border-white/[0.08] bg-black/10 p-4">
                 <Icon size={15} className="text-primary" />
                 <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.13em] text-subtle">{label}</p>
-                <p className="mt-1 text-xs font-medium leading-5">{String(value)}</p>
+                <p className="mt-1 text-xs font-medium leading-5">{value}</p>
               </div>
             ))}
           </div>
@@ -188,7 +188,7 @@ export default function OnboardClient() {
 
             <div className="lg:col-span-2 rounded-3xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6">
               <div className="flex items-start gap-3">
-                <Lock size={16 className="mt-0.5 text-primary" />
+                <Lock size={16} className="mt-0.5 text-primary" />
                 <p className="text-[10px] leading-5 text-muted-foreground">RUXS uses the household details above to keep recurring deliveries consistent. You can change service settings later without rebuilding your household.</p>
               </div>
               <button type="submit" disabled={loading} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-xs font-semibold text-primary-foreground disabled:opacity-50">
