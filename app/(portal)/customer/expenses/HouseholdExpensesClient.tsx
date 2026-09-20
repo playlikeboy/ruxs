@@ -8,7 +8,6 @@ import { formatINR, Paise } from "@/src/shared/types/money";
 import {
   ArrowRight,
   Check,
-  CircleAlert,
   CreditCard,
   Receipt,
   Users,
@@ -130,7 +129,7 @@ export default function HouseholdExpensesClient() {
 
         {expenses.length === 0 ? (
           <section className="rounded-3xl border border-dashed border-white/[0.1] bg-white/[0.02] px-6 py-16 text-center">
-            <CircleAlert size={22} className="mx-auto text-subtle" />
+            <X size={22} className="mx-auto text-subtle" />
             <h2 className="mt-4 text-sm font-semibold">No shared expenses yet.</h2>
             <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-muted-foreground">When a household invoice is ready to split, the members and exact shares will appear here.</p>
           </section>
