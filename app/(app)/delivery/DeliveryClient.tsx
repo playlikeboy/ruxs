@@ -5,6 +5,7 @@ import { DeliveryRun, DeliveryStop } from "@/src/modules/delivery/delivery-schem
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { RuxsPageLoading } from "@/components/ui/LoadingState";
 
 export default function DeliveryClient() {
   const [activeSociety, setActiveSociety] = useState<string>("All");
@@ -33,9 +34,12 @@ export default function DeliveryClient() {
 
   if (loading || !run) {
     return (
-      <div className="min-h-screen py-12 px-4 max-w-lg mx-auto flex items-center justify-center">
-        <p className="text-muted-foreground animate-pulse text-sm">Loading delivery run sheet from Neon database...</p>
-      </div>
+      <RuxsPageLoading
+        badge="Driver Logistics Run Sheet"
+        title="Sequencing Society Run Sheet"
+        description="Optimizing elevator descending clusters, customer drop instructions, and empty container exchanges…"
+        fullPage={true}
+      />
     );
   }
 

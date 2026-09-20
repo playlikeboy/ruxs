@@ -23,6 +23,7 @@ import { formatINR, Paise } from "@/src/shared/types/money";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RuxsDashboardSkeleton } from "@/components/ui/LoadingState";
 
 interface VendorSubscriber {
   id: string;
@@ -145,17 +146,8 @@ export default function VendorDashboardClient() {
 
   if (loading) {
     return (
-      <div className="mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-6xl items-center justify-center px-6">
-        <div className="w-full max-w-lg rounded-3xl border border-white/[0.08] bg-white/[0.025] p-6">
-          <div className="h-2 w-28 animate-pulse rounded-full bg-primary/30" />
-          <div className="mt-5 h-8 w-3/4 animate-pulse rounded-xl bg-white/[0.06]" />
-          <div className="mt-3 h-4 w-1/2 animate-pulse rounded bg-white/[0.04]" />
-          <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-28 animate-pulse rounded-2xl bg-white/[0.04]" />
-            ))}
-          </div>
-        </div>
+      <div className="py-2">
+        <RuxsDashboardSkeleton />
       </div>
     );
   }

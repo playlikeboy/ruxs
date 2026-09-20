@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RuxsCardListSkeleton } from "@/components/ui/LoadingState";
 
 const tenantId = "ten_sharma_tiffin";
 
@@ -179,7 +180,9 @@ export default function VendorServicesClient() {
 
             <div className="divide-y divide-white/[0.07]">
               {loading ? (
-                <div className="px-6 py-12 text-center text-xs text-muted-foreground">Loading service catalog…</div>
+                <div className="p-5">
+                  <RuxsCardListSkeleton count={2} />
+                </div>
               ) : services.length === 0 ? (
                 <div className="px-6 py-12 text-center">
                   <PackageCheck className="mx-auto h-6 w-6 text-subtle" />

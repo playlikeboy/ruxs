@@ -7,6 +7,7 @@ import { formatINR, Paise } from "@/src/shared/types/money";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { RuxsPageLoading } from "@/components/ui/LoadingState";
 
 export default function DisputesClient() {
   const [activeTab, setActiveTab] = useState<string>("All");
@@ -61,9 +62,12 @@ export default function DisputesClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen py-12 px-4 max-w-4xl mx-auto flex items-center justify-center">
-        <p className="text-muted-foreground animate-pulse text-sm">Loading disputes from Neon database...</p>
-      </div>
+      <RuxsPageLoading
+        badge="Dispute Resolution Desk"
+        title="Loading Customer Disputes"
+        description="Fetching delivery incident logs, photo proofs, and compensating Khata refund records…"
+        fullPage={true}
+      />
     );
   }
 

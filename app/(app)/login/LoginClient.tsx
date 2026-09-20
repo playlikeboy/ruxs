@@ -14,6 +14,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { RuxsPageLoading, RuxsSpinner } from "@/components/ui/LoadingState";
 
 type Role = "CUSTOMER" | "VENDOR_ADMIN" | "DELIVERY_STAFF" | "PLATFORM_ADMIN";
 
@@ -173,15 +174,12 @@ export default function LoginClient() {
 
   if (routing) {
     return (
-      <div className="flex min-h-[calc(100vh-64px)] items-center justify-center px-4">
-        <div className="w-full max-w-sm rounded-3xl border border-white/[0.08] bg-white/[0.025] p-6 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <p className="mt-5 text-sm font-semibold">Opening your workspace</p>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">RUXS is detecting your account access automatically.</p>
-        </div>
-      </div>
+      <RuxsPageLoading
+        badge="Hexclave Identity Secured"
+        title="Opening your workspace"
+        description="Detecting account permissions and routing to your designated operating portal…"
+        fullPage={true}
+      />
     );
   }
 
@@ -273,8 +271,17 @@ export default function LoginClient() {
               type="submit"
               className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-lg shadow-primary/10 transition hover:brightness-105 disabled:opacity-50"
             >
-              {loading ? "Signing in…" : authMode === "SIGN_IN" ? "Sign in" : "Create account"}
-              <ArrowRight className="h-3.5 w-3.5" />
+              {loading ? (
+                <>
+                  <RuxsSpinner className="w-4 h-4" color="text-primary-foreground" />
+                  <span>Connecting with Hexclave…</span>
+                </>
+              ) : (
+                <>
+                  <span>{authMode === "SIGN_IN" ? "Sign in" : "Create account"}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </>
+              )}
             </button>
           </form>
 
