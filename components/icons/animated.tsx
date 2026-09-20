@@ -1,7 +1,7 @@
 "use client";
 
 export { ArrowRightIcon as ArrowRight } from "@animateicons/react/lucide/arrow-right-icon";
-export { CalendarIcon as Calendar } from "@animateicons/react/lucide/calendar-icon";
+export { CalendarIcon as Calendar, CalendarIcon as CalendarDays } from "@animateicons/react/lucide/calendar-icon";
 export { CheckIcon as Check } from "@animateicons/react/lucide/check-icon";
 export { ChevronRightIcon as ChevronRight } from "@animateicons/react/lucide/chevron-right-icon";
 export { ClockIcon as Clock } from "@animateicons/react/lucide/clock-icon";
@@ -14,7 +14,7 @@ export { PackageIcon as Package } from "@animateicons/react/lucide/package-icon"
 export { PauseIcon as Pause } from "@animateicons/react/lucide/pause-icon";
 export { PlayIcon as Play } from "@animateicons/react/lucide/play-icon";
 export { PlusIcon as Plus } from "@animateicons/react/lucide/plus-icon";
-export { ReceiptIcon as Receipt } from "@animateicons/react/lucide/receipt-icon";
+export { ReceiptIcon as Receipt, ReceiptIcon as ReceiptText } from "@animateicons/react/lucide/receipt-icon";
 export { RefreshCwIcon as RefreshCw } from "@animateicons/react/lucide/refresh-cw-icon";
 export { SearchIcon as Search } from "@animateicons/react/lucide/search-icon";
 export { SettingsIcon as Settings } from "@animateicons/react/lucide/settings-icon";
@@ -22,5 +22,5 @@ export { SparklesIcon as Sparkles } from "@animateicons/react/lucide/sparkles-ic
 export { UtensilsIcon as Utensils } from "@animateicons/react/lucide/utensils-icon";
 export { UsersIcon as Users } from "@animateicons/react/lucide/users-icon";
 export { UserPlusIcon as UserPlus } from "@animateicons/react/lucide/user-plus-icon";
-export { WalletIcon as Wallet } from "@animateicons/react/lucide/wallet-icon";
+export { WalletIcon as Wallet, WalletIcon as WalletCards } from "@animateicons/react/lucide/wallet-icon";
 export { XIcon as X } from "@animateicons/react/lucide/x-icon";
