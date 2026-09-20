@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Check, Clock3, PackageCheck, Plus, Settings2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Check, Clock3, PackageCheck, Plus, Settings2, Store } from "lucide-react";
 import { ServiceDefinition } from "@/src/modules/services/service-schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RuxsCardListSkeleton } from "@/components/ui/LoadingState";
 
-const tenantId = "ten_sharma_tiffin";
-
 export default function VendorServicesClient() {
+  const searchParams = useSearchParams();
+  const [vendors, setVendors] = useState<any[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>("");
   const [services, setServices] = useState<ServiceDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -25,9 +27,31 @@ export default function VendorServicesClient() {
   const [requiresAssetTracking, setRequiresAssetTracking] = useState(true);
   const [lateCancellationFeePercent, setLateCancellationFeePercent] = useState(50);
 
-  const fetchServices = async () => {
+  // Load verified vendors
+  useEffect(() => {
+    async function loadVendors() {
+      try {
+        const res = await fetch("/api/marketplace/vendors");
+        const data = (await res.json()) as { success: boolean; data?: any[] };
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setVendors(data.data);
+          const urlParam = searchParams.get("tenantId") || searchParams.get("slug");
+          const matched = data.data.find((v: any) => v.id === urlParam || v.slug === urlParam);
+          setSelectedTenantId(matched ? matched.id : data.data[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to load vendors:", err);
+      }
+    }
+    loadVendors();
+  }, [searchParams]);
+
+  const fetchServices = async (tenantIdToFetch?: string) => {
+    const tid = tenantIdToFetch || selectedTenantId;
+    if (!tid) return;
     try {
-      const res = await fetch(`/api/vendor/services?tenantId=${tenantId}`);
+      setLoading(true);
+      const res = await fetch(`/api/vendor/services?tenantId=${tid}`);
       const data = (await res.json()) as { success: boolean; data?: ServiceDefinition[] };
       if (data.success && data.data) setServices(data.data);
     } catch (err) {
@@ -38,11 +62,44 @@ export default function VendorServicesClient() {
   };
 
   useEffect(() => {
-    void fetchServices();
-  }, []);
+    if (selectedTenantId) {
+      void fetchServices(selectedTenantId);
+      const currentV = vendors.find((v) => v.id === selectedTenantId);
+      if (currentV) {
+        if (currentV.vendorType === "MILKMAN") {
+          setCategory("MILK");
+          setName("Farm Fresh Desi Cow Milk");
+          setProductName("A2 Gir Cow Milk 1L Bottle");
+          setPriceInRupees(42);
+          setCutoffTimeStr("21:00");
+          setPollTimeStr("18:00");
+          setRequiresAssetTracking(true);
+        } else if (currentV.vendorType === "WATER_SERVICE") {
+          setCategory("WATER");
+          setName("20L Mineral Water Jar Daily Supply");
+          setProductName("Bisleri 20L Bubbletop Can");
+          setPriceInRupees(80);
+          setCutoffTimeStr("08:00");
+          setPollTimeStr("06:00");
+          setRequiresAssetTracking(true);
+        } else {
+          setCategory("TIFFIN");
+          setName("Daily Executive Veg Lunch");
+          setProductName("Standard Veg Thali");
+          setPriceInRupees(120);
+          setCutoffTimeStr("10:00");
+          setPollTimeStr("08:30");
+          setRequiresAssetTracking(true);
+        }
+      }
+    }
+  }, [selectedTenantId]);
+
+  const activeVendor = vendors.find((v) => v.id === selectedTenantId) || vendors[0];
 
   const handleCreateService = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!selectedTenantId) return;
     setError(null);
     setSubmitting(true);
     try {
@@ -50,11 +107,11 @@ export default function VendorServicesClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tenantId,
+          tenantId: selectedTenantId,
           name,
           category,
           productName,
-          unitType: "MEAL",
+          unitType: category === "MILK" ? "LITER" : category === "WATER" ? "CAN" : "MEAL",
           priceInRupees: Number(priceInRupees),
           cutoffTimeStr,
           pollTimeStr,
@@ -64,7 +121,7 @@ export default function VendorServicesClient() {
       });
       const data = (await res.json()) as { success: boolean; data?: ServiceDefinition; error?: { message: string } };
       if (!res.ok || !data.success) throw new Error(data.error?.message || "Failed to create service");
-      await fetchServices();
+      await fetchServices(selectedTenantId);
       setName("");
       setProductName("");
     } catch (err) {
@@ -88,9 +145,27 @@ export default function VendorServicesClient() {
               Keep the recurring offer simple: what customers buy, when the kitchen locks, and what happens after cutoff.
             </p>
           </div>
-          <Badge variant="outline" className="w-fit rounded-full border-white/[0.1] bg-white/[0.02] px-3 py-1 text-[10px]">
-            Tenant · {tenantId}
-          </Badge>
+          <div className="flex flex-col sm:items-end gap-2">
+            {vendors.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Store className="h-3.5 w-3.5 text-primary" />
+                <select
+                  value={selectedTenantId}
+                  onChange={(e) => setSelectedTenantId(e.target.value)}
+                  className="h-8 rounded-lg border border-white/[0.1] bg-white/[0.04] px-2 text-xs font-semibold text-foreground outline-none"
+                >
+                  {vendors.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.vendorType === "MILKMAN" ? "🥛" : v.vendorType === "WATER_SERVICE" ? "💧" : "🍱"} {v.businessName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <Badge variant="outline" className="w-fit rounded-full border-white/[0.1] bg-white/[0.02] px-3 py-1 text-[10px]">
+              Active · {activeVendor?.businessName || selectedTenantId}
+            </Badge>
+          </div>
         </div>
 
         <div className="grid gap-5 xl:grid-cols-[.86fr_1.14fr]">

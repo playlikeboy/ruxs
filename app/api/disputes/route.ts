@@ -18,10 +18,8 @@ export async function GET(request: Request) {
     return Response.json(createSuccessResponse(list));
   }
 
-  return Response.json(
-    createErrorResponse("VALIDATION_FAILED", "tenantId or customerId is required"),
-    { status: 400 }
-  );
+  const list = await DisputeService.listAllAsync(status);
+  return Response.json(createSuccessResponse(list));
 }
 
 export async function POST(request: Request) {

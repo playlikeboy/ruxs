@@ -6,23 +6,37 @@ import { ZodError } from "zod";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const runId = searchParams.get("runId");
+  const driverId = searchParams.get("driverId") || undefined;
+  const tenantId = searchParams.get("tenantId") || undefined;
+  const shift = searchParams.get("shift") || undefined;
+  const list = searchParams.get("list") === "true";
 
-  if (!runId) {
-    return Response.json(
-      createErrorResponse("VALIDATION_FAILED", "runId query parameter is required"),
-      { status: 400 }
-    );
+  if (list) {
+    const runs = await DeliveryEngine.listRunsAsync({ tenantId, driverId, shift });
+    return Response.json(createSuccessResponse(runs));
   }
 
-  const run = await DeliveryEngine.getRunSheetAsync(runId);
-  if (!run) {
+  if (runId) {
+    const run = await DeliveryEngine.getRunSheetAsync(runId);
+    if (!run) {
+      return Response.json(
+        createErrorResponse("NOT_FOUND", `Run sheet ${runId} not found`),
+        { status: 404 }
+      );
+    }
+    return Response.json(createSuccessResponse(run));
+  }
+
+  // If no runId passed, load latest active run for driver/tenant
+  const latestRun = await DeliveryEngine.getLatestRunAsync({ tenantId, driverId });
+  if (!latestRun) {
     return Response.json(
-      createErrorResponse("NOT_FOUND", `Run sheet ${runId} not found`),
+      createErrorResponse("NOT_FOUND", "No active delivery runs found"),
       { status: 404 }
     );
   }
 
-  return Response.json(createSuccessResponse(run));
+  return Response.json(createSuccessResponse(latestRun));
 }
 
 export async function POST(request: Request) {

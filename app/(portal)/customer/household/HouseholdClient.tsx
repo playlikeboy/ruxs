@@ -31,9 +31,18 @@ export default function HouseholdClient() {
   const fetchHousehold = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/households?householdId=hh_sobha_b402");
-      const data = (await response.json()) as { success: boolean; data?: Household };
-      if (data.success && data.data) setHousehold(data.data);
+      let data: { success: boolean; data?: Household } | null = null;
+      if (user?.id) {
+        try {
+          const userRes = await fetch(`/api/households?userId=${user.id}`);
+          data = (await userRes.json()) as { success: boolean; data?: Household };
+        } catch {}
+      }
+      if (!data?.success || !data?.data) {
+        const response = await fetch("/api/households?householdId=hh_sobha_b402");
+        data = (await response.json()) as { success: boolean; data?: Household };
+      }
+      if (data?.success && data?.data) setHousehold(data.data);
       else setHousehold(null);
     } catch (fetchError) {
       console.error(fetchError);

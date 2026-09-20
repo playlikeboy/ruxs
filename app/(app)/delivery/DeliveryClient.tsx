@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { DeliveryRun, DeliveryStop } from "@/src/modules/delivery/delivery-schema";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,18 +9,37 @@ import { Button } from "@/components/ui/button";
 import { RuxsPageLoading } from "@/components/ui/LoadingState";
 
 export default function DeliveryClient() {
+  const searchParams = useSearchParams();
   const [activeSociety, setActiveSociety] = useState<string>("All");
   const [run, setRun] = useState<DeliveryRun | null>(null);
+  const [allRuns, setAllRuns] = useState<DeliveryRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStopForFail, setSelectedStopForFail] = useState<DeliveryStop | null>(null);
   const [failReason, setFailReason] = useState<string>("Flat locked / No answer");
 
-  const fetchRun = async () => {
+  const fetchRun = async (targetRunId?: string) => {
     try {
-      const res = await fetch("/api/delivery/run?runId=run_2026-09-12_lunch_drv_ramesh");
+      const q = new URLSearchParams();
+      const runId = targetRunId || searchParams.get("runId");
+      if (runId) q.set("runId", runId);
+      const driverId = searchParams.get("driverId");
+      if (driverId) q.set("driverId", driverId);
+      const shift = searchParams.get("shift");
+      if (shift) q.set("shift", shift);
+      const tenantId = searchParams.get("tenantId");
+      if (tenantId) q.set("tenantId", tenantId);
+
+      const res = await fetch(`/api/delivery/run${q.toString() ? `?${q.toString()}` : ""}`);
       const data = (await res.json()) as { success: boolean; data?: DeliveryRun };
       if (data.success && data.data) {
         setRun(data.data);
+      }
+
+      // Also fetch all runs for switching
+      const listRes = await fetch("/api/delivery/run?list=true");
+      const listData = (await listRes.json()) as { success: boolean; data?: DeliveryRun[] };
+      if (listData.success && Array.isArray(listData.data)) {
+        setAllRuns(listData.data);
       }
     } catch (err) {
       console.error("Failed to load delivery run:", err);
@@ -30,7 +50,7 @@ export default function DeliveryClient() {
 
   useEffect(() => {
     fetchRun();
-  }, []);
+  }, [searchParams]);
 
   if (loading || !run) {
     return (
@@ -92,6 +112,26 @@ export default function DeliveryClient() {
 
   return (
     <div className="min-h-screen pb-20 max-w-lg mx-auto px-4 pt-4 space-y-4">
+      {/* Route Switcher */}
+      {allRuns.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {allRuns.map((r) => (
+            <Button
+              key={r.id}
+              variant={run.id === r.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setRun(r);
+                setActiveSociety("All");
+              }}
+              className="text-xs font-semibold rounded-xl whitespace-nowrap"
+            >
+              {r.shift === "MORNING" ? "🥛 Morning Run" : r.shift === "LUNCH" ? "🍱 Lunch Run" : "🌆 Evening Run"} ({r.driverName})
+            </Button>
+          ))}
+        </div>
+      )}
+
       {/* Top Driver Bar */}
       <Card className="bg-card border-border">
         <CardContent className="p-4">

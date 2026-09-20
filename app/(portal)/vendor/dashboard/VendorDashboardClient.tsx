@@ -88,13 +88,14 @@ function VendorDashboardContent() {
     searchParams.get("slug") ||
     searchParams.get("tenantId") ||
     searchParams.get("id") ||
-    "ten_sharma_tiffin";
+    "";
 
   const fetchOperationalData = async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     try {
-      // 1. Fetch Vendor Profile
-      const profRes = await fetch(`/api/vendor/profile?slug=${targetIdentifier}`);
+      // 1. Fetch Vendor Profile dynamically
+      const profUrl = targetIdentifier ? `/api/vendor/profile?slug=${targetIdentifier}` : "/api/vendor/profile";
+      const profRes = await fetch(profUrl);
       const profData = (await profRes.json()) as { success: boolean; data?: VendorProfileData };
       if (profData.success && profData.data) {
         setVendor(profData.data);

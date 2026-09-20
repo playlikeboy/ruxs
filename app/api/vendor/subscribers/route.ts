@@ -12,10 +12,23 @@ import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors"
 import { SubscriptionEngine } from "@/src/modules/subscriptions/subscription-engine";
 import { KhataLedgerService } from "@/src/modules/khata/khata-ledger";
 
+import { AdminService } from "@/src/modules/admin/admin-service";
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const tenantId = searchParams.get("tenantId") || "ten_sharma_tiffin";
+    let tenantId = searchParams.get("tenantId");
+    if (!tenantId) {
+      const slug = searchParams.get("slug");
+      if (slug) {
+        const detail = await AdminService.getVendorDetailBySlug(slug);
+        if (detail?.vendor) tenantId = detail.vendor.id;
+      }
+    }
+    if (!tenantId) {
+      const allVendors = await AdminService.listVendorsAsync();
+      tenantId = allVendors[0]?.id || "ten_sharma_tiffin";
+    }
     const todayStr = searchParams.get("date") || new Date().toISOString().split("T")[0];
 
     if (!isTestEnv) {

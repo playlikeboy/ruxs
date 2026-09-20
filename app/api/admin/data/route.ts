@@ -59,8 +59,9 @@ export async function GET(request: Request) {
     const fulfillments = FulfillmentStateMachine.listAll();
 
     // Default kitchen batch aggregation for lunch shift
+    const defaultVendorId = vendors[0]?.id || "ten_sharma_tiffin";
     const kitchenBatches = CutoffEngine.getKitchenBatchCounter(
-      "ten_sharma_tiffin",
+      defaultVendorId,
       todayStr,
       "LUNCH"
     );
@@ -235,19 +236,27 @@ export async function POST(request: Request) {
 
       case "LOCK_CUTOFF": {
         const date = payload.serviceDate || new Date().toISOString().split("T")[0];
-        const tenantId = payload.tenantId || "ten_sharma_tiffin";
-        const result = CutoffEngine.lockExpiredCutoffs(tenantId, date);
+        let totalLocked = 0;
+        const allVendors = await AdminService.listVendorsAsync();
+        const targetTenants = payload.tenantId && payload.tenantId !== "ALL"
+          ? [payload.tenantId]
+          : allVendors.map((v) => v.id);
+
+        for (const tId of targetTenants) {
+          const res = CutoffEngine.lockExpiredCutoffs(tId, date);
+          totalLocked += res.lockedCount;
+        }
 
         AdminService.logAction({
           adminUserId: adminUser.userId,
           adminEmail: adminUser.email,
           action: "CUTOFF_LOCKED",
           targetType: "CUTOFF_ENGINE",
-          targetId: tenantId,
-          details: `Admin executed cutoff lock for tenant ${tenantId} on ${date}. Locked ${result.lockedCount} orders`,
+          targetId: payload.tenantId || "ALL_VENDORS",
+          details: `Admin executed cutoff lock for ${targetTenants.length} tenants on ${date}. Locked ${totalLocked} orders`,
         });
 
-        return NextResponse.json(createSuccessResponse({ result, message: `Cutoff locked. ${result.lockedCount} orders updated.` }));
+        return NextResponse.json(createSuccessResponse({ result: { lockedCount: totalLocked }, message: `Cutoff locked. ${totalLocked} orders updated.` }));
       }
 
       case "RESOLVE_DISPUTE": {
@@ -293,8 +302,9 @@ export async function POST(request: Request) {
       }
 
       case "ADD_KHATA_ENTRY": {
+        const defaultVendorId = (await AdminService.listVendorsAsync())[0]?.id || "ten_sharma_tiffin";
         const entry = await KhataLedgerService.recordEntry({
-          tenantId: payload.tenantId || "ten_sharma_tiffin",
+          tenantId: payload.tenantId || defaultVendorId,
           customerId: payload.customerId || "usr_priya",
           entryType: payload.direction === "CREDIT" ? "PAYMENT_RECEIVED" : "DELIVERY_CHARGE",
           direction: payload.direction, // "CREDIT" | "DEBIT"
@@ -317,8 +327,9 @@ export async function POST(request: Request) {
       }
 
       case "DISPATCH_NOTIFICATION": {
+        const defaultVendorId = (await AdminService.listVendorsAsync())[0]?.id || "ten_sharma_tiffin";
         const notif = await NotificationService.dispatchNotification({
-          tenantId: payload.tenantId || "ten_sharma_tiffin",
+          tenantId: payload.tenantId || defaultVendorId,
           customerId: payload.customerId || "usr_priya",
           recipientPhone: payload.phone || "+919876543212",
           eventType: "DAILY_POLL",

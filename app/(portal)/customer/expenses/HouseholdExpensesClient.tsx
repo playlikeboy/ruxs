@@ -24,7 +24,11 @@ export default function HouseholdExpensesClient() {
   const fetchExpenses = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/expenses?householdId=hh_sobha_b402");
+      let queryParam = "householdId=hh_sobha_b402";
+      if (user?.id) {
+        queryParam = `userId=${user.id}`;
+      }
+      const response = await fetch(`/api/expenses?${queryParam}`);
       const data = (await response.json()) as { success: boolean; data?: HouseholdExpense[] };
       setExpenses(data.success && data.data ? data.data : []);
     } catch (error) {

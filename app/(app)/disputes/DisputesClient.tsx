@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Dispute } from "@/src/modules/disputes/dispute-schema";
 import { formatINR, Paise } from "@/src/shared/types/money";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -10,13 +11,22 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { RuxsPageLoading } from "@/components/ui/LoadingState";
 
 export default function DisputesClient() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<string>("All");
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDisputes = async () => {
     try {
-      const res = await fetch("/api/disputes?tenantId=ten_sharma_tiffin");
+      const q = new URLSearchParams();
+      const tenantId = searchParams.get("tenantId");
+      if (tenantId) q.set("tenantId", tenantId);
+      const customerId = searchParams.get("customerId");
+      if (customerId) q.set("customerId", customerId);
+      const status = searchParams.get("status");
+      if (status) q.set("status", status);
+
+      const res = await fetch(`/api/disputes${q.toString() ? `?${q.toString()}` : ""}`);
       const data = (await res.json()) as { success: boolean; data?: Dispute[] };
       if (data.success && data.data) {
         setDisputes(data.data);
@@ -30,7 +40,7 @@ export default function DisputesClient() {
 
   useEffect(() => {
     fetchDisputes();
-  }, []);
+  }, [searchParams]);
 
   const handleResolve = async (
     disputeId: string,
@@ -46,7 +56,7 @@ export default function DisputesClient() {
           decision,
           refundPaise: decision === "FULL_REFUND" ? refundPaise : 0,
           resolutionNotes: notes,
-          resolvedBy: "Sharma (Owner)",
+          resolvedBy: "Merchant / Support Admin",
         }),
       });
       await fetchDisputes();
@@ -81,7 +91,9 @@ export default function DisputesClient() {
               <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider text-secondary border-secondary/40">
                 Arbitration & Quality
               </Badge>
-              <span className="text-xs text-muted-foreground font-mono">Sharma Tiffin Services</span>
+              <span className="text-xs text-muted-foreground font-mono">
+                {searchParams.get("tenantId") ? `Vendor: ${searchParams.get("tenantId")}` : "All Platform Vendors"}
+              </span>
             </div>
             <h1 className="text-2xl font-bold text-foreground">Dispute & Claim Management</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
