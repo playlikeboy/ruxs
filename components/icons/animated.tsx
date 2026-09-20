@@ -16,5 +16,8 @@ export { SearchIcon as Search } from "@animateicons/react/lucide/search-icon";
 export { SettingsIcon as Settings } from "@animateicons/react/lucide/settings-icon";
 export { UserPlusIcon as UserPlus } from "@animateicons/react/lucide/user-plus-icon";
 export { UsersIcon as Users } from "@animateicons/react/lucide/users-icon";
+export { MessageCircleIcon as MessageCircle } from "@animateicons/react/lucide/message-circle-icon";
+export { TriangleAlertIcon as CircleAlert } from "@animateicons/react/lucide/triangle-alert-icon";
+export { CoffeeIcon as Utensils } from "@animateicons/react/lucide/coffee-icon";
 export { WalletIcon as Wallet, WalletIcon as WalletCards } from "@animateicons/react/lucide/wallet-icon";
 export { XIcon as X } from "@animateicons/react/lucide/x-icon";
