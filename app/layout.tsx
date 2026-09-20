@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { HexclaveProvider, HexclaveTheme } from "@hexclave/next";
 import { hexclaveServerApp } from "@/src/hexclave/server";
 import { PwaManager } from "./components/PwaManager";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { TopProgressBar } from "@/components/ui/TopProgressBar";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -61,6 +63,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={cn("dark", geist.variable)}>
       <body className="min-h-screen bg-background text-foreground antialiased">
+        <Suspense fallback={null}>
+          <TopProgressBar />
+        </Suspense>
         <PwaManager />
         <HexclaveProvider app={hexclaveServerApp}>
           <HexclaveTheme>

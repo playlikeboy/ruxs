@@ -208,24 +208,39 @@ textarea {
   background-size: 48px 48px;
 }
 
-@keyframes ruxs-shimmer {
+@keyframes ruxs-shimmer-sweep {
   0% {
-    background-position: -200% 0;
+    transform: translateX(-100%);
   }
   100% {
-    background-position: 200% 0;
+    transform: translateX(100%);
   }
 }
 
 .shimmer-pulse {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.shimmer-pulse::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.02) 0%,
-    rgba(255, 255, 255, 0.075) 50%,
-    rgba(255, 255, 255, 0.02) 100%
+    transparent 0%,
+    rgba(159, 197, 143, 0.05) 20%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(159, 197, 143, 0.05) 80%,
+    transparent 100%
   );
-  background-size: 200% 100%;
-  animation: ruxs-shimmer 2.2s infinite ease-in-out;
+  animation: ruxs-shimmer-sweep 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes indeterminate-bar {

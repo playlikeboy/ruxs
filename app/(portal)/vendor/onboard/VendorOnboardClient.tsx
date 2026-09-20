@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { RuxsSpinner } from "@/components/ui/LoadingState";
 
 interface VendorCreatedState {
   id: string;
@@ -301,9 +302,16 @@ export default function VendorOnboardClient() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary hover:opacity-90 text-primary-foreground font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg disabled:opacity-50 mt-4"
+            className="w-full inline-flex items-center justify-center gap-2 bg-primary hover:opacity-90 text-primary-foreground font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg disabled:opacity-50 mt-4"
           >
-            {loading ? "Registering Business..." : "Create Vendor Account & Get Invite Link ✓"}
+            {loading ? (
+              <>
+                <RuxsSpinner size="sm" color="text-primary-foreground" />
+                <span>Registering Business...</span>
+              </>
+            ) : (
+              "Create Vendor Account & Get Invite Link ✓"
+            )}
           </button>
         </form>
       )}

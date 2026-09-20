@@ -16,9 +16,11 @@ import {
   Plus,
   Receipt,
   Sparkles,
+  Users,
   Utensils,
   X,
 } from "@/components/icons/animated";
+import { RuxsCardListSkeleton, RuxsSpinner } from "@/components/ui/LoadingState";
 
 const products = [
   {
@@ -283,8 +285,17 @@ export default function SubscribeClient() {
                 disabled={submitting}
                 className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
               >
-                {submitting ? "Creating your routine…" : user ? "Start this service" : "Sign in to start"}
-                <ArrowRight size={14} />
+                {submitting ? (
+                  <>
+                    <RuxsSpinner size="sm" color="text-primary-foreground" />
+                    <span>Creating your routine…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{user ? "Start this service" : "Sign in to start"}</span>
+                    <ArrowRight size={14} />
+                  </>
+                )}
               </button>
             </form>
           </section>
@@ -312,8 +323,8 @@ export default function SubscribeClient() {
                 </Link>
               </div>
             ) : loading ? (
-              <div className="space-y-3 p-5">
-                {[1, 2, 3].map((item) => <div key={item} className="h-20 animate-pulse rounded-2xl bg-white/[0.04]" />)}
+              <div className="p-5">
+                <RuxsCardListSkeleton count={3} />
               </div>
             ) : subscriptions.length === 0 ? (
               <div className="px-6 py-14 text-center">
