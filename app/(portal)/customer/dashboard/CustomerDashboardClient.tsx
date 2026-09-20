@@ -330,7 +330,7 @@ export default function CustomerDashboardClient() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Link href="/subscribe" className={buttonVariants({ variant: "outline", size: "sm", className: "h-10 rounded-xl border-white/[0.1] bg-white/[0.02] px-4 text-xs" })}>
+                <Link href="/customer/subscribe" className={buttonVariants({ variant: "outline", size: "sm", className: "h-10 rounded-xl border-white/[0.1] bg-white/[0.02] px-4 text-xs" })}>
                   Add a service
                 </Link>
                 <Button onClick={() => handlePayUPI(dueAmountPaise || 12000)} disabled={actionLoading} size="sm" className="h-10 rounded-xl px-4 text-xs font-semibold">
@@ -440,7 +440,7 @@ export default function CustomerDashboardClient() {
                     <Utensils className="mx-auto h-6 w-6 text-subtle" />
                     <p className="mt-3 text-sm font-medium">Nothing scheduled today</p>
                     <p className="mt-1 text-xs text-muted-foreground">Start a recurring service and RUXS will handle the routine from there.</p>
-                    <Link href="/subscribe" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-primary">
+                    <Link href="/customer/subscribe" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-primary">
                       Add a service <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>
@@ -495,7 +495,7 @@ export default function CustomerDashboardClient() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-subtle">Subscriptions</p>
                 <h2 className="mt-2 text-xl font-semibold">Recurring services</h2>
               </div>
-              <Link href="/subscribe" className="text-xs font-semibold text-primary">Add another service</Link>
+              <Link href="/customer/subscribe" className="text-xs font-semibold text-primary">Add another service</Link>
             </div>
 
             <div className="divide-y divide-white/[0.07]">
