@@ -30,7 +30,7 @@ interface MarketVendor {
   id: string;
   businessName: string;
   slug: string;
-  vendorType: "MILKMAN" | "WATER_SERVICE" | "TIFFIN";
+  vendorType: "MILKMAN" | "WATER_SERVICE" | "TIFFIN" | "FLOWERS" | "PET_SERVICES" | "LAUNDRY";
   locality: string;
   city: string;
   coveredSocieties: string[];
@@ -81,6 +81,25 @@ const cadences = [
   { id: "ALTERNATE_DAYS", label: "Alternate days" },
 ] as const;
 
+const SERVICE_CATEGORIES = [
+  { id: "ALL", label: "All Services", emoji: "⚡" },
+  { id: "WATER_SERVICE", label: "Water Cans", emoji: "💧" },
+  { id: "MILKMAN", label: "Milk & Dairy", emoji: "🥛" },
+  { id: "TIFFIN", label: "Tiffin & Meals", emoji: "🍱" },
+  { id: "FLOWERS", label: "Puja Flowers", emoji: "🌸" },
+  { id: "PET_SERVICES", label: "Pet Care", emoji: "🐾" },
+  { id: "LAUNDRY", label: "Iron & Wash", emoji: "🧺" },
+] as const;
+
+const VENDOR_TYPE_META: Record<string, { emoji: string; label: string; defaultProduct: string; unit: string; price: number }> = {
+  WATER_SERVICE: { emoji: "💧", label: "Water Cans", defaultProduct: "20L Bisleri Water Can", unit: "CAN", price: 4000 },
+  MILKMAN: { emoji: "🥛", label: "Milk & Dairy", defaultProduct: "Daily Pure Farm Fresh Milk", unit: "L", price: 6500 },
+  TIFFIN: { emoji: "🍱", label: "Tiffin & Meals", defaultProduct: "Standard Homestyle Thali", unit: "MEAL", price: 12000 },
+  FLOWERS: { emoji: "🌸", label: "Puja Flowers", defaultProduct: "Fresh Morning Puja Flower Basket", unit: "PACK", price: 1500 },
+  PET_SERVICES: { emoji: "🐾", label: "Pet Care", defaultProduct: "Daily Evening Dog Walk & Feed", unit: "WALK", price: 25000 },
+  LAUNDRY: { emoji: "🧺", label: "Iron & Wash", defaultProduct: "Daily Garment Steam Iron Pass", unit: "PIECE", price: 500 },
+};
+
 function SubscribeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -96,6 +115,7 @@ function SubscribeContent() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Form states
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [selectedVendorId, setSelectedVendorId] = useState<string>("");
   const [selectedShiftId, setSelectedShiftId] = useState<string>("AFTERNOON");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
@@ -114,16 +134,24 @@ function SubscribeContent() {
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
           setVendors(json.data);
 
-          // Check if pre-selected from URL query ?vendor=...
+          // Check if pre-selected from URL query ?vendor=... or ?category=...
           const paramVendorSlug = searchParams.get("vendor");
           const paramShift = searchParams.get("shift");
+          const paramCategory = searchParams.get("category");
+
+          if (paramCategory && SERVICE_CATEGORIES.some((c) => c.id === paramCategory)) {
+            setSelectedCategory(paramCategory);
+          }
 
           let initialVendor = json.data[0];
           if (paramVendorSlug) {
             const found = json.data.find(
               (v) => v.slug === paramVendorSlug || v.id === paramVendorSlug
             );
-            if (found) initialVendor = found;
+            if (found) {
+              initialVendor = found;
+              setSelectedCategory(found.vendorType);
+            }
           }
 
           setSelectedVendorId(initialVendor.id);
@@ -151,10 +179,16 @@ function SubscribeContent() {
     void loadVendors();
   }, [searchParams]);
 
+  // Filtered vendors by selected category
+  const filteredVendors = useMemo(() => {
+    if (selectedCategory === "ALL") return vendors;
+    return vendors.filter((v) => v.vendorType === selectedCategory);
+  }, [vendors, selectedCategory]);
+
   // Selected vendor reference
   const selectedVendor = useMemo(() => {
-    return vendors.find((v) => v.id === selectedVendorId) || vendors[0];
-  }, [vendors, selectedVendorId]);
+    return vendors.find((v) => v.id === selectedVendorId) || filteredVendors[0] || vendors[0];
+  }, [vendors, filteredVendors, selectedVendorId]);
 
   // Available products for current vendor
   const availableProducts = useMemo(() => {
@@ -172,12 +206,20 @@ function SubscribeContent() {
       }));
     }
 
+    const meta = (selectedVendor && VENDOR_TYPE_META[selectedVendor.vendorType]) || {
+      emoji: "📦",
+      label: "Routine",
+      defaultProduct: "Standard Subscription Item",
+      unit: "ITEM",
+      price: 5000,
+    };
+
     return [
       {
         id: `prd_${selectedVendor.id}_standard`,
-        name: selectedVendor.vendorType === "MILKMAN" ? "Daily Pure Milk" : selectedVendor.vendorType === "WATER_SERVICE" ? "20L Water Can" : "Standard Daily Meal",
-        unitType: selectedVendor.vendorType === "MILKMAN" ? "L" : selectedVendor.vendorType === "WATER_SERVICE" ? "CAN" : "MEAL",
-        basePricePaise: selectedVendor.vendorType === "MILKMAN" ? 6500 : selectedVendor.vendorType === "WATER_SERVICE" ? 4000 : 12000,
+        name: meta.defaultProduct,
+        unitType: meta.unit,
+        basePricePaise: meta.price,
       },
     ];
   }, [selectedVendor]);
@@ -378,12 +420,41 @@ function SubscribeContent() {
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <label className="text-[10px] font-semibold uppercase tracking-[0.14em] text-subtle">1. Select Local Merchant</label>
-                  <span className="text-[10px] text-muted-foreground">{vendors.length} verified vendors</span>
+                  <span className="text-[10px] text-muted-foreground">{filteredVendors.length} verified vendors</span>
                 </div>
+
+                {/* Service Category Pills */}
+                <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  {SERVICE_CATEGORIES.map((cat) => {
+                    const active = selectedCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategory(cat.id);
+                          const matching = cat.id === "ALL" ? vendors : vendors.filter((v) => v.vendorType === cat.id);
+                          if (matching.length > 0 && !matching.some((m) => m.id === selectedVendorId)) {
+                            setSelectedVendorId(matching[0].id);
+                          }
+                        }}
+                        className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition ${
+                          active
+                            ? "bg-primary text-primary-foreground shadow"
+                            : "border border-white/[0.08] bg-white/[0.02] text-muted-foreground hover:bg-white/[0.06] hover:text-foreground"
+                        }`}
+                      >
+                        <span>{cat.emoji}</span>
+                        <span>{cat.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {vendors.map((v) => {
+                  {filteredVendors.map((v) => {
                     const isSelected = v.id === selectedVendorId;
-                    const emoji = v.vendorType === "MILKMAN" ? "🥛" : v.vendorType === "WATER_SERVICE" ? "💧" : "🍱";
+                    const meta = VENDOR_TYPE_META[v.vendorType] || { emoji: "📦", label: v.vendorType };
                     return (
                       <button
                         key={v.id}
@@ -401,7 +472,12 @@ function SubscribeContent() {
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-base">{emoji}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base">{meta.emoji}</span>
+                            <span className="rounded-full bg-white/[0.05] px-2 py-0.5 text-[9px] font-medium text-muted-foreground">
+                              {meta.label}
+                            </span>
+                          </div>
                           <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-400">
                             <Star size={11} className="fill-amber-400" />
                             {v.rating}
