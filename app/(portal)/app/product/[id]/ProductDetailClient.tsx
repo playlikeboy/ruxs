@@ -137,7 +137,7 @@ export default function ProductDetailClient({
               {/* Geofence Delivery Guarantee Pill */}
               <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Doorstep Autopilot: $0 delivery</span>
+                <span>Doorstep Autopilot: ₹0 delivery</span>
               </div>
 
               {product.isBestSeller && (
@@ -245,7 +245,7 @@ export default function ProductDetailClient({
                     <ul className="space-y-1.5 text-xs text-muted-foreground pl-2">
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
-                        <span>$0 Delivery fee inside active society zone</span>
+                        <span>₹0 Delivery fee inside active society zone</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
@@ -316,11 +316,11 @@ export default function ProductDetailClient({
               <div className="flex items-center justify-between border-y border-white/[0.06] py-3">
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-extrabold text-white">
-                    ${(unitPrice / 100).toFixed(2)}
+                    {formatINR(unitPrice as Paise)}
                   </span>
                   {product.originalPricePaise && (
                     <span className="text-sm text-muted-foreground line-through">
-                      ${(product.originalPricePaise / 100).toFixed(2)}
+                      {formatINR(product.originalPricePaise as Paise)}
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground font-medium">/ {product.unit}</span>
@@ -362,7 +362,7 @@ export default function ProductDetailClient({
                               isSelected ? "text-emerald-400" : "text-muted-foreground"
                             }`}
                           >
-                            ${sizePrice.toFixed(2)}
+                            ₹{sizePrice.toFixed(2)}
                           </span>
                         </button>
                       );
@@ -433,7 +433,7 @@ export default function ProductDetailClient({
                 <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
                   <span>Subtotal ({quantity} item{quantity > 1 ? "s" : ""}):</span>
                   <span className="text-base font-extrabold text-white">
-                    ${(totalPrice / 100).toFixed(2)}
+                    {formatINR(totalPrice as Paise)}
                   </span>
                 </div>
 
@@ -444,7 +444,7 @@ export default function ProductDetailClient({
                   onClick={handleAddToCart}
                   className="mt-2 text-sm font-bold shadow-lg shadow-emerald-500/25"
                 >
-                  Add to Cart · ${(totalPrice / 100).toFixed(2)}
+                  Add to Cart · {formatINR(totalPrice as Paise)}
                 </DSButton>
 
                 <p className="text-center text-[10px] text-muted-foreground">
@@ -518,7 +518,7 @@ export default function ProductDetailClient({
                       {item.vendorName}
                     </p>
                     <p className="mt-1 text-sm font-extrabold text-white">
-                      ${(item.pricePaise / 100).toFixed(2)}
+                      {formatINR(item.pricePaise as Paise)}
                     </p>
                   </div>
 
