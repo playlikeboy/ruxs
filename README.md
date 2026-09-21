@@ -2,7 +2,7 @@
 
 **RUXS is a quiet operating layer for recurring local household services.**
 
-[Domain](https://ruxs.in) · [GitHub](https://github.com/SH20RAJ/ruxs) · Cloudflare Workers · Next.js App Router
+[Website](https://ruxs.in) · [GitHub](https://github.com/SH20RAJ/ruxs) · Cloudflare Workers · Next.js App Router
 
 RUXS coordinates recurring services such as meals, water and dairy without making households repeat themselves every day.
 

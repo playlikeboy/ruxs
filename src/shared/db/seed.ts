@@ -54,7 +54,7 @@ export interface SeededVendorData {
   upiId: string;
   fssaiNumber: string;
   planTier: "STARTER" | "GROWTH" | "PRO";
-  vendorType: "MILKMAN" | "WATER_SERVICE" | "TIFFIN";
+  vendorType: "MILKMAN" | "WATER_SERVICE" | "TIFFIN" | "FLOWERS" | "PET_SERVICES" | "LAUNDRY";
   status: "VERIFIED" | "PENDING_APPROVAL" | "SUSPENDED";
   locality: string;
   city: string;
@@ -66,7 +66,7 @@ export interface SeededVendorData {
   varieties?: SeededVendorVariety[];
   services: Array<{
     id: string;
-    category: "MILK" | "WATER" | "TIFFIN";
+    category: "MILK" | "WATER" | "TIFFIN" | "FLOWERS" | "PET_SERVICES" | "LAUNDRY";
     name: string;
     description: string;
     cutoffTimeStr: string;
@@ -479,6 +479,251 @@ export const SEEDED_VENDORS: SeededVendorData[] = [
     ],
     services: [],
   },
+  {
+    id: "ten_pushpam_flowers",
+    businessName: "Pushpam Daily Mandi Fresh Pooja Flowers",
+    slug: "pushpam-daily-pooja-flowers",
+    phone: "+919876543207",
+    email: "pushpam.flowers@ruxs.in",
+    upiId: "pushpamflowers@okhdfcbank",
+    fssaiNumber: "77889900112233",
+    planTier: "GROWTH",
+    vendorType: "FLOWERS",
+    status: "VERIFIED",
+    locality: "HSR Layout & Koramangala",
+    city: "Bengaluru",
+    coveredSocieties: ["Sobha Classic", "Purva Fairmont", "Prestige Ferns", "SJR Parkway", "Sobha Silicon Oasis"],
+    rating: 4.9,
+    reviewCount: 165,
+    deliverySlots: ["Early Morning (5:00 AM – 6:00 AM)"],
+    shifts: [
+      {
+        id: "MORNING",
+        label: "Early Morning Pooja Drop",
+        name: "Early Morning Pooja Drop",
+        timing: "5:00 AM – 6:00 AM",
+        cutoff: "08:00 PM (Prev Night)",
+        cutoffTime: "08:00 PM",
+        pricePaise: 2500,
+        monthlyEstimatePaise: 75000,
+        menuToday: "Assorted Marigold, Fragrant Jasmine, Hibiscus, Tulsi & Bilva Patra",
+      },
+    ],
+    varieties: [
+      {
+        id: "POOJA_BASKET",
+        name: "Daily Sacred Pushpa Basket (Assorted Marigold & Tulsi)",
+        packaging: "Eco Banana Leaf Pack",
+        pricePaise: 2500,
+        unit: "Daily Basket",
+      },
+      {
+        id: "JASMINE_MOGRA",
+        name: "Madurai Jasmine Mogra Veni (2 String Gazra)",
+        packaging: "Fresh Moisture Seal",
+        pricePaise: 4000,
+        unit: "2 Strands",
+      },
+      {
+        id: "TEMPLE_ARCHANA",
+        name: "Tuesday & Friday Grand Temple Archana Set",
+        packaging: "Pooja Thali Pack",
+        pricePaise: 6000,
+        unit: "Per Special",
+      },
+    ],
+    services: [
+      {
+        id: "srv_pushpam_daily",
+        category: "FLOWERS",
+        name: "Daily Pooja Flower Basket",
+        description: "Direct from city flower market before 5:30 AM in hygienic banana leaf packing.",
+        cutoffTimeStr: "20:00",
+        pollTimeStr: "18:00",
+        products: [
+          {
+            id: "prd_pushpam_basket",
+            name: "Daily Pushpa Basket",
+            unitType: "BASKET",
+            basePricePaise: 2500,
+          },
+          {
+            id: "prd_pushpam_jasmine",
+            name: "Fragrant Jasmine Gazra",
+            unitType: "STRAND",
+            basePricePaise: 4000,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "ten_pawsome_pets",
+    businessName: "Pawsome Daily Walks & Fresh Canine Meals",
+    slug: "pawsome-pets-daily-care",
+    phone: "+919876543208",
+    email: "care@pawsomepets.ruxs.in",
+    upiId: "pawsomepets@icici",
+    fssaiNumber: "88990011223344",
+    planTier: "PRO",
+    vendorType: "PET_SERVICES",
+    status: "VERIFIED",
+    locality: "HSR Layout Sector 2 & Bellandur",
+    city: "Bengaluru",
+    coveredSocieties: ["Sobha Classic", "Purva Fairmont", "Prestige Ferns", "SJR Parkway"],
+    rating: 4.95,
+    reviewCount: 142,
+    deliverySlots: ["Morning Walk (6:30 AM – 8:30 AM)", "Evening Walk & Dinner (5:30 PM – 7:30 PM)"],
+    shifts: [
+      {
+        id: "MORNING",
+        label: "Morning Walk & Refresh",
+        name: "Morning Walk & Refresh",
+        timing: "6:30 AM – 8:30 AM",
+        cutoff: "09:00 PM (Prev Night)",
+        cutoffTime: "09:00 PM",
+        pricePaise: 12000,
+        monthlyEstimatePaise: 360000,
+        menuToday: "30-min structured GPS walk + sanitized paw cleaning + fresh hydration",
+      },
+      {
+        id: "EVENING",
+        label: "Evening Walk & Warm Nutrition Bowl",
+        name: "Evening Walk & Warm Nutrition Bowl",
+        timing: "5:30 PM – 7:30 PM",
+        cutoff: "02:00 PM",
+        cutoffTime: "02:00 PM",
+        pricePaise: 15000,
+        monthlyEstimatePaise: 450000,
+        menuToday: "Simmered Free-Range Chicken, Pumpkin, Carrot & Brown Rice Stew",
+      },
+    ],
+    varieties: [
+      {
+        id: "DOG_WALK_SOLO",
+        name: "Daily Solo GPS Dog Walk (30 mins)",
+        packaging: "GPS Tracked Session",
+        pricePaise: 12000,
+        unit: "Per Walk",
+      },
+      {
+        id: "CANINE_MEAL_CHICKEN",
+        name: "Fresh Slow-Cooked Chicken Protein Bowl (500g)",
+        packaging: "Insulated Thermal Box",
+        pricePaise: 14000,
+        unit: "500g Bowl",
+      },
+      {
+        id: "CANINE_MEAL_VEG",
+        name: "Vitality Veg & Paneer Canine Bowl (500g)",
+        packaging: "Insulated Thermal Box",
+        pricePaise: 11000,
+        unit: "500g Bowl",
+      },
+    ],
+    services: [
+      {
+        id: "srv_pawsome_walk",
+        category: "PET_SERVICES",
+        name: "Certified Daily Dog Walk",
+        description: "KCI-certified handlers with real-time GPS tracking and doorstep pickup.",
+        cutoffTimeStr: "21:00",
+        pollTimeStr: "19:00",
+        products: [
+          {
+            id: "prd_pawsome_walk",
+            name: "Daily 30-min Dog Walk",
+            unitType: "SESSION",
+            basePricePaise: 12000,
+          },
+          {
+            id: "prd_pawsome_chicken_meal",
+            name: "Warm Chicken Stew Bowl",
+            unitType: "MEAL",
+            basePricePaise: 14000,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "ten_dhobi_express",
+    businessName: "DhobiExpress Steam Press & Doorstep Laundry",
+    slug: "dhobiexpress-steam-press-laundry",
+    phone: "+919876543209",
+    email: "ops@dhobiexpress.ruxs.in",
+    upiId: "dhobiexpress@paytm",
+    fssaiNumber: "99001122334455",
+    planTier: "GROWTH",
+    vendorType: "LAUNDRY",
+    status: "VERIFIED",
+    locality: "HSR Layout Sector 1 & Haralur",
+    city: "Bengaluru",
+    coveredSocieties: ["Sobha Classic", "Purva Fairmont", "Prestige Ferns", "SJR Parkway", "Prestige Meridian"],
+    rating: 4.85,
+    reviewCount: 208,
+    deliverySlots: ["Morning Pickup (7:00 AM – 9:00 AM)", "Evening Drop (6:00 PM – 8:00 PM)"],
+    shifts: [
+      {
+        id: "MORNING",
+        label: "Morning Doorstep Pickup",
+        name: "Morning Doorstep Pickup",
+        timing: "7:00 AM – 9:00 AM",
+        cutoff: "09:00 PM (Prev Night)",
+        cutoffTime: "09:00 PM",
+        pricePaise: 1500,
+        monthlyEstimatePaise: 90000,
+        menuToday: "24-hr high-pressure Italian steam press with hanger delivery",
+      },
+    ],
+    varieties: [
+      {
+        id: "STEAM_PRESS_60",
+        name: "Monthly Steam Press Pass (60 Garments)",
+        packaging: "Hanger & Dust Cover",
+        pricePaise: 90000,
+        unit: "Monthly Pass",
+      },
+      {
+        id: "WASH_AND_IRON_KG",
+        name: "Wash & Fold + Steam Iron 15kg Monthly Family Bundle",
+        packaging: "Eco Fabric Bag",
+        pricePaise: 149900,
+        unit: "15kg Bundle",
+      },
+      {
+        id: "PER_PIECE_PRESS",
+        name: "Steam Ironing (Shirts, Trousers, Sarees)",
+        packaging: "Hanger Delivered",
+        pricePaise: 1500,
+        unit: "Per Piece",
+      },
+    ],
+    services: [
+      {
+        id: "srv_dhobi_press",
+        category: "LAUNDRY",
+        name: "Doorstep Steam Press Routine",
+        description: "Professional steam ironing with wrinkle-free hanger delivery in 24 hours.",
+        cutoffTimeStr: "21:00",
+        pollTimeStr: "19:00",
+        products: [
+          {
+            id: "prd_dhobi_steam_piece",
+            name: "Steam Press (Per Piece)",
+            unitType: "PIECE",
+            basePricePaise: 1500,
+          },
+          {
+            id: "prd_dhobi_monthly_pass",
+            name: "60-Cloth Monthly Pass",
+            unitType: "PASS",
+            basePricePaise: 90000,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 let seededInMemory = false;
@@ -495,7 +740,7 @@ export async function seedDatabase(force: boolean = false): Promise<{ count: num
     try {
       // Check if tenants exist
       const existing = await db.select().from(tenantsTable);
-      if (existing.length >= 4 && !force) {
+      if (existing.length >= 8 && !force) {
         seededInMemory = true;
         return { count: existing.length, seeded: false };
       }

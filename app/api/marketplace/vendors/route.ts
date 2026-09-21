@@ -74,6 +74,12 @@ export async function GET(request: Request) {
           ? "MILKMAN"
           : category === "WATER"
           ? "WATER_SERVICE"
+          : category === "FLOWERS"
+          ? "FLOWERS"
+          : category === "PETS" || category === "PET_SERVICES"
+          ? "PET_SERVICES"
+          : category === "LAUNDRY"
+          ? "LAUNDRY"
           : "TIFFIN";
       vendors = vendors.filter((v) => v.vendorType === targetType);
     }
@@ -92,31 +98,39 @@ export async function GET(request: Request) {
       );
     }
 
-    // Ensure all vendors have fully normalized shifts and varieties
-    const normalizedVendors = vendors.map((v) => ({
-      ...v,
-      shifts: (v.shifts || []).map((s: any) => ({
-        id: s.id,
-        name: s.name || s.label || s.id,
-        label: s.label || s.name || s.id,
-        timing: s.timing || "",
-        cutoffTime: s.cutoffTime || s.cutoff || "",
-        cutoff: s.cutoff || s.cutoffTime || "",
-        pricePaise: s.pricePaise || 0,
-        monthlyEstimatePaise: s.monthlyEstimatePaise || 0,
-        menuToday: s.menuToday || (s.menu?.items ? s.menu.items.join(", ") : ""),
-        menu: s.menu,
-      })),
-      varieties: (v.varieties || []).map((va: any) => ({
-        id: va.id,
-        name: va.name,
-        unit: va.unit || "unit",
-        pricePaise: va.pricePaise || 0,
-        fatPercentage: va.fatPercentage || va.fatPercent || undefined,
-        container: va.container || va.packaging || undefined,
-        depositPaise: va.depositPaise || 0,
-      })),
-    }));
+    // Ensure all vendors have fully normalized shifts, varieties, and products
+    const normalizedVendors = vendors.map((v) => {
+      const baseline = SEEDED_VENDORS.find((s) => s.id === v.id || s.slug === v.slug);
+      const vendorServices = v.services?.length ? v.services : (baseline?.services || []);
+      const vendorProducts = vendorServices.flatMap((srv) => srv.products || []);
+
+      return {
+        ...v,
+        shifts: (v.shifts || []).map((s: any) => ({
+          id: s.id,
+          name: s.name || s.label || s.id,
+          label: s.label || s.name || s.id,
+          timing: s.timing || "",
+          cutoffTime: s.cutoffTime || s.cutoff || "",
+          cutoff: s.cutoff || s.cutoffTime || "",
+          pricePaise: s.pricePaise || 0,
+          monthlyEstimatePaise: s.monthlyEstimatePaise || 0,
+          menuToday: s.menuToday || (s.menu?.items ? s.menu.items.join(", ") : ""),
+          menu: s.menu,
+        })),
+        varieties: (v.varieties || []).map((va: any) => ({
+          id: va.id,
+          name: va.name,
+          unit: va.unit || "unit",
+          pricePaise: va.pricePaise || 0,
+          fatPercentage: va.fatPercentage || va.fatPercent || undefined,
+          container: va.container || va.packaging || undefined,
+          depositPaise: va.depositPaise || 0,
+        })),
+        services: vendorServices,
+        products: vendorProducts,
+      };
+    });
 
     return Response.json(createSuccessResponse(normalizedVendors));
   } catch (error) {
