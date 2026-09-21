@@ -548,7 +548,7 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
               ["Households", String(overview?.totalHouseholds || 0), "active records"],
               ["Today", String(overview?.todayDeliveriesCount || 0), String(overview?.deliveredCount || 0) + " delivered"],
               ["Disputes", String(overview?.openDisputesCount || 0), "open cases"],
-              ["GMV", overview ? formatINR((overview.monthlyGmvPaise || 0) as Paise) : "$0", "current window"],
+              ["GMV", overview ? formatINR((overview.monthlyGmvPaise || 0) as Paise) : "₹0", "current window"],
             ].map(([label, value, detail]) => (
               <div key={label} className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-5">
                 <p className="text-[10px] font-medium text-muted-foreground">{label}</p>
@@ -1122,7 +1122,7 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="font-semibold text-foreground">Amount ($)</label>
+                <label className="font-semibold text-foreground">Amount (₹)</label>
                 <input
                   type="number"
                   min="1"
@@ -1182,8 +1182,8 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                   onChange={(e) => setExchangeForm({ ...exchangeForm, assetType: e.target.value })}
                   className="w-full bg-background border border-input rounded-lg px-3 py-2 text-foreground"
                 >
-                  <option value="WATER_JAR_20L">20L RO Mineral Water Can ($5.00 dep)</option>
-                  <option value="INSULATED_TIFFIN_BOX">Insulated Stainless Tiffin ($10.00 dep)</option>
+                  <option value="WATER_JAR_20L">20L RO Mineral Water Can (₹5.00 dep)</option>
+                  <option value="INSULATED_TIFFIN_BOX">Insulated Stainless Tiffin (₹10.00 dep)</option>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-2">
