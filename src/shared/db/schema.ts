@@ -28,6 +28,60 @@ export const tenants = pgTable(
   ]
 );
 
+export type VendorType =
+  | "WATER_SERVICE"
+  | "MILKMAN"
+  | "TIFFIN"
+  | "FLOWERS"
+  | "PET_SERVICES"
+  | "LAUNDRY";
+
+export interface WaterServiceConfig {
+  canCapacities: string[];
+  depositPaisePerCan: number;
+  waterSource?: string;
+  tdsLevel?: number;
+  emptyCanExchange: boolean;
+  coveredSocieties: string[];
+}
+
+export interface MilkmanConfig {
+  shifts: string[];
+  varieties: string[];
+  packaging: "GLASS_BOTTLES" | "POUCHES" | "BOTH";
+  bottleDepositPaise?: number;
+  coveredSocieties: string[];
+}
+
+export interface TiffinConfig {
+  shifts: string[];
+  dietOptions: string[];
+  packaging: "STEEL_DABBA" | "ECO_DISPOSABLE" | "BOTH";
+  todayMenuPreview?: string;
+  coveredSocieties: string[];
+}
+
+export interface FlowersConfig {
+  flowerTypes: string[];
+  frequencyOptions: string[];
+  morningCutoffTime: string;
+  coveredSocieties: string[];
+}
+
+export interface PetServicesConfig {
+  petTypes: string[];
+  servicesOffered: string[];
+  slotTimings: string[];
+  coveredSocieties: string[];
+}
+
+export interface LaundryConfig {
+  turnaroundHours: number;
+  servicesOffered: string[];
+  freePickupDelivery: boolean;
+  coveredSocieties: string[];
+}
+
 // ---------------------------------------------------------------------------
 // 2. Users (Customers, Vendor Admins, Delivery Drivers, Platform Admins)
 // ---------------------------------------------------------------------------

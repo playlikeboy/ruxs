@@ -57,7 +57,9 @@ export const AdminVendorProfileSchema = z.object({
   businessName: z.string(),
   slug: z.string(),
   phone: z.string(),
-  vendorType: z.enum(["MILKMAN", "WATER_SERVICE", "TIFFIN"]).default("TIFFIN"),
+  vendorType: z
+    .enum(["MILKMAN", "WATER_SERVICE", "TIFFIN", "FLOWERS", "PET_SERVICES", "LAUNDRY"])
+    .default("TIFFIN"),
   serviceCategories: z.array(z.string()),
   coveredSocieties: z.array(z.string()),
   status: VendorApprovalStatusSchema.default("PENDING_APPROVAL"),

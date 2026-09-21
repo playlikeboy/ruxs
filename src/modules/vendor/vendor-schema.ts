@@ -3,7 +3,13 @@ import { isValidIndianPhone, normalizeIndianPhone } from "../../shared/auth/phon
 
 export const UPI_ID_REGEX = /^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,64}$/;
 
-export type VendorType = "MILKMAN" | "WATER_SERVICE" | "TIFFIN";
+export type VendorType =
+  | "MILKMAN"
+  | "WATER_SERVICE"
+  | "TIFFIN"
+  | "FLOWERS"
+  | "PET_SERVICES"
+  | "LAUNDRY";
 export type VendorApprovalStatus = "PENDING_APPROVAL" | "VERIFIED" | "SUSPENDED";
 
 export const MilkmanConfigSchema = z.object({
@@ -26,6 +32,24 @@ export const TiffinConfigSchema = z.object({
   todayMenuPreview: z.string().optional(),
 });
 
+export const FlowersConfigSchema = z.object({
+  flowerTypes: z.array(z.string()).default(["POOJA_MIX", "JASMINE_VENI", "TEMPLE_SET"]),
+  frequencyOptions: z.array(z.string()).default(["DAILY", "TUE_FRI"]),
+  morningCutoffTime: z.string().default("20:00"),
+});
+
+export const PetServicesConfigSchema = z.object({
+  petTypes: z.array(z.enum(["DOG", "CAT"])).default(["DOG"]),
+  servicesOffered: z.array(z.string()).default(["WALK", "FRESH_MEAL", "GROOMING"]),
+  slotTimings: z.array(z.string()).default(["07:00 AM", "06:00 PM"]),
+});
+
+export const LaundryConfigSchema = z.object({
+  turnaroundHours: z.number().default(24),
+  servicesOffered: z.array(z.string()).default(["STEAM_PRESS", "WASH_AND_IRON", "DRY_CLEAN"]),
+  freePickupDelivery: z.boolean().default(true),
+});
+
 export const VendorOnboardingSchema = z.object({
   businessName: z
     .string()
@@ -43,8 +67,12 @@ export const VendorOnboardingSchema = z.object({
     .string()
     .regex(UPI_ID_REGEX, "Please enter a valid UPI ID (e.g., merchant@okhdfcbank or 9876543210@paytm)")
     .trim(),
-  vendorType: z.enum(["MILKMAN", "WATER_SERVICE", "TIFFIN"]).default("TIFFIN"),
-  primaryCategory: z.enum(["TIFFIN", "WATER", "MILK"]).optional(),
+  vendorType: z
+    .enum(["MILKMAN", "WATER_SERVICE", "TIFFIN", "FLOWERS", "PET_SERVICES", "LAUNDRY"])
+    .default("TIFFIN"),
+  primaryCategory: z
+    .enum(["TIFFIN", "WATER", "MILK", "FLOWERS", "PETS", "LAUNDRY"])
+    .optional(),
   typeConfig: z.record(z.string(), z.any()).optional().default({}),
   locality: z.string().min(2, "Locality/Area name is required").trim(),
   city: z.string().min(2, "City name is required").trim().default("Bengaluru"),

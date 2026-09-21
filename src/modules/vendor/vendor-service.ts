@@ -29,6 +29,9 @@ export class VendorService {
     if (validated.primaryCategory) {
       if (validated.primaryCategory === "MILK") resolvedType = "MILKMAN";
       else if (validated.primaryCategory === "WATER") resolvedType = "WATER_SERVICE";
+      else if (validated.primaryCategory === "FLOWERS") resolvedType = "FLOWERS";
+      else if (validated.primaryCategory === "PETS") resolvedType = "PET_SERVICES";
+      else if (validated.primaryCategory === "LAUNDRY") resolvedType = "LAUNDRY";
       else resolvedType = "TIFFIN";
     }
 
@@ -57,7 +60,19 @@ export class VendorService {
       phone: validated.phone,
       upiId: validated.upiId,
       vendorType: resolvedType,
-      primaryCategory: validated.primaryCategory || (resolvedType === "MILKMAN" ? "MILK" : resolvedType === "WATER_SERVICE" ? "WATER" : "TIFFIN"),
+      primaryCategory:
+        validated.primaryCategory ||
+        (resolvedType === "MILKMAN"
+          ? "MILK"
+          : resolvedType === "WATER_SERVICE"
+          ? "WATER"
+          : resolvedType === "FLOWERS"
+          ? "FLOWERS"
+          : resolvedType === "PET_SERVICES"
+          ? "PETS"
+          : resolvedType === "LAUNDRY"
+          ? "LAUNDRY"
+          : "TIFFIN"),
       typeConfig: validated.typeConfig || {},
       locality: validated.locality,
       city: validated.city,
