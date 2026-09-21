@@ -265,7 +265,7 @@ export function DiscoveryView() {
                 {/* Price Display */}
                 <div className="mt-1 flex items-baseline gap-1.5">
                   <span className="text-base font-extrabold text-foreground">
-                    ${(product.pricePaise / 100).toFixed(2)}
+                    {formatINR(product.pricePaise as Paise)}
                   </span>
                   {product.originalPricePaise && (
                     <span className="text-xs text-muted-foreground line-through">
