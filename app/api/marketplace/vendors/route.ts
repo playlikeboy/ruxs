@@ -92,7 +92,33 @@ export async function GET(request: Request) {
       );
     }
 
-    return Response.json(createSuccessResponse(vendors));
+    // Ensure all vendors have fully normalized shifts and varieties
+    const normalizedVendors = vendors.map((v) => ({
+      ...v,
+      shifts: (v.shifts || []).map((s: any) => ({
+        id: s.id,
+        name: s.name || s.label || s.id,
+        label: s.label || s.name || s.id,
+        timing: s.timing || "",
+        cutoffTime: s.cutoffTime || s.cutoff || "",
+        cutoff: s.cutoff || s.cutoffTime || "",
+        pricePaise: s.pricePaise || 0,
+        monthlyEstimatePaise: s.monthlyEstimatePaise || 0,
+        menuToday: s.menuToday || (s.menu?.items ? s.menu.items.join(", ") : ""),
+        menu: s.menu,
+      })),
+      varieties: (v.varieties || []).map((va: any) => ({
+        id: va.id,
+        name: va.name,
+        unit: va.unit || "unit",
+        pricePaise: va.pricePaise || 0,
+        fatPercentage: va.fatPercentage || va.fatPercent || undefined,
+        container: va.container || va.packaging || undefined,
+        depositPaise: va.depositPaise || 0,
+      })),
+    }));
+
+    return Response.json(createSuccessResponse(normalizedVendors));
   } catch (error) {
     return Response.json(
       createErrorResponse(

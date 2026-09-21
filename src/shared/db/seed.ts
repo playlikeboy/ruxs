@@ -25,11 +25,14 @@ export interface SeededVendorMenuItem {
 export interface SeededVendorShift {
   id: "MORNING" | "AFTERNOON" | "EVENING" | "NIGHT";
   label: string;
+  name?: string;
   timing: string;
   cutoff: string;
+  cutoffTime?: string;
   pricePaise: number;
   monthlyEstimatePaise: number;
   menu?: SeededVendorMenuItem;
+  menuToday?: string;
 }
 
 export interface SeededVendorVariety {

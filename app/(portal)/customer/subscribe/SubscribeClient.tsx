@@ -39,11 +39,18 @@ interface MarketVendor {
   deliverySlots: string[];
   shifts?: Array<{
     id: string;
-    name: string;
+    name?: string;
+    label?: string;
     timing: string;
-    cutoffTime: string;
-    menuToday: string;
+    cutoff?: string;
+    cutoffTime?: string;
+    menuToday?: string;
     pricePaise: number;
+    menu?: {
+      title?: string;
+      items?: string[];
+      diet?: string;
+    };
   }>;
   varieties?: Array<{
     id: string;
@@ -258,7 +265,7 @@ function SubscribeContent() {
           tenantId: selectedVendor.id,
           customerId,
           productId: selectedProduct.id,
-          productName: `${selectedProduct.name} (${activeShift?.name || selectedVendor.businessName})`,
+          productName: `${selectedProduct.name} (${activeShift?.name || (activeShift as any)?.label || selectedVendor.businessName})`,
           unitPricePaise: effectiveUnitPricePaise,
           cadence,
           shift: selectedShiftId,
@@ -429,9 +436,9 @@ function SubscribeContent() {
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <p className="text-xs font-bold text-foreground">{s.name}</p>
+                            <p className="text-xs font-bold text-foreground">{s.name || (s as any).label || s.id}</p>
                             <span className="rounded-md border border-white/[0.1] bg-black/20 px-1.5 py-0.5 text-[9px] font-mono text-muted-foreground">
-                              Cutoff {s.cutoffTime}
+                              Cutoff {s.cutoffTime || (s as any).cutoff || "Standard"}
                             </span>
                           </div>
                           <p className="mt-1 text-[11px] text-subtle">{s.timing}</p>
@@ -444,17 +451,17 @@ function SubscribeContent() {
                   </div>
 
                   {/* Shift Menu Details Box */}
-                  {activeShift?.menuToday && (
+                  {Boolean(activeShift && (activeShift.menuToday || (activeShift as any)?.menu?.items)) && (
                     <div className="mt-3 rounded-2xl border border-primary/20 bg-primary/[0.04] p-4 text-xs">
                       <div className="flex items-center gap-2 font-semibold text-primary">
                         <ChefHat size={14} />
-                        <span>Today&apos;s Menu ({activeShift.name}):</span>
+                        <span>Today&apos;s Menu ({activeShift?.name || (activeShift as any)?.label || "Selected"}):</span>
                       </div>
                       <p className="mt-1.5 text-[11px] leading-relaxed text-foreground">
-                        {activeShift.menuToday}
+                        {activeShift?.menuToday || ((activeShift as any)?.menu?.items ? (activeShift as any).menu.items.join(", ") : "")}
                       </p>
                       <p className="mt-2 text-[10px] text-muted-foreground">
-                        Order modifications and skips are accepted until daily cutoff at {activeShift.cutoffTime}.
+                        Order modifications and skips are accepted until daily cutoff at {activeShift?.cutoffTime || (activeShift as any)?.cutoff || "10:00 AM"}.
                       </p>
                     </div>
                   )}

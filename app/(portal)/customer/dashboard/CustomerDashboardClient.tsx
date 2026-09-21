@@ -131,11 +131,18 @@ interface MarketVendor {
   deliverySlots: string[];
   shifts?: Array<{
     id: string;
-    name: string;
+    name?: string;
+    label?: string;
     timing: string;
-    cutoffTime: string;
-    menuToday: string;
+    cutoff?: string;
+    cutoffTime?: string;
+    menuToday?: string;
     pricePaise: number;
+    menu?: {
+      title?: string;
+      items?: string[];
+      diet?: string;
+    };
   }>;
   varieties?: Array<{
     id: string;
@@ -324,7 +331,10 @@ export default function CustomerDashboardClient() {
         const matchesName = v.businessName.toLowerCase().includes(q);
         const matchesLocality = v.locality.toLowerCase().includes(q);
         const matchesSocieties = v.coveredSocieties.some((s) => String(s).toLowerCase().includes(q));
-        const matchesMenu = v.shifts?.some((s) => String(s.menuToday || "").toLowerCase().includes(q));
+        const matchesMenu = v.shifts?.some((s) => {
+          const menuText = s.menuToday || (s.menu?.items ? s.menu.items.join(", ") : "");
+          return menuText ? menuText.toLowerCase().includes(q) : false;
+        });
         if (!matchesName && !matchesLocality && !matchesSocieties && !matchesMenu) {
           return false;
         }
@@ -473,7 +483,7 @@ export default function CustomerDashboardClient() {
                   <span className="text-subtle">{new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "short" }).format(new Date())}</span>
                 </div>
                 <h1 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
-                  Good day, {displayName.split(" ")[0] || "there"}.
+                  Good day, {typeof displayName === "string" && displayName.trim() ? displayName.trim().split(" ")[0] : "there"}.
                 </h1>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
                   Order your daily lunch, dinner, fresh farm milk, and water cans from verified society merchants. Manage cutoffs with zero paperwork.
@@ -784,42 +794,49 @@ export default function CustomerDashboardClient() {
                             <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">
                               Daily Shift Timings & Menus:
                             </p>
-                            {vendor.shifts.map((shift) => (
-                              <div
-                                key={shift.id}
-                                className="rounded-2xl border border-white/[0.06] bg-black/20 p-3 text-xs"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-bold text-foreground flex items-center gap-1">
-                                    <Clock size={12} className="text-primary" />
-                                    {shift.name}
-                                  </span>
-                                  {shift.pricePaise > 0 && (
-                                    <span className="font-semibold text-primary">
-                                      {formatINR(shift.pricePaise as Paise)}
+                            {vendor.shifts.map((shift) => {
+                              const shiftName = shift.name || shift.label || shift.id || "Meal";
+                              const shiftShortName = shiftName.includes(" ") ? shiftName.split(" ")[1] : shiftName;
+                              const cutoffStr = shift.cutoffTime || shift.cutoff || "Before Delivery";
+                              const menuStr = shift.menuToday || (shift.menu?.items ? shift.menu.items.join(", ") : "");
+
+                              return (
+                                <div
+                                  key={shift.id}
+                                  className="rounded-2xl border border-white/[0.06] bg-black/20 p-3 text-xs"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-bold text-foreground flex items-center gap-1">
+                                      <Clock size={12} className="text-primary" />
+                                      {shiftName}
                                     </span>
-                                  )}
-                                </div>
-                                <p className="mt-0.5 text-[10px] text-muted-foreground">
-                                  {shift.timing} · Cutoff {shift.cutoffTime}
-                                </p>
-                                {shift.menuToday && (
-                                  <div className="mt-2 rounded-xl bg-white/[0.025] border border-white/[0.04] p-2 text-[11px] leading-relaxed text-foreground">
-                                    <span className="font-semibold text-primary mr-1">Today&apos;s Menu:</span>
-                                    {shift.menuToday}
+                                    {shift.pricePaise > 0 && (
+                                      <span className="font-semibold text-primary">
+                                        {formatINR(shift.pricePaise as Paise)}
+                                      </span>
+                                    )}
                                   </div>
-                                )}
-                                <div className="mt-2 flex justify-end">
-                                  <Link
-                                    href={`/customer/subscribe?vendor=${vendor.slug}&shift=${shift.id}`}
-                                    className="text-[10px] font-semibold text-primary hover:underline flex items-center gap-1"
-                                  >
-                                    Subscribe to {shift.name.split(" ")[1] || shift.name}
-                                    <ArrowRight size={10} />
-                                  </Link>
+                                  <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                    {shift.timing} · Cutoff {cutoffStr}
+                                  </p>
+                                  {menuStr && (
+                                    <div className="mt-2 rounded-xl bg-white/[0.025] border border-white/[0.04] p-2 text-[11px] leading-relaxed text-foreground">
+                                      <span className="font-semibold text-primary mr-1">Today&apos;s Menu:</span>
+                                      {menuStr}
+                                    </div>
+                                  )}
+                                  <div className="mt-2 flex justify-end">
+                                    <Link
+                                      href={`/customer/subscribe?vendor=${vendor.slug}&shift=${shift.id}`}
+                                      className="text-[10px] font-semibold text-primary hover:underline flex items-center gap-1"
+                                    >
+                                      Subscribe to {shiftShortName}
+                                      <ArrowRight size={10} />
+                                    </Link>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         ) : vendor.varieties && vendor.varieties.length > 0 ? (
                           /* Varieties for Milk & Water */
