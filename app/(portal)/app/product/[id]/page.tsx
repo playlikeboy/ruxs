@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { formatINR, Paise } from "@/src/shared/types/money";
 import {
   getProductById,
   getVendorById,
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const priceStr = `$${(product.pricePaise / 100).toFixed(2)}`;
+  const priceStr = formatINR(product.pricePaise as Paise);
   const title = `${product.name} (${priceStr}) · ${product.vendorName} | RUXS`;
   const description = `${product.description} Available for doorstep delivery and recurring routine in Bangalore gated societies on RUXS.`;
   const canonicalUrl = `https://ruxs.in/app/product/${product.id}`;
@@ -108,7 +109,7 @@ export default async function ProductPage({ params }: PageProps) {
     offers: {
       "@type": "Offer",
       url: `https://ruxs.in/app/product/${product.id}`,
-      priceCurrency: "USD",
+      priceCurrency: "INR",
       price: (product.pricePaise / 100).toFixed(2),
       availability: "https://schema.org/InStock",
       seller: {
