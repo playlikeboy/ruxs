@@ -128,7 +128,7 @@ export function CartDrawer() {
                     {item.selectedSize?.name || item.product.vendorName}
                   </p>
                   <p className="mt-1 text-xs font-extrabold text-foreground">
-                    ${(item.totalPricePaise / 100).toFixed(2)}
+                    {formatINR(item.totalPricePaise as Paise)}
                   </p>
                 </div>
 
