@@ -426,14 +426,14 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                         <p className="text-xs font-semibold text-foreground">Desi Gir Cow A2 Raw Milk</p>
                         <p className="text-[10px] text-muted-foreground">4.8% Fat · Sealed Glass Bottle</p>
                       </div>
-                      <span className="text-xs font-mono font-bold text-primary">$3.50 / L</span>
+                      <span className="text-xs font-mono font-bold text-primary">₹3.50 / L</span>
                     </div>
                     <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.01] p-3">
                       <div>
                         <p className="text-xs font-semibold text-foreground">Farm Fresh Pure Cow Milk</p>
                         <p className="text-[10px] text-muted-foreground">3.8% Fat · Sealed Glass Bottle</p>
                       </div>
-                      <span className="text-xs font-mono font-bold text-primary">$2.75 / L</span>
+                      <span className="text-xs font-mono font-bold text-primary">₹2.75 / L</span>
                     </div>
                   </div>
                 </div>
@@ -448,20 +448,20 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                         <p className="text-xs font-semibold text-foreground">Bisleri Sealed 20L Bubbletop Can</p>
                         <p className="text-[10px] text-muted-foreground">Doorstep 1-to-1 Empty Exchange</p>
                       </div>
-                      <span className="text-xs font-mono font-bold text-primary">$2.99 / Can</span>
+                      <span className="text-xs font-mono font-bold text-primary">₹2.99 / Can</span>
                     </div>
                     <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.01] p-3">
                       <div>
                         <p className="text-xs font-semibold text-foreground">RO Ultra-Pure 20L Mineral Can</p>
                         <p className="text-[10px] text-muted-foreground">Doorstep 1-to-1 Empty Exchange</p>
                       </div>
-                      <span className="text-xs font-mono font-bold text-primary">$1.99 / Can</span>
+                      <span className="text-xs font-mono font-bold text-primary">₹1.99 / Can</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-3 text-xs text-cyan-200">
-                  Refundable Empty Jar Deposit: <span className="font-bold text-foreground font-mono">$5.00 / Jar</span>
+                  Refundable Empty Jar Deposit: <span className="font-bold text-foreground font-mono">₹5.00 / Jar</span>
                 </div>
               </div>
             ) : (
@@ -472,7 +472,7 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                     <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-3.5 space-y-1.5">
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-semibold text-primary">Afternoon Lunch Thali (12:30 PM)</span>
-                        <span className="text-xs font-mono font-bold text-foreground">$8.99 / meal</span>
+                        <span className="text-xs font-mono font-bold text-foreground">₹8.99 / meal</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground">
                         4 Ghee Phulkas, Dal Tadka, Paneer Butter Masala, Jeera Rice, Boondi Raita, Gulab Jamun
@@ -482,7 +482,7 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                     <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-3.5 space-y-1.5">
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-semibold text-primary">Night Light Dinner Thali (7:30 PM)</span>
-                        <span className="text-xs font-mono font-bold text-foreground">$9.99 / meal</span>
+                        <span className="text-xs font-mono font-bold text-foreground">₹9.99 / meal</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground">
                         3 Multigrain Rotis, Yellow Dal Fry, Aloo Gobi Matar, Steamed Rice, Roasted Papad, Salad
