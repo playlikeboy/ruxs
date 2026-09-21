@@ -227,7 +227,7 @@ export function ProductDetailModal() {
                         <p className="text-xs font-bold text-foreground">{addon.name}</p>
                         <p className="text-[11px] text-muted-foreground">
                           {addon.subtitle ? `${addon.subtitle} · ` : ""}
-                          +${(addon.pricePaise / 100).toFixed(2)}
+                          +{formatINR(addon.pricePaise as Paise)}
                         </p>
                       </div>
                     </div>
@@ -266,7 +266,7 @@ export function ProductDetailModal() {
             onClick={handleAddToCart}
             className="flex-1"
           >
-            Add to Cart · ${(totalPrice / 100).toFixed(2)}
+            Add to Cart · {formatINR(totalPrice as Paise)}
           </DSButton>
         </div>
       </div>
