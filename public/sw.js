@@ -35,39 +35,57 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // 1. NEVER cache dynamic financial or auth API routes
+  // 1. Only handle same-origin GET requests (bypass third-party analytics/CDNs and mutations)
+  if (request.method !== "GET" || !url.origin.startsWith(self.location.origin)) {
+    return;
+  }
+
+  // 2. NEVER cache dynamic financial or auth API routes
   if (url.pathname.startsWith("/api/")) {
     return; // Pass through to network
   }
 
-  // 2. Navigation requests: Network-first with offline fallback
+  // 3. Navigation requests: Network-first with offline fallback
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request).catch(() => {
         return caches.match(OFFLINE_FALLBACK).then((fallback) => {
-          return fallback || new Response("Offline — Please check internet connection", {
-            headers: { "Content-Type": "text/plain" },
-          });
+          return (
+            fallback ||
+            new Response("Offline — Please check internet connection", {
+              status: 200,
+              headers: { "Content-Type": "text/plain" },
+            })
+          );
         });
       })
     );
     return;
   }
 
-  // 3. Static assets: Stale-while-revalidate
+  // 4. Static assets: Stale-while-revalidate for same-origin assets
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
-      const fetchPromise = fetch(request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => cachedResponse);
+      const fetchPromise = fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
 
-      return cachedResponse || fetchPromise;
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetchPromise.then((res) => {
+        if (res) return res;
+        return new Response("Not found", { status: 404, statusText: "Not Found" });
+      });
     })
   );
 });
