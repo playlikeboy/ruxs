@@ -79,11 +79,11 @@ export default function SearchClient() {
         p.vendorName.toLowerCase().includes(query.toLowerCase()) ||
         p.description.toLowerCase().includes(query.toLowerCase());
 
-      const priceDollars = p.pricePaise / 100;
+      const priceRupees = p.pricePaise / 100;
       let matchesPrice = true;
-      if (priceFilter === "UNDER_5") matchesPrice = priceDollars < 5;
-      else if (priceFilter === "5_TO_10") matchesPrice = priceDollars >= 5 && priceDollars <= 10;
-      else if (priceFilter === "OVER_10") matchesPrice = priceDollars > 10;
+      if (priceFilter === "UNDER_5") matchesPrice = priceRupees < 500;
+      else if (priceFilter === "5_TO_10") matchesPrice = priceRupees >= 500 && priceRupees <= 1000;
+      else if (priceFilter === "OVER_10") matchesPrice = priceRupees > 1000;
 
       return matchesCategory && matchesQuery && matchesPrice;
     });
@@ -186,9 +186,9 @@ export default function SearchClient() {
             <span className="text-muted-foreground font-semibold mr-1">Price:</span>
             {[
               { id: "ALL", label: "All" },
-              { id: "UNDER_5", label: "< $5" },
-              { id: "5_TO_10", label: "$5 - $10" },
-              { id: "OVER_10", label: "> $10" },
+              { id: "UNDER_5", label: "< ₹500" },
+              { id: "5_TO_10", label: "₹500 - ₹1,000" },
+              { id: "OVER_10", label: "> ₹1,000" },
             ].map((p) => (
               <button
                 key={p.id}
@@ -308,11 +308,11 @@ export default function SearchClient() {
                       {/* Price Display */}
                       <div className="mt-1 flex items-baseline gap-1.5">
                         <span className="text-base font-extrabold text-foreground">
-                          ${(product.pricePaise / 100).toFixed(2)}
+                          {formatINR(product.pricePaise as Paise)}
                         </span>
                         {product.originalPricePaise && (
                           <span className="text-xs text-muted-foreground line-through">
-                            ${(product.originalPricePaise / 100).toFixed(2)}
+                            {formatINR(product.originalPricePaise as Paise)}
                           </span>
                         )}
                       </div>
