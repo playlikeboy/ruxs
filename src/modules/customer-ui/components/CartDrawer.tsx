@@ -229,7 +229,7 @@ export function CartDrawer() {
               onClick={handleCheckout}
               className="font-bold text-base shadow-[0_8px_24px_rgba(16,185,129,0.3)]"
             >
-              Checkout · ${(totalPaise / 100).toFixed(2)}
+              Checkout · {formatINR(totalPaise as Paise)}
             </DSButton>
           </div>
         )}
