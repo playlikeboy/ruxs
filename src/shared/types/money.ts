@@ -23,15 +23,15 @@ export function toRupees(paise: Paise): number {
 }
 
 /**
- * Formats integer Paise/cents into a standard USD currency string (e.g., "$3,680.50").
+ * Formats integer Paise into a standard Indian Rupee currency string (e.g., "₹3,680.50").
  */
-export function formatUSD(paise: Paise, options?: { hideDecimalsIfZero?: boolean }): string {
+export function formatINR(paise: Paise, options?: { hideDecimalsIfZero?: boolean }): string {
   const units = paise / 100;
   const isZeroDecimals = units % 1 === 0 && options?.hideDecimalsIfZero;
 
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
     minimumFractionDigits: isZeroDecimals ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(units);
@@ -40,12 +40,7 @@ export function formatUSD(paise: Paise, options?: { hideDecimalsIfZero?: boolean
 /**
  * Universal currency formatter for RUXS.
  */
-export const formatCurrency = formatUSD;
-
-/**
- * Format alias for backward compatibility, standardizing all currency output to USD ($).
- */
-export const formatINR = formatUSD;
+export const formatCurrency = formatINR;
 
 /**
  * Safe integer addition for Paise.
