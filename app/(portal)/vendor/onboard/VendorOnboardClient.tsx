@@ -400,7 +400,7 @@ export default function VendorOnboardClient() {
                     </select>
                   </div>
                   <div>
-                    <label className="block font-semibold text-foreground mb-1">Can Deposit per New Jar (₹)</label>
+                    <label className="block font-semibold text-foreground mb-1">Can Deposit per New Jar ($)</label>
                     <input
                       type="number"
                       min="0"

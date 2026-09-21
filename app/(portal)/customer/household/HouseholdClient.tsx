@@ -182,8 +182,8 @@ export default function HouseholdClient() {
 
           <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-6">
             {[
-              { title: "20L Water Jar", detail: "Alternate days · doorstep delivery", meta: "1 jar currently held", price: "₹90 / jar" },
-              { title: "Nandini Toned Milk", detail: "Daily · 6:30 AM · 2 packets", meta: "Delivered to doorstep bag", price: "₹48 / day" },
+              { title: "20L Water Jar", detail: "Alternate days · doorstep delivery", meta: "1 jar currently held", price: "$2.99 / jar" },
+              { title: "Nandini Toned Milk", detail: "Daily · 6:30 AM · 2 packets", meta: "Delivered to doorstep bag", price: "$3.50 / day" },
             ].map((service) => (
               <div key={service.title} className="rounded-2xl border border-white/[0.08] bg-black/10 p-4">
                 <div className="flex items-start justify-between gap-4">

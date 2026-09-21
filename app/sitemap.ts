@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import { MOCK_PRODUCTS, MOCK_VENDORS } from "@/src/modules/customer-ui/mock-data";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://ruxs.in";
   const now = new Date();
 
-  return [
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/`,
       lastModified: now,
@@ -13,6 +14,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/app`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/app/search`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
@@ -30,4 +37,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
   ];
+
+  const productPages: MetadataRoute.Sitemap = MOCK_PRODUCTS.map((p) => ({
+    url: `${baseUrl}/app/product/${p.id}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.85,
+  }));
+
+  const vendorPages: MetadataRoute.Sitemap = MOCK_VENDORS.map((v) => ({
+    url: `${baseUrl}/app/vendor/${v.id}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.85,
+  }));
+
+  return [...staticPages, ...productPages, ...vendorPages];
 }

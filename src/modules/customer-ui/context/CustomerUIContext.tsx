@@ -197,7 +197,7 @@ export function CustomerUIProvider({ children }: { children: React.ReactNode }) 
     return cart.reduce((sum, item) => sum + item.totalPricePaise, 0);
   }, [cart]);
 
-  // Geofenced delivery fee: $0 / ₹0 if inside geofence! Otherwise 500 paise ($5.00 / ₹50)
+  // Geofenced delivery fee: $0.00 if inside geofence! Otherwise 500 cents ($5.00)
   const deliveryFeePaise = useMemo(() => {
     if (cart.length === 0) return 0;
     return currentGeofence.isInside ? 0 : 500;

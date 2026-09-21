@@ -1,0 +1,172 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import {
+  getProductById,
+  getVendorById,
+  getProductsByVendor,
+  MOCK_PRODUCTS,
+  CustomerUIProvider,
+} from "@/src/modules/customer-ui";
+import ProductDetailClient from "./ProductDetailClient";
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export async function generateStaticParams() {
+  return MOCK_PRODUCTS.map((p) => ({
+    id: p.id,
+  }));
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const product = getProductById(id);
+
+  if (!product) {
+    return {
+      title: "Product Not Found | RUXS",
+      description: "The requested subscription product could not be found.",
+    };
+  }
+
+  const priceStr = `$${(product.pricePaise / 100).toFixed(2)}`;
+  const title = `${product.name} (${priceStr}) · ${product.vendorName} | RUXS`;
+  const description = `${product.description} Available for doorstep delivery and recurring routine in Bangalore gated societies on RUXS.`;
+  const canonicalUrl = `https://ruxs.in/app/product/${product.id}`;
+
+  return {
+    title,
+    description,
+    keywords: [
+      product.name,
+      product.vendorName,
+      product.category,
+      "daily subscription",
+      "society delivery",
+      "RUXS",
+    ],
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: "RUXS",
+      type: "website",
+      images: [
+        {
+          url: product.image,
+          width: 800,
+          height: 800,
+          alt: product.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [product.image],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+      },
+    },
+  };
+}
+
+export default async function ProductPage({ params }: PageProps) {
+  const { id } = await params;
+  const product = getProductById(id);
+
+  if (!product) {
+    notFound();
+  }
+
+  const vendor = getVendorById(product.vendorId);
+  const relatedProducts = MOCK_PRODUCTS.filter(
+    (p) => p.id !== product.id && (p.category === product.category || p.vendorId === product.vendorId)
+  ).slice(0, 4);
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.image,
+    description: product.description,
+    brand: {
+      "@type": "Brand",
+      name: product.vendorName,
+    },
+    offers: {
+      "@type": "Offer",
+      url: `https://ruxs.in/app/product/${product.id}`,
+      priceCurrency: "USD",
+      price: (product.pricePaise / 100).toFixed(2),
+      availability: "https://schema.org/InStock",
+      seller: {
+        "@type": "Organization",
+        name: product.vendorName,
+      },
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: product.rating,
+      reviewCount: product.reviewCount,
+      bestRating: "5",
+      worstRating: "1",
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://ruxs.in",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "App",
+        item: "https://ruxs.in/app",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.name,
+        item: `https://ruxs.in/app/product/${product.id}`,
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <CustomerUIProvider>
+        <ProductDetailClient
+          product={product}
+          vendor={vendor}
+          relatedProducts={relatedProducts}
+        />
+      </CustomerUIProvider>
+    </>
+  );
+}

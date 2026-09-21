@@ -141,7 +141,7 @@ export default function Home() {
             <div className="mt-5 rounded-xl border border-border bg-background/60 p-4">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Digital Khata</span>
-                <span className="font-mono font-semibold text-foreground">₹1,240 due</span>
+                <span className="font-mono font-semibold text-foreground">$124.00 due</span>
               </div>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div className="h-full w-[72%] rounded-full bg-primary" />

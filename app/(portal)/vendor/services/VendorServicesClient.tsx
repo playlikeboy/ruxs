@@ -203,7 +203,7 @@ export default function VendorServicesClient() {
                   <Input required value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Standard Veg Thali" className="h-10 rounded-xl border-white/[0.1] bg-white/[0.025] text-xs" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Price (₹)</Label>
+                  <Label className="text-xs">Price ($)</Label>
                   <Input type="number" min="1" required value={priceInRupees} onChange={(e) => setPriceInRupees(Number(e.target.value))} className="h-10 rounded-xl border-white/[0.1] bg-white/[0.025] font-mono text-xs" />
                 </div>
               </div>
@@ -275,7 +275,7 @@ export default function VendorServicesClient() {
                       </div>
                       <div className="text-left sm:text-right">
                         {service.products.map((product) => (
-                          <p key={product.id} className="text-lg font-semibold text-primary">₹{(product.basePricePaise / 100).toFixed(0)}</p>
+                          <p key={product.id} className="text-lg font-semibold text-primary">${(product.basePricePaise / 100).toFixed(2)}</p>
                         ))}
                         <p className="mt-1 text-[10px] text-muted-foreground">per unit</p>
                       </div>

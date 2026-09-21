@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Bell,
   Search,
@@ -18,7 +19,8 @@ import {
   Store,
 } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
-import { MOCK_PRODUCTS, MOCK_CATEGORIES } from "../mock-data";
+import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_VENDORS } from "../mock-data";
+import { CatalogSvgIllustration } from "../svg-assets";
 import {
   DSButton,
   DSBadge,
@@ -121,13 +123,20 @@ export function DiscoveryView() {
       </header>
 
       {/* 2. SEARCH BAR with Filter Button */}
-      <div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          window.location.href = searchQuery
+            ? `/app/search?q=${encodeURIComponent(searchQuery)}`
+            : "/app/search";
+        }}
+      >
         <DSSearchBar
           value={searchQuery}
           onChange={setSearchQuery}
           onFilterClick={() => setIsGeofenceModalOpen(true)}
         />
-      </div>
+      </form>
 
       {/* 3. CATEGORIES SECTION (Horizontal Scrollable rounded squircle cards) */}
       <div>
@@ -217,9 +226,9 @@ export function DiscoveryView() {
         {/* 2-Column Responsive Card Grid */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.map((product) => (
-            <div
+            <Link
               key={product.id}
-              onClick={() => openProductModal(product)}
+              href={`/app/product/${product.id}`}
               className="group relative flex flex-col justify-between rounded-3xl border border-white/[0.08] bg-[#121714] p-3.5 sm:p-4 shadow-[0_8px_20px_rgba(0,0,0,0.3)] transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-[0_12px_32px_rgba(16,185,129,0.15)] cursor-pointer select-none"
             >
               <div>
@@ -231,6 +240,10 @@ export function DiscoveryView() {
                     alt={product.name}
                     className="relative z-10 h-full w-full rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
+                  {/* Floating SVG Vector Badge */}
+                  <div className="absolute -bottom-1 -right-1 z-20 h-8 w-8 rounded-full bg-[#121714] border border-white/20 p-1 shadow-lg flex items-center justify-center">
+                    <CatalogSvgIllustration idOrCategory={product.category} size={22} />
+                  </div>
                   {product.isBestSeller && (
                     <span className="absolute top-0 right-0 z-20 rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-black shadow">
                       ★ TOP
@@ -280,6 +293,7 @@ export function DiscoveryView() {
                 <button
                   type="button"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     openProductModal(product);
                   }}
@@ -289,7 +303,7 @@ export function DiscoveryView() {
                   <Plus size={16} className="stroke-[3]" />
                 </button>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
@@ -309,61 +323,41 @@ export function DiscoveryView() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {/* Card 1 */}
-          <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#121714]">
-            <div className="relative h-44 w-full">
-              <img
-                src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80"
-                alt="Asian Kitchen"
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute top-3 right-3">
-                <span className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-black shadow">
-                  Open now
-                </span>
-              </div>
-              <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-white">Asian Kitchen</h3>
-                  <p className="text-xs text-white/80 flex items-center gap-1 mt-0.5">
-                    <MapPin size={12} /> HSR Sector 2 · ★ 4.5 ratings (78 reviews)
-                  </p>
+          {MOCK_VENDORS.slice(0, 4).map((vendor) => (
+            <Link
+              key={vendor.id}
+              href={`/app/vendor/${vendor.id}`}
+              className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#121714] transition hover:-translate-y-1 hover:border-emerald-500/40 shadow-xl"
+            >
+              <div className="relative h-44 w-full">
+                <img
+                  src={vendor.bannerImage || vendor.image}
+                  alt={vendor.name}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                <div className="absolute top-3 right-3">
+                  <span className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-black shadow">
+                    {vendor.deliveryWindow}
+                  </span>
                 </div>
-                <div className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                  <ArrowRight size={14} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2 */}
-          <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#121714]">
-            <div className="relative h-44 w-full">
-              <img
-                src="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=600&auto=format&fit=crop&q=80"
-                alt="Krishna Dairy & Farm"
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute top-3 right-3">
-                <span className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-black shadow">
-                  6:30 AM Slot
-                </span>
-              </div>
-              <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-white">Krishna Fresh Farm</h3>
-                  <p className="text-xs text-white/80 flex items-center gap-1 mt-0.5">
-                    <MapPin size={12} /> Direct Dairy Partner · ★ 4.9 (3.1k reviews)
-                  </p>
-                </div>
-                <div className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                  <ArrowRight size={14} />
+                <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
+                      {vendor.name}
+                    </h3>
+                    <p className="text-xs text-white/80 flex items-center gap-1 mt-0.5">
+                      <MapPin size={12} className="text-emerald-400" />
+                      {vendor.address.split(",")[0]} · ★ {vendor.rating} ({vendor.reviewCount} reviews)
+                    </p>
+                  </div>
+                  <div className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white group-hover:bg-emerald-500 group-hover:text-black transition">
+                    <ArrowRight size={14} />
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </Link>
+          ))}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { ArrowLeft, Trash2, Tag, ShieldCheck, Check, Sparkles } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
 import {
@@ -116,9 +117,13 @@ export function CartDrawer() {
 
                 {/* Info */}
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-xs font-bold text-foreground truncate">
+                  <Link
+                    href={`/app/product/${item.product.id}`}
+                    onClick={() => setIsCartOpen(false)}
+                    className="text-xs font-bold text-foreground truncate block hover:text-emerald-400 transition-colors"
+                  >
                     {item.product.name}
-                  </h3>
+                  </Link>
                   <p className="text-[10px] text-muted-foreground truncate">
                     {item.selectedSize?.name || item.product.vendorName}
                   </p>

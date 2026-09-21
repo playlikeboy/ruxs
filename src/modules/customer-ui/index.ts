@@ -10,3 +10,4 @@ export * from "./components/GeofenceModal";
 export * from "./components/ServicesGridView";
 export * from "./components/KhataProfileView";
 export * from "./components/CustomerAppContainer";
+export * from "./svg-assets";
