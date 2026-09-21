@@ -434,7 +434,7 @@ export const MOCK_GEOFENCES: GeofenceArea[] = [
     radiusMeters: 500,
     isInside: true,
     distanceMeters: 42,
-    deliveryGuarantee: "7:00 AM Autopilot Doorstep Active ($0 Delivery Fee)",
+    deliveryGuarantee: "7:00 AM Autopilot Doorstep Active (₹0 Delivery Fee)",
   },
   {
     id: "geo_greenglen",
