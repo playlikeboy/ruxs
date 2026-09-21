@@ -395,7 +395,7 @@ export default function ProductDetailClient({
                             <p className="text-xs font-bold text-foreground">{addon.name}</p>
                             <p className="text-[11px] text-muted-foreground">
                               {addon.subtitle ? `${addon.subtitle} · ` : ""}
-                              +${(addon.pricePaise / 100).toFixed(2)}
+                              +{formatINR(addon.pricePaise as Paise)}
                             </p>
                           </div>
 
