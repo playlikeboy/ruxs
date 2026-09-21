@@ -183,7 +183,7 @@ export function CartDrawer() {
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Subtotal</span>
                 <span className="font-semibold text-foreground">
-                  ${(subtotalPaise / 100).toFixed(2)}
+                  {formatINR(subtotalPaise as Paise)}
                 </span>
               </div>
 
@@ -197,28 +197,28 @@ export function CartDrawer() {
                   )}
                 </span>
                 <span className="font-semibold text-foreground">
-                  {deliveryFeePaise === 0 ? "Free" : `$${(deliveryFeePaise / 100).toFixed(2)}`}
+                  {deliveryFeePaise === 0 ? "Free" : `${formatINR(deliveryFeePaise as Paise)}`}
                 </span>
               </div>
 
               {discountPaise > 0 && (
                 <div className="flex items-center justify-between text-emerald-400">
                   <span>Discount ({promoCode})</span>
-                  <span className="font-bold">-${(discountPaise / 100).toFixed(2)}</span>
+                  <span className="font-bold">-{formatINR(discountPaise as Paise)}</span>
                 </div>
               )}
 
               <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between text-sm">
                 <span className="font-bold text-foreground">Total</span>
                 <span className="font-black text-emerald-400 text-base">
-                  ${(totalPaise / 100).toFixed(2)}
+                  {formatINR(totalPaise as Paise)}
                 </span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Sticky Checkout Button (Screen 2: Checkout · $26.43) */}
+        {/* Sticky Checkout Button (Screen 2: Checkout) */}
         {cart.length > 0 && (
           <div className="border-t border-white/[0.08] bg-[#0d120f] p-4">
             <DSButton
