@@ -271,7 +271,7 @@ export default function VendorDetailClient({
                 <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between">
                   <div>
                     <span className="text-base font-extrabold text-white">
-                      ${(p.pricePaise / 100).toFixed(2)}
+                      {formatINR(p.pricePaise as Paise)}
                     </span>
                     <span className="text-xs text-muted-foreground"> / {p.unit}</span>
                   </div>
