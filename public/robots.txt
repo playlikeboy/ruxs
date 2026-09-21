@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
+Allow: /app
+Allow: /subscribe
+Allow: /vendor/onboard
 
 Disallow: /api/
 Disallow: /admin/
