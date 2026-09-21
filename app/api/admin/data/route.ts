@@ -78,7 +78,7 @@ export async function GET(request: Request) {
       skippedCount: fulfillments.filter((f) => f.status === "SKIPPED" || f.status === "LATE_SKIP").length,
       openDisputesCount: disputes.filter((d) => d.status === "OPEN").length,
       totalAssetHoldingsCount: assetHoldings.reduce((sum, a) => sum + a.holdingCount, 0),
-      monthlyGmvPaise: 184000000 as Paise, // $18.4k GMV
+      monthlyGmvPaise: 184000000 as Paise, // ₹18.4L GMV
       dbConnected: true,
       serviceDate: todayStr,
     };
@@ -320,7 +320,7 @@ export async function POST(request: Request) {
           action: "KHATA_ADJUSTMENT_POSTED",
           targetType: "KHATA_LEDGER",
           targetId: entry.id,
-          details: `Manual Khata ${payload.direction} of $${(payload.amountPaise || 10000) / 100} applied to customer ${payload.customerId}`,
+          details: `Manual Khata ${payload.direction} of ₹${(payload.amountPaise || 10000) / 100} applied to customer ${payload.customerId}`,
         });
 
         return NextResponse.json(createSuccessResponse({ entry, message: `Khata ${payload.direction} recorded` }));
