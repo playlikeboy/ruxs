@@ -24,7 +24,7 @@ import {
   X,
 } from "@/components/icons/animated";
 import { RuxsCardListSkeleton, RuxsSpinner } from "@/components/ui/LoadingState";
-import { formatINR, Paise } from "@/src/shared/types/money";
+import { formatINR, Paise, toPaise } from "@/src/shared/types/money";
 
 interface MarketVendor {
   id: string;
@@ -383,7 +383,7 @@ function SubscribeContent() {
             </div>
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3">
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-subtle">Estimated monthly run-rate</p>
-              <p className="mt-1 text-lg font-semibold text-primary">${monthlyEstimate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="mt-1 text-lg font-semibold text-primary">{formatINR(toPaise(monthlyEstimate))}</p>
             </div>
           </div>
         </section>
