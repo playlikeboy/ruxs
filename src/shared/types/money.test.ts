@@ -27,7 +27,7 @@ describe("Money & Paise Ledger Arithmetic", () => {
   it("formats Indian Rupee currency strings properly", () => {
     const amount = toPaise(3680.5);
     const formatted = formatINR(amount);
-    expect(formatted).toContain("3,680.50");
+    expect(formatted).toContain("₹3,680.50");
   });
 
   it("accurately calculates integer percentage fees (e.g. 50% late cancellation)", () => {
