@@ -39,7 +39,7 @@ export const DEMO_USERS = [
     phone: "9876543212",
     label: "Household Flat (Priya S. - Tower B-402)",
     description: "Recurring subscriptions, morning cutoff polls, vacation pauses & digital khata",
-    redirect: "/customer/dashboard",
+    redirect: "/app",
   },
 ];
 

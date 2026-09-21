@@ -11,7 +11,7 @@ const normalizeDestination = (role?: string) => {
     case "DELIVERY_STAFF":
       return "/delivery";
     default:
-      return "/customer/dashboard";
+      return "/app";
   }
 };
 
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const email = body.email?.trim().toLowerCase();
 
     if (!email) {
-      return NextResponse.json({ success: true, data: { destination: "/customer/dashboard", role: "CUSTOMER" } });
+      return NextResponse.json({ success: true, data: { destination: "/app", role: "CUSTOMER" } });
     }
 
     const rows = await db
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       success: true,
       data: {
         role: "CUSTOMER",
-        destination: "/customer/dashboard",
+        destination: "/app",
       },
     });
   }

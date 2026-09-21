@@ -40,11 +40,11 @@ export function AppHeaderUserNav() {
       )}
 
       <Link
-        href="/customer/dashboard"
+        href="/app"
         className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card/60 text-xs font-medium text-foreground hover:bg-card transition-colors"
       >
         <LayoutDashboard className="w-3.5 h-3.5 text-primary" />
-        <span>My Account</span>
+        <span>RUXS App</span>
       </Link>
 
       <Link
