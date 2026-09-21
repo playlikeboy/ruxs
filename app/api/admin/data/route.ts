@@ -273,7 +273,7 @@ export async function POST(request: Request) {
           action: payload.decision === "UPHELD_NO_REFUND" ? "DISPUTE_UPHELD" : "DISPUTE_REFUNDED",
           targetType: "DISPUTE",
           targetId: payload.disputeId,
-          details: `Dispute ${payload.disputeId} arbitrated with decision ${payload.decision} (Refund $${(payload.refundPaise || 0) / 100})`,
+          details: `Dispute ${payload.disputeId} arbitrated with decision ${payload.decision} (Refund ₹${(payload.refundPaise || 0) / 100})`,
         });
 
         return NextResponse.json(createSuccessResponse({ result: res, message: `Dispute arbitrated: ${payload.decision}` }));
