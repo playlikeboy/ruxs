@@ -29,6 +29,44 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { RuxsDashboardSkeleton } from "@/components/ui/LoadingState";
 
+
+
+type ApiEnvelope<T> = { success?: boolean; data?: T; error?: unknown };
+
+async function safeJsonFetch<T>(input: RequestInfo | URL, init?: RequestInit): Promise<{ ok: boolean; payload: ApiEnvelope<T> }> {
+  try {
+    const response = await fetch(input, init);
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      return { ok: false, payload: {} };
+    }
+    const payload = (await response.json()) as ApiEnvelope<T>;
+    return { ok: response.ok, payload };
+  } catch (error) {
+    console.warn("RUXS dashboard request failed:", error);
+    return { ok: false, payload: {} };
+  }
+}
+
+function normalizeVendor(raw: any): MarketVendor | null {
+  if (!raw || typeof raw !== "object" || !raw.id) return null;
+  return {
+    ...raw,
+    id: String(raw.id),
+    businessName: String(raw.businessName || "Local merchant"),
+    slug: String(raw.slug || raw.id),
+    vendorType: raw.vendorType === "MILKMAN" || raw.vendorType === "WATER_SERVICE" ? raw.vendorType : "TIFFIN",
+    locality: String(raw.locality || raw.city || "Local area"),
+    city: String(raw.city || ""),
+    coveredSocieties: Array.isArray(raw.coveredSocieties) ? raw.coveredSocieties.map(String) : [],
+    rating: Number.isFinite(Number(raw.rating)) ? Number(raw.rating) : 0,
+    reviewCount: Number.isFinite(Number(raw.reviewCount)) ? Number(raw.reviewCount) : 0,
+    deliverySlots: Array.isArray(raw.deliverySlots) ? raw.deliverySlots.map(String) : [],
+    shifts: Array.isArray(raw.shifts) ? raw.shifts.filter(Boolean) : [],
+    varieties: Array.isArray(raw.varieties) ? raw.varieties.filter(Boolean) : [],
+  } as MarketVendor;
+}
+
 interface FulfillmentItem {
   id: string;
   subscriptionId: string;
@@ -158,97 +196,100 @@ export default function CustomerDashboardClient() {
     try {
       setLoading(true);
 
-      // 1. Fetch marketplace vendors & subscriptions concurrently
-      const [vendorsRes, subRes, fulRes, invRes] = await Promise.all([
-        fetch("/api/marketplace/vendors"),
-        fetch(`/api/subscriptions?customerId=${user.id}`),
-        fetch(`/api/fulfillments?customerId=${user.id}`),
-        fetch(`/api/billing/invoices?customerId=${user.id}`),
+      // Dashboard APIs are independent. One failing endpoint must not blank the whole portal.
+      const [vendorsResult, subResult, fulResult, invResult] = await Promise.all([
+        safeJsonFetch<unknown[]>("/api/marketplace/vendors"),
+        safeJsonFetch<any[]>(`/api/subscriptions?customerId=${encodeURIComponent(user.id)}`),
+        safeJsonFetch<any[]>(`/api/fulfillments?customerId=${encodeURIComponent(user.id)}`),
+        safeJsonFetch<any[]>(`/api/billing/invoices?customerId=${encodeURIComponent(user.id)}`),
       ]);
 
-      const vendorsData = (await vendorsRes.json()) as { success: boolean; data?: MarketVendor[] };
-      let loadedVendors: MarketVendor[] = [];
-      if (vendorsData.success && Array.isArray(vendorsData.data)) {
-        loadedVendors = vendorsData.data;
-        setMarketVendors(loadedVendors);
-      }
+      const loadedVendors = Array.isArray(vendorsResult.payload.data)
+        ? vendorsResult.payload.data.map(normalizeVendor).filter((v): v is MarketVendor => Boolean(v))
+        : [];
+      setMarketVendors(loadedVendors);
 
       let activeTenantId = loadedVendors[0]?.id || "";
 
-      const subData = (await subRes.json()) as { success: boolean; data?: any[] };
-      if (subData.success && Array.isArray(subData.data)) {
-        setSubscriptions(
-          subData.data.map((s: any) => ({
-            id: s.id,
-            tenantId: s.tenantId,
-            serviceId: s.productName || "Recurring Service",
-            status: s.status,
-            quantity: s.defaultQuantity || 1,
-            unitPricePaise: s.unitPricePaise || 0,
-            cadence: s.cadence,
-            shift: s.shift || "LUNCH",
-            instructions: s.instructions,
-            isSuspended: s.status === "PAUSED",
-            startDate: s.startDate,
-          }))
-        );
+      const subData = subResult.payload;
+      if (Array.isArray(subData.data)) {
+        const normalizedSubscriptions = subData.data
+          .filter((s) => s && s.id)
+          .map((s: any) => ({
+            id: String(s.id),
+            tenantId: String(s.tenantId || ""),
+            serviceId: String(s.productName || "Recurring Service"),
+            status: s.status === "PAUSED" || s.status === "CANCELLED" ? s.status : "ACTIVE",
+            quantity: Number(s.defaultQuantity) || 1,
+            unitPricePaise: Number(s.unitPricePaise) || 0,
+            cadence: String(s.cadence || "DAILY"),
+            shift: s.shift ? String(s.shift) : "LUNCH",
+            startDate: String(s.startDate || ""),
+          }));
+        setSubscriptions(normalizedSubscriptions);
 
-        if (subData.data.length > 0 && subData.data[0]?.tenantId) {
-          activeTenantId = subData.data[0].tenantId;
+        if (normalizedSubscriptions[0]?.tenantId) {
+          activeTenantId = normalizedSubscriptions[0].tenantId;
         }
       } else {
         setSubscriptions([]);
       }
 
-      // 2. Fetch Digital Khata Balance
-      try {
-        if (activeTenantId) {
-          const khataRes = await fetch(`/api/khata?tenantId=${activeTenantId}&customerId=${user.id}`);
-          const khataData = (await khataRes.json()) as { success: boolean; data?: any };
-          if (khataData.success && khataData.data) {
-            setKhataStatement(khataData.data);
-          }
+      // Digital Khata is optional; keep the rest of the dashboard usable if it is unavailable.
+      if (activeTenantId) {
+        const khataResult = await safeJsonFetch<any>(
+          `/api/khata?tenantId=${encodeURIComponent(activeTenantId)}&customerId=${encodeURIComponent(user.id)}`
+        );
+        const statement = khataResult.payload.data;
+        if (statement && typeof statement === "object") {
+          setKhataStatement({
+            tenantId: String(statement.tenantId || activeTenantId),
+            customerId: String(statement.customerId || user.id),
+            runningBalancePaise: Number(statement.runningBalancePaise) || 0,
+            entries: Array.isArray(statement.entries) ? statement.entries.filter(Boolean) : [],
+          });
         }
-      } catch (khataErr) {
-        console.warn("Khata lookup fallback:", khataErr);
       }
 
-      const fulData = (await fulRes.json()) as { success: boolean; data?: any[] };
-      if (fulData.success && Array.isArray(fulData.data) && fulData.data.length > 0) {
+      const fulData = fulResult.payload;
+      if (Array.isArray(fulData.data) && fulData.data.length > 0) {
         const todayStr = new Date().toISOString().split("T")[0];
-        const match = fulData.data.find((f) => f.serviceDate === todayStr) || fulData.data[0];
-        setTodayFulfillment({
-          id: match.id,
-          subscriptionId: match.subscriptionId,
-          serviceId: match.items?.[0]?.productName || "Standard Lunch Service",
-          serviceDate: match.serviceDate,
-          quantity: match.items?.[0]?.quantity || 1,
-          unitPricePaise: match.items?.[0]?.unitPricePaise || match.totalPricePaise,
-          totalPricePaise: match.totalPricePaise,
-          status: match.status,
-          cutoffTime: match.cutoffTime || "10:00 AM",
-          notes: match.notes,
-        });
+        const match = fulData.data.find((f: any) => f?.serviceDate === todayStr) || fulData.data[0];
+        if (match) {
+          setTodayFulfillment({
+            id: String(match.id || ""),
+            subscriptionId: String(match.subscriptionId || ""),
+            serviceId: String(match.items?.[0]?.productName || "Standard Lunch Service"),
+            serviceDate: String(match.serviceDate || todayStr),
+            quantity: Number(match.items?.[0]?.quantity) || 1,
+            unitPricePaise: Number(match.items?.[0]?.unitPricePaise || match.totalPricePaise) || 0,
+            totalPricePaise: Number(match.totalPricePaise) || 0,
+            status: String(match.status || "PENDING"),
+            cutoffTime: String(match.cutoffTime || "10:00 AM"),
+            notes: match.notes ? String(match.notes) : undefined,
+          });
+        }
       } else {
         setTodayFulfillment(null);
       }
 
-      const invData = (await invRes.json()) as { success: boolean; data?: any[] };
-      if (invData.success && Array.isArray(invData.data)) {
+      const invData = invResult.payload;
+      if (Array.isArray(invData.data)) {
         setInvoices(
-          invData.data.map((i: any) => ({
-            id: i.id,
-            invoiceNumber: i.invoiceNumber,
-            billingMonth: (i.periodStart || "").slice(0, 7) || "2026-09",
-            totalAmountPaise: i.totalAmountDuePaise || i.subtotalPaise || 0,
-            paidAmountPaise: i.amountPaidPaise || 0,
-            status: i.status,
-            dueDate: i.dueDate,
-          }))
+          invData.data
+            .filter((i) => i && i.id)
+            .map((i: any) => ({
+              id: String(i.id),
+              invoiceNumber: String(i.invoiceNumber || "Invoice"),
+              billingMonth: String(i.periodStart || "").slice(0, 7) || new Date().toISOString().slice(0, 7),
+              totalAmountPaise: Number(i.totalAmountDuePaise || i.subtotalPaise) || 0,
+              paidAmountPaise: Number(i.amountPaidPaise) || 0,
+              status: i.status,
+              dueDate: String(i.dueDate || ""),
+            }))
         );
       } else {
-        setInvoices([]);
-      }
+        setInvoices([]);      }
     } catch (error) {
       console.error("Failed to load customer portal data:", error);
     } finally {
@@ -282,8 +323,8 @@ export default function CustomerDashboardClient() {
         const q = searchQuery.toLowerCase();
         const matchesName = v.businessName.toLowerCase().includes(q);
         const matchesLocality = v.locality.toLowerCase().includes(q);
-        const matchesSocieties = v.coveredSocieties.some((s) => s.toLowerCase().includes(q));
-        const matchesMenu = v.shifts?.some((s) => s.menuToday?.toLowerCase().includes(q));
+        const matchesSocieties = v.coveredSocieties.some((s) => String(s).toLowerCase().includes(q));
+        const matchesMenu = v.shifts?.some((s) => String(s.menuToday || "").toLowerCase().includes(q));
         if (!matchesName && !matchesLocality && !matchesSocieties && !matchesMenu) {
           return false;
         }
@@ -398,15 +439,18 @@ export default function CustomerDashboardClient() {
     }
   };
 
-  const dueAmountPaise = khataStatement.runningBalancePaise || 0;
+  const dueAmountPaise = Number.isFinite(Number(khataStatement.runningBalancePaise))
+    ? Math.max(Number(khataStatement.runningBalancePaise), 0)
+    : 0;
   const activePlans = subscriptions.filter((item) => item.status === "ACTIVE").length;
   const latestInvoice = useMemo(() => invoices[0], [invoices]);
-  const displayName =
+  const displayName = String(
     (user as any)?.name ||
-    (user as any)?.displayName ||
-    user?.primaryEmail ||
-    (user as any)?.email ||
-    "Household member";
+      (user as any)?.displayName ||
+      user?.primaryEmail ||
+      (user as any)?.email ||
+      "Household member"
+  );
 
   if (loading) {
     return (
@@ -597,8 +641,7 @@ export default function CustomerDashboardClient() {
                 className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-primary transition hover:text-foreground"
               >
                 Pay balance <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
+              </button>            </div>
           </section>
 
           {/* ========================================================================= */}
@@ -729,7 +772,7 @@ export default function CustomerDashboardClient() {
                         </div>
 
                         <p className="mt-2 text-[10px] text-subtle leading-tight line-clamp-1">
-                          Servicing: {vendor.coveredSocieties.slice(0, 3).join(", ")}
+                          Servicing: {vendor.coveredSocieties.slice(0, 3).join(", ") || "Local society coverage"}
                           {vendor.coveredSocieties.length > 3 ? ` +${vendor.coveredSocieties.length - 3} more` : ""}
                         </p>
 
