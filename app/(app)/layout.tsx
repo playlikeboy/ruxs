@@ -103,11 +103,11 @@ export default function AppLayout({
         </Link>
 
         <Link
-          href="/customer/dashboard"
+          href="/app"
           className="flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary active:scale-95 transition-all py-1 px-2.5 min-w-[56px]"
         >
           <Wallet className="w-5 h-5" />
-          <span className="text-[10px] font-medium leading-none tracking-tight">Account</span>
+          <span className="text-[10px] font-medium leading-none tracking-tight">App</span>
         </Link>
 
         <Link

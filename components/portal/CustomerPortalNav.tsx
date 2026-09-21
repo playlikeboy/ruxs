@@ -15,7 +15,7 @@ import {
 import { BrandLogo } from "@/components/brand/BrandLogo";
 
 const items = [
-  { href: "/customer/dashboard", label: "Overview", icon: Home },
+  { href: "/app", label: "App", icon: Home },
   { href: "/customer/subscribe", label: "Services", icon: Settings },
   { href: "/customer/household", label: "Household", icon: Users },
   { href: "/customer/expenses", label: "Expenses", icon: Wallet },
@@ -95,7 +95,7 @@ export default function CustomerPortalNav({ children }: { children: ReactNode })
                   <Calendar size={12} />
                   {today}
                 </span>
-                <Link href="/customer/dashboard" className="rounded-xl border border-white/[0.08] px-3 py-2 text-[10px] font-semibold text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground">My overview</Link>
+                <Link href="/app" className="rounded-xl border border-white/[0.08] px-3 py-2 text-[10px] font-semibold text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground">App Home</Link>
               </div>
             </div>
           </header>

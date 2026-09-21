@@ -50,12 +50,13 @@ Shared semantic styles: app/globals.css
 | Route | Purpose |
 | --- | --- |
 | / | Marketing homepage |
+| /app | Modern geofenced customer app (subscriptions, food, services, tracking) |
 | /customer/subscribe | Household service setup |
 | /vendor/onboard | Vendor onboarding |
 | /login | Authentication |
 | /vendor/dashboard | Vendor operations |
 | /vendor/services | Vendor service catalog |
-| /customer/dashboard | Household operations |
+| /customer/dashboard | Legacy route (redirects to /app) |
 | /customer/onboard | Household profile setup |
 | /delivery | Driver run sheet |
 | /customer/household | Household management |

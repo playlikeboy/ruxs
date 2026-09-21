@@ -7,13 +7,16 @@ import { eq } from "drizzle-orm";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get("category") || "ALL"; // ALL, MILK, WATER, TIFFIN
+    const category = searchParams.get("category") || "ALL"; // ALL, MILK, WATER, TIFFIN, FLOWERS, PETS, LAUNDRY
     const shift = searchParams.get("shift") || "ALL"; // ALL, MORNING, AFTERNOON, EVENING, NIGHT
     const society = searchParams.get("society") || undefined;
     const forceSeed = searchParams.get("seed") === "true";
+    const geofencedOnly = searchParams.get("geofenced") === "true";
 
-    // Ensure database is populated with verified baseline merchants
-    await seedDatabase(forceSeed);
+    // Only seed on demand or initial setup to keep queries sub-millisecond
+    if (forceSeed) {
+      await seedDatabase(true);
+    }
 
     let vendors: SeededVendorData[] = [];
 
@@ -132,7 +135,11 @@ export async function GET(request: Request) {
       };
     });
 
-    return Response.json(createSuccessResponse(normalizedVendors));
+    return Response.json(createSuccessResponse(normalizedVendors), {
+      headers: {
+        "Cache-Control": "public, max-age=15, stale-while-revalidate=45",
+      },
+    });
   } catch (error) {
     return Response.json(
       createErrorResponse(
