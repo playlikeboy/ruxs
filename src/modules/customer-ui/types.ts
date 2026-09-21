@@ -128,3 +128,24 @@ export interface NotificationItem {
   vendorAvatar?: string;
   actionLabel?: string;
 }
+
+export interface CatalogVendor {
+  id: string;
+  name: string;
+  category: ServiceCategoryId;
+  image: string;
+  bannerImage: string;
+  rating: number;
+  reviewCount: number;
+  deliveryWindow: string;
+  address: string;
+  fssaiNumber: string;
+  description: string;
+  societiesCovered: string[];
+  isVerified: boolean;
+  badge?: string;
+  openingHours: string;
+  minOrderPaise: number;
+  phone?: string;
+  tags?: string[];
+}

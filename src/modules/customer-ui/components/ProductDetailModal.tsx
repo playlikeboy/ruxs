@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Heart, Share2, ArrowLeft, Check, Star, Store, ShieldAlert } from "lucide-react";
+import Link from "next/link";
+import { Heart, Share2, ArrowLeft, Check, Star, Store, ShieldAlert, ExternalLink } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
 import { ProductOption, ProductAddOn } from "../types";
 import {
@@ -118,14 +119,28 @@ export function ProductDetailModal() {
 
         {/* Title, Vendor Tag & Rating Row */}
         <div className="px-6 pt-2">
-          <h2 className="text-2xl font-black tracking-tight text-foreground">
-            {selectedProduct.name}
-          </h2>
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="text-2xl font-black tracking-tight text-foreground">
+              {selectedProduct.name}
+            </h2>
+            <Link
+              href={`/app/product/${selectedProduct.id}`}
+              onClick={closeProductModal}
+              className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 hover:underline shrink-0 mt-1"
+            >
+              <span>Full Page</span>
+              <ExternalLink size={12} />
+            </Link>
+          </div>
           <div className="mt-1.5 flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+            <Link
+              href={`/app/vendor/${selectedProduct.vendorId}`}
+              onClick={closeProductModal}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium hover:text-emerald-400 transition-colors"
+            >
               <Store size={14} className="text-emerald-400" />
-              <span>{selectedProduct.vendorName}</span>
-            </div>
+              <span className="hover:underline">{selectedProduct.vendorName}</span>
+            </Link>
             <span className="text-muted-foreground">·</span>
             <DSRatingPill
               rating={selectedProduct.rating}

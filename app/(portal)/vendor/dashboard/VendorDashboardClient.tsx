@@ -447,8 +447,8 @@ function VendorDashboardContent() {
               </div>
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5">
                 <p className="text-[10px] font-medium text-muted-foreground">Container Deposit Held</p>
-                <p className="mt-3 text-2xl font-bold tracking-tight text-emerald-400">₹27,750</p>
-                <p className="mt-1 text-[10px] text-subtle">₹150 refundable per jar</p>
+                <p className="mt-3 text-2xl font-bold tracking-tight text-emerald-400">$2,775</p>
+                <p className="mt-1 text-[10px] text-subtle">$5.00 refundable per jar</p>
               </div>
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5">
                 <p className="text-[10px] font-medium text-muted-foreground">Elevator Floor Distribution</p>
@@ -475,7 +475,7 @@ function VendorDashboardContent() {
               </div>
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5">
                 <p className="text-[10px] font-medium text-muted-foreground">Shift Value</p>
-                <p className="mt-3 text-2xl font-bold tracking-tight text-foreground">₹2,880</p>
+                <p className="mt-3 text-2xl font-bold tracking-tight text-foreground">$288.00</p>
                 <p className="mt-1 text-[10px] text-subtle">Auto-billed to digital khata</p>
               </div>
             </>
@@ -538,14 +538,14 @@ function VendorDashboardContent() {
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-bold text-foreground">💧 20L RO Mineral Water Can</p>
-                      <p className="text-[11px] text-muted-foreground">Bisleri standard sanitized jar · ₹40/jar</p>
+                      <p className="text-[11px] text-muted-foreground">Bisleri standard sanitized jar · $2.99/jar</p>
                     </div>
                     <span className="text-lg font-bold text-primary">36 Jars</span>
                   </div>
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-bold text-foreground">💧 20L Copper Alkaline Water Can</p>
-                      <p className="text-[11px] text-muted-foreground">pH 8.5+ infused alkaline jar · ₹65/jar</p>
+                      <p className="text-[11px] text-muted-foreground">pH 8.5+ infused alkaline jar · $3.99/jar</p>
                     </div>
                     <span className="text-lg font-bold text-primary">12 Jars</span>
                   </div>
@@ -555,14 +555,14 @@ function VendorDashboardContent() {
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-bold text-foreground">🍱 Standard Homestyle Veg Thali</p>
-                      <p className="text-[11px] text-muted-foreground">4 Ghee Phulkas, Paneer, Dal, Rice, Salad · ₹120</p>
+                      <p className="text-[11px] text-muted-foreground">4 Ghee Phulkas, Paneer, Dal, Rice, Salad · $8.99</p>
                     </div>
                     <span className="text-lg font-bold text-primary">18 Meals</span>
                   </div>
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-bold text-foreground">🍱 Jain Sattvik No-Onion Thali</p>
-                      <p className="text-[11px] text-muted-foreground">No onion, no garlic, pure sattvik · ₹120</p>
+                      <p className="text-[11px] text-muted-foreground">No onion, no garlic, pure sattvik · $8.99</p>
                     </div>
                     <span className="text-lg font-bold text-primary">6 Meals</span>
                   </div>
@@ -630,7 +630,7 @@ function VendorDashboardContent() {
                       <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold text-emerald-400">
                         {c.status || "CONFIRMED"}
                       </span>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Khata: ₹{c.balance}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Khata: ${c.balance}</p>
                     </div>
                   </div>
                 ))

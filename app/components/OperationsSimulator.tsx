@@ -7,27 +7,27 @@ type ActionState = "PENDING" | "DELIVER" | "SKIP" | "EXTRA";
 export default function OperationsSimulator() {
   const [action, setAction] = useState<ActionState>("PENDING");
   const [kitchenCount, setKitchenCount] = useState(84);
-  const [khataBalance, setKhataBalance] = useState(3600); // in Rupees
+  const [khataBalance, setKhataBalance] = useState("42.00"); // in USD
   const [jarsHeld, setJarsHeld] = useState(2);
 
   const handleAction = (type: ActionState) => {
     setAction(type);
     if (type === "DELIVER") {
       setKitchenCount(85);
-      setKhataBalance(3690);
+      setKhataBalance("44.99");
     } else if (type === "SKIP") {
       setKitchenCount(84);
-      setKhataBalance(3600);
+      setKhataBalance("42.00");
     } else if (type === "EXTRA") {
       setKitchenCount(86);
-      setKhataBalance(3710);
+      setKhataBalance("46.49");
     }
   };
 
   const resetSimulator = () => {
     setAction("PENDING");
     setKitchenCount(84);
-    setKhataBalance(3600);
+    setKhataBalance("42.00");
     setJarsHeld(2);
   };
 
@@ -100,7 +100,7 @@ export default function OperationsSimulator() {
                 >
                   <span className="text-base mb-1">🍱</span>
                   DELIVER
-                  <span className="text-[9px] font-normal opacity-75">+₹90.00</span>
+                  <span className="text-[9px] font-normal opacity-75">+$2.99</span>
                 </button>
 
                 <button
@@ -113,7 +113,7 @@ export default function OperationsSimulator() {
                 >
                   <span className="text-base mb-1">⏸️</span>
                   SKIP TODAY
-                  <span className="text-[9px] font-normal opacity-75">₹0 Charge</span>
+                  <span className="text-[9px] font-normal opacity-75">$0 Charge</span>
                 </button>
 
                 <button
@@ -126,7 +126,7 @@ export default function OperationsSimulator() {
                 >
                   <span className="text-base mb-1">➕</span>
                   +2 ROTIS
-                  <span className="text-[9px] font-normal opacity-75">+₹20.00</span>
+                  <span className="text-[9px] font-normal opacity-75">+$1.50</span>
                 </button>
               </div>
             </div>
@@ -166,13 +166,13 @@ export default function OperationsSimulator() {
                 Customer Khata Balance
               </div>
               <div className="mt-1 flex items-baseline gap-1">
-                <span className="text-xs text-slate-400">₹</span>
+                <span className="text-xs text-slate-400">$</span>
                 <span className="text-3xl font-black tabular-nums text-white">
                   {khataBalance}
                 </span>
               </div>
               <div className="mt-2 text-[10px] text-slate-400">
-                {action === "SKIP" ? "No charge added (₹0)" : action === "EXTRA" ? "+₹110.00 debited" : action === "DELIVER" ? "+₹90.00 debited" : "Unbilled month-to-date"}
+                {action === "SKIP" ? "No charge added ($0)" : action === "EXTRA" ? "+$4.49 debited" : action === "DELIVER" ? "+$2.99 debited" : "Unbilled month-to-date"}
               </div>
             </div>
           </div>
@@ -217,7 +217,7 @@ export default function OperationsSimulator() {
             </div>
             <div className="text-right">
               <div className="text-base font-black text-emerald-400">{jarsHeld} Containers</div>
-              <div className="text-[10px] text-slate-400">Deposit: ₹300.00 Held</div>
+              <div className="text-[10px] text-slate-400">Deposit: $10.00 Held</div>
             </div>
           </div>
         </div>

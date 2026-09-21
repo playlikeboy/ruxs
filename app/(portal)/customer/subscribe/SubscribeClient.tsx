@@ -383,7 +383,7 @@ function SubscribeContent() {
             </div>
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3">
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-subtle">Estimated monthly run-rate</p>
-              <p className="mt-1 text-lg font-semibold text-primary">₹{monthlyEstimate.toLocaleString("en-IN")}</p>
+              <p className="mt-1 text-lg font-semibold text-primary">${monthlyEstimate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
         </section>
