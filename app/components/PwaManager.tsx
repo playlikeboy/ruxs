@@ -7,6 +7,8 @@ export function PwaManager() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
+  const INSTALL_DISMISSED_KEY = "ruxs:pwa-install-dismissed";
+
   useEffect(() => {
     // 1. Online/Offline event listeners
     setIsOnline(navigator.onLine);
@@ -30,10 +32,16 @@ export function PwaManager() {
     }
 
     // 3. BeforeInstallPrompt handler
+    // Respect a user's dismissal permanently on this browser/device.
+    const wasDismissed = window.localStorage.getItem(INSTALL_DISMISSED_KEY) === "1";
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowInstallPrompt(true);
+
+      if (!wasDismissed && window.localStorage.getItem(INSTALL_DISMISSED_KEY) !== "1") {
+        setShowInstallPrompt(true);
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -50,6 +58,10 @@ export function PwaManager() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
+      setShowInstallPrompt(false);
+      window.localStorage.setItem(INSTALL_DISMISSED_KEY, "1");
+    } else {
+      // A declined native install prompt should not immediately re-open our banner.
       setShowInstallPrompt(false);
     }
     setDeferredPrompt(null);
@@ -84,7 +96,10 @@ export function PwaManager() {
               Install
             </button>
             <button
-              onClick={() => setShowInstallPrompt(false)}
+              onClick={() => {
+                setShowInstallPrompt(false);
+                window.localStorage.setItem(INSTALL_DISMISSED_KEY, "1");
+              }}
               className="text-slate-400 hover:text-white text-xs px-1"
             >
               ✕
