@@ -65,6 +65,15 @@ export const DS_TOKENS = {
     normal: "250ms cubic-bezier(0.4, 0, 0.2, 1)",
     spring: "350ms cubic-bezier(0.175, 0.885, 0.32, 1.275)",
   },
+  cleanMinimal: {
+    canvas: "bg-gradient-to-b from-sky-50/50 via-white to-sky-50/25",
+    card: "bg-gradient-to-b from-sky-50/60 to-white rounded-3xl border border-blue-100 shadow-xl shadow-black/[0.04]",
+    iconBadge: "w-14 h-14 rounded-2xl bg-white shadow-lg shadow-black/[0.04] border border-blue-50 flex items-center justify-center text-black",
+    input: "w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-black text-sm focus:outline-none focus:ring-2 focus:ring-blue-200",
+    primaryButton: "bg-gradient-to-b from-gray-700 to-gray-900 text-white font-medium py-2.5 px-5 rounded-xl shadow hover:brightness-105 cursor-pointer transition",
+    secondaryButton: "rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-medium py-2.5 px-5 transition shadow-sm",
+    divider: "border-t border-dashed border-gray-200",
+  },
 } as const;
 
 export type DSTokens = typeof DS_TOKENS;
