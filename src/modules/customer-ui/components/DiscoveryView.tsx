@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { formatINR, Paise } from "@/src/shared/types/money";
 import Image from "next/image";
 import Link from "next/link";
 import {
