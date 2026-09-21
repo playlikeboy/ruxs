@@ -211,7 +211,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     category: "FAST_FOOD",
     vendorId: "v_pizza_italiano",
     vendorName: "Pizza Italiano",
-    pricePaise: 1099, // $10.99
+    pricePaise: 1099, // ₹10.99
     originalPricePaise: 1499,
     calories: 440,
     prepTimeMinutes: 20,
@@ -240,7 +240,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     category: "FAST_FOOD",
     vendorId: "v_burger_hunt",
     vendorName: "Burger Hunt",
-    pricePaise: 499, // $4.99
+    pricePaise: 499, // ₹4.99
     originalPricePaise: 699,
     calories: 440,
     prepTimeMinutes: 20,
@@ -267,7 +267,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     category: "FAST_FOOD",
     vendorId: "v_melt_house",
     vendorName: "Melt House & Salads",
-    pricePaise: 456, // $4.56
+    pricePaise: 456, // ₹4.56
     calories: 320,
     prepTimeMinutes: 15,
     deliveryWindow: "15 min",
@@ -293,7 +293,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     category: "MILK",
     vendorId: "ten_krishna_dairy",
     vendorName: "Krishna Fresh Dairy",
-    pricePaise: 350, // $3.50
+    pricePaise: 350, // ₹3.50
     originalPricePaise: 420,
     calories: 62,
     deliveryWindow: "6:30 AM Daily",
@@ -320,7 +320,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     category: "WATER",
     vendorId: "ten_ganga_water",
     vendorName: "Ganga RO Aqua",
-    pricePaise: 299, // $2.99
+    pricePaise: 299, // ₹2.99
     originalPricePaise: 350,
     calories: 0,
     deliveryWindow: "7:00 AM - 9:00 AM",
@@ -345,7 +345,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     category: "TIFFIN",
     vendorId: "ten_annapurna_tiffin",
     vendorName: "Annapurna Kitchens",
-    pricePaise: 899, // $8.99
+    pricePaise: 899, // ₹8.99
     originalPricePaise: 1099,
     calories: 550,
     prepTimeMinutes: 30,
@@ -372,7 +372,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     category: "FLOWERS",
     vendorId: "ten_pushpam_flowers",
     vendorName: "Pushpam Pooja Florals",
-    pricePaise: 250, // $2.50
+    pricePaise: 250, // ₹2.50
     originalPricePaise: 300,
     deliveryWindow: "6:00 AM Daily",
     image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=600&auto=format&fit=crop&q=80",
@@ -393,7 +393,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     category: "PETS",
     vendorId: "ten_pawsome_pets",
     vendorName: "Pawsome Daily Walks",
-    pricePaise: 1800, // $18.00
+    pricePaise: 1800, // ₹18.00
     originalPricePaise: 2200,
     deliveryWindow: "5:30 PM Daily",
     image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&auto=format&fit=crop&q=80",
@@ -410,7 +410,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     category: "LAUNDRY",
     vendorId: "ten_dhobi_express",
     vendorName: "DhobiExpress",
-    pricePaise: 199, // $1.99
+    pricePaise: 199, // ₹1.99
     originalPricePaise: 250,
     deliveryWindow: "8:00 AM Doorstep Pickup",
     image: "https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?w=600&auto=format&fit=crop&q=80",
