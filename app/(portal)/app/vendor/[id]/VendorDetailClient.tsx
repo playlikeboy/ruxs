@@ -183,7 +183,7 @@ export default function VendorDetailClient({
               <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
                 <span className="text-[10px] uppercase font-bold text-subtle">Doorstep Fee</span>
                 <p className="mt-1 text-xs font-bold text-emerald-400">
-                  $0 (Society Pass)
+                  ₹0 (Society Pass)
                 </p>
               </div>
 
