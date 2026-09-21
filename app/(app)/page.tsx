@@ -23,9 +23,12 @@ export const metadata: Metadata = {
 };
 
 const services = [
-  { name: "Meals & tiffin", detail: "Daily homestyle lunch and dinner plans, automatic skips, and cutoff control." },
-  { name: "20L water", detail: "Scheduled doorstep jar drops, empty container tracking and reorder flows." },
-  { name: "Milk & dairy", detail: "Simple recurring morning milk delivery with 1-tap pause and resume." },
+  { name: "Milk & dairy", detail: "Simple recurring morning milk delivery with 1-tap pause and resume before 10 PM cutoff." },
+  { name: "20L water cans", detail: "Scheduled doorstep jar drops, empty container tracking and reorder flows." },
+  { name: "Meals & tiffin", detail: "Daily homestyle lunch and dinner plans, automatic skips, and kitchen cutoff control." },
+  { name: "Morning puja flowers", detail: "Mandi fresh jasmine, marigold and tulsi garlands delivered daily at 6:00 AM." },
+  { name: "Pet care & walks", detail: "GPS-monitored daily dog walks and canine nutrition meals with verified handlers." },
+  { name: "Steam press & laundry", detail: "Doorstep garment pickup, monthly press passes, and next-day return." },
 ];
 
 const steps = [
@@ -89,7 +92,10 @@ export default function Home() {
             </p>
 
             <div className="mt-9 flex flex-wrap gap-3">
-              <Link href="/subscribe" className="ds-button">
+              <Link href="/app" className="ds-button">
+                Open Customer App
+              </Link>
+              <Link href="/subscribe" className="ds-button-secondary">
                 Set up a service
               </Link>
               <Link href="/vendor/onboard" className="ds-button-secondary">
