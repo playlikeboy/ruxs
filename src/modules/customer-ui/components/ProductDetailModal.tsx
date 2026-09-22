@@ -1,5 +1,6 @@
 "use client";
 
+import { formatINR, Paise } from "@/src/shared/types/money";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Heart, Share2, ArrowLeft, Check, Star, Store, ShieldAlert, ExternalLink } from "lucide-react";
