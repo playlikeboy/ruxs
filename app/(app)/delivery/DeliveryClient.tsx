@@ -126,7 +126,7 @@ export default function DeliveryClient() {
               }}
               className="text-xs font-semibold rounded-xl whitespace-nowrap"
             >
-              {r.shift === "MORNING" ? "🥛 Morning Run" : r.shift === "LUNCH" ? "🍱 Lunch Run" : "🌆 Evening Run"} ({r.driverName})
+              {r.shift === "MORNING" ? "Morning Run" : r.shift === "LUNCH" ? "Lunch Run" : "Evening Run"} ({r.driverName})
             </Button>
           ))}
         </div>
@@ -138,7 +138,7 @@ export default function DeliveryClient() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-primary animate-ping" />
+                <span className="w-2.5 h-2.5 rounded-full bg-primary" />
                 <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider text-primary border-primary/40">
                   Live Run Sheet
                 </Badge>
@@ -249,7 +249,7 @@ export default function DeliveryClient() {
                       href={`tel:${stop.customerPhone}`}
                       className="text-primary font-mono font-semibold hover:underline"
                     >
-                      📞 Call
+                      Call
                     </a>
                   </div>
                   <div className="text-xs text-muted-foreground">
@@ -258,7 +258,7 @@ export default function DeliveryClient() {
                   </div>
                   {stop.notes && (
                     <p className="text-[11px] text-secondary-foreground bg-secondary/20 p-2 rounded-lg border border-secondary/40 mt-1">
-                      📌 {stop.notes}
+                      {stop.notes}
                     </p>
                   )}
                   {isDelivered && (
@@ -295,7 +295,7 @@ export default function DeliveryClient() {
 
                 {isSkipped && (
                   <div className="text-[11px] text-muted-foreground italic mt-1 text-center bg-muted/40 py-1.5 rounded-lg border border-border">
-                    🚫 Order cancelled by customer before cutoff. Do not deliver.
+                    Order cancelled by customer before cutoff. Do not deliver.
                   </div>
                 )}
               </CardContent>

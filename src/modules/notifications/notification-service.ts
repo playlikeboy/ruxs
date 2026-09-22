@@ -14,28 +14,28 @@ export class NotificationService {
     switch (eventType) {
       case "DAILY_POLL":
         return {
-          title: "🍱 RUXS Daily Service Poll",
+          title: "RUXS Daily Service Poll",
           body: `Hi ${params.name || "there"}, delivering your ${params.serviceName || "tiffin"} today? Cutoff is at ${params.cutoffTime || "10:00 AM"}. Tap below to Skip or Confirm.`,
         };
       case "OUT_FOR_DELIVERY":
         return {
-          title: "🚀 Delivery En Route",
+          title: "Delivery En Route",
           body: `Your ${params.serviceName || "order"} is out for delivery with driver ${params.driverName || "assigned to your route"}.`,
         };
       case "DELIVERED":
         return {
-          title: "✅ Doorstep Delivery Complete",
+          title: "Doorstep Delivery Complete",
           body: `Your ${params.serviceName || "service"} was delivered to ${params.address || "your door"}. Added to your Khata ledger.`,
         };
       case "INVOICE_GENERATED":
         return {
-          title: "🧾 Monthly Statement Ready",
-          body: `Your statement for ${params.month || "this month"} of ₹${params.amountRupees || "0"} is ready. Pay seamlessly via UPI.`,
+          title: "Monthly Statement Ready",
+          body: `Your statement for ${params.month || "this month"} of $${params.amountRupees || "0"} is ready. Pay seamlessly.`,
         };
       case "PAYMENT_RECEIVED":
         return {
-          title: "💚 Payment Confirmed",
-          body: `Received ₹${params.amountRupees || "0"} via UPI. Your Khata ledger balance has been updated.`,
+          title: "Payment Confirmed",
+          body: `Received $${params.amountRupees || "0"}. Your Khata ledger balance has been updated.`,
         };
       default:
         return {

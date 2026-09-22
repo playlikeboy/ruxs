@@ -300,8 +300,7 @@ export class AdminService {
     vendorsStore.set(vendor.id, vendor);
     vendorsStore.set(vendor.slug, vendor);
 
-    const typeEmoji = vendor.vendorType === "MILKMAN" ? "🥛" : vendor.vendorType === "WATER_SERVICE" ? "💧" : "🍱";
-    const shareCardText = `${typeEmoji} RUXS Merchant Access: ${vendor.businessName}
+    const shareCardText = `RUXS Merchant Access: ${vendor.businessName}
 Your merchant operations cockpit is ready.
 Direct Login: ${directUrl}
 Access PIN: ${pin}

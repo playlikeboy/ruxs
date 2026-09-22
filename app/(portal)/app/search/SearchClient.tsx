@@ -123,7 +123,7 @@ export default function SearchClient() {
         <div className="mx-auto max-w-5xl flex items-center gap-3">
           <Link
             href="/app"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 transition-colors shadow-xs"
             aria-label="Back to App"
           >
             <ArrowLeft size={18} />
@@ -184,12 +184,12 @@ export default function SearchClient() {
 
           {/* Price Range Dropdown / Filter Pills */}
           <div className="hidden sm:flex items-center gap-1.5 text-xs">
-            <span className="text-muted-foreground font-semibold mr-1">Price:</span>
+            <span className="text-gray-500 font-semibold mr-1">Price:</span>
             {[
               { id: "ALL", label: "All" },
-              { id: "UNDER_5", label: "< ₹500" },
-              { id: "5_TO_10", label: "₹500 - ₹1,000" },
-              { id: "OVER_10", label: "> ₹1,000" },
+              { id: "UNDER_5", label: "< $5" },
+              { id: "5_TO_10", label: "$5 - $10" },
+              { id: "OVER_10", label: "> $10" },
             ].map((p) => (
               <button
                 key={p.id}
@@ -197,8 +197,8 @@ export default function SearchClient() {
                 onClick={() => setPriceFilter(p.id as any)}
                 className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
                   priceFilter === p.id
-                    ? "border border-emerald-500/50 bg-emerald-500/20 text-emerald-300"
-                    : "border border-white/[0.06] text-muted-foreground hover:text-foreground"
+                    ? "border border-red-300 bg-red-50 text-red-600"
+                    : "border border-gray-200 text-gray-600 hover:text-gray-900"
                 }`}
               >
                 {p.label}
@@ -209,13 +209,13 @@ export default function SearchClient() {
 
         {/* Category Horizontal Pills */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between text-xs text-gray-500">
             <span className="font-semibold uppercase tracking-wider text-[10px]">Filter by Category</span>
             {selectedCategory !== "ALL" && (
               <button
                 type="button"
                 onClick={() => setSelectedCategory("ALL")}
-                className="text-emerald-400 font-bold hover:underline"
+                className="text-red-500 font-bold hover:underline"
               >
                 Reset Category
               </button>
@@ -227,7 +227,7 @@ export default function SearchClient() {
                 key={cat.id}
                 id={cat.id}
                 label={cat.label}
-                icon={cat.emoji}
+                icon={cat.id}
                 isActive={selectedCategory === cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
                 count={cat.count}
@@ -283,15 +283,15 @@ export default function SearchClient() {
                         <img
                           src={product.image}
                           alt={product.name}
-                          className="relative z-10 h-full w-full rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="relative z-10 h-full w-full rounded-full object-cover"
                         />
                         {/* SVG Vector Badge floating */}
-                        <div className="absolute -bottom-1 -right-1 z-20 h-8 w-8 rounded-full bg-[#121714] border border-white/20 p-1 shadow-lg flex items-center justify-center">
+                        <div className="absolute -bottom-1 -right-1 z-20 h-8 w-8 rounded-full bg-white border border-gray-200 p-1 shadow-xs flex items-center justify-center">
                           <CatalogSvgIllustration idOrCategory={product.category} size={22} />
                         </div>
                         {product.isBestSeller && (
-                          <span className="absolute top-0 right-0 z-20 rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-black shadow">
-                            ★ TOP
+                          <span className="absolute top-0 right-0 z-20 rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-bold text-white shadow-xs">
+                            TOP
                           </span>
                         )}
                       </div>
@@ -343,7 +343,7 @@ export default function SearchClient() {
                           addToCart(product, 1);
                           setIsCartOpen(true);
                         }}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-black shadow-md transition-all hover:bg-emerald-400 hover:scale-110 active:scale-95"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-xs hover:bg-red-600 transition-colors"
                         aria-label={`Add ${product.name}`}
                       >
                         <Plus size={16} className="stroke-[3]" />
@@ -369,17 +369,17 @@ export default function SearchClient() {
                   <Link
                     key={vendor.id}
                     href={`/app/vendor/${vendor.id}`}
-                    className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#121714] transition hover:-translate-y-1 hover:border-emerald-500/40 shadow-xl"
+                    className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#121714] shadow-xl"
                   >
                     <div className="relative h-44 w-full">
                       <img
                         src={vendor.bannerImage || vendor.image}
                         alt={vendor.name}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="h-full w-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                       <div className="absolute top-3 right-3">
-                        <span className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-black shadow">
+                        <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-xs">
                           {vendor.deliveryWindow}
                         </span>
                       </div>
@@ -406,14 +406,14 @@ export default function SearchClient() {
 
           {/* 3. Empty State */}
           {totalResults === 0 && (
-            <div className="py-16 text-center rounded-3xl border border-white/[0.08] bg-[#121714] p-8 space-y-4">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.04] text-3xl">
-                🔍
+            <div className="py-16 text-center rounded-3xl border border-gray-100 bg-white p-8 space-y-4 shadow-xs">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
+                <Search className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-white">No matches found</h3>
+                <h3 className="text-base font-bold text-gray-900">No matches found</h3>
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                  We couldn't find any items or merchants matching &ldquo;{query}&rdquo;. Try another keyword or reset your filters.
+                  We couldn&apos;t find any items or merchants matching &ldquo;{query}&rdquo;. Try another keyword or reset your filters.
                 </p>
               </div>
               <DSButton variant="secondary" size="sm" onClick={clearAllFilters}>

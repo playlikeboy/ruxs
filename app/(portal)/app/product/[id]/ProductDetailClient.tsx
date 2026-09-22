@@ -77,7 +77,7 @@ export default function ProductDetailClient({
         <div className="flex items-center gap-3">
           <Link
             href="/app"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             aria-label="Back to App"
           >
             <ArrowLeft size={18} />
@@ -101,7 +101,7 @@ export default function ProductDetailClient({
           <button
             type="button"
             onClick={() => setIsFavorite(!isFavorite)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             aria-label="Favorite"
           >
             <Heart
@@ -120,7 +120,7 @@ export default function ProductDetailClient({
                 }).catch(() => {});
               }
             }}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             aria-label="Share"
           >
             <Share2 size={18} />
@@ -136,14 +136,14 @@ export default function ProductDetailClient({
             {/* Hero Image Card */}
             <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#121a15] to-[#0d120f] p-6 sm:p-10 flex flex-col items-center justify-center text-center">
               {/* Geofence Delivery Guarantee Pill */}
-              <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Doorstep Autopilot: ₹0 delivery</span>
+              <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
+                <span className="h-2 w-2 rounded-full bg-red-500" />
+                <span>Doorstep Autopilot: Free delivery</span>
               </div>
 
               {product.isBestSeller && (
-                <div className="absolute top-4 right-4 z-10 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-bold text-black shadow-lg">
-                  ★ BEST SELLER
+                <div className="absolute top-4 right-4 z-10 rounded-full bg-red-500 px-3 py-1 text-[11px] font-bold text-white shadow-xs">
+                  BEST SELLER
                 </div>
               )}
 
@@ -502,17 +502,17 @@ export default function ProductDetailClient({
                 <Link
                   key={item.id}
                   href={`/app/product/${item.id}`}
-                  className="group flex flex-col justify-between rounded-3xl border border-white/[0.08] bg-[#121714] p-3.5 transition hover:-translate-y-1 hover:border-emerald-500/40"
+                  className="group flex flex-col justify-between rounded-3xl border border-white/[0.08] bg-[#121714] p-3.5"
                 >
                   <div>
                     <div className="relative mx-auto h-24 w-24 sm:h-28 sm:w-28 my-1 flex items-center justify-center">
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="h-full w-full rounded-full object-cover transition-transform group-hover:scale-105"
+                        className="h-full w-full rounded-full object-cover"
                       />
                     </div>
-                    <h3 className="mt-2 text-xs font-bold text-white line-clamp-1 group-hover:text-emerald-400">
+                    <h3 className="mt-2 text-xs font-bold text-white line-clamp-1 group-hover:text-red-400 transition-colors">
                       {item.name}
                     </h3>
                     <p className="text-[10px] text-muted-foreground truncate mt-0.5">

@@ -7,7 +7,7 @@ import { useUser, useHexclaveApp } from "@hexclave/next";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { AlertCircle, ArrowUpRight, BarChart3, CheckCircle2, ChevronRight, Copy, Database, ExternalLink, Gavel, Lock, RefreshCw, ShieldCheck, Store, UsersRound, WalletCards } from "lucide-react";
+import { AlertCircle, ArrowUpRight, BarChart3, CheckCircle2, ChevronRight, Copy, Database, ExternalLink, Gavel, Lock, Milk, Droplets, RefreshCw, ShieldCheck, Store, UsersRound, UtensilsCrossed, WalletCards } from "lucide-react";
 import { formatINR, Paise } from "@/src/shared/types/money";
 import { RuxsAdminSkeleton, RuxsPageLoading } from "@/components/ui/LoadingState";
 
@@ -237,10 +237,9 @@ export default function AdminClient() {
 
   const handleCopyCreds = (vendor: Vendor) => {
     const creds = vendor.credentials;
-    const typeEmoji = vendor.vendorType === "MILKMAN" ? "🥛" : vendor.vendorType === "WATER_SERVICE" ? "💧" : "🍱";
     const directUrl = creds?.directUrl || `https://ruxs.in/login?vendorToken=vtok_${vendor.slug}&slug=${vendor.slug}`;
     const pin = creds?.accessPin || "849201";
-    const text = `${typeEmoji} RUXS Merchant Access: ${vendor.businessName}
+    const text = `RUXS Merchant Access: ${vendor.businessName}
 Your merchant operations cockpit is live.
 Direct Login: ${directUrl}
 Access PIN: ${pin}
@@ -521,7 +520,7 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                 disabled={actionLoading}
                 className="h-9 rounded-xl border-white/[0.1] bg-white/[0.02] text-xs"
               >
-                <RefreshCw className={actionLoading ? "mr-2 h-3.5 w-3.5 animate-spin" : "mr-2 h-3.5 w-3.5"} />
+                <RefreshCw className="mr-2 h-3.5 w-3.5" />
                 Refresh
               </Button>
               <Link href="/" className="hidden h-9 items-center rounded-xl border border-white/[0.1] px-3 text-xs text-muted-foreground hover:bg-white/[0.03] hover:text-foreground sm:flex">
@@ -655,10 +654,10 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                   const isPending = vendor.status === "PENDING_VERIFICATION" || vendor.status === "PENDING_APPROVAL";
                   const typeLabel =
                     vendor.vendorType === "MILKMAN"
-                      ? "🥛 Milkman"
+                      ? "Milkman"
                       : vendor.vendorType === "WATER_SERVICE"
-                      ? "💧 Water Service"
-                      : "🍱 Tiffin Service";
+                      ? "Water Service"
+                      : "Tiffin Service";
 
                   return (
                     <div key={vendor.id} className="grid gap-4 px-5 py-5 lg:grid-cols-[1.35fr_.7fr_.7fr_auto] lg:items-center">
@@ -978,11 +977,12 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                 <label className="font-semibold text-foreground">Vendor Category & Service Type</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { type: "MILKMAN" as const, label: "Milkman", emoji: "🥛" },
-                    { type: "WATER_SERVICE" as const, label: "Water 20L", emoji: "💧" },
-                    { type: "TIFFIN" as const, label: "Tiffin Hub", emoji: "🍱" },
+                    { type: "MILKMAN" as const, label: "Milkman", icon: Milk },
+                    { type: "WATER_SERVICE" as const, label: "Water 20L", icon: Droplets },
+                    { type: "TIFFIN" as const, label: "Tiffin Hub", icon: UtensilsCrossed },
                   ].map((item) => {
                     const isSelected = newVendorForm.vendorType === item.type;
+                    const IconComponent = item.icon;
                     return (
                       <button
                         key={item.type}
@@ -1000,7 +1000,7 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                             : "border-white/[0.08] bg-white/[0.02] text-muted-foreground hover:bg-white/[0.05]"
                         }`}
                       >
-                        <div className="text-base mb-1">{item.emoji}</div>
+                        <div className="flex justify-center mb-1"><IconComponent className="w-5 h-5 text-inherit" /></div>
                         <div className="text-[11px]">{item.label}</div>
                       </button>
                     );

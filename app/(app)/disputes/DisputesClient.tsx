@@ -185,7 +185,7 @@ export default function DisputesClient() {
               <CardContent className="space-y-3 pt-0">
                 <div className="bg-muted/40 border border-border rounded-xl p-4 space-y-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    🔍 Delivery & Complaint Evidence Timeline
+                    Delivery & Complaint Evidence Timeline
                   </span>
 
                   {dispute.evidence.driverDeliveredAt && (
@@ -222,7 +222,7 @@ export default function DisputesClient() {
                     <p className="text-foreground">{dispute.resolution.resolutionNotes}</p>
                     {isRefunded && (
                       <p className="text-[11px] text-primary font-mono mt-1">
-                        ⚡ Compensating Credit of {formatINR(dispute.resolution.refundPaise as Paise)}{" "}
+                        Compensating Credit of {formatINR(dispute.resolution.refundPaise as Paise)}{" "}
                         appended to Customer Digital Khata.
                       </p>
                     )}
@@ -244,7 +244,7 @@ export default function DisputesClient() {
                       }
                       className="font-bold text-xs"
                     >
-                      ⚡ Approve Full Refund ({formatINR(dispute.disputedAmountPaise as Paise)})
+                      Approve Full Refund ({formatINR(dispute.disputedAmountPaise as Paise)})
                     </Button>
 
                     <Button

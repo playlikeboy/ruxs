@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Home, Heart, ShoppingBag, MapPin, User, Receipt } from "lucide-react";
+import { Search, Clock, User, Bookmark, Menu } from "lucide-react";
 
 export type NavTabId = "home" | "favorites" | "cart" | "tracking" | "profile";
 
@@ -19,12 +19,14 @@ export interface DSBottomNavProps {
   className?: string;
 }
 
+// Exactly matching the 5 icons in the mockup image bottom dock:
+// Search (Search), History/Clock (tracking), User (profile), Bookmark (favorites), Menu (cart/more)
 const DEFAULT_TABS: NavTabItem[] = [
-  { id: "home", label: "Home", icon: Home },
-  { id: "favorites", label: "Routines", icon: Heart },
-  { id: "cart", label: "Cart", icon: ShoppingBag },
-  { id: "tracking", label: "Tracking", icon: MapPin },
-  { id: "profile", label: "Khata", icon: Receipt },
+  { id: "home", label: "Search", icon: Search },
+  { id: "tracking", label: "History", icon: Clock },
+  { id: "profile", label: "Profile", icon: User },
+  { id: "favorites", label: "Projects", icon: Bookmark },
+  { id: "cart", label: "More", icon: Menu },
 ];
 
 export function DSBottomNav({
@@ -36,7 +38,7 @@ export function DSBottomNav({
   return (
     <nav
       aria-label="Bottom Navigation"
-      className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-[#0d120f]/90 px-2 py-1.5 shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_24px_rgba(16,185,129,0.1)] backdrop-blur-2xl transition-all duration-300 ${className}`}
+      className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 rounded-full border border-gray-200/90 bg-white/95 px-2.5 py-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.08)] backdrop-blur-xl select-none ${className}`}
     >
       {DEFAULT_TABS.map((tab) => {
         const isActive = activeTab === tab.id;
@@ -49,12 +51,12 @@ export function DSBottomNav({
               key={tab.id}
               type="button"
               onClick={() => onTabChange(tab.id)}
-              className="flex items-center gap-1.5 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold text-black shadow-[0_4px_12px_rgba(16,185,129,0.35)] transition-all duration-200 select-none scale-105"
+              className="flex items-center gap-1.5 rounded-full bg-red-500 px-4 py-2 text-xs font-semibold text-white shadow-xs select-none"
             >
-              <Icon size={16} className="text-black stroke-[2.5]" />
+              <Icon size={16} className="text-white stroke-[2.5]" />
               <span>{tab.label}</span>
               {Boolean(badge) && (
-                <span className="ml-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-black px-1 text-[9px] font-bold text-emerald-400">
+                <span className="ml-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white px-1 text-[9px] font-bold text-red-600">
                   {badge}
                 </span>
               )}
@@ -67,12 +69,12 @@ export function DSBottomNav({
             key={tab.id}
             type="button"
             onClick={() => onTabChange(tab.id)}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-all duration-150 hover:bg-white/[0.08] hover:text-foreground active:scale-90 select-none"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-800 hover:bg-gray-100 select-none"
             aria-label={tab.label}
           >
             <Icon size={18} />
             {Boolean(badge) && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-black">
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
                 {badge}
               </span>
             )}

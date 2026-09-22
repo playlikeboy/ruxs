@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Utensils, PauseCircle, PlusCircle, CheckCircle2 } from "lucide-react";
 
 type ActionState = "PENDING" | "DELIVER" | "SKIP" | "EXTRA";
 
@@ -36,7 +37,7 @@ export default function OperationsSimulator() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
             Interactive Engine Preview
           </div>
           <h3 className="mt-2 text-2xl font-bold tracking-tight text-white">
@@ -49,7 +50,7 @@ export default function OperationsSimulator() {
 
         <button
           onClick={resetSimulator}
-          className="text-xs font-medium text-slate-400 hover:text-emerald-400 transition"
+          className="text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors"
         >
           Reset Simulation ↺
         </button>
@@ -58,82 +59,88 @@ export default function OperationsSimulator() {
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
         {/* Mock WhatsApp Interface */}
         <div className="rounded-2xl border border-emerald-500/20 bg-[#0b141a] p-4 sm:p-6 shadow-inner font-sans">
-          <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-700 text-sm font-bold text-white">
-              RK
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
-                Sharma Kitchen (via RUXS)
-                <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Official</span>
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-sm">
+                RH
               </div>
-              <div className="text-[11px] text-emerald-400">Cutoff: 10:00 AM Sharp</div>
+              <div>
+                <div className="text-sm font-semibold text-white flex items-center gap-1.5">
+                  Ruxs Verified Merchant
+                  <span className="text-[10px] text-emerald-400">✓</span>
+                </div>
+                <div className="text-[11px] text-slate-400">Official Business Account</div>
+              </div>
             </div>
+            <span className="rounded-md bg-[#202c33] px-2 py-0.5 text-[10px] text-slate-300">Today, 08:30 AM</span>
           </div>
 
-          <div className="mt-4 space-y-3">
-            <div className="rounded-xl bg-[#202c33] p-3.5 text-xs text-slate-200 space-y-2 max-w-[90%] shadow">
-              <p className="font-medium text-emerald-400">
-                Good morning Rahul! Today&apos;s lunch:
+          <div className="mt-4 space-y-4">
+            {/* Incoming Automated WhatsApp Prompt */}
+            <div className="max-w-[85%] rounded-2xl rounded-tl-none bg-[#202c33] p-3 text-xs text-slate-200 shadow">
+              <p className="font-semibold text-emerald-400">Good morning, Shaswat!</p>
+              <p className="mt-1">
+                Your standard North Indian Veg Thali subscription is scheduled for delivery today by 1:00 PM at Sobha Daisy #402.
               </p>
-              <p className="text-slate-300">
-                🍱 <strong>Homestyle Thali</strong>: 4 Tawa Phulkas, Dal Tadka, Paneer Bhurji, Jeera Rice.
-              </p>
-              <p className="text-[11px] text-slate-400 italic">
-                Cutoff locks in 45 minutes. Autopilot will deliver if no response.
+              <div className="mt-2 rounded-lg bg-[#111b21] p-2 text-[11px] text-slate-300">
+                • 4 Butter Rotis & Paneer Butter Masala<br />
+                • Dal Tadka, Jeera Rice, Fresh Salad
+              </div>
+              <p className="mt-2 text-[10px] text-slate-400">
+                Please confirm before cutoff (10:30 AM).
               </p>
             </div>
 
-            {/* Interactive WhatsApp Quick-Reply Buttons */}
-            <div className="space-y-2 pt-2">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            {/* Quick Action Interactive Buttons */}
+            <div>
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                 Select Your Action:
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => handleAction("DELIVER")}
-                  className={`flex flex-col items-center justify-center rounded-xl p-3 text-xs font-bold transition active:scale-95 ${
+                  className={`flex flex-col items-center justify-center rounded-xl p-3 text-xs font-bold transition-colors ${
                     action === "DELIVER"
                       ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400"
                       : "border border-white/10 bg-[#202c33] text-slate-200 hover:border-emerald-500/40"
                   }`}
                 >
-                  <span className="text-base mb-1">🍱</span>
+                  <Utensils className="w-5 h-5 mb-1 text-inherit" />
                   DELIVER
-                  <span className="text-[9px] font-normal opacity-75">+₹2.99</span>
+                  <span className="text-[9px] font-normal opacity-75">+$2.99</span>
                 </button>
 
                 <button
                   onClick={() => handleAction("SKIP")}
-                  className={`flex flex-col items-center justify-center rounded-xl p-3 text-xs font-bold transition active:scale-95 ${
+                  className={`flex flex-col items-center justify-center rounded-xl p-3 text-xs font-bold transition-colors ${
                     action === "SKIP"
                       ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 ring-2 ring-amber-400"
                       : "border border-white/10 bg-[#202c33] text-slate-200 hover:border-amber-500/40"
                   }`}
                 >
-                  <span className="text-base mb-1">⏸️</span>
+                  <PauseCircle className="w-5 h-5 mb-1 text-inherit" />
                   SKIP TODAY
-                  <span className="text-[9px] font-normal opacity-75">₹0 Charge</span>
+                  <span className="text-[9px] font-normal opacity-75">$0 Charge</span>
                 </button>
 
                 <button
                   onClick={() => handleAction("EXTRA")}
-                  className={`flex flex-col items-center justify-center rounded-xl p-3 text-xs font-bold transition active:scale-95 ${
+                  className={`flex flex-col items-center justify-center rounded-xl p-3 text-xs font-bold transition-colors ${
                     action === "EXTRA"
                       ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 ring-2 ring-indigo-400"
                       : "border border-white/10 bg-[#202c33] text-slate-200 hover:border-indigo-500/40"
                   }`}
                 >
-                  <span className="text-base mb-1">➕</span>
+                  <PlusCircle className="w-5 h-5 mb-1 text-inherit" />
                   +2 ROTIS
-                  <span className="text-[9px] font-normal opacity-75">+₹1.50</span>
+                  <span className="text-[9px] font-normal opacity-75">+$1.50</span>
                 </button>
               </div>
             </div>
 
             {/* Instant Confirmation Balloon */}
             {action !== "PENDING" && (
-              <div className="mt-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 p-3 text-xs text-emerald-300 animate-in fade-in slide-in-from-top-2">
+              <div className="mt-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 p-3 text-xs text-emerald-300">
                 ✓ Action recorded! {action === "SKIP" ? "Lunch skipped for today. No charge debited." : action === "EXTRA" ? "Extra 2 rotis added to today's prep." : "Lunch confirmed! Driver run sheet updated."}
               </div>
             )}
@@ -155,7 +162,7 @@ export default function OperationsSimulator() {
                 <span className="text-xs text-slate-400">Meals</span>
               </div>
               <div className="mt-2 text-[10px] text-emerald-400 flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 {action === "DELIVER" ? "Incremented by 1" : action === "SKIP" ? "0 waste: meal decremented" : "Live synchronization"}
               </div>
             </div>
@@ -166,13 +173,13 @@ export default function OperationsSimulator() {
                 Customer Khata Balance
               </div>
               <div className="mt-1 flex items-baseline gap-1">
-                <span className="text-xs text-slate-400">₹</span>
+                <span className="text-xs text-slate-400">$</span>
                 <span className="text-3xl font-black tabular-nums text-white">
                   {khataBalance}
                 </span>
               </div>
               <div className="mt-2 text-[10px] text-slate-400">
-                {action === "SKIP" ? "No charge added (₹0)" : action === "EXTRA" ? "+₹4.49 debited" : action === "DELIVER" ? "+₹2.99 debited" : "Unbilled month-to-date"}
+                {action === "SKIP" ? "No charge added ($0)" : action === "EXTRA" ? "+$4.49 debited" : action === "DELIVER" ? "+$2.99 debited" : "Unbilled month-to-date"}
               </div>
             </div>
           </div>
@@ -217,7 +224,7 @@ export default function OperationsSimulator() {
             </div>
             <div className="text-right">
               <div className="text-base font-black text-emerald-400">{jarsHeld} Containers</div>
-              <div className="text-[10px] text-slate-400">Deposit: ₹10.00 Held</div>
+              <div className="text-[10px] text-slate-400">Deposit: $10.00 Held</div>
             </div>
           </div>
         </div>

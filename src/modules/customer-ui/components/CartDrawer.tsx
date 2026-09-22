@@ -3,7 +3,7 @@
 import { formatINR, Paise } from "@/src/shared/types/money";
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Trash2, Tag, ShieldCheck, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Trash2, Tag, ShoppingBag } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
 import {
   DSBottomSheet,
@@ -17,7 +17,6 @@ export function CartDrawer() {
     setIsCartOpen,
     cart,
     updateCartQuantity,
-    removeFromCart,
     clearCart,
     subtotalPaise,
     deliveryFeePaise,
@@ -51,9 +50,8 @@ export function CartDrawer() {
     setTimeout(() => {
       setIsCheckingOut(false);
       setIsCartOpen(false);
-      // Switch directly to live delivery tracking screen (Screen 4)!
       setActiveTab("tracking");
-    }, 900);
+    }, 600);
   };
 
   return (
@@ -64,25 +62,25 @@ export function CartDrawer() {
       maxWidth="max-w-md"
       className="p-0 overflow-hidden"
     >
-      <div className="flex flex-col h-full max-h-[85vh]">
-        {/* Cart Header (Screen 2: Back, "Cart", Trash) */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4">
+      <div className="flex flex-col h-full max-h-[85vh] text-gray-900 font-sans">
+        {/* Cart Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
           <button
             type="button"
             onClick={() => setIsCartOpen(false)}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.05] text-foreground hover:bg-white/[0.1] transition active:scale-95"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
             aria-label="Back"
           >
             <ArrowLeft size={16} />
           </button>
 
-          <h2 className="text-base font-bold text-foreground tracking-tight">Cart</h2>
+          <h2 className="text-base font-bold text-gray-950 tracking-tight">Cart</h2>
 
           <button
             type="button"
             onClick={clearCart}
             disabled={cart.length === 0}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition disabled:opacity-30"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 disabled:opacity-30"
             aria-label="Clear Cart"
           >
             <Trash2 size={16} />
@@ -93,11 +91,11 @@ export function CartDrawer() {
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {cart.length === 0 ? (
             <div className="py-12 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.03] text-2xl">
-                🛒
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                <ShoppingBag size={24} />
               </div>
-              <p className="mt-3 text-sm font-semibold text-foreground">Your cart is empty</p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-3 text-sm font-semibold text-gray-900">Your cart is empty</p>
+              <p className="mt-1 text-xs text-gray-500">
                 Add fresh meals, water cans, or daily groceries to start your routine.
               </p>
             </div>
@@ -105,10 +103,10 @@ export function CartDrawer() {
             cart.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 transition hover:border-white/[0.12]"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-xs"
               >
                 {/* Item Thumbnail */}
-                <div className="relative h-14 w-14 shrink-0 rounded-xl overflow-hidden border border-white/[0.08]">
+                <div className="relative h-14 w-14 shrink-0 rounded-xl overflow-hidden border border-gray-100">
                   <img
                     src={item.product.image}
                     alt={item.product.name}
@@ -121,46 +119,46 @@ export function CartDrawer() {
                   <Link
                     href={`/app/product/${item.product.id}`}
                     onClick={() => setIsCartOpen(false)}
-                    className="text-xs font-bold text-foreground truncate block hover:text-emerald-400 transition-colors"
+                    className="text-xs font-bold text-gray-900 truncate block hover:text-red-500"
                   >
                     {item.product.name}
                   </Link>
-                  <p className="text-[10px] text-muted-foreground truncate">
+                  <p className="text-[10px] text-gray-400 truncate">
                     {item.selectedSize?.name || item.product.vendorName}
                   </p>
-                  <p className="mt-1 text-xs font-extrabold text-foreground">
+                  <p className="mt-1 text-xs font-extrabold text-gray-950">
                     {formatINR(item.totalPricePaise as Paise)}
                   </p>
                 </div>
 
-                {/* Tactile Green Stepper Pill */}
+                {/* Stepper Pill */}
                 <DSQuantityStepper
                   value={item.quantity}
                   onChange={(newQty) => updateCartQuantity(item.id, newQty)}
                   min={0}
                   size="sm"
-                  variant="green-pill"
+                  variant="pill"
                 />
               </div>
             ))
           )}
 
-          {/* Promo Code Input (Screen 2) */}
+          {/* Promo Code Input */}
           {cart.length > 0 && (
             <div className="pt-2">
-              <div className="flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-1.5 pl-3">
-                <Tag size={15} className="text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-1.5 pl-3">
+                <Tag size={15} className="text-gray-400 shrink-0" />
                 <input
                   type="text"
                   placeholder="Promo code (e.g. RUXS30)"
                   value={inputCode}
                   onChange={(e) => setInputCode(e.target.value)}
-                  className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 outline-none uppercase font-mono"
+                  className="w-full bg-transparent text-xs text-gray-900 placeholder:text-gray-400 outline-none uppercase font-mono"
                 />
                 <button
                   type="button"
                   onClick={handleApplyCode}
-                  className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-black transition hover:bg-emerald-400 active:scale-95 shadow"
+                  className="rounded-xl bg-red-500 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-red-600"
                 >
                   Apply
                 </button>
@@ -169,7 +167,7 @@ export function CartDrawer() {
               {promoMessage && (
                 <p
                   className={`mt-1.5 text-[11px] font-medium px-2 ${
-                    promoMessage.isError ? "text-red-400" : "text-emerald-400"
+                    promoMessage.isError ? "text-red-500" : "text-emerald-600"
                   }`}
                 >
                   {promoMessage.text}
@@ -178,40 +176,40 @@ export function CartDrawer() {
             </div>
           )}
 
-          {/* Price Breakdown Card (Screen 2) */}
+          {/* Price Breakdown Card */}
           {cart.length > 0 && (
-            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-2.5 text-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
+            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 space-y-2.5 text-xs">
+              <div className="flex items-center justify-between text-gray-500">
                 <span>Subtotal</span>
-                <span className="font-semibold text-foreground">
+                <span className="font-semibold text-gray-900">
                   {formatINR(subtotalPaise as Paise)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-muted-foreground">
+              <div className="flex items-center justify-between text-gray-500">
                 <span className="flex items-center gap-1">
                   <span>Delivery</span>
                   {currentGeofence.isInside && (
-                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.2 rounded">
+                    <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                       Geofence Free
                     </span>
                   )}
                 </span>
-                <span className="font-semibold text-foreground">
+                <span className="font-semibold text-gray-900">
                   {deliveryFeePaise === 0 ? "Free" : `${formatINR(deliveryFeePaise as Paise)}`}
                 </span>
               </div>
 
               {discountPaise > 0 && (
-                <div className="flex items-center justify-between text-emerald-400">
+                <div className="flex items-center justify-between text-emerald-600 font-medium">
                   <span>Discount ({promoCode})</span>
                   <span className="font-bold">-{formatINR(discountPaise as Paise)}</span>
                 </div>
               )}
 
-              <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between text-sm">
-                <span className="font-bold text-foreground">Total</span>
-                <span className="font-black text-emerald-400 text-base">
+              <div className="pt-2 border-t border-gray-200 flex items-center justify-between text-sm">
+                <span className="font-bold text-gray-950">Total</span>
+                <span className="font-extrabold text-red-600 text-base">
                   {formatINR(totalPaise as Paise)}
                 </span>
               </div>
@@ -219,16 +217,16 @@ export function CartDrawer() {
           )}
         </div>
 
-        {/* Sticky Checkout Button (Screen 2: Checkout) */}
+        {/* Sticky Checkout Button */}
         {cart.length > 0 && (
-          <div className="border-t border-white/[0.08] bg-[#0d120f] p-4">
+          <div className="border-t border-gray-100 bg-white p-4 shadow-sm">
             <DSButton
               variant="primary"
               size="lg"
               fullWidth
               isLoading={isCheckingOut}
               onClick={handleCheckout}
-              className="font-bold text-base shadow-[0_8px_24px_rgba(16,185,129,0.3)]"
+              className="font-bold text-base"
             >
               Checkout · {formatINR(totalPaise as Paise)}
             </DSButton>

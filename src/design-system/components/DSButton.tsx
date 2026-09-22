@@ -28,9 +28,9 @@ export const DSButton = forwardRef<HTMLButtonElement, DSButtonProps>(
     },
     ref
   ) => {
-    // Base classes
+    // Base classes without animations
     let classes =
-      "inline-flex items-center justify-center font-medium tracking-tight transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:opacity-50 disabled:pointer-events-none select-none active:scale-[0.98]";
+      "inline-flex items-center justify-center font-medium tracking-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50 disabled:pointer-events-none select-none";
 
     // Full width
     if (fullWidth) classes += " w-full";
@@ -41,7 +41,7 @@ export const DSButton = forwardRef<HTMLButtonElement, DSButtonProps>(
         classes += " text-xs px-3.5 py-1.5 h-8 gap-1.5 rounded-full";
         break;
       case "lg":
-        classes += " text-base px-6 py-3.5 h-12 gap-2.5 rounded-full font-semibold";
+        classes += " text-base px-6 py-3 h-12 gap-2.5 rounded-full font-semibold";
         break;
       case "icon":
         classes += " h-10 w-10 p-0 rounded-full flex-shrink-0";
@@ -59,26 +59,26 @@ export const DSButton = forwardRef<HTMLButtonElement, DSButtonProps>(
     switch (variant) {
       case "secondary":
         classes +=
-          " bg-white/[0.06] hover:bg-white/[0.1] text-foreground border border-white/[0.08] backdrop-blur-md";
+          " bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200";
         break;
       case "outline":
         classes +=
-          " bg-transparent hover:bg-white/[0.04] text-foreground border border-white/[0.12]";
+          " bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 shadow-xs";
         break;
       case "ghost":
-        classes += " bg-transparent hover:bg-white/[0.06] text-muted-foreground hover:text-foreground";
+        classes += " bg-transparent hover:bg-gray-100 text-gray-600 hover:text-gray-900";
         break;
       case "danger":
-        classes += " bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20";
+        classes += " bg-red-50 hover:bg-red-100 text-red-600 border border-red-200";
         break;
       case "glass":
         classes +=
-          " bg-black/40 hover:bg-black/60 text-white border border-white/[0.15] backdrop-blur-xl shadow-lg";
+          " bg-white/90 hover:bg-white text-gray-900 border border-gray-200 shadow-sm";
         break;
       case "primary":
       default:
         classes +=
-          " bg-emerald-500 hover:bg-emerald-400 text-black font-semibold shadow-[0_4px_16px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)]";
+          " bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold shadow-xs";
         break;
     }
 
@@ -90,7 +90,7 @@ export const DSButton = forwardRef<HTMLButtonElement, DSButtonProps>(
         {...props}
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin text-current" />
+          <Loader2 className="h-4 w-4 text-current" />
         ) : (
           <>
             {leftIcon && <span className="shrink-0">{leftIcon}</span>}

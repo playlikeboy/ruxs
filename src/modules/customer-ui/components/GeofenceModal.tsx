@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MapPin, Navigation, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
+import { MapPin, Navigation, CheckCircle2 } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
 import { DSBottomSheet, DSButton } from "@/src/design-system";
 
@@ -19,31 +19,28 @@ export function GeofenceModal() {
       isOpen={isGeofenceModalOpen}
       onClose={() => setIsGeofenceModalOpen(false)}
       title="Society Geofence & Location"
-      subtitle="Select or simulate your apartment society geofence"
+      subtitle="Select your gated apartment society"
       maxWidth="max-w-md"
     >
-      <div className="space-y-4 pb-4">
-        {/* Radar Status Card */}
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.08] p-4 text-center">
-          <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
-            <span className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" />
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-black shadow">
-              <Navigation size={22} className="stroke-[2.5]" />
-            </div>
+      <div className="space-y-4 pb-4 text-gray-900 font-sans">
+        {/* Status Card */}
+        <div className="rounded-2xl border border-red-100 bg-red-50/50 p-4 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500 text-white shadow-xs">
+            <Navigation size={22} className="stroke-[2.5]" />
           </div>
-          <h3 className="mt-3 text-sm font-bold text-foreground">
+          <h3 className="mt-3 text-sm font-bold text-gray-950">
             {currentGeofence.isInside
               ? "Inside Active Society Geofence"
               : "Outside Society Boundary"}
           </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-gray-500">
             {currentGeofence.deliveryGuarantee}
           </p>
         </div>
 
         {/* Society List */}
         <div className="space-y-2">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
             Available Society Clusters
           </label>
           {geofenceList.map((geo) => {
@@ -56,43 +53,54 @@ export function GeofenceModal() {
                   selectGeofence(geo.id);
                   setIsGeofenceModalOpen(false);
                 }}
-                className={`flex w-full items-center justify-between rounded-2xl border p-3.5 text-left transition-all ${
+                className={`flex w-full items-center justify-between rounded-2xl border p-3.5 text-left select-none ${
                   isSelected
-                    ? "border-emerald-500/40 bg-emerald-500/10 shadow-[0_0_16px_rgba(16,185,129,0.15)]"
-                    : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.14]"
+                    ? "border-red-300 bg-red-50/60 shadow-xs"
+                    : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                      geo.isInside ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+                      isSelected
+                        ? "bg-red-500 text-white"
+                        : "bg-gray-100 text-gray-500"
                     }`}
                   >
                     <MapPin size={18} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-foreground">{geo.societyName}</h4>
-                    <p className="text-[10px] text-muted-foreground">
-                      Radius: {geo.radiusMeters}m · GPS: {geo.distanceMeters}m away
+                    <p
+                      className={`text-xs font-bold ${
+                        isSelected ? "text-red-600" : "text-gray-900"
+                      }`}
+                    >
+                      {geo.societyName}
+                    </p>
+                    <p className="text-[11px] text-gray-400">
+                      Radius: {geo.radiusMeters}m · Gate Pass: Pre-cleared
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      geo.isInside
-                        ? "bg-emerald-500/20 text-emerald-300"
-                        : "bg-amber-500/20 text-amber-300"
-                    }`}
-                  >
-                    {geo.isInside ? "Inside" : "Edge"}
-                  </span>
-                </div>
+                {isSelected ? (
+                  <CheckCircle2 size={18} className="text-red-500 shrink-0" />
+                ) : (
+                  <span className="text-xs font-medium text-gray-400">Select</span>
+                )}
               </button>
             );
           })}
         </div>
+
+        {/* Action Button */}
+        <DSButton
+          variant="primary"
+          fullWidth
+          onClick={() => setIsGeofenceModalOpen(false)}
+        >
+          Confirm Location
+        </DSButton>
       </div>
     </DSBottomSheet>
   );

@@ -57,7 +57,7 @@ export default function VendorDetailClient({
         <div className="flex items-center gap-3">
           <Link
             href="/app"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             aria-label="Back to App"
           >
             <ArrowLeft size={18} />
@@ -81,7 +81,7 @@ export default function VendorDetailClient({
           <button
             type="button"
             onClick={() => setIsFavorite(!isFavorite)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             aria-label="Favorite"
           >
             <Heart
@@ -100,7 +100,7 @@ export default function VendorDetailClient({
                 }).catch(() => {});
               }
             }}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             aria-label="Share"
           >
             <Share2 size={18} />
@@ -242,7 +242,7 @@ export default function VendorDetailClient({
             {filteredProducts.map((p) => (
               <div
                 key={p.id}
-                className="group flex flex-col justify-between rounded-3xl border border-white/[0.08] bg-[#121714] p-4 transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/40 shadow-lg"
+                className="group flex flex-col justify-between rounded-3xl border border-white/[0.08] bg-[#121714] p-4 shadow-lg"
               >
                 <div>
                   <Link href={`/app/product/${p.id}`} className="block">
@@ -251,16 +251,16 @@ export default function VendorDetailClient({
                       <img
                         src={p.image}
                         alt={p.name}
-                        className="relative z-10 h-full w-full rounded-full object-cover transition-transform group-hover:scale-105"
+                        className="relative z-10 h-full w-full rounded-full object-cover"
                       />
                       {p.isBestSeller && (
-                        <span className="absolute top-0 right-0 z-20 rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-black shadow">
-                          ★ TOP
+                        <span className="absolute top-0 right-0 z-20 rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-bold text-white shadow-xs">
+                          TOP
                         </span>
                       )}
                     </div>
 
-                    <h3 className="mt-3 text-sm font-bold text-white line-clamp-1 group-hover:text-emerald-400 transition-colors">
+                    <h3 className="mt-3 text-sm font-bold text-white line-clamp-1 group-hover:text-red-400 transition-colors">
                       {p.name}
                     </h3>
                     <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
@@ -280,7 +280,7 @@ export default function VendorDetailClient({
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/app/product/${p.id}`}
-                      className="rounded-full border border-white/[0.12] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-white/[0.08] transition"
+                      className="rounded-full border border-white/[0.12] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-white/[0.08] transition-colors"
                     >
                       Details
                     </Link>
@@ -290,7 +290,7 @@ export default function VendorDetailClient({
                         addToCart(p, 1);
                         setIsCartOpen(true);
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-black font-bold shadow-md hover:bg-emerald-400 transition active:scale-95"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white font-bold shadow-xs hover:bg-red-600 transition-colors"
                       aria-label={`Add ${p.name} to cart`}
                     >
                       <Plus size={16} className="stroke-[3]" />

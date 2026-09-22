@@ -25,6 +25,7 @@ import {
 } from "@/components/icons/animated";
 import { RuxsCardListSkeleton, RuxsSpinner } from "@/components/ui/LoadingState";
 import { formatINR, Paise, toPaise } from "@/src/shared/types/money";
+import { CategoryIcon } from "@/src/modules/customer-ui/category-icons";
 
 interface MarketVendor {
   id: string;
@@ -82,22 +83,22 @@ const cadences = [
 ] as const;
 
 const SERVICE_CATEGORIES = [
-  { id: "ALL", label: "All Services", emoji: "⚡" },
-  { id: "WATER_SERVICE", label: "Water Cans", emoji: "💧" },
-  { id: "MILKMAN", label: "Milk & Dairy", emoji: "🥛" },
-  { id: "TIFFIN", label: "Tiffin & Meals", emoji: "🍱" },
-  { id: "FLOWERS", label: "Puja Flowers", emoji: "🌸" },
-  { id: "PET_SERVICES", label: "Pet Care", emoji: "🐾" },
-  { id: "LAUNDRY", label: "Iron & Wash", emoji: "🧺" },
+  { id: "ALL", label: "All Services" },
+  { id: "WATER_SERVICE", label: "Water Cans" },
+  { id: "MILKMAN", label: "Milk & Dairy" },
+  { id: "TIFFIN", label: "Tiffin & Meals" },
+  { id: "FLOWERS", label: "Puja Flowers" },
+  { id: "PET_SERVICES", label: "Pet Care" },
+  { id: "LAUNDRY", label: "Iron & Wash" },
 ] as const;
 
-const VENDOR_TYPE_META: Record<string, { emoji: string; label: string; defaultProduct: string; unit: string; price: number }> = {
-  WATER_SERVICE: { emoji: "💧", label: "Water Cans", defaultProduct: "20L Bisleri Water Can", unit: "CAN", price: 4000 },
-  MILKMAN: { emoji: "🥛", label: "Milk & Dairy", defaultProduct: "Daily Pure Farm Fresh Milk", unit: "L", price: 6500 },
-  TIFFIN: { emoji: "🍱", label: "Tiffin & Meals", defaultProduct: "Standard Homestyle Thali", unit: "MEAL", price: 12000 },
-  FLOWERS: { emoji: "🌸", label: "Puja Flowers", defaultProduct: "Fresh Morning Puja Flower Basket", unit: "PACK", price: 1500 },
-  PET_SERVICES: { emoji: "🐾", label: "Pet Care", defaultProduct: "Daily Evening Dog Walk & Feed", unit: "WALK", price: 25000 },
-  LAUNDRY: { emoji: "🧺", label: "Iron & Wash", defaultProduct: "Daily Garment Steam Iron Pass", unit: "PIECE", price: 500 },
+const VENDOR_TYPE_META: Record<string, { label: string; defaultProduct: string; unit: string; price: number }> = {
+  WATER_SERVICE: { label: "Water Cans", defaultProduct: "20L Bisleri Water Can", unit: "CAN", price: 4000 },
+  MILKMAN: { label: "Milk & Dairy", defaultProduct: "Daily Pure Farm Fresh Milk", unit: "L", price: 6500 },
+  TIFFIN: { label: "Tiffin & Meals", defaultProduct: "Standard Homestyle Thali", unit: "MEAL", price: 12000 },
+  FLOWERS: { label: "Puja Flowers", defaultProduct: "Fresh Morning Puja Flower Basket", unit: "PACK", price: 1500 },
+  PET_SERVICES: { label: "Pet Care", defaultProduct: "Daily Evening Dog Walk & Feed", unit: "WALK", price: 25000 },
+  LAUNDRY: { label: "Iron & Wash", defaultProduct: "Daily Garment Steam Iron Pass", unit: "PIECE", price: 500 },
 };
 
 function SubscribeContent() {
@@ -207,7 +208,6 @@ function SubscribeContent() {
     }
 
     const meta = (selectedVendor && VENDOR_TYPE_META[selectedVendor.vendorType]) || {
-      emoji: "📦",
       label: "Routine",
       defaultProduct: "Standard Subscription Item",
       unit: "ITEM",
@@ -444,7 +444,7 @@ function SubscribeContent() {
                             : "border border-white/[0.08] bg-white/[0.02] text-muted-foreground hover:bg-white/[0.06] hover:text-foreground"
                         }`}
                       >
-                        <span>{cat.emoji}</span>
+                        <CategoryIcon id={cat.id} size={14} />
                         <span>{cat.label}</span>
                       </button>
                     );
@@ -454,7 +454,7 @@ function SubscribeContent() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {filteredVendors.map((v) => {
                     const isSelected = v.id === selectedVendorId;
-                    const meta = VENDOR_TYPE_META[v.vendorType] || { emoji: "📦", label: v.vendorType };
+                    const meta = VENDOR_TYPE_META[v.vendorType] || { label: v.vendorType };
                     return (
                       <button
                         key={v.id}
@@ -473,7 +473,7 @@ function SubscribeContent() {
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-base">{meta.emoji}</span>
+                            <CategoryIcon id={v.vendorType} size={16} />
                             <span className="rounded-full bg-white/[0.05] px-2 py-0.5 text-[9px] font-medium text-muted-foreground">
                               {meta.label}
                             </span>

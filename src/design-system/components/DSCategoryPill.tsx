@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
+import { CategoryIcon } from "@/src/modules/customer-ui/category-icons";
 
 export interface DSCategoryPillProps {
   id: string;
   label: string;
-  icon: React.ReactNode | string;
+  icon?: React.ReactNode | string;
   isActive?: boolean;
   onClick?: () => void;
   count?: number;
@@ -13,6 +14,7 @@ export interface DSCategoryPillProps {
 }
 
 export function DSCategoryPill({
+  id,
   label,
   icon,
   isActive = false,
@@ -20,26 +22,33 @@ export function DSCategoryPill({
   count,
   className = "",
 }: DSCategoryPillProps) {
+  const renderIcon = () => {
+    if (React.isValidElement(icon)) {
+      return icon;
+    }
+    return <CategoryIcon id={id} size={22} isActive={isActive} />;
+  };
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`group relative flex flex-col items-center justify-center rounded-2xl p-3 min-w-[76px] transition-all duration-200 select-none ${
+      className={`relative flex flex-col items-center justify-center rounded-2xl p-3 min-w-[76px] select-none ${
         isActive
-          ? "border border-emerald-500/50 bg-emerald-500/10 shadow-[0_4px_16px_rgba(16,185,129,0.18)] scale-[1.03]"
-          : "border border-white/[0.06] bg-white/[0.025] hover:border-white/[0.14] hover:bg-white/[0.05] active:scale-95"
+          ? "border border-red-300 bg-red-50/60 text-red-600 shadow-xs"
+          : "border border-gray-100 bg-gray-50/90 text-gray-700 hover:bg-gray-100 hover:border-gray-200"
       } ${className}`}
     >
       <div
-        className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl transition-transform duration-200 group-hover:scale-110 ${
-          isActive ? "bg-emerald-500/20" : "bg-white/[0.04]"
+        className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+          isActive ? "bg-red-100/50 text-red-600" : "bg-white text-gray-700 shadow-xs"
         }`}
       >
-        {typeof icon === "string" ? <span>{icon}</span> : icon}
+        {renderIcon()}
       </div>
       <span
-        className={`mt-2 text-xs font-semibold tracking-tight transition-colors line-clamp-1 ${
-          isActive ? "text-emerald-400 font-bold" : "text-foreground group-hover:text-foreground"
+        className={`mt-2 text-xs font-semibold tracking-tight line-clamp-1 ${
+          isActive ? "text-red-600 font-bold" : "text-gray-800"
         }`}
       >
         {label}
@@ -47,7 +56,7 @@ export function DSCategoryPill({
       {count !== undefined && (
         <span
           className={`mt-0.5 text-[10px] ${
-            isActive ? "text-emerald-500 font-medium" : "text-muted-foreground"
+            isActive ? "text-red-500 font-medium" : "text-gray-400"
           }`}
         >
           {count} items

@@ -17,7 +17,8 @@ export type ServiceCategoryId =
 export interface ServiceCategory {
   id: ServiceCategoryId;
   label: string;
-  emoji: string;
+  iconName?: string;
+  emoji?: string;
   count: number;
 }
 

@@ -1,34 +1,26 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { formatINR, Paise } from "@/src/shared/types/money";
-import Image from "next/image";
 import Link from "next/link";
 import {
   Bell,
-  Search,
   SlidersHorizontal,
-  ChevronRight,
-  ShieldCheck,
   MapPin,
-  Sparkles,
-  Flame,
   Clock,
   Plus,
   ArrowRight,
-  TrendingUp,
-  Store,
+  Search as SearchIcon,
+  Star,
+  ShieldCheck,
 } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
 import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_VENDORS } from "../mock-data";
 import { CatalogSvgIllustration } from "../svg-assets";
 import {
-  DSButton,
-  DSBadge,
   DSCard,
   DSCategoryPill,
   DSSearchBar,
-  DSRatingPill,
 } from "@/src/design-system";
 
 export function DiscoveryView() {
@@ -38,7 +30,6 @@ export function DiscoveryView() {
     searchQuery,
     setSearchQuery,
     openProductModal,
-    addToCart,
     unreadNotifCount,
     setIsNotificationsOpen,
     currentGeofence,
@@ -61,69 +52,76 @@ export function DiscoveryView() {
     });
   }, [activeCategory, searchQuery]);
 
+  // Featured vendor for the Screen 1 "Asian Kitchen" card layout
+  const featuredVendor = MOCK_VENDORS[0];
+
   return (
-    <div className="space-y-6 pb-24">
-      {/* 1. TOP HEADER: Greeting, Geofence Radar Pill, Notification Bell */}
-      <header className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full border-2 border-emerald-500/40 p-0.5 shadow-[0_0_16px_rgba(16,185,129,0.2)]">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-                alt="User Profile"
-                className="h-full w-full rounded-full object-cover"
-              />
-            </div>
-            <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#0b0d0c] bg-emerald-500" />
+    <div className="space-y-6 pb-24 text-gray-900 font-sans">
+      {/* =====================================================================
+          1. TOP LOCATION BAR & USER PROFILE (Screen 1)
+         ===================================================================== */}
+      <header className="flex items-center justify-between pt-1">
+        {/* Current Location Pill */}
+        <button
+          type="button"
+          onClick={() => setIsGeofenceModalOpen(true)}
+          className="flex items-center gap-3 text-left focus:outline-none"
+        >
+          {/* Squircle Location Icon */}
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-50 border border-red-100 text-red-500 shadow-xs">
+            <MapPin size={20} className="fill-red-500 text-red-500" />
           </div>
-          <div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span>Hello</span>
-              <span className="text-sm">👋</span>
-            </div>
-            <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
-              Delisas Agency
-            </h1>
+
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-gray-400 leading-none">
+              Current Location
+            </p>
+            <p className="mt-1 text-sm font-bold text-gray-900 truncate max-w-[190px] sm:max-w-[260px]">
+              {currentGeofence.societyName.split(",")[0]}, Bangalore
+            </p>
           </div>
-        </div>
+        </button>
 
-        <div className="flex items-center gap-2">
-          {/* Geofence Status Pill */}
-          <button
-            type="button"
-            onClick={() => setIsGeofenceModalOpen(true)}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border transition-all select-none active:scale-95 ${
-              currentGeofence.isInside
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-                : "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
-            }`}
-          >
-            <span
-              className={`h-2 w-2 rounded-full ${
-                currentGeofence.isInside ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
-              }`}
-            />
-            <span className="max-w-[110px] sm:max-w-[160px] truncate">
-              {currentGeofence.societyName.split(",")[0]}
-            </span>
-          </button>
-
-          {/* Notifications Button */}
+        {/* Right: Notifications & User Avatar */}
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={() => setIsNotificationsOpen(true)}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition active:scale-90"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 shadow-xs"
             aria-label="Notifications"
           >
             <Bell size={18} />
             {unreadNotifCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[#0b0d0c]" />
+              <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-red-500" />
             )}
           </button>
+
+          {/* User Avatar */}
+          <div className="h-10 w-10 shrink-0 rounded-full border border-gray-200 overflow-hidden shadow-xs">
+            <img
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+              alt="User"
+              className="h-full w-full object-cover"
+            />
+          </div>
         </div>
       </header>
 
-      {/* 2. SEARCH BAR with Filter Button */}
+      {/* =====================================================================
+          2. GREETING HEADER (Screen 1)
+         ===================================================================== */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-950">
+          Hello! <span className="font-extrabold text-red-500">Arafat</span>
+        </h1>
+        <p className="mt-0.5 text-xs text-gray-400 font-medium">
+          Thursday, Mar 18 - Today
+        </p>
+      </div>
+
+      {/* =====================================================================
+          3. SEARCH BAR WITH CORAL FILTER BUTTON (Screen 1)
+         ===================================================================== */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -135,162 +133,186 @@ export function DiscoveryView() {
         <DSSearchBar
           value={searchQuery}
           onChange={setSearchQuery}
+          placeholder="Search your place here"
           onFilterClick={() => setIsGeofenceModalOpen(true)}
         />
       </form>
 
-      {/* 3. CATEGORIES SECTION (Horizontal Scrollable rounded squircle cards) */}
+      {/* =====================================================================
+          4. CATEGORIES HORIZONTAL SQUIRCLES (Screen 1 - Zero Emojis)
+         ===================================================================== */}
       <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold tracking-tight text-foreground uppercase text-subtle">
-            Categories
-          </h2>
-          <span className="text-xs text-muted-foreground">
-            {MOCK_CATEGORIES.length - 1} verticals
-          </span>
-        </div>
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
           {MOCK_CATEGORIES.map((cat) => (
             <DSCategoryPill
               key={cat.id}
               id={cat.id}
               label={cat.label}
-              icon={cat.emoji}
+              icon={cat.id}
               isActive={activeCategory === cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              count={cat.count}
             />
           ))}
         </div>
       </div>
 
-      {/* 4. HERO PROMOTIONAL AD FLYER SLIDER (From Image 1 Screen 1) */}
-      <DSCard
-        variant="hero"
-        className="relative p-5 sm:p-6 overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-r from-[#0e2417] via-[#101e16] to-[#0d1512]"
-      >
-        <div className="flex items-center justify-between gap-4">
-          <div className="max-w-[65%] sm:max-w-md z-10">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
-              <Sparkles size={11} /> New Year Offer
-            </div>
-            <h3 className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-white">
-              30% OFF
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              16 - 31 Dec · Valid on all daily subscriptions
-            </p>
-            <div className="mt-4">
-              <DSButton
-                size="sm"
-                variant="primary"
-                onClick={() => setActiveCategory("ALL")}
-              >
-                Get Now
-              </DSButton>
-            </div>
-          </div>
-
-          <div className="relative shrink-0 pr-2">
-            <div className="relative h-28 w-28 sm:h-36 sm:w-36 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-xl animate-pulse" />
-              <img
-                src="https://images.unsplash.com/photo-1526367790999-0150786686a2?w=300&auto=format&fit=crop&q=80"
-                alt="Delivery Courier & Pizza"
-                className="relative z-10 h-24 w-24 sm:h-32 sm:w-32 object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)]"
-              />
-            </div>
-          </div>
-        </div>
-      </DSCard>
-
-      {/* 5. BEST SELLERS SECTION (2-Column Grid as in Image 1 Screen 1) */}
+      {/* =====================================================================
+          5. NEARBY RESTAURANTS / VENDORS (Screen 1 - "Asian Kitchen" Card)
+         ===================================================================== */}
       <div>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-3.5 flex items-center justify-between">
+          <h2 className="text-lg font-bold tracking-tight text-gray-950">
+            Nearby Restaurants
+          </h2>
+          <button
+            type="button"
+            onClick={() => setActiveCategory("ALL")}
+            className="text-xs font-semibold text-gray-500 hover:text-red-500"
+          >
+            View all
+          </button>
+        </div>
+
+        {/* Featured Big Card matching Screen 1 "Asian Kitchen" */}
+        {featuredVendor && (
+          <Link
+            href={`/app/vendor/${featuredVendor.id}`}
+            className="group relative block w-full overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm"
+          >
+            {/* Banner Image */}
+            <div className="relative h-56 sm:h-64 w-full">
+              <img
+                src={featuredVendor.bannerImage || featuredVendor.image}
+                alt={featuredVendor.name}
+                className="h-full w-full object-cover"
+              />
+
+              {/* Top Bar on Card: User Avatar badge + Red "Open now" pill */}
+              <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-2 rounded-full bg-white/90 px-2.5 py-1 shadow-xs backdrop-blur-md">
+                  <img
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop&q=80"
+                    alt="Reviewer"
+                    className="h-5 w-5 rounded-full object-cover"
+                  />
+                  <span className="text-[11px] font-semibold text-gray-800">
+                    Jane Doe · Snapped a photo
+                  </span>
+                </div>
+
+                <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-xs">
+                  Open now
+                </span>
+              </div>
+
+              {/* Bottom Frosted Glass Card Banner from Screen 1 */}
+              <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/40 bg-white/80 p-3.5 backdrop-blur-lg shadow-sm flex items-center justify-between">
+                <div className="min-w-0 pr-2">
+                  <h3 className="text-base font-bold text-gray-950 truncate">
+                    {featuredVendor.name}
+                  </h3>
+                  <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <MapPin size={12} className="text-red-500 shrink-0" />
+                      <span className="truncate">{featuredVendor.address.split(",")[0]}</span>
+                    </span>
+                    <span className="flex items-center gap-1 font-semibold text-gray-800 shrink-0">
+                      <Star size={12} className="fill-amber-400 text-amber-400" />
+                      <span>{featuredVendor.rating} ratings ({featuredVendor.reviewCount})</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* White Circular Action Button on Right */}
+                <div className="h-9 w-9 shrink-0 rounded-full bg-white text-gray-800 shadow-sm flex items-center justify-center border border-gray-200">
+                  <ArrowRight size={15} />
+                </div>
+              </div>
+            </div>
+          </Link>
+        )}
+      </div>
+
+      {/* =====================================================================
+          6. LIST OF FOOD & PRODUCTS (Grid / Cards)
+         ===================================================================== */}
+      <div>
+        <div className="mb-3.5 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold tracking-tight text-foreground">
-              Best Sellers
+            <h2 className="text-lg font-bold tracking-tight text-gray-950">
+              Popular Dishes & Items
             </h2>
-            <p className="text-xs text-muted-foreground">
-              Top-rated items in {currentGeofence.societyName.split(",")[0]}
+            <p className="text-xs text-gray-400">
+              Fresh daily doorstep options in {currentGeofence.societyName.split(",")[0]}
             </p>
           </div>
           <button
             type="button"
             onClick={() => setActiveCategory("ALL")}
-            className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="text-xs font-semibold text-gray-500 hover:text-red-500"
           >
             See All
           </button>
         </div>
 
-        {/* 2-Column Responsive Card Grid */}
+        {/* 2-Column Clean White Product Cards */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.map((product) => (
             <Link
               key={product.id}
               href={`/app/product/${product.id}`}
-              className="group relative flex flex-col justify-between rounded-3xl border border-white/[0.08] bg-[#121714] p-3.5 sm:p-4 shadow-[0_8px_20px_rgba(0,0,0,0.3)] transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-[0_12px_32px_rgba(16,185,129,0.15)] cursor-pointer select-none"
+              className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-white p-3.5 sm:p-4 shadow-xs select-none"
             >
               <div>
-                {/* Floating Circular Image with Drop Shadow */}
+                {/* Circular Product Image */}
                 <div className="relative mx-auto flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center my-1">
-                  <div className="absolute inset-0 rounded-full bg-black/40 blur-md translate-y-3" />
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="relative z-10 h-full w-full rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full rounded-2xl object-cover"
                   />
-                  {/* Floating SVG Vector Badge */}
-                  <div className="absolute -bottom-1 -right-1 z-20 h-8 w-8 rounded-full bg-[#121714] border border-white/20 p-1 shadow-lg flex items-center justify-center">
-                    <CatalogSvgIllustration idOrCategory={product.category} size={22} />
+                  {/* Floating SVG Illustration Badge */}
+                  <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-white border border-gray-200 p-0.5 shadow-xs flex items-center justify-center">
+                    <CatalogSvgIllustration idOrCategory={product.category} size={18} />
                   </div>
                   {product.isBestSeller && (
-                    <span className="absolute top-0 right-0 z-20 rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-black shadow">
-                      ★ TOP
+                    <span className="absolute top-1 right-1 rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-bold text-white shadow-xs">
+                      TOP
                     </span>
                   )}
                 </div>
 
-                {/* Product Title & Vendor */}
+                {/* Title & Vendor */}
                 <div className="mt-3">
-                  <h3 className="text-sm font-bold text-foreground line-clamp-1 group-hover:text-emerald-400 transition-colors">
+                  <h3 className="text-sm font-bold text-gray-900 line-clamp-1">
                     {product.name}
                   </h3>
-                  <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
+                  <p className="text-[11px] text-gray-400 line-clamp-1 mt-0.5">
                     {product.vendorName}
                   </p>
                 </div>
 
-                {/* Price Display */}
+                {/* Price */}
                 <div className="mt-1 flex items-baseline gap-1.5">
-                  <span className="text-base font-extrabold text-foreground">
+                  <span className="text-base font-extrabold text-gray-950">
                     {formatINR(product.pricePaise as Paise)}
                   </span>
                   {product.originalPricePaise && (
-                    <span className="text-xs text-muted-foreground line-through">
+                    <span className="text-xs text-gray-400 line-through">
                       ${(product.originalPricePaise / 100).toFixed(2)}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Bottom Meta & Action Row */}
-              <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between">
-                <div className="space-y-1">
-                  {product.calories !== undefined && (
-                    <div className="flex items-center gap-1 text-[10px] font-semibold text-orange-400">
-                      <Flame size={11} className="fill-orange-400" />
-                      <span>{product.calories} Calories</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                    <Clock size={11} />
-                    <span>{product.deliveryWindow || "20 min"}</span>
-                  </div>
+              {/* Bottom Meta & Red Action Button (+) */}
+              <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
+                  <Clock size={11} />
+                  <span>{product.deliveryWindow || "20 min"}</span>
                 </div>
 
-                {/* Green Add Button (+) */}
+                {/* Red Circular Add Button (+) */}
                 <button
                   type="button"
                   onClick={(e) => {
@@ -298,7 +320,7 @@ export function DiscoveryView() {
                     e.stopPropagation();
                     openProductModal(product);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-black shadow-[0_2px_10px_rgba(16,185,129,0.35)] transition-all hover:bg-emerald-400 hover:scale-110 active:scale-95"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-xs hover:bg-red-600 active:bg-red-700"
                   aria-label={`Add ${product.name}`}
                 >
                   <Plus size={16} className="stroke-[3]" />
@@ -309,72 +331,71 @@ export function DiscoveryView() {
         </div>
       </div>
 
-      {/* 6. NEARBY VERIFIED MERCHANTS (From Image 2 Screen 1) */}
-      <div className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold tracking-tight text-foreground">
-              Nearby Society Restaurants & Vendors
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Direct geofenced gate-pass access
-            </p>
-          </div>
-          <span className="text-xs font-semibold text-emerald-400">View all</span>
+      {/* =====================================================================
+          7. MORE NEARBY VENDORS (List Row Cards)
+         ===================================================================== */}
+      <div>
+        <div className="mb-3.5 flex items-center justify-between">
+          <h2 className="text-lg font-bold tracking-tight text-gray-950">
+            More Society Vendors
+          </h2>
+          <span className="text-xs font-semibold text-gray-400">Direct Gate Access</span>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {MOCK_VENDORS.slice(0, 4).map((vendor) => (
+        <div className="space-y-3">
+          {MOCK_VENDORS.slice(1, 4).map((vendor) => (
             <Link
               key={vendor.id}
               href={`/app/vendor/${vendor.id}`}
-              className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#121714] transition hover:-translate-y-1 hover:border-emerald-500/40 shadow-xl"
+              className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-3 shadow-xs"
             >
-              <div className="relative h-44 w-full">
+              <div className="flex items-center gap-3 min-w-0">
                 <img
-                  src={vendor.bannerImage || vendor.image}
+                  src={vendor.image}
                   alt={vendor.name}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="h-14 w-14 rounded-xl object-cover shrink-0"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                <div className="absolute top-3 right-3">
-                  <span className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-black shadow">
-                    {vendor.deliveryWindow}
-                  </span>
-                </div>
-                <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
-                      {vendor.name}
-                    </h3>
-                    <p className="text-xs text-white/80 flex items-center gap-1 mt-0.5">
-                      <MapPin size={12} className="text-emerald-400" />
-                      {vendor.address.split(",")[0]} · ★ {vendor.rating} ({vendor.reviewCount} reviews)
-                    </p>
-                  </div>
-                  <div className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white group-hover:bg-emerald-500 group-hover:text-black transition">
-                    <ArrowRight size={14} />
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-gray-900 truncate">
+                    {vendor.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                    {vendor.address.split(",")[0]}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-400 font-medium">
+                    <span className="flex items-center gap-0.5 font-bold text-gray-800">
+                      <Star size={11} className="fill-amber-400 text-amber-400" />
+                      {vendor.rating}
+                    </span>
+                    <span>·</span>
+                    <span>{vendor.deliveryWindow}</span>
                   </div>
                 </div>
+              </div>
+
+              <div className="h-8 w-8 shrink-0 rounded-full bg-gray-50 border border-gray-200 text-gray-600 flex items-center justify-center">
+                <ArrowRight size={14} />
               </div>
             </Link>
           ))}
         </div>
       </div>
 
-      {/* 7. ACTIVE ROUTINES TEASER DECK */}
+      {/* =====================================================================
+          8. ACTIVE HOUSEHOLD ROUTINES
+         ===================================================================== */}
       {routines.length > 0 && (
-        <div className="mt-8 rounded-3xl border border-white/[0.08] bg-[#111613] p-5">
+        <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500">
                 <ShieldCheck size={16} />
               </div>
-              <h2 className="text-sm font-bold text-foreground">
+              <h2 className="text-sm font-bold text-gray-900">
                 Your Active Household Routines ({routines.length})
               </h2>
             </div>
-            <span className="text-[11px] font-semibold text-emerald-400">
+            <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
               Autopilot Active
             </span>
           </div>
@@ -383,7 +404,7 @@ export function DiscoveryView() {
             {routines.map((routine) => (
               <div
                 key={routine.id}
-                className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3"
+                className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/60 p-3"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <img
@@ -392,10 +413,10 @@ export function DiscoveryView() {
                     className="h-10 w-10 rounded-xl object-cover"
                   />
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-foreground truncate">
+                    <p className="text-xs font-bold text-gray-900 truncate">
                       {routine.productName}
                     </p>
-                    <p className="text-[10px] text-muted-foreground truncate">
+                    <p className="text-[10px] text-gray-500 truncate">
                       {routine.nextDelivery}
                     </p>
                   </div>
@@ -404,10 +425,10 @@ export function DiscoveryView() {
                 <button
                   type="button"
                   onClick={() => toggleRoutinePause(routine.id)}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition ${
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold ${
                     routine.status === "ACTIVE"
-                      ? "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
-                      : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                      ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      : "bg-red-500 text-white hover:bg-red-600"
                   }`}
                 >
                   {routine.status === "ACTIVE" ? "Pause" : "Resume"}

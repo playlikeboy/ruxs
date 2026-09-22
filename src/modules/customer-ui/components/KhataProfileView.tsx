@@ -2,13 +2,7 @@
 
 import React, { useState } from "react";
 import {
-  Receipt,
-  Wallet,
-  ArrowRight,
   ShieldCheck,
-  CheckCircle2,
-  Calendar,
-  CreditCard,
   Building,
 } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
@@ -19,33 +13,33 @@ export function KhataProfileView() {
   const [settled, setSettled] = useState(false);
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-24 text-gray-900 font-sans">
       {/* Title */}
       <div>
-        <h2 className="text-xl font-bold tracking-tight text-foreground">
+        <h2 className="text-xl font-bold tracking-tight text-gray-950">
           Digital Khata & Household Statement
         </h2>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          End-of-month consolidated statement for {currentGeofence.societyName}
+        <p className="text-xs text-gray-400 mt-0.5">
+          End-of-month consolidated statement for {currentGeofence.societyName.split(",")[0]}
         </p>
       </div>
 
       {/* Khata Balance Card */}
-      <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-[#12241a] via-[#0e1713] to-[#0b0f0d] p-5 sm:p-6 shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl border border-red-100 bg-gradient-to-br from-red-50/50 via-white to-orange-50/30 p-5 sm:p-6 shadow-xs">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-red-600">
             Digital Khata Balance
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100/60 px-2.5 py-0.5 text-[10px] font-bold text-red-700">
             <ShieldCheck size={12} /> Verified Ledger
           </span>
         </div>
 
         <div className="mt-4">
-          <p className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-950">
             {settled ? "$0.00" : "$142.00"}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-gray-500">
             {settled ? "All household merchant balances cleared" : "Due on 1st of next month · 4 vendors active"}
           </p>
         </div>
@@ -62,7 +56,7 @@ export function KhataProfileView() {
 
           <button
             type="button"
-            className="rounded-full border border-white/[0.12] bg-white/[0.04] px-4 py-2 text-xs font-semibold text-foreground hover:bg-white/[0.08] transition"
+            className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 shadow-xs"
           >
             Download PDF
           </button>
@@ -70,8 +64,8 @@ export function KhataProfileView() {
       </div>
 
       {/* Verified Vendors in Khata */}
-      <div className="rounded-3xl border border-white/[0.08] bg-[#121714] p-5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+      <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-xs">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
           Associated Society Merchants
         </h3>
 
@@ -84,19 +78,19 @@ export function KhataProfileView() {
           ].map((v, i) => (
             <div
               key={i}
-              className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3"
+              className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/60 p-3"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.04] text-base">
-                  <Building size={16} className="text-emerald-400" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-gray-700 shadow-xs border border-gray-100">
+                  <Building size={16} className="text-red-500" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-foreground">{v.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{v.type} · {v.items}</p>
+                  <p className="text-xs font-bold text-gray-900">{v.name}</p>
+                  <p className="text-[10px] text-gray-400">{v.type} · {v.items}</p>
                 </div>
               </div>
 
-              <span className="text-xs font-bold font-mono text-foreground">{v.amount}</span>
+              <span className="text-xs font-bold font-mono text-gray-900">{v.amount}</span>
             </div>
           ))}
         </div>

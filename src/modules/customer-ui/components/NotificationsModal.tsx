@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowLeft, Bell, Check, Sparkles, AlertCircle } from "lucide-react";
+import { ShoppingBag, Milk, Sparkles, Check } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
 import { DSBottomSheet, DSButton } from "@/src/design-system";
 
@@ -11,7 +11,6 @@ export function NotificationsModal() {
     setIsNotificationsOpen,
     notifications,
     markNotificationRead,
-    setActiveTab,
   } = useCustomerUI();
 
   return (
@@ -22,9 +21,9 @@ export function NotificationsModal() {
       subtitle="Live updates on orders, society cutoffs and offers"
       maxWidth="max-w-md"
     >
-      <div className="space-y-3 pb-4">
+      <div className="space-y-3 pb-4 text-gray-900 font-sans">
         {notifications.length === 0 ? (
-          <div className="py-8 text-center text-xs text-muted-foreground">
+          <div className="py-8 text-center text-xs text-gray-400">
             No new notifications
           </div>
         ) : (
@@ -32,58 +31,50 @@ export function NotificationsModal() {
             <div
               key={notif.id}
               onClick={() => markNotificationRead(notif.id)}
-              className={`rounded-2xl border p-4 transition-all ${
+              className={`rounded-2xl border p-4 select-none cursor-pointer ${
                 notif.read
-                  ? "border-white/[0.06] bg-white/[0.015]"
-                  : "border-emerald-500/30 bg-emerald-500/[0.05]"
+                  ? "border-gray-100 bg-white"
+                  : "border-red-200 bg-red-50/40"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.05] text-base">
-                    {notif.type === "ORDER" ? "🍕" : notif.type === "ROUTINE" ? "🥛" : "🎁"}
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 text-gray-700">
+                    {notif.type === "ORDER" ? (
+                      <ShoppingBag size={16} className="text-red-500" />
+                    ) : notif.type === "ROUTINE" ? (
+                      <Milk size={16} className="text-blue-500" />
+                    ) : (
+                      <Sparkles size={16} className="text-amber-500" />
+                    )}
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-foreground">{notif.title}</h4>
-                    <span className="text-[10px] text-muted-foreground">
+                    <h4 className="text-xs font-bold text-gray-900">{notif.title}</h4>
+                    <span className="text-[10px] text-gray-400">
                       {notif.timestamp}
                     </span>
                   </div>
                 </div>
 
                 {!notif.read && (
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="h-2 w-2 rounded-full bg-red-500 shrink-0 mt-1" />
                 )}
               </div>
 
-              <p className="mt-2.5 text-xs text-foreground/90 leading-relaxed">
+              <p className="mt-2.5 text-xs text-gray-600 leading-relaxed">
                 {notif.message}
               </p>
-
-              {/* Action Buttons (Screen 5: Decline & View Details) */}
-              <div className="mt-3 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => markNotificationRead(notif.id)}
-                  className="rounded-xl border border-white/[0.1] px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-white/[0.05] transition"
-                >
-                  Dismiss
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    markNotificationRead(notif.id);
-                    setIsNotificationsOpen(false);
-                    if (notif.type === "ORDER") setActiveTab("tracking");
-                  }}
-                  className="rounded-xl bg-emerald-500 px-3.5 py-1.5 text-[11px] font-bold text-black hover:bg-emerald-400 transition shadow"
-                >
-                  {notif.actionLabel || "View Details"}
-                </button>
-              </div>
             </div>
           ))
         )}
+
+        <DSButton
+          variant="outline"
+          fullWidth
+          onClick={() => setIsNotificationsOpen(false)}
+        >
+          Dismiss
+        </DSButton>
       </div>
     </DSBottomSheet>
   );
