@@ -37,7 +37,7 @@ export function KhataProfileView() {
 
         <div className="mt-4">
           <p className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-950">
-            {settled ? "$0.00" : "$142.00"}
+            {settled ? "₹0.00" : "₹142.00"}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             {settled ? "All household merchant balances cleared" : "Due on 1st of next month · 4 vendors active"}
@@ -51,7 +51,7 @@ export function KhataProfileView() {
             onClick={() => setSettled(true)}
             disabled={settled}
           >
-            {settled ? "Settled via Auto-Pay ✓" : "Pay via Auto-Debit · $142.00"}
+            {settled ? "Settled via Auto-Pay ✓" : "Pay via Auto-Debit · ₹142.00"}
           </DSButton>
 
           <button
@@ -71,10 +71,10 @@ export function KhataProfileView() {
 
         <div className="space-y-2.5">
           {[
-            { name: "Krishna Fresh Dairy", type: "Milk (Daily 1L)", amount: "$65.00", items: "10 deliveries" },
-            { name: "Ganga RO Aqua", type: "Water (20L Cans)", amount: "$24.00", items: "6 cans exchanged" },
-            { name: "Annapurna Kitchens", type: "Homestyle Tiffin", amount: "$36.00", items: "3 dinners" },
-            { name: "Pushpam Pooja Florals", type: "Daily Flowers", amount: "$17.00", items: "11 baskets" },
+            { name: "Krishna Fresh Dairy", type: "Milk (Daily 1L)", amount: "₹65.00", items: "10 deliveries" },
+            { name: "Ganga RO Aqua", type: "Water (20L Cans)", amount: "₹24.00", items: "6 cans exchanged" },
+            { name: "Annapurna Kitchens", type: "Homestyle Tiffin", amount: "₹36.00", items: "3 dinners" },
+            { name: "Pushpam Pooja Florals", type: "Daily Flowers", amount: "₹17.00", items: "11 baskets" },
           ].map((v, i) => (
             <div
               key={i}
