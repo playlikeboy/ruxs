@@ -20,20 +20,20 @@ export class WhatsAppGateway {
   ): WhatsAppInteractiveMessage {
     return {
       to: toPhone,
-      bodyText: `🍱 *RUXS Daily Morning Poll*\n\nDelivering your *${serviceName}* today?\n\n⏰ *Cutoff Deadline:* ${cutoffTimeStr} AM\n\nTap below to confirm or skip:`,
+      bodyText: `*RUXS Daily Morning Poll*\n\nDelivering your *${serviceName}* today?\n\n*Cutoff Deadline:* ${cutoffTimeStr} AM\n\nTap below to confirm or skip:`,
       buttons: [
         {
           type: "reply",
           reply: {
             id: `CONFIRM_${fulfillmentId}`,
-            title: "✅ Deliver Today",
+            title: "Deliver Today",
           },
         },
         {
           type: "reply",
           reply: {
             id: `SKIP_${fulfillmentId}`,
-            title: "⏭️ Skip Today",
+            title: "Skip Today",
           },
         },
       ],

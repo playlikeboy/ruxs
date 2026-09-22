@@ -11,6 +11,7 @@ import {
   ExternalLink,
   KeyRound,
   Lock,
+  MapPin,
   MessageCircle,
   RefreshCw,
   ShieldAlert,
@@ -153,9 +154,8 @@ export default function AdminVendorDetailClient({ slug }: { slug: string }) {
 
   const handleCopyCard = () => {
     if (!vendor) return;
-    const typeEmoji = vendor.vendorType === "MILKMAN" ? "🥛" : vendor.vendorType === "WATER_SERVICE" ? "💧" : "🍱";
     const creds = vendor.credentials;
-    const text = `${typeEmoji} RUXS Merchant Access: ${vendor.businessName}
+    const text = `RUXS Merchant Access: ${vendor.businessName}
 Your merchant operations cockpit is live.
 Direct Login: ${creds?.directUrl || `https://ruxs.in/login?slug=${vendor.slug}`}
 Access PIN: ${creds?.accessPin || "Contact Platform Operations"}
@@ -312,10 +312,10 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
                   }
                 >
                   {vendor.vendorType === "MILKMAN"
-                    ? "🥛 Milkman & Dairy"
+                    ? "Milkman & Dairy"
                     : vendor.vendorType === "WATER_SERVICE"
-                    ? "💧 20L Water Service"
-                    : "🍱 Tiffin & Homestyle Meals"}
+                    ? "20L Water Service"
+                    : "Tiffin & Homestyle Meals"}
                 </Badge>
 
                 <Badge
@@ -503,8 +503,9 @@ Manage society deliveries, daily cutoffs, and digital khata.`;
 
             <div className="flex flex-wrap gap-2">
               {vendor.coveredSocieties.map((soc) => (
-                <span key={soc} className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-foreground font-medium">
-                  📍 {soc}
+                <span key={soc} className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-foreground font-medium">
+                  <MapPin className="w-3 h-3 text-red-500 shrink-0" />
+                  {soc}
                 </span>
               ))}
             </div>

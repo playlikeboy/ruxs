@@ -38,16 +38,16 @@ export function DSTimelineStepper({ steps, className = "" }: DSTimelineStepperPr
             {/* Step Icon / Dot */}
             <div className="relative z-10 flex shrink-0">
               {isCompleted ? (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-black shadow-[0_0_12px_rgba(16,185,129,0.5)]">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white">
                   <Check size={14} className="stroke-[3]" />
                 </div>
               ) : isCurrent ? (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500/20 shadow-[0_0_16px_rgba(16,185,129,0.4)]">
-                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-red-500 bg-red-50">
+                  <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
                 </div>
               ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-white/[0.2] bg-white/[0.04]">
-                  <div className="h-2 w-2 rounded-full bg-white/[0.2]" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-gray-50">
+                  <div className="h-2 w-2 rounded-full bg-gray-300" />
                 </div>
               )}
             </div>

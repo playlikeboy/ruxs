@@ -9,16 +9,16 @@ import {
 } from "./types";
 
 export const MOCK_CATEGORIES: ServiceCategory[] = [
-  { id: "ALL", label: "All Items", emoji: "✨", count: 24 },
-  { id: "FAST_FOOD", label: "Fast Food", emoji: "🍔", count: 8 },
-  { id: "MILK", label: "Pure Milk", emoji: "🥛", count: 4 },
-  { id: "WATER", label: "Water Cans", emoji: "💧", count: 3 },
-  { id: "TIFFIN", label: "Tiffin & Meals", emoji: "🍱", count: 5 },
-  { id: "FLOWERS", label: "Puja Flowers", emoji: "🌸", count: 4 },
-  { id: "PETS", label: "Pet Care", emoji: "🐾", count: 3 },
-  { id: "LAUNDRY", label: "Wash & Iron", emoji: "🧺", count: 4 },
-  { id: "MEAT", label: "Fresh Protein", emoji: "🥩", count: 6 },
-  { id: "DRINKS", label: "Beverages", emoji: "🍹", count: 5 },
+  { id: "ALL", label: "All Items", iconName: "ALL", count: 24 },
+  { id: "FAST_FOOD", label: "Restaurants", iconName: "FAST_FOOD", count: 8 },
+  { id: "MILK", label: "Pure Milk", iconName: "MILK", count: 4 },
+  { id: "WATER", label: "Water Cans", iconName: "WATER", count: 3 },
+  { id: "TIFFIN", label: "Tiffin & Meals", iconName: "TIFFIN", count: 5 },
+  { id: "FLOWERS", label: "Puja Flowers", iconName: "FLOWERS", count: 4 },
+  { id: "PETS", label: "Pet Care", iconName: "PETS", count: 3 },
+  { id: "LAUNDRY", label: "Wash & Iron", iconName: "LAUNDRY", count: 4 },
+  { id: "MEAT", label: "Fresh Protein", iconName: "MEAT", count: 6 },
+  { id: "DRINKS", label: "Beverages", iconName: "DRINKS", count: 5 },
 ];
 
 export const MOCK_VENDORS: CatalogVendor[] = [

@@ -72,7 +72,7 @@ export function PwaManager() {
       {/* Offline Banner */}
       {!isOnline && (
         <div className="bg-amber-500 text-slate-950 text-xs font-semibold py-1.5 px-4 text-center sticky top-0 z-50 flex items-center justify-center gap-2">
-          <span>⚠️ Offline Mode: Live Khata transactions paused until reconnection</span>
+          <span>Offline Mode: Live Khata transactions paused until reconnection</span>
         </div>
       )}
 

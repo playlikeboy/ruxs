@@ -178,7 +178,7 @@ function VendorDashboardContent() {
         <div className="w-full rounded-[32px] border border-amber-500/30 bg-card p-7 sm:p-9 shadow-2xl space-y-6">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
-              <Clock className="h-7 w-7 animate-pulse" />
+              <Clock className="h-7 w-7" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -209,7 +209,7 @@ function VendorDashboardContent() {
             <div className="flex justify-between py-1 border-b border-white/[0.06]">
               <span className="text-muted-foreground font-sans">Service Category:</span>
               <span className="text-primary font-bold">
-                {vendor.vendorType === "MILKMAN" ? "🥛 Milkman Dairy" : vendor.vendorType === "WATER_SERVICE" ? "💧 Water Distribution" : "🍱 Tiffin & Meals Service"}
+                {vendor.vendorType === "MILKMAN" ? "Milkman Dairy" : vendor.vendorType === "WATER_SERVICE" ? "Water Distribution" : "Tiffin & Meals Service"}
               </span>
             </div>
             <div className="flex justify-between py-1 border-b border-white/[0.06]">
@@ -309,7 +309,7 @@ function VendorDashboardContent() {
                   Verified Merchant Cockpit
                 </span>
                 <span className="text-subtle">
-                  {vType === "MILKMAN" ? "🥛 Daily Dairy Operations" : vType === "WATER_SERVICE" ? "💧 Water Distribution Operations" : "🍱 Kitchen Meal Production"}
+                  {vType === "MILKMAN" ? "Daily Dairy Operations" : vType === "WATER_SERVICE" ? "Water Distribution Operations" : "Kitchen Meal Production"}
                 </span>
               </div>
               <h1 className="mt-4 text-3xl font-bold tracking-[-0.03em] sm:text-4xl text-foreground">
@@ -348,7 +348,7 @@ function VendorDashboardContent() {
                 disabled={refreshing}
                 className="h-10 rounded-xl border-white/[0.1] bg-white/[0.02] text-xs"
               >
-                <RefreshCw className={refreshing ? "mr-2 h-3.5 w-3.5 animate-spin" : "mr-2 h-3.5 w-3.5"} />
+                <RefreshCw className="mr-2 h-3.5 w-3.5" />
                 Sync
               </Button>
             </div>
@@ -367,7 +367,7 @@ function VendorDashboardContent() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              ☀️ Lunch Shift (12:30 PM)
+              Lunch Shift (12:30 PM)
             </button>
             <button
               type="button"
@@ -378,7 +378,7 @@ function VendorDashboardContent() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              🌙 Dinner Shift (07:30 PM)
+              Dinner Shift (07:30 PM)
             </button>
           </div>
         ) : (
@@ -392,7 +392,7 @@ function VendorDashboardContent() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              🌅 Morning Delivery (06:00 AM)
+              Morning Delivery (06:00 AM)
             </button>
             <button
               type="button"
@@ -403,7 +403,7 @@ function VendorDashboardContent() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              🌆 Evening Delivery (05:00 PM)
+              Evening Delivery (05:00 PM)
             </button>
           </div>
         )}
@@ -513,21 +513,21 @@ function VendorDashboardContent() {
                 <>
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold text-foreground">🐄 Pure Gir Cow A2 Milk</p>
+                      <p className="text-sm font-bold text-foreground">Pure Gir Cow A2 Milk</p>
                       <p className="text-[11px] text-muted-foreground">4.5% Fat · Glass Bottle Bottled</p>
                     </div>
                     <span className="text-lg font-bold text-primary">85 L</span>
                   </div>
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold text-foreground">🐃 Buffalo Rich Cream Milk</p>
+                      <p className="text-sm font-bold text-foreground">Buffalo Rich Cream Milk</p>
                       <p className="text-[11px] text-muted-foreground">6.5% Fat · Glass Bottle Bottled</p>
                     </div>
                     <span className="text-lg font-bold text-primary">120 L</span>
                   </div>
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold text-foreground">🥛 Standard Daily Cow Milk</p>
+                      <p className="text-sm font-bold text-foreground">Standard Daily Cow Milk</p>
                       <p className="text-[11px] text-muted-foreground">Pasteurized Daily Pack</p>
                     </div>
                     <span className="text-lg font-bold text-primary">75 L</span>
@@ -537,14 +537,14 @@ function VendorDashboardContent() {
                 <>
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold text-foreground">💧 20L RO Mineral Water Can</p>
+                      <p className="text-sm font-bold text-foreground">20L RO Mineral Water Can</p>
                       <p className="text-[11px] text-muted-foreground">Bisleri standard sanitized jar · $2.99/jar</p>
                     </div>
                     <span className="text-lg font-bold text-primary">36 Jars</span>
                   </div>
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold text-foreground">💧 20L Copper Alkaline Water Can</p>
+                      <p className="text-sm font-bold text-foreground">20L Copper Alkaline Water Can</p>
                       <p className="text-[11px] text-muted-foreground">pH 8.5+ infused alkaline jar · $3.99/jar</p>
                     </div>
                     <span className="text-lg font-bold text-primary">12 Jars</span>
@@ -554,14 +554,14 @@ function VendorDashboardContent() {
                 <>
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold text-foreground">🍱 Standard Homestyle Veg Thali</p>
+                      <p className="text-sm font-bold text-foreground">Standard Homestyle Veg Thali</p>
                       <p className="text-[11px] text-muted-foreground">4 Ghee Phulkas, Paneer, Dal, Rice, Salad · $8.99</p>
                     </div>
                     <span className="text-lg font-bold text-primary">18 Meals</span>
                   </div>
                   <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold text-foreground">🍱 Jain Sattvik No-Onion Thali</p>
+                      <p className="text-sm font-bold text-foreground">Jain Sattvik No-Onion Thali</p>
                       <p className="text-[11px] text-muted-foreground">No onion, no garlic, pure sattvik · $8.99</p>
                     </div>
                     <span className="text-lg font-bold text-primary">6 Meals</span>

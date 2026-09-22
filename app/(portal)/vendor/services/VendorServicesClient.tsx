@@ -157,7 +157,7 @@ export default function VendorServicesClient() {
                 >
                   {vendors.map((v) => (
                     <option key={v.id} value={v.id}>
-                      {v.vendorType === "MILKMAN" ? "🥛" : v.vendorType === "WATER_SERVICE" ? "💧" : "🍱"} {v.businessName}
+                      {v.businessName} ({v.vendorType === "MILKMAN" ? "Milk" : v.vendorType === "WATER_SERVICE" ? "Water" : "Tiffin"})
                     </option>
                   ))}
                 </select>

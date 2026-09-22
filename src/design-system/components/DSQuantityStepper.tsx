@@ -55,18 +55,18 @@ export function DSQuantityStepper({
   }
 
   if (variant === "green-pill") {
-    containerStyle += " rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400";
-    btnStyle += " rounded-full bg-emerald-500 text-black hover:bg-emerald-400 active:scale-95 transition flex items-center justify-center font-bold";
-    textStyle = "font-bold text-emerald-300 min-w-[20px] text-center";
+    containerStyle += " rounded-full bg-red-50 border border-red-200 text-red-600";
+    btnStyle += " rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center justify-center font-bold";
+    textStyle = "font-bold text-red-600 min-w-[20px] text-center";
   } else if (variant === "bordered") {
-    containerStyle += " rounded-xl border border-white/[0.1] bg-white/[0.03]";
-    btnStyle += " rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-foreground active:scale-95 transition flex items-center justify-center";
-    textStyle = "font-semibold text-foreground min-w-[24px] text-center font-mono";
+    containerStyle += " rounded-xl border border-gray-200 bg-white";
+    btnStyle += " rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 flex items-center justify-center";
+    textStyle = "font-semibold text-gray-900 min-w-[24px] text-center font-mono";
   } else {
     // pill (default matching reference Cart)
-    containerStyle += " rounded-full bg-white/[0.04] border border-white/[0.08]";
-    btnStyle += " rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 active:scale-95 transition flex items-center justify-center";
-    textStyle = "font-semibold text-foreground min-w-[22px] text-center font-mono";
+    containerStyle += " rounded-full bg-gray-50 border border-gray-200";
+    btnStyle += " rounded-full bg-red-100 hover:bg-red-200 text-red-600 flex items-center justify-center";
+    textStyle = "font-semibold text-gray-900 min-w-[22px] text-center font-mono";
   }
 
   return (

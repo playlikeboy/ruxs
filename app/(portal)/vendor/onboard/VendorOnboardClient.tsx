@@ -119,7 +119,7 @@ export default function VendorOnboardClient() {
         <div className="bg-card border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl text-card-foreground space-y-6">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xl">
-              <Clock className="w-6 h-6 animate-pulse" />
+              <Clock className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export default function VendorOnboardClient() {
             <div className="flex justify-between py-1 border-b border-white/[0.06]">
               <span className="text-muted-foreground">Merchant Type:</span>
               <span className="text-primary font-semibold">
-                {createdVendor.vendorType === "MILKMAN" ? "🥛 Milkman Dairy" : createdVendor.vendorType === "WATER_SERVICE" ? "💧 Water Distribution" : "🍱 Tiffin & Meals Service"}
+                {createdVendor.vendorType === "MILKMAN" ? "Milkman Dairy" : createdVendor.vendorType === "WATER_SERVICE" ? "Water Distribution" : "Tiffin & Meals Service"}
               </span>
             </div>
             <div className="flex justify-between py-1 border-b border-white/[0.06]">
@@ -204,24 +204,22 @@ export default function VendorOnboardClient() {
                   label: "Tiffin Service",
                   tag: "Lunch & Dinner Thalis",
                   icon: Utensils,
-                  emoji: "🍱",
                 },
                 {
                   type: "MILKMAN" as const,
                   label: "Milkman",
                   tag: "Cow, Buffalo & A2 Dairy",
                   icon: Milk,
-                  emoji: "🥛",
                 },
                 {
                   type: "WATER_SERVICE" as const,
                   label: "Water Service",
                   tag: "20L RO & Mineral Cans",
                   icon: Droplet,
-                  emoji: "💧",
                 },
               ].map((item) => {
                 const isSelected = vendorType === item.type;
+                const IconComponent = item.icon;
                 return (
                   <button
                     key={item.type}
@@ -233,7 +231,9 @@ export default function VendorOnboardClient() {
                         : "border-white/[0.08] bg-white/[0.02] text-muted-foreground hover:bg-white/[0.05]"
                     }`}
                   >
-                    <div className="text-2xl mb-2">{item.emoji}</div>
+                    <div className="mb-2">
+                      <IconComponent size={24} />
+                    </div>
                     <div className="text-xs font-bold text-foreground">{item.label}</div>
                     <div className="text-[10px] text-muted-foreground mt-0.5">{item.tag}</div>
                   </button>

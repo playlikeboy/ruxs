@@ -24,12 +24,7 @@ function MainAppContent() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0b0d0c] text-foreground">
-      {/* Background ambient lighting */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 h-[500px] w-[650px] rounded-full bg-emerald-500/[0.04] blur-[120px]" />
-      </div>
-
+    <div className="relative min-h-screen bg-[#FBF9F7] text-gray-950 font-sans selection:bg-red-100 selection:text-red-900">
       {/* Main Responsive Canvas */}
       <main className="relative mx-auto w-full max-w-xl px-4 pt-3 sm:px-6 sm:pt-6">
         {activeTab === "home" && <DiscoveryView />}
@@ -38,7 +33,7 @@ function MainAppContent() {
         {activeTab === "profile" && <KhataProfileView />}
       </main>
 
-      {/* Persistent Floating Bottom Dock (Screen 1 & 2) */}
+      {/* Persistent Floating Bottom Dock */}
       <DSBottomNav
         activeTab={activeTab}
         onTabChange={handleTabChange}
