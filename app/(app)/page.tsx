@@ -66,7 +66,7 @@ const SERVICES = [
     name: "Pure Farm Milk & Dairy",
     kicker: "MORNING 06:15 AM",
     cutoff: "10 PM Cutoff",
-    price: "$0.90 / L",
+    price: "₹0.90 / L",
     description:
       "Raw unadulterated A2 Gir Cow and fresh buffalo milk sourced from local certified farms. Delivered to your door daily before 6:30 AM with 1-tap pause/resume.",
     Icon: MilkSvg,
@@ -78,7 +78,7 @@ const SERVICES = [
     name: "20L Water Can Subscriptions",
     kicker: "SCHEDULED JAR DROPS",
     cutoff: "Asset Tracked",
-    price: "$1.10 / Can",
+    price: "₹1.10 / Can",
     description:
       "Mineral and RO 20L water cans delivered straight inside your utility area. Automatic empty container tallying, zero deposits, and scheduled replenishments.",
     Icon: WaterCanSvg,
@@ -90,7 +90,7 @@ const SERVICES = [
     name: "Homestyle Tiffins & Kitchens",
     kicker: "LUNCH & DINNER DABBA",
     cutoff: "3-Hr Cutoff",
-    price: "$3.20 / Meal",
+    price: "₹3.20 / Meal",
     description:
       "Wholesome, low-oil lunch and dinner meals cooked fresh by verified residential cloud kitchens. Complete dietary options including Jain, North, and South Indian.",
     Icon: ThaliSvg,
@@ -102,7 +102,7 @@ const SERVICES = [
     name: "Morning Puja Flowers & Garlands",
     kicker: "MANDI FRESH 06:00 AM",
     cutoff: "Daily 6:00 AM",
-    price: "$0.65 / Basket",
+    price: "₹0.65 / Basket",
     description:
       "Freshly plucked devotional flowers, including fragrant jasmine, marigold, rose petals, durva grass, and fresh tulsi leaves delivered every morning before sunrise.",
     Icon: FlowersSvg,
@@ -114,7 +114,7 @@ const SERVICES = [
     name: "Verified Pet Care & Dog Walking",
     kicker: "GPS-LOGGED WALKS",
     cutoff: "Verified Walkers",
-    price: "$3.50 / Walk",
+    price: "₹3.50 / Walk",
     description:
       "Certified and background-checked canine handlers for 30-minute daily morning and evening walks. Includes live GPS trail tracking and tailored pet nutrition meals.",
     Icon: PetsSvg,
@@ -126,7 +126,7 @@ const SERVICES = [
     name: "Steam Press & Doorstep Laundry",
     kicker: "MONTHLY PASSES",
     cutoff: "24-Hr Turnaround",
-    price: "$0.25 / Garment",
+    price: "₹0.25 / Garment",
     description:
       "Doorstep garment pickup in branded laundry bags with crisp commercial steam ironing and next-day hanger return. Digital wardrobe count eliminates lost clothes.",
     Icon: LaundrySvg,
@@ -402,7 +402,7 @@ export default function Home() {
                         <CreditCard className="w-3.5 h-3.5 text-gray-400" />
                         <span className="font-medium text-gray-700">Digital Khata Balance</span>
                       </div>
-                      <span className="font-mono font-bold text-gray-900">$124.00 due</span>
+                      <span className="font-mono font-bold text-gray-900">₹124.00 due</span>
                     </div>
                     <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                       <div className="h-full w-[68%] rounded-full bg-gradient-to-r from-gray-700 to-gray-900" />
