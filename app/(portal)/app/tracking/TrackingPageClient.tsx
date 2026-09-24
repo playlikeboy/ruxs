@@ -60,6 +60,7 @@ export default function TrackingPageClient() {
   };
 
   useEffect(() => {
+    setRequestedFulfillmentId(new URLSearchParams(window.location.search).get("fulfillment") || "");
     void load();
   }, [user?.id]);
 
