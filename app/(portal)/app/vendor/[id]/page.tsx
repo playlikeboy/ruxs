@@ -1,26 +1,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
-  getVendorById,
-  getProductsByVendor,
-  MOCK_VENDORS,
-  CustomerUIProvider,
-} from "@/src/modules/customer-ui";
+  getCustomerVendorById,
+  getCustomerProductsByVendor,
+} from "@/src/modules/customer-ui/catalog-service";
 import VendorDetailClient from "./VendorDetailClient";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateStaticParams() {
-  return MOCK_VENDORS.map((v) => ({
-    id: v.id,
-  }));
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const vendor = getVendorById(id);
+  const vendor = await getCustomerVendorById(id);
 
   if (!vendor) {
     return {
@@ -89,7 +81,7 @@ export default async function VendorPage({ params }: PageProps) {
     notFound();
   }
 
-  const products = getProductsByVendor(vendor.id);
+  const products = await getCustomerProductsByVendor(vendor.id);
 
   const vendorJsonLd = {
     "@context": "https://schema.org",
@@ -150,9 +142,7 @@ export default async function VendorPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <CustomerUIProvider>
-        <VendorDetailClient vendor={vendor} products={products} />
-      </CustomerUIProvider>
+      <VendorDetailClient vendor={vendor} products={products} />
     </>
   );
 }
