@@ -46,10 +46,14 @@ type Invoice = {
   status: string;
 };
 
+type ApiEnvelope<T> = { success?: boolean; data?: T };
+
 async function json<T>(url: string): Promise<T | null> {
   const response = await fetch(url, { cache: "no-store" });
-  const payload = await response.json();
-  return payload?.success ? payload.data : null;
+  const payload: unknown = await response.json();
+  if (typeof payload !== "object" || payload === null) return null;
+  const envelope = payload as ApiEnvelope<T>;
+  return envelope.success ? envelope.data ?? null : null;
 }
 
 export default function KhataPageClient() {
