@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { getCustomerCatalog } from "@/src/modules/customer-ui/catalog-service";
 import { Suspense } from "react";
-import { CustomerUIProvider } from "@/src/modules/customer-ui";
 import SearchClient from "./SearchClient";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Search Daily Subscriptions, Society Food & Services | RUXS",
@@ -66,24 +68,21 @@ const searchStructuredData = {
   },
 };
 
-export default function SearchPage() {
+export default async function SearchPage() {
+  const catalog = await getCustomerCatalog();
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(searchStructuredData) }}
       />
-      <CustomerUIProvider>
-        <Suspense
-          fallback={
+      <Suspense fallback={
             <div className="min-h-screen bg-[#0b0f0d] flex items-center justify-center text-sm text-muted-foreground">
               Loading search...
             </div>
-          }
         >
-          <SearchClient />
+          <SearchClient catalog={catalog} />
         </Suspense>
-      </CustomerUIProvider>
     </>
   );
 }
