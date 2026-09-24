@@ -6,12 +6,9 @@ import { formatINR, Paise } from "@/src/shared/types/money";
 import Link from "next/link";
 import {
   Bell,
-  SlidersHorizontal,
   MapPin,
   Clock,
-  Plus,
   ArrowRight,
-  Search as SearchIcon,
   Star,
   ShieldCheck,
 } from "lucide-react";
@@ -20,7 +17,6 @@ import type { CatalogProduct, CatalogVendor, ServiceCategory } from "../types";
 import { useUser } from "@hexclave/next";
 import { CatalogSvgIllustration } from "../svg-assets";
 import {
-  DSCard,
   DSCategoryPill,
   DSSearchBar,
 } from "@/src/design-system";
@@ -42,11 +38,7 @@ export function DiscoveryView({
     setSearchQuery,
     openProductModal,
     unreadNotifCount,
-    setIsNotificationsOpen,
     currentGeofence,
-    setIsGeofenceModalOpen,
-    routines,
-    toggleRoutinePause,
   } = useCustomerUI();
 
   // Filter products by category and search
