@@ -1,7 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo } from "react";
-import {
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useUser } from "@hexclave/next";
+import type {
   CatalogProduct,
   CartItem,
   ServiceCategoryId,
@@ -11,24 +13,18 @@ import {
   ProductOption,
   ProductAddOn,
 } from "../types";
-import {
-  MOCK_PRODUCTS,
-  MOCK_GEOFENCES,
-  MOCK_NOTIFICATIONS,
-  MOCK_ACTIVE_ROUTINES,
-} from "../mock-data";
+import { CUSTOMER_ROUTES, CUSTOMER_TAB_ROUTES } from "../routes";
 import { NavTabId } from "@/src/design-system";
 
 interface CustomerUIContextType {
-  // Navigation
   activeTab: NavTabId;
   setActiveTab: (tab: NavTabId) => void;
   activeCategory: ServiceCategoryId;
   setActiveCategory: (cat: ServiceCategoryId) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  navigateTo: (url: string) => void;
 
-  // Modals & Drawers
   selectedProduct: CatalogProduct | null;
   openProductModal: (prod: CatalogProduct) => void;
   closeProductModal: () => void;
@@ -39,12 +35,10 @@ interface CustomerUIContextType {
   isGeofenceModalOpen: boolean;
   setIsGeofenceModalOpen: (open: boolean) => void;
 
-  // Geofence
   currentGeofence: GeofenceArea;
   geofenceList: GeofenceArea[];
   selectGeofence: (id: string) => void;
 
-  // Cart
   cart: CartItem[];
   addToCart: (
     product: CatalogProduct,
@@ -63,68 +57,209 @@ interface CustomerUIContextType {
   promoCode: string;
   applyPromoCode: (code: string) => { success: boolean; message: string };
 
-  // Notifications
   notifications: NotificationItem[];
   unreadNotifCount: number;
   markNotificationRead: (id: string) => void;
 
-  // Active Routines
   routines: ActiveRoutine[];
   toggleRoutinePause: (id: string) => void;
 }
 
 const CustomerUIContext = createContext<CustomerUIContextType | undefined>(undefined);
 
-export function CustomerUIProvider({ children }: { children: React.ReactNode }) {
-  // Navigation
-  const [activeTab, setActiveTab] = useState<NavTabId>("home");
+const EMPTY_GEOFENCE: GeofenceArea = {
+  id: "unconfigured",
+  name: "Delivery location",
+  societyName: "Choose your society",
+  city: "",
+  lat: 0,
+  lng: 0,
+  radiusMeters: 0,
+  isInside: false,
+  distanceMeters: 0,
+  deliveryGuarantee: "Set your household location to see delivery coverage.",
+};
+
+function tabForPath(pathname: string): NavTabId {
+  if (pathname.startsWith(CUSTOMER_ROUTES.services)) return "favorites";
+  if (pathname.startsWith(CUSTOMER_ROUTES.tracking)) return "tracking";
+  if (pathname.startsWith(CUSTOMER_ROUTES.khata)) return "profile";
+  if (pathname.startsWith(CUSTOMER_ROUTES.cart)) return "cart";
+  return "home";
+}
+
+function parseCart(value: string | null): CartItem[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.filter(
+          (item) =>
+            item &&
+            typeof item === "object" &&
+            item.product &&
+            typeof item.quantity === "number" &&
+            typeof item.unitPricePaise === "number"
+        )
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function CustomerUIProvider({
+  children,
+  initialTab,
+}: {
+  children: React.ReactNode;
+  initialTab?: NavTabId;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const user = useUser();
+  const [activeTabState, setActiveTabState] = useState<NavTabId>(
+    initialTab || tabForPath(pathname)
+  );
   const [activeCategory, setActiveCategory] = useState<ServiceCategoryId>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Modals
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isGeofenceModalOpen, setIsGeofenceModalOpen] = useState(false);
 
-  // Geofence state
-  const [geofenceList, setGeofenceList] = useState<GeofenceArea[]>(MOCK_GEOFENCES);
-  const [currentGeofenceId, setCurrentGeofenceId] = useState<string>("geo_sobha");
+  const [geofenceList, setGeofenceList] = useState<GeofenceArea[]>([EMPTY_GEOFENCE]);
+  const [currentGeofenceId, setCurrentGeofenceId] = useState(EMPTY_GEOFENCE.id);
 
-  const currentGeofence = useMemo(() => {
-    return geofenceList.find((g) => g.id === currentGeofenceId) || geofenceList[0];
-  }, [geofenceList, currentGeofenceId]);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [promoCode, setPromoCode] = useState("");
+  const [discountPaise, setDiscountPaise] = useState(0);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [routines, setRoutines] = useState<ActiveRoutine[]>([]);
+
+  const currentGeofence =
+    geofenceList.find((item) => item.id === currentGeofenceId) ||
+    geofenceList[0] ||
+    EMPTY_GEOFENCE;
+
+  const activeTab = tabForPath(pathname) || activeTabState;
+
+  useEffect(() => {
+    setActiveTabState(tabForPath(pathname));
+  }, [pathname]);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("ruxs.cart.v1");
+    setCart(parseCart(stored));
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("ruxs.cart.v1", JSON.stringify(cart));
+  }, [cart]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setGeofenceList([EMPTY_GEOFENCE]);
+      setCurrentGeofenceId(EMPTY_GEOFENCE.id);
+      setNotifications([]);
+      setRoutines([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadCustomerState() {
+      try {
+        const [householdResponse, notificationsResponse, routinesResponse] = await Promise.all([
+          fetch(`/api/households?userId=${encodeURIComponent(user.id)}`),
+          fetch(`/api/notifications?customerId=${encodeURIComponent(user.id)}`),
+          fetch(`/api/subscriptions?customerId=${encodeURIComponent(user.id)}`),
+        ]);
+
+        if (!cancelled && householdResponse.ok) {
+          const householdPayload = await householdResponse.json();
+          const household = householdPayload?.success ? householdPayload.data : null;
+          if (household) {
+            const geofence: GeofenceArea = {
+              id: String(household.id || "household"),
+              name: String(household.name || household.societyName || "Delivery location"),
+              societyName: String(household.societyName || household.name || "Household"),
+              city: String(household.city || ""),
+              lat: 0,
+              lng: 0,
+              radiusMeters: 0,
+              isInside: true,
+              distanceMeters: 0,
+              deliveryGuarantee: "Household location loaded from your account.",
+            };
+            setGeofenceList([geofence]);
+            setCurrentGeofenceId(geofence.id);
+          }
+        }
+
+        if (!cancelled && notificationsResponse.ok) {
+          const payload = await notificationsResponse.json();
+          const raw = payload?.success && Array.isArray(payload.data) ? payload.data : [];
+          setNotifications(
+            raw.map((item: any) => ({
+              id: String(item.id),
+              title: String(item.title || "RUXS update"),
+              message: String(item.message || ""),
+              timestamp: String(item.timestamp || item.createdAt || ""),
+              type: ["ORDER", "ROUTINE", "OFFER", "SYSTEM"].includes(item.type)
+                ? item.type
+                : "SYSTEM",
+              read: Boolean(item.read),
+              vendorAvatar: item.vendorAvatar ? String(item.vendorAvatar) : undefined,
+              actionLabel: item.actionLabel ? String(item.actionLabel) : undefined,
+            }))
+          );
+        }
+
+        if (!cancelled && routinesResponse.ok) {
+          const payload = await routinesResponse.json();
+          const raw = payload?.success && Array.isArray(payload.data) ? payload.data : [];
+          setRoutines(
+            raw.map((item: any) => ({
+              id: String(item.id),
+              productName: String(item.productName || item.serviceName || "Recurring service"),
+              vendorName: String(item.vendorName || item.businessName || "Local merchant"),
+              quantity: Number(item.defaultQuantity || item.quantity || 1),
+              cadence:
+                item.cadence === "WEEKDAYS" || item.cadence === "ALTERNATE_DAYS"
+                  ? item.cadence
+                  : "DAILY",
+              shift: String(item.shift || ""),
+              status: item.status === "PAUSED" ? "PAUSED" : "ACTIVE",
+              nextDelivery: String(item.nextDelivery || item.startDate || ""),
+              unitPricePaise: Number(item.unitPricePaise || 0),
+              image: "/icon.svg",
+            }))
+          );
+        }
+      } catch (error) {
+        console.warn("RUXS customer state request failed:", error);
+      }
+    }
+
+    void loadCustomerState();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  const setActiveTab = (tab: NavTabId) => {
+    setActiveTabState(tab);
+    const destination = CUSTOMER_TAB_ROUTES[tab];
+    if (pathname !== destination) router.push(destination);
+  };
+
+  const navigateTo = (url: string) => router.push(url);
 
   const selectGeofence = (id: string) => {
     setCurrentGeofenceId(id);
   };
 
-  // Cart State (Initialized with the reference items: Melting Cheese Pizza & Chicken Salad)
-  const [cart, setCart] = useState<CartItem[]>([
-    {
-      id: "cart_item_1",
-      product: MOCK_PRODUCTS[0],
-      selectedSize: MOCK_PRODUCTS[0].sizes?.[1],
-      selectedAddOns: [],
-      quantity: 1,
-      unitPricePaise: 1188,
-      totalPricePaise: 1188,
-    },
-    {
-      id: "cart_item_2",
-      product: MOCK_PRODUCTS[2],
-      selectedSize: MOCK_PRODUCTS[2].sizes?.[0],
-      selectedAddOns: [],
-      quantity: 1,
-      unitPricePaise: 456,
-      totalPricePaise: 456,
-    },
-  ]);
-
-  const [promoCode, setPromoCode] = useState("");
-  const [discountPaise, setDiscountPaise] = useState(0);
-
-  // Cart operations
   const addToCart = (
     product: CatalogProduct,
     quantity = 1,
@@ -132,37 +267,50 @@ export function CustomerUIProvider({ children }: { children: React.ReactNode }) 
     selectedAddOns: ProductAddOn[] = []
   ) => {
     const sizeDelta = selectedSize?.priceDeltaPaise || 0;
-    const addOnTotal = selectedAddOns.reduce((sum, a) => sum + a.pricePaise, 0);
+    const addOnTotal = selectedAddOns.reduce((sum, addon) => sum + addon.pricePaise, 0);
     const unitPrice = product.pricePaise + sizeDelta + addOnTotal;
 
-    const existingIdx = cart.findIndex(
-      (c) =>
-        c.product.id === product.id &&
-        c.selectedSize?.id === selectedSize?.id &&
-        c.selectedAddOns.length === selectedAddOns.length
-    );
+    setCart((previous) => {
+      const existingIndex = previous.findIndex(
+        (item) =>
+          item.product.id === product.id &&
+          item.selectedSize?.id === selectedSize?.id &&
+          item.selectedAddOns
+            .map((addon) => addon.id)
+            .sort()
+            .join(",") === selectedAddOns.map((addon) => addon.id).sort().join(",")
+      );
 
-    if (existingIdx > -1) {
-      const updated = [...cart];
-      updated[existingIdx].quantity += quantity;
-      updated[existingIdx].totalPricePaise = updated[existingIdx].quantity * unitPrice;
-      setCart(updated);
-    } else {
-      const newItem: CartItem = {
-        id: `cart_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        product,
-        selectedSize,
-        selectedAddOns,
-        quantity,
-        unitPricePaise: unitPrice,
-        totalPricePaise: unitPrice * quantity,
-      };
-      setCart([...cart, newItem]);
-    }
+      if (existingIndex >= 0) {
+        return previous.map((item, index) =>
+          index === existingIndex
+            ? {
+                ...item,
+                quantity: item.quantity + quantity,
+                unitPricePaise: unitPrice,
+                totalPricePaise: (item.quantity + quantity) * unitPrice,
+              }
+            : item
+        );
+      }
+
+      return [
+        ...previous,
+        {
+          id: `cart_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          product,
+          selectedSize,
+          selectedAddOns,
+          quantity,
+          unitPricePaise: unitPrice,
+          totalPricePaise: unitPrice * quantity,
+        },
+      ];
+    });
   };
 
   const removeFromCart = (itemId: string) => {
-    setCart(cart.filter((c) => c.id !== itemId));
+    setCart((previous) => previous.filter((item) => item.id !== itemId));
   };
 
   const updateCartQuantity = (itemId: string, quantity: number) => {
@@ -170,15 +318,11 @@ export function CustomerUIProvider({ children }: { children: React.ReactNode }) 
       removeFromCart(itemId);
       return;
     }
-    setCart(
-      cart.map((c) =>
-        c.id === itemId
-          ? {
-              ...c,
-              quantity,
-              totalPricePaise: c.unitPricePaise * quantity,
-            }
-          : c
+    setCart((previous) =>
+      previous.map((item) =>
+        item.id === itemId
+          ? { ...item, quantity, totalPricePaise: item.unitPricePaise * quantity }
+          : item
       )
     );
   };
@@ -189,70 +333,51 @@ export function CustomerUIProvider({ children }: { children: React.ReactNode }) 
     setDiscountPaise(0);
   };
 
-  const cartCount = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  }, [cart]);
-
-  const subtotalPaise = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.totalPricePaise, 0);
-  }, [cart]);
-
-  // Geofenced delivery fee: $0.00 if inside geofence! Otherwise 500 cents ($5.00)
-  const deliveryFeePaise = useMemo(() => {
-    if (cart.length === 0) return 0;
-    return currentGeofence.isInside ? 0 : 500;
-  }, [cart.length, currentGeofence.isInside]);
-
+  const cartCount = useMemo(
+    () => cart.reduce((sum, item) => sum + item.quantity, 0),
+    [cart]
+  );
+  const subtotalPaise = useMemo(
+    () => cart.reduce((sum, item) => sum + item.totalPricePaise, 0),
+    [cart]
+  );
+  const deliveryFeePaise = cart.length > 0 && !currentGeofence.isInside ? 500 : 0;
   const totalPaise = Math.max(0, subtotalPaise + deliveryFeePaise - discountPaise);
 
-  const applyPromoCode = (code: string) => {
-    const trimmed = code.trim().toUpperCase();
-    if (trimmed === "RUXS30" || trimmed === "NEWYEAR30") {
-      const discount = Math.round(subtotalPaise * 0.3);
-      setDiscountPaise(discount);
-      setPromoCode(trimmed);
-      return { success: true, message: "30% OFF New Year discount applied!" };
-    }
-    if (trimmed === "FREESHIP") {
-      setPromoCode(trimmed);
-      return { success: true, message: "Free Doorstep Delivery applied!" };
-    }
-    return { success: false, message: "Invalid promo code. Try 'RUXS30'" };
-  };
-
-  // Notifications
-  const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
-  const unreadNotifCount = useMemo(() => {
-    return notifications.filter((n) => !n.read).length;
-  }, [notifications]);
+  const applyPromoCode = (_code: string) => ({
+    success: false,
+    message: "Promo validation is handled at checkout and no active code is available.",
+  });
 
   const markNotificationRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    setNotifications((previous) =>
+      previous.map((item) => (item.id === id ? { ...item, read: true } : item))
     );
   };
 
-  // Routines
-  const [routines, setRoutines] = useState<ActiveRoutine[]>(MOCK_ACTIVE_ROUTINES);
-  const toggleRoutinePause = (id: string) => {
-    setRoutines((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              status: r.status === "ACTIVE" ? "PAUSED" : "ACTIVE",
-            }
-          : r
+  const toggleRoutinePause = async (id: string) => {
+    const current = routines.find((routine) => routine.id === id);
+    if (!current) return;
+
+    setRoutines((previous) =>
+      previous.map((routine) =>
+        routine.id === id
+          ? { ...routine, status: routine.status === "ACTIVE" ? "PAUSED" : "ACTIVE" }
+          : routine
       )
     );
-  };
 
-  const openProductModal = (prod: CatalogProduct) => {
-    setSelectedProduct(prod);
-  };
-
-  const closeProductModal = () => {
-    setSelectedProduct(null);
+    try {
+      await fetch(`/api/subscriptions/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: current.status === "ACTIVE" ? "PAUSED" : "ACTIVE",
+        }),
+      });
+    } catch {
+      // The optimistic UI is intentionally kept responsive; the next refresh reconciles state.
+    }
   };
 
   return (
@@ -264,9 +389,10 @@ export function CustomerUIProvider({ children }: { children: React.ReactNode }) 
         setActiveCategory,
         searchQuery,
         setSearchQuery,
+        navigateTo,
         selectedProduct,
-        openProductModal,
-        closeProductModal,
+        openProductModal: setSelectedProduct,
+        closeProductModal: () => setSelectedProduct(null),
         isCartOpen,
         setIsCartOpen,
         isNotificationsOpen,
@@ -289,7 +415,7 @@ export function CustomerUIProvider({ children }: { children: React.ReactNode }) 
         promoCode,
         applyPromoCode,
         notifications,
-        unreadNotifCount,
+        unreadNotifCount: notifications.filter((item) => !item.read).length,
         markNotificationRead,
         routines,
         toggleRoutinePause,
