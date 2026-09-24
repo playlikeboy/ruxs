@@ -1,6 +1,6 @@
 "use client";
 
-import type { CustomerCatalog } from "@/src/modules/customer-ui/catalog-service";
+import type { CustomerCatalog } from "@/src/modules/customer-ui/types";
 import { DiscoveryView } from "@/src/modules/customer-ui/components/DiscoveryView";
 
 export default function AppClient({ catalog }: { catalog: CustomerCatalog }) {
