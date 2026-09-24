@@ -33,8 +33,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       vendor.category,
       ...vendor.societiesCovered,
       "society merchant",
-      "Bangalore daily delivery",
-      "FSSAI verified",
+      "daily delivery",
+      "verified merchant",
       "RUXS",
     ],
     alternates: {
@@ -92,8 +92,6 @@ export default async function VendorPage({ params }: PageProps) {
     address: {
       "@type": "PostalAddress",
       streetAddress: vendor.address,
-      addressLocality: "Bengaluru",
-      addressRegion: "KA",
       addressCountry: "IN",
     },
     aggregateRating: {
