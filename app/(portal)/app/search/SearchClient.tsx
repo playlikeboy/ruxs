@@ -20,13 +20,9 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import {
-  CatalogProduct,
-  CatalogVendor,
-  ServiceCategoryId,
-  useCustomerUI,
-  CatalogSvgIllustration,
-} from "@/src/modules/customer-ui";
+import type { CatalogProduct, CatalogVendor, ServiceCategoryId } from "@/src/modules/customer-ui/types";
+import { useCustomerUI } from "@/src/modules/customer-ui/context/CustomerUIContext";
+import { CatalogSvgIllustration } from "@/src/modules/customer-ui/svg-assets";
 import { categoryFromParam } from "@/src/modules/customer-ui/routes";
 import {
   DSButton,
