@@ -182,12 +182,13 @@ export function CustomerUIProvider({
       return;
     }
 
+    const resolvedCustomerId = customerId;
     let cancelled = false;
 
     async function loadCustomerState() {
       try {
         const [householdResponse, notificationsResponse, routinesResponse] = await Promise.all([
-          fetch(`/api/households?userId=${encodeURIComponent(customerId)}`),
+          fetch(`/api/households?userId=${encodeURIComponent(resolvedCustomerId)}`),
           fetch(`/api/notifications?customerId=${encodeURIComponent(customerId)}`),
           fetch(`/api/subscriptions?customerId=${encodeURIComponent(customerId)}`),
         ]);
