@@ -138,7 +138,7 @@ export default function ProductDetailClient({
               {/* Geofence Delivery Guarantee Pill */}
               <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
                 <span className="h-2 w-2 rounded-full bg-red-500" />
-                <span>Doorstep Autopilot: Free delivery</span>
+                <span>Delivery coverage · checked at checkout</span>
               </div>
 
               {product.isBestSeller && (
