@@ -171,7 +171,7 @@ export default function ProductDetailClient({
                 )}
                 <div className="flex items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs text-muted-foreground">
                   <Clock size={14} className="text-emerald-400" />
-                  <span>{product.deliveryWindow || "20 min"}</span>
+                  <span>{product.deliveryWindow || "Scheduled"}</span>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs text-muted-foreground">
                   <Truck size={14} className="text-emerald-400" />
