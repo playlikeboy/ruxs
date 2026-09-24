@@ -150,3 +150,9 @@ export interface CatalogVendor {
   phone?: string;
   tags?: string[];
 }
+
+export interface CustomerCatalog {
+  vendors: CatalogVendor[];
+  products: CatalogProduct[];
+  categories: ServiceCategory[];
+}
