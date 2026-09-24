@@ -209,7 +209,7 @@ export function DiscoveryView({
                 </div>
 
                 <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-xs">
-                  Open now
+                  {featuredVendor.openingHours || "Scheduled"}
                 </span>
               </div>
 
