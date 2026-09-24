@@ -3,6 +3,8 @@ import { getCustomerCatalog } from "@/src/modules/customer-ui/catalog-service";
 import { Suspense } from "react";
 import SearchClient from "./SearchClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Search Daily Subscriptions, Society Food & Services | RUXS",
   description:
