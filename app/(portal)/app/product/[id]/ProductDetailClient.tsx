@@ -138,7 +138,7 @@ export default function ProductDetailClient({
               {/* Geofence Delivery Guarantee Pill */}
               <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
                 <span className="h-2 w-2 rounded-full bg-red-500" />
-                <span>Doorstep Autopilot: Free delivery</span>
+                <span>Delivery coverage · checked at checkout</span>
               </div>
 
               {product.isBestSeller && (
@@ -171,11 +171,11 @@ export default function ProductDetailClient({
                 )}
                 <div className="flex items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs text-muted-foreground">
                   <Clock size={14} className="text-emerald-400" />
-                  <span>{product.deliveryWindow || "20 min"}</span>
+                  <span>{product.deliveryWindow || "Scheduled"}</span>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs text-muted-foreground">
                   <Truck size={14} className="text-emerald-400" />
-                  <span>Doorstep Drop</span>
+                  <span>Scheduled doorstep delivery</span>
                 </div>
               </div>
             </div>
@@ -246,11 +246,11 @@ export default function ProductDetailClient({
                     <ul className="space-y-1.5 text-xs text-muted-foreground pl-2">
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
-                        <span>₹0 Delivery fee inside active society zone</span>
+                        <span>Delivery fee is determined by the checkout workflow</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
-                        <span>Morning cutoff locks at 10:00 PM previous night</span>
+                        <span>Service cutoff is shown from the selected merchant</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
