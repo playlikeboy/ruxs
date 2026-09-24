@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { formatINR, Paise } from "@/src/shared/types/money";
 import Link from "next/link";
 import {
@@ -33,6 +34,7 @@ export function DiscoveryView({
   vendors: CatalogVendor[];
   categories: ServiceCategory[];
 }) {
+  const router = useRouter();
   const {
     activeCategory,
     setActiveCategory,
@@ -76,7 +78,7 @@ export function DiscoveryView({
         {/* Current Location Pill */}
         <button
           type="button"
-          onClick={() => setIsGeofenceModalOpen(true)}
+          onClick={() => router.push("/app/location")}
           className="flex items-center gap-3 text-left focus:outline-none"
         >
           {/* Squircle Location Icon */}
@@ -98,7 +100,7 @@ export function DiscoveryView({
         <div className="flex items-center gap-2.5">
           <button
             type="button"
-            onClick={() => setIsNotificationsOpen(true)}
+            onClick={() => router.push("/app/notifications")}
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 shadow-xs"
             aria-label="Notifications"
           >
@@ -110,11 +112,9 @@ export function DiscoveryView({
 
           {/* User Avatar */}
           <div className="h-10 w-10 shrink-0 rounded-full border border-gray-200 overflow-hidden shadow-xs">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-              alt="User"
-              className="h-full w-full object-cover"
-            />
+            <span className="flex h-full w-full items-center justify-center bg-gray-900 text-xs font-bold text-white">
+              {displayName.slice(0, 1).toUpperCase()}
+            </span>
           </div>
         </div>
       </header>
@@ -137,16 +137,18 @@ export function DiscoveryView({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          window.location.href = searchQuery
-            ? `/app/search?q=${encodeURIComponent(searchQuery)}`
-            : "/app/search";
+          router.push(
+            searchQuery
+              ? `/app/search?q=${encodeURIComponent(searchQuery)}`
+              : "/app/search"
+          );
         }}
       >
         <DSSearchBar
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Search your place here"
-          onFilterClick={() => setIsGeofenceModalOpen(true)}
+          onFilterClick={() => router.push("/app/location")}
         />
       </form>
 
@@ -162,7 +164,10 @@ export function DiscoveryView({
               label={cat.label}
               icon={cat.id}
               isActive={activeCategory === cat.id}
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                router.replace(`/app?category=${encodeURIComponent(cat.id)}`);
+              }}
             />
           ))}
         </div>
@@ -178,7 +183,10 @@ export function DiscoveryView({
           </h2>
           <button
             type="button"
-            onClick={() => setActiveCategory("ALL")}
+            onClick={() => {
+              setActiveCategory("ALL");
+              router.replace("/app");
+            }}
             className="text-xs font-semibold text-gray-500 hover:text-red-500"
           >
             View all
