@@ -74,14 +74,12 @@ export default async function SearchPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(searchStructuredData) }}
       />
-      <Suspense
-          fallback={
+      <Suspense fallback={
             <div className="min-h-screen bg-[#0b0f0d] flex items-center justify-center text-sm text-muted-foreground">
               Loading search...
             </div>
-          }
         >
-          <SearchClient />
+          <SearchClient catalog={catalog} />
         </Suspense>
     </>
   );
