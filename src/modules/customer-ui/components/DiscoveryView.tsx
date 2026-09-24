@@ -15,7 +15,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
-import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_VENDORS } from "../mock-data";
+import type { CatalogProduct, CatalogVendor, ServiceCategory } from "../types";
+import { useUser } from "@hexclave/next";
 import { CatalogSvgIllustration } from "../svg-assets";
 import {
   DSCard,
@@ -23,7 +24,15 @@ import {
   DSSearchBar,
 } from "@/src/design-system";
 
-export function DiscoveryView() {
+export function DiscoveryView({
+  products,
+  vendors,
+  categories,
+}: {
+  products: CatalogProduct[];
+  vendors: CatalogVendor[];
+  categories: ServiceCategory[];
+}) {
   const {
     activeCategory,
     setActiveCategory,
@@ -40,7 +49,7 @@ export function DiscoveryView() {
 
   // Filter products by category and search
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter((p) => {
+    return products.filter((p) => {
       const matchesCategory =
         activeCategory === "ALL" || p.category === activeCategory;
       const matchesSearch =
@@ -50,10 +59,13 @@ export function DiscoveryView() {
         p.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, products]);
 
   // Featured vendor for the Screen 1 "Asian Kitchen" card layout
-  const featuredVendor = MOCK_VENDORS[0];
+  const user = useUser();
+  const displayName = String((user as any)?.firstName || (user as any)?.name || (user as any)?.fullName || "there");
+  const todayLabel = new Intl.DateTimeFormat("en-IN", { weekday: "long", month: "short", day: "numeric" }).format(new Date());
+  const featuredVendor = vendors[0];
 
   return (
     <div className="space-y-6 pb-24 text-gray-900 font-sans">
@@ -77,7 +89,7 @@ export function DiscoveryView() {
               Current Location
             </p>
             <p className="mt-1 text-sm font-bold text-gray-900 truncate max-w-[190px] sm:max-w-[260px]">
-              {currentGeofence.societyName.split(",")[0]}, Bangalore
+              {currentGeofence.societyName.split(",")[0]}{currentGeofence.city ? `, ${currentGeofence.city}` : ""}
             </p>
           </div>
         </button>
@@ -112,10 +124,10 @@ export function DiscoveryView() {
          ===================================================================== */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-950">
-          Hello! <span className="font-extrabold text-red-500">Arafat</span>
+          Hello! <span className="font-extrabold text-red-500">{displayName}</span>
         </h1>
         <p className="mt-0.5 text-xs text-gray-400 font-medium">
-          Thursday, Mar 18 - Today
+          {todayLabel} · Today
         </p>
       </div>
 
@@ -143,7 +155,7 @@ export function DiscoveryView() {
          ===================================================================== */}
       <div>
         <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-          {MOCK_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <DSCategoryPill
               key={cat.id}
               id={cat.id}
@@ -162,7 +174,7 @@ export function DiscoveryView() {
       <div>
         <div className="mb-3.5 flex items-center justify-between">
           <h2 className="text-lg font-bold tracking-tight text-gray-950">
-            Nearby Restaurants
+            Nearby services
           </h2>
           <button
             type="button"
@@ -189,14 +201,10 @@ export function DiscoveryView() {
 
               {/* Top Bar on Card: User Avatar badge + Red "Open now" pill */}
               <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
-                <div className="flex items-center gap-2 rounded-full bg-white/90 px-2.5 py-1 shadow-xs backdrop-blur-md">
-                  <img
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop&q=80"
-                    alt="Reviewer"
-                    className="h-5 w-5 rounded-full object-cover"
-                  />
+                      <div className="flex items-center gap-2 rounded-full bg-white/90 px-2.5 py-1 shadow-xs backdrop-blur-md">
+                  <ShieldCheck size={13} className="text-emerald-600" />
                   <span className="text-[11px] font-semibold text-gray-800">
-                    Jane Doe · Snapped a photo
+                    {featuredVendor.badge || "Verified merchant"}
                   </span>
                 </div>
 
