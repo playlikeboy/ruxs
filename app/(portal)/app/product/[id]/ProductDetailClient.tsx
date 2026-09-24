@@ -239,7 +239,7 @@ export default function ProductDetailClient({
                       <div>
                         <p className="font-bold text-sm">Geofence Autopilot Guarantee</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Orders for {currentGeofence.societyName} are delivered silently to your doorstep without gate pass friction. Direct elevator access enabled for verified couriers.
+                          Delivery coverage is based on the household location and the merchant's active service area. Final eligibility and delivery charges are checked when the service is scheduled.
                         </p>
                       </div>
                     </div>
