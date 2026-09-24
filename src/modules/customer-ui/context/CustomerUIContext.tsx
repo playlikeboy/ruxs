@@ -189,8 +189,8 @@ export function CustomerUIProvider({
       try {
         const [householdResponse, notificationsResponse, routinesResponse] = await Promise.all([
           fetch(`/api/households?userId=${encodeURIComponent(resolvedCustomerId)}`),
-          fetch(`/api/notifications?customerId=${encodeURIComponent(customerId)}`),
-          fetch(`/api/subscriptions?customerId=${encodeURIComponent(customerId)}`),
+          fetch(`/api/notifications?customerId=${encodeURIComponent(resolvedCustomerId)}`),
+          fetch(`/api/subscriptions?customerId=${encodeURIComponent(resolvedCustomerId)}`),
         ]);
 
         if (!cancelled && householdResponse.ok) {
