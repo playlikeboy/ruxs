@@ -1,10 +1,14 @@
 "use client";
 
-import React from "react";
+import type { CustomerCatalog } from "@/src/modules/customer-ui/catalog-service";
 import { DiscoveryView } from "@/src/modules/customer-ui/components/DiscoveryView";
-import { useCustomerUI } from "@/src/modules/customer-ui";
 
-export default function AppClient() {
-  const { activeCategory } = useCustomerUI();
-  return <DiscoveryView initialCategory={activeCategory} />;
+export default function AppClient({ catalog }: { catalog: CustomerCatalog }) {
+  return (
+    <DiscoveryView
+      products={catalog.products}
+      vendors={catalog.vendors}
+      categories={catalog.categories}
+    />
+  );
 }
