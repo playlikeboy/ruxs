@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@hexclave/next";
 import type {
   CatalogProduct,
@@ -116,11 +116,14 @@ export function CustomerUIProvider({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const user = useUser();
   const [activeTabState, setActiveTabState] = useState<NavTabId>(
     initialTab || tabForPath(pathname)
   );
-  const [activeCategory, setActiveCategory] = useState<ServiceCategoryId>("ALL");
+  const [activeCategory, setActiveCategoryState] = useState<ServiceCategoryId>(() =>
+    (searchParams.get("category")?.toUpperCase() || "ALL") as ServiceCategoryId
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
@@ -146,15 +149,18 @@ export function CustomerUIProvider({
 
   useEffect(() => {
     setActiveTabState(tabForPath(pathname));
-  }, [pathname]);
+    const rawCategory = (searchParams.get("category") || "ALL").toUpperCase();
+    const nextCategory = rawCategory as ServiceCategoryId;
+    setActiveCategoryState(nextCategory);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("ruxs.cart.v1");
+    const stored = window.localStorage.getItem("ruxs.cart.v2");
     setCart(parseCart(stored));
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("ruxs.cart.v1", JSON.stringify(cart));
+    window.localStorage.setItem("ruxs.cart.v2", JSON.stringify(cart));
   }, [cart]);
 
   useEffect(() => {
@@ -247,6 +253,10 @@ export function CustomerUIProvider({
       cancelled = true;
     };
   }, [user?.id]);
+
+  const setActiveCategory = (category: ServiceCategoryId) => {
+    setActiveCategoryState(category);
+  };
 
   const setActiveTab = (tab: NavTabId) => {
     setActiveTabState(tab);
