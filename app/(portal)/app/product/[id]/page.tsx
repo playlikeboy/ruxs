@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const priceStr = formatINR(product.pricePaise as Paise);
   const title = `${product.name} (${priceStr}) · ${product.vendorName} | RUXS`;
-  const description = `${product.description} Available for doorstep delivery and recurring routine in Bangalore gated societies on RUXS.`;
+  const description = `${product.description} Available for doorstep delivery and recurring household routines through RUXS.`;
   const canonicalUrl = `https://ruxs.in/app/product/${product.id}`;
 
   return {
@@ -77,13 +77,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const product = getProductById(id);
+  const product = await getCustomerProductById(id);
 
   if (!product) {
     notFound();
   }
 
   const vendor = await getCustomerVendorById(product.vendorId);
+  if (!vendor) {
+    notFound();
+  }
+
   const relatedProducts = (await getCustomerProductsByVendor(product.vendorId))
     .filter((p) => p.id !== product.id && p.category === product.category)
     .slice(0, 4);
