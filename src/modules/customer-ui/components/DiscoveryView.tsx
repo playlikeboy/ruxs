@@ -320,7 +320,7 @@ export function DiscoveryView({
               <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
                   <Clock size={11} />
-                  <span>{product.deliveryWindow || "20 min"}</span>
+                  <span>{product.deliveryWindow || "Scheduled"}</span>
                 </div>
 
                 {/* Red Circular Add Button (+) */}
