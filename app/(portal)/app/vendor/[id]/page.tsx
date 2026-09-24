@@ -4,7 +4,6 @@ import {
   getVendorById,
   getProductsByVendor,
   MOCK_VENDORS,
-  CustomerUIProvider,
 } from "@/src/modules/customer-ui";
 import VendorDetailClient from "./VendorDetailClient";
 
@@ -150,8 +149,7 @@ export default async function VendorPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <CustomerUIProvider>
-        <VendorDetailClient vendor={vendor} products={products} />
+      <VendorDetailClient vendor={vendor} products={products} />
       </CustomerUIProvider>
     </>
   );
