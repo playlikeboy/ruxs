@@ -38,6 +38,7 @@ export default function TrackingPageClient() {
   const user = useUser();
   const [fulfillments, setFulfillments] = useState<Fulfillment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [requestedFulfillmentId, setRequestedFulfillmentId] = useState("");
 
   const load = async () => {
     if (!user?.id) {
@@ -65,12 +66,11 @@ export default function TrackingPageClient() {
   }, [user?.id]);
 
   const latest = useMemo(() => {
-    const requestedId = new URLSearchParams(window.location.search).get("fulfillment");
-    if (requestedId) {
-      return fulfillments.find((item) => item.id === requestedId) || fulfillments[0];
+    if (requestedFulfillmentId) {
+      return fulfillments.find((item) => item.id === requestedFulfillmentId) || fulfillments[0];
     }
     return fulfillments[0];
-  }, [fulfillments]);
+  }, [fulfillments, requestedFulfillmentId]);
 
   const activeIndex = latest ? statusIndex(String(latest.status || "SCHEDULED")) : -1;
 
