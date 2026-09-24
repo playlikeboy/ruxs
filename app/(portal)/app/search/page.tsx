@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getCustomerCatalog } from "@/src/modules/customer-ui/catalog-service";
 import { Suspense } from "react";
 import SearchClient from "./SearchClient";
 
@@ -65,7 +66,8 @@ const searchStructuredData = {
   },
 };
 
-export default function SearchPage() {
+export default async function SearchPage() {
+  const catalog = await getCustomerCatalog();
   return (
     <>
       <script
