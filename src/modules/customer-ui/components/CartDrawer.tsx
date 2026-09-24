@@ -46,12 +46,9 @@ export function CartDrawer() {
   };
 
   const handleCheckout = () => {
-    setIsCheckingOut(true);
-    setTimeout(() => {
-      setIsCheckingOut(false);
-      setIsCartOpen(false);
-      setActiveTab("tracking");
-    }, 600);
+    // Checkout is not yet a server-backed order mutation. Keep the drawer open
+    // rather than fabricating a tracking transition or successful order.
+    setIsCheckingOut(false);
   };
 
   return (
