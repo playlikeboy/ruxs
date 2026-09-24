@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getCustomerCatalog } from "@/src/modules/customer-ui/catalog-service";
 import ServicesPageClient from "./ServicesPageClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Services | RUXS",
   description: "Browse the recurring household services currently available from verified RUXS merchants.",
