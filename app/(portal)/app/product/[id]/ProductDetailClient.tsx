@@ -254,7 +254,7 @@ export default function ProductDetailClient({
                       </li>
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
-                        <span>1-tap instant pause / skip anytime</span>
+                        <span>Pause or skip controls appear when supported by the routine</span>
                       </li>
                     </ul>
                   </div>
