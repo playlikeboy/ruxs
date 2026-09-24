@@ -14,7 +14,7 @@ import type {
   ProductAddOn,
 } from "../types";
 import { CUSTOMER_ROUTES, CUSTOMER_TAB_ROUTES } from "../routes";
-import { NavTabId } from "@/src/design-system";
+import type { NavTabId } from "@/src/design-system/components/DSBottomNav";
 
 interface CustomerUIContextType {
   activeTab: NavTabId;
