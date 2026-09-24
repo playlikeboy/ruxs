@@ -67,6 +67,19 @@ interface CustomerUIContextType {
 
 const CustomerUIContext = createContext<CustomerUIContextType | undefined>(undefined);
 
+type ApiEnvelope<T> = {
+  success?: boolean;
+  data?: T;
+};
+
+async function readApiEnvelope<T>(response: Response): Promise<ApiEnvelope<T>> {
+  const payload: unknown = await response.json();
+  if (typeof payload === "object" && payload !== null) {
+    return payload as ApiEnvelope<T>;
+  }
+  return {};
+}
+
 const EMPTY_GEOFENCE: GeofenceArea = {
   id: "unconfigured",
   name: "Delivery location",
@@ -117,6 +130,7 @@ export function CustomerUIProvider({
   const router = useRouter();
   const pathname = usePathname();
   const user = useUser();
+  const customerId = user?.id;
   const [activeTabState, setActiveTabState] = useState<NavTabId>(
     initialTab || tabForPath(pathname)
   );
@@ -160,7 +174,7 @@ export function CustomerUIProvider({
   }, [cart]);
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!customerId) {
       setGeofenceList([EMPTY_GEOFENCE]);
       setCurrentGeofenceId(EMPTY_GEOFENCE.id);
       setNotifications([]);
@@ -173,13 +187,13 @@ export function CustomerUIProvider({
     async function loadCustomerState() {
       try {
         const [householdResponse, notificationsResponse, routinesResponse] = await Promise.all([
-          fetch(`/api/households?userId=${encodeURIComponent(user.id)}`),
-          fetch(`/api/notifications?customerId=${encodeURIComponent(user.id)}`),
-          fetch(`/api/subscriptions?customerId=${encodeURIComponent(user.id)}`),
+          fetch(`/api/households?userId=${encodeURIComponent(customerId)}`),
+          fetch(`/api/notifications?customerId=${encodeURIComponent(customerId)}`),
+          fetch(`/api/subscriptions?customerId=${encodeURIComponent(customerId)}`),
         ]);
 
         if (!cancelled && householdResponse.ok) {
-          const householdPayload = await householdResponse.json();
+          const householdPayload = await readApiEnvelope<Record<string, unknown>>(householdResponse);
           const household = householdPayload?.success ? householdPayload.data : null;
           if (household) {
             const geofence: GeofenceArea = {
@@ -200,7 +214,7 @@ export function CustomerUIProvider({
         }
 
         if (!cancelled && notificationsResponse.ok) {
-          const payload = await notificationsResponse.json();
+          const payload = await readApiEnvelope<unknown[]>(notificationsResponse);
           const raw = payload?.success && Array.isArray(payload.data) ? payload.data : [];
           setNotifications(
             raw.map((item: any) => ({
@@ -219,7 +233,7 @@ export function CustomerUIProvider({
         }
 
         if (!cancelled && routinesResponse.ok) {
-          const payload = await routinesResponse.json();
+          const payload = await readApiEnvelope<unknown[]>(routinesResponse);
           const raw = payload?.success && Array.isArray(payload.data) ? payload.data : [];
           setRoutines(
             raw.map((item: any) => ({
@@ -248,7 +262,7 @@ export function CustomerUIProvider({
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [customerId]);
 
   const setActiveCategory = (category: ServiceCategoryId) => {
     setActiveCategoryState(category);
