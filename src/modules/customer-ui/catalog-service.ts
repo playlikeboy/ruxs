@@ -12,6 +12,7 @@ import type {
   CatalogVendor,
   ServiceCategory,
   ServiceCategoryId,
+  CustomerCatalog,
 } from "./types";
 
 const CATEGORY_LABELS: Record<ServiceCategoryId, string> = {
@@ -99,12 +100,6 @@ function mapVendor(
     phone: row.phone,
     tags: [CATEGORY_LABELS[category]],
   };
-}
-
-export interface CustomerCatalog {
-  vendors: CatalogVendor[];
-  products: CatalogProduct[];
-  categories: ServiceCategory[];
 }
 
 export async function getCustomerCatalog(): Promise<CustomerCatalog> {
