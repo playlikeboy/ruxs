@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
-import { CustomerAppContainer } from "@/src/modules/customer-ui";
+import { DiscoveryView } from "@/src/modules/customer-ui/components/DiscoveryView";
+import { useCustomerUI } from "@/src/modules/customer-ui";
 
 export default function AppClient() {
-  return <CustomerAppContainer />;
+  const { activeCategory } = useCustomerUI();
+  return <DiscoveryView initialCategory={activeCategory} />;
 }
