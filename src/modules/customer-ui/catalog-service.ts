@@ -129,36 +129,39 @@ export async function getCustomerCatalog(): Promise<CustomerCatalog> {
 
   const vendorMap = new Map(vendors.map((vendor) => [vendor.id, vendor] as const));
 
-  const products = productRows
-    .map((product) => {
-      const vendor = vendorMap.get(product.tenantId) || vendorMap.get(tenantsById.get(product.tenantId)?.id || "");
-      const service = servicesById.get(product.serviceId);
-      if (!vendor || !service) return null;
+  const products: CatalogProduct[] = [];
+  for (const product of productRows) {
+    const vendor =
+      vendorMap.get(product.tenantId) ||
+      vendorMap.get(tenantsById.get(product.tenantId)?.id || "");
+    const service = servicesById.get(product.serviceId);
+    if (!vendor || !service) continue;
 
-      const category =
-        (service.category as ServiceCategoryId) in CATEGORY_LABELS
-          ? (service.category as ServiceCategoryId)
-          : vendor.category;
+    const category =
+      (service.category as ServiceCategoryId) in CATEGORY_LABELS
+        ? (service.category as ServiceCategoryId)
+        : vendor.category;
 
-      return {
-        id: product.id,
-        name: product.name,
-        category,
-        vendorId: vendor.id,
-        vendorName: vendor.name,
-        pricePaise: product.basePricePaise,
-        originalPricePaise: undefined,
-        deliveryWindow: service.cutoffTimeStr ? `Cutoff ${service.cutoffTimeStr}` : "Scheduled delivery",
-        image: safeImage(),
-        rating: vendor.rating,
-        reviewCount: vendor.reviewCount,
-        description: service.description || `${product.name} from ${vendor.name}.`,
-        isBestSeller: false,
-        isGeofenceGuaranteed: false,
-        unit: product.unitType.toLowerCase(),
-      } satisfies CatalogProduct;
-    })
-    .filter((product): product is CatalogProduct => Boolean(product));
+    products.push({
+      id: product.id,
+      name: product.name,
+      category,
+      vendorId: vendor.id,
+      vendorName: vendor.name,
+      pricePaise: product.basePricePaise,
+      originalPricePaise: undefined,
+      deliveryWindow: service.cutoffTimeStr
+        ? `Cutoff ${service.cutoffTimeStr}`
+        : "Scheduled delivery",
+      image: safeImage(),
+      rating: vendor.rating,
+      reviewCount: vendor.reviewCount,
+      description: service.description || `${product.name} from ${vendor.name}.`,
+      isBestSeller: false,
+      isGeofenceGuaranteed: false,
+      unit: product.unitType.toLowerCase(),
+    });
+  }
 
   const counts = new Map<ServiceCategoryId, number>();
   for (const product of products) {
