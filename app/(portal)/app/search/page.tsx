@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { CustomerUIProvider } from "@/src/modules/customer-ui";
 import SearchClient from "./SearchClient";
 
 export const metadata: Metadata = {
@@ -73,8 +72,7 @@ export default function SearchPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(searchStructuredData) }}
       />
-      <CustomerUIProvider>
-        <Suspense
+      <Suspense
           fallback={
             <div className="min-h-screen bg-[#0b0f0d] flex items-center justify-center text-sm text-muted-foreground">
               Loading search...
@@ -83,7 +81,6 @@ export default function SearchPage() {
         >
           <SearchClient />
         </Suspense>
-      </CustomerUIProvider>
     </>
   );
 }
