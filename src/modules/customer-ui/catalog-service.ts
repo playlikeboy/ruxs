@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db, isTestEnv } from "@/src/shared/db";
 import {
   products as productsTable,
