@@ -2,6 +2,12 @@
 
 import type { ReactNode } from "react";
 import { CustomerUIProvider, useCustomerUI } from "@/src/modules/customer-ui";
+import {
+  CartDrawer,
+  GeofenceModal,
+  NotificationsModal,
+  ProductDetailModal,
+} from "@/src/modules/customer-ui";
 import { DSBottomNav } from "@/src/design-system";
 
 function CustomerAppNavigation() {
@@ -15,6 +21,10 @@ export default function CustomerAppLayout({ children }: { children: ReactNode })
       <div className="min-h-screen">
         {children}
         <CustomerAppNavigation />
+        <ProductDetailModal />
+        <CartDrawer />
+        <NotificationsModal />
+        <GeofenceModal />
       </div>
     </CustomerUIProvider>
   );
