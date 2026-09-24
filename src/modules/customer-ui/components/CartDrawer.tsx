@@ -191,12 +191,12 @@ export function CartDrawer() {
                   <span>Delivery</span>
                   {currentGeofence.isInside && (
                     <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                      Geofence Free
+                      Coverage checked
                     </span>
                   )}
                 </span>
                 <span className="font-semibold text-gray-900">
-                  {deliveryFeePaise === 0 ? "Free" : `${formatINR(deliveryFeePaise as Paise)}`}
+                  {deliveryFeePaise === 0 ? "Calculated at checkout" : formatINR(deliveryFeePaise as Paise)}
                 </span>
               </div>
 
