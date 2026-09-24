@@ -1,175 +1,76 @@
 "use client";
 
 import React from "react";
-import {
-  UtensilsCrossed,
-  Truck,
-  Sparkles,
-  Wrench,
-  Zap,
-  Car,
-  Hammer,
-  MoreHorizontal,
-  ArrowLeft,
-  MoreVertical,
-} from "lucide-react";
-import { useCustomerUI } from "../context/CustomerUIContext";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, MoreVertical, Sparkles } from "lucide-react";
+import type { ServiceCategory } from "../types";
+import { CUSTOMER_ROUTES, buildCustomerUrl } from "../routes";
+import { CatalogSvgIllustration } from "../svg-assets";
 
-const PRO_SERVICES = [
-  { id: "rest", title: "Restaurants", icon: UtensilsCrossed, color: "text-red-500", bg: "bg-red-50/70" },
-  { id: "movers", title: "Movers", icon: Truck, color: "text-blue-500", bg: "bg-blue-50/70" },
-  { id: "cleaning", title: "Cleaning", icon: Sparkles, color: "text-amber-500", bg: "bg-amber-50/70" },
-  { id: "plumbers", title: "Plumbers", icon: Wrench, color: "text-emerald-500", bg: "bg-emerald-50/70" },
-  { id: "electrician", title: "Electrician", icon: Zap, color: "text-purple-500", bg: "bg-purple-50/70" },
-  { id: "auto", title: "Auto Detail...", icon: Car, color: "text-rose-500", bg: "bg-rose-50/70" },
-  { id: "contractors", title: "Contractors", icon: Hammer, color: "text-indigo-500", bg: "bg-indigo-50/70" },
-  { id: "more", title: "More", icon: MoreHorizontal, color: "text-gray-500", bg: "bg-gray-100" },
-];
-
-export function ServicesGridView() {
-  const { setActiveCategory, setActiveTab } = useCustomerUI();
+export function ServicesGridView({ categories }: { categories: ServiceCategory[] }) {
+  const available = categories.filter((category) => category.id !== "ALL");
 
   return (
-    <div className="space-y-6 pb-24 text-gray-900 font-sans">
-      {/* =====================================================================
-          1. TOP HEADER (Screen 3: Arafat's Projects / Services)
-         ===================================================================== */}
-      <div className="flex items-center justify-between pt-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab("home")}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 shadow-xs"
-          aria-label="Back"
+    <div className="mx-auto w-full max-w-5xl space-y-8 px-4 pb-28 pt-5 text-gray-900 sm:px-6">
+      <header className="flex items-center justify-between">
+        <Link
+          href={CUSTOMER_ROUTES.home}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50"
+          aria-label="Back to home"
         >
           <ArrowLeft size={18} />
-        </button>
-
-        <h1 className="text-base font-bold tracking-tight text-gray-950">
-          Arafat's Projects
-        </h1>
-
-        <button
-          type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 shadow-xs"
-          aria-label="Menu"
-        >
+        </Link>
+        <div className="text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Customer app</p>
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-950">Services</h1>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm">
           <MoreVertical size={18} />
-        </button>
-      </div>
+        </div>
+      </header>
 
-      {/* =====================================================================
-          2. HIRE A LOCAL PRO TODAY (Screen 3: 4x2 Clean Squircles Grid)
-         ===================================================================== */}
-      <div>
-        <h2 className="text-lg font-bold tracking-tight text-gray-950 mb-3">
-          Hire a Local Pro Today
-        </h2>
+      <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-950">Every recurring service, in one place.</h2>
+            <p className="mt-1 text-sm leading-6 text-gray-500">
+              Categories below are generated from the live marketplace catalog, so unavailable service types do not appear as dead-end UI.
+            </p>
+          </div>
+        </div>
 
-        {/* 4x2 Squircle Grid exactly from Screen 3 */}
-        <div className="grid grid-cols-4 gap-2.5 sm:gap-3.5">
-          {PRO_SERVICES.map((pro) => {
-            const Icon = pro.icon;
-            return (
-              <button
-                key={pro.id}
-                type="button"
-                onClick={() => {
-                  if (pro.id === "rest") setActiveCategory("FAST_FOOD");
-                  else if (pro.id === "cleaning") setActiveCategory("LAUNDRY");
-                  else setActiveCategory("ALL");
-                  setActiveTab("home");
-                }}
-                className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-3 text-center shadow-xs hover:border-gray-200 hover:bg-gray-50 select-none"
+        {available.length === 0 ? (
+          <div className="mt-8 rounded-2xl border border-dashed border-gray-200 p-8 text-center">
+            <p className="text-sm font-semibold text-gray-900">No services are available yet.</p>
+            <p className="mt-1 text-xs text-gray-500">Approved merchants will appear here as soon as they publish a service.</p>
+          </div>
+        ) : (
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {available.map((category) => (
+              <Link
+                key={category.id}
+                href={buildCustomerUrl(CUSTOMER_ROUTES.search, { category: category.id })}
+                className="group rounded-2xl border border-gray-100 bg-gray-50/60 p-4 transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-white hover:shadow-md"
               >
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl ${pro.bg} ${pro.color}`}
-                >
-                  <Icon size={22} />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-gray-700 shadow-sm ring-1 ring-gray-100">
+                  <CatalogSvgIllustration idOrCategory={category.id} size={24} />
                 </div>
-                <span className="mt-2 text-xs font-semibold text-gray-800 line-clamp-1">
-                  {pro.title}
+                <p className="mt-3 text-sm font-bold text-gray-950">{category.label}</p>
+                <p className="mt-1 text-[11px] text-gray-500">
+                  {category.count} {category.count === 1 ? "item" : "items"}
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                  Browse
+                  <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
                 </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* =====================================================================
-          3. TRANSFORM YOUR HOME (Screen 3: Carousel / Grid Cards)
-         ===================================================================== */}
-      <div>
-        <div className="mb-3.5 flex items-center justify-between">
-          <h2 className="text-lg font-bold tracking-tight text-gray-950">
-            Transform Your Home
-          </h2>
-          <span className="text-xs font-semibold text-gray-500 hover:text-red-500 cursor-pointer">
-            See all
-          </span>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {/* Card 1: Upgrade your Kitchen */}
-          <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xs">
-            <div className="relative h-44 w-full">
-              <img
-                src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800&auto=format&fit=crop&q=80"
-                alt="Modern Kitchen"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="text-base font-bold text-gray-950">
-                Upgrade your Kitchen
-              </h3>
-              <p className="mt-1.5 text-xs text-gray-500 leading-relaxed line-clamp-2">
-                Transform your kitchen with modern appliances and stylish decor for a
-                welcoming and inviting vibe.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveCategory("TIFFIN");
-                  setActiveTab("home");
-                }}
-                className="mt-4 w-full rounded-full bg-red-500 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-red-600 active:bg-red-700"
-              >
-                Find kitchen Pros
-              </button>
-            </div>
+              </Link>
+            ))}
           </div>
-
-          {/* Card 2: Upgrade your Living Room */}
-          <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xs">
-            <div className="relative h-44 w-full">
-              <img
-                src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80"
-                alt="Living Renovation"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="text-base font-bold text-gray-950">
-                Upgrade your Home Living
-              </h3>
-              <p className="mt-1.5 text-xs text-gray-500 leading-relaxed line-clamp-2">
-                Transform your apartment spaces with verified electricians, carpenters, and
-                deep-cleaning specialists.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveCategory("ALL");
-                  setActiveTab("home");
-                }}
-                className="mt-4 w-full rounded-full bg-red-500 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-red-600 active:bg-red-700"
-              >
-                Find home Pros
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+        )}
+      </section>
     </div>
   );
 }
