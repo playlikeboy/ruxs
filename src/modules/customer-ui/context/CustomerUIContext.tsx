@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useUser } from "@hexclave/next";
 import type {
   CatalogProduct,
@@ -116,14 +116,11 @@ export function CustomerUIProvider({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const user = useUser();
   const [activeTabState, setActiveTabState] = useState<NavTabId>(
     initialTab || tabForPath(pathname)
   );
-  const [activeCategory, setActiveCategoryState] = useState<ServiceCategoryId>(() =>
-    (searchParams.get("category")?.toUpperCase() || "ALL") as ServiceCategoryId
-  );
+  const [activeCategory, setActiveCategoryState] = useState<ServiceCategoryId>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
@@ -149,10 +146,9 @@ export function CustomerUIProvider({
 
   useEffect(() => {
     setActiveTabState(tabForPath(pathname));
-    const rawCategory = (searchParams.get("category") || "ALL").toUpperCase();
-    const nextCategory = rawCategory as ServiceCategoryId;
-    setActiveCategoryState(nextCategory);
-  }, [pathname, searchParams]);
+    const rawCategory = new URLSearchParams(window.location.search).get("category");
+    if (rawCategory) setActiveCategoryState(rawCategory.toUpperCase() as ServiceCategoryId);
+  }, [pathname]);
 
   useEffect(() => {
     const stored = window.localStorage.getItem("ruxs.cart.v2");
