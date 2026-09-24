@@ -7,6 +7,13 @@ import { useUser } from "@hexclave/next";
 import { CUSTOMER_ROUTES } from "@/src/modules/customer-ui/routes";
 import { formatINR, Paise } from "@/src/shared/types/money";
 
+type ApiEnvelope<T> = { success?: boolean; data?: T };
+
+async function readApiEnvelope<T>(response: Response): Promise<ApiEnvelope<T>> {
+  const payload: unknown = await response.json();
+  return typeof payload === "object" && payload !== null ? (payload as ApiEnvelope<T>) : {};
+}
+
 type Fulfillment = {
   id: string;
   serviceDate?: string;
@@ -51,8 +58,8 @@ export default function TrackingPageClient() {
       const response = await fetch(`/api/fulfillments?customerId=${encodeURIComponent(user.id)}`, {
         cache: "no-store",
       });
-      const payload = await response.json();
-      setFulfillments(payload?.success && Array.isArray(payload.data) ? payload.data : []);
+      const payload = await readApiEnvelope<Fulfillment[]>(response);
+      setFulfillments(payload.success && Array.isArray(payload.data) ? payload.data : []);
     } catch {
       setFulfillments([]);
     } finally {
