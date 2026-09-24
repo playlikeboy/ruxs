@@ -46,12 +46,8 @@ export function CartDrawer() {
   };
 
   const handleCheckout = () => {
-    setIsCheckingOut(true);
-    setTimeout(() => {
-      setIsCheckingOut(false);
-      setIsCartOpen(false);
-      setActiveTab("tracking");
-    }, 600);
+    // Keep this explicit until checkout becomes a real server-backed mutation.
+    setIsCheckingOut(false);
   };
 
   return (
@@ -191,12 +187,12 @@ export function CartDrawer() {
                   <span>Delivery</span>
                   {currentGeofence.isInside && (
                     <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                      Geofence Free
+                      Coverage checked
                     </span>
                   )}
                 </span>
                 <span className="font-semibold text-gray-900">
-                  {deliveryFeePaise === 0 ? "Free" : `${formatINR(deliveryFeePaise as Paise)}`}
+                  {deliveryFeePaise === 0 ? "Calculated at checkout" : formatINR(deliveryFeePaise as Paise)}
                 </span>
               </div>
 
