@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Star,
   ShieldCheck,
+  Plus,
 } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
 import type { CatalogProduct, CatalogVendor, ServiceCategory } from "../types";
@@ -39,6 +40,8 @@ export function DiscoveryView({
     openProductModal,
     unreadNotifCount,
     currentGeofence,
+    routines,
+    toggleRoutinePause,
   } = useCustomerUI();
 
   // Filter products by category and search
@@ -307,7 +310,7 @@ export function DiscoveryView({
                   </span>
                   {product.originalPricePaise && (
                     <span className="text-xs text-gray-400 line-through">
-                      ${(product.originalPricePaise / 100).toFixed(2)}
+                      {formatINR(product.originalPricePaise as Paise)}
                     </span>
                   )}
                 </div>
@@ -351,7 +354,7 @@ export function DiscoveryView({
         </div>
 
         <div className="space-y-3">
-          {MOCK_VENDORS.slice(1, 4).map((vendor) => (
+          {vendors.slice(1, 4).map((vendor) => (
             <Link
               key={vendor.id}
               href={`/app/vendor/${vendor.id}`}
