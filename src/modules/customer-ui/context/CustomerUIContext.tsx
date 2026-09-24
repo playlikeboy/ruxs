@@ -190,9 +190,9 @@ export function CustomerUIProvider({
               lat: 0,
               lng: 0,
               radiusMeters: 0,
-              isInside: true,
+              isInside: false,
               distanceMeters: 0,
-              deliveryGuarantee: "Household location loaded from your account.",
+              deliveryGuarantee: "Household location linked. Service coverage is checked against the selected merchant.",
             };
             setGeofenceList([geofence]);
             setCurrentGeofenceId(geofence.id);
@@ -347,7 +347,7 @@ export function CustomerUIProvider({
     () => cart.reduce((sum, item) => sum + item.totalPricePaise, 0),
     [cart]
   );
-  const deliveryFeePaise = cart.length > 0 && !currentGeofence.isInside ? 500 : 0;
+  const deliveryFeePaise = 0;
   const totalPaise = Math.max(0, subtotalPaise + deliveryFeePaise - discountPaise);
 
   const applyPromoCode = (_code: string) => ({
