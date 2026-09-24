@@ -250,7 +250,7 @@ export default function ProductDetailClient({
                       </li>
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
-                        <span>Morning cutoff locks at 10:00 PM previous night</span>
+                        <span>Service cutoff is shown from the selected merchant</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
