@@ -2,26 +2,19 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { formatINR, Paise } from "@/src/shared/types/money";
 import {
-  getProductById,
-  getVendorById,
-  getProductsByVendor,
-  MOCK_PRODUCTS,
-} from "@/src/modules/customer-ui";
+  getCustomerProductById,
+  getCustomerVendorById,
+  getCustomerProductsByVendor,
+} from "@/src/modules/customer-ui/catalog-service";
 import ProductDetailClient from "./ProductDetailClient";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateStaticParams() {
-  return MOCK_PRODUCTS.map((p) => ({
-    id: p.id,
-  }));
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const product = getProductById(id);
+  const product = await getCustomerProductById(id);
 
   if (!product) {
     return {
@@ -90,10 +83,10 @@ export default async function ProductPage({ params }: PageProps) {
     notFound();
   }
 
-  const vendor = getVendorById(product.vendorId);
-  const relatedProducts = MOCK_PRODUCTS.filter(
-    (p) => p.id !== product.id && (p.category === product.category || p.vendorId === product.vendorId)
-  ).slice(0, 4);
+  const vendor = await getCustomerVendorById(product.vendorId);
+  const relatedProducts = (await getCustomerProductsByVendor(product.vendorId))
+    .filter((p) => p.id !== product.id && p.category === product.category)
+    .slice(0, 4);
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -160,11 +153,7 @@ export default async function ProductPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <ProductDetailClient
-          product={product}
-          vendor={vendor}
-          relatedProducts={relatedProducts}
-        />
+      <ProductDetailClient product={product} vendor={vendor} relatedProducts={relatedProducts} />
     </>
   );
 }
