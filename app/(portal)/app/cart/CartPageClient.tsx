@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, Tag, Trash2 } from "lucide-react";
-import { useCustomerUI } from "@/src/modules/customer-ui";
+import { useCustomerUI } from "@/src/modules/customer-ui/context/CustomerUIContext";
 import { CUSTOMER_ROUTES } from "@/src/modules/customer-ui/routes";
 import { DSButton, DSQuantityStepper } from "@/src/design-system";
 import { formatINR, Paise } from "@/src/shared/types/money";
@@ -17,16 +17,16 @@ export default function CartPageClient() {
     deliveryFeePaise,
     discountPaise,
     totalPaise,
-    applyPromoCode,
-    currentGeofence,
   } = useCustomerUI();
   const [code, setCode] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   const apply = () => {
-    const result = applyPromoCode(code.trim());
-    setMessage(result.message);
-    if (result.success) setCode("");
+    setMessage(
+      code.trim()
+        ? "Promo validation is handled at checkout. No active promo code is available."
+        : "Enter a promo code to validate it."
+    );
   };
 
   return (
@@ -61,9 +61,12 @@ export default function CartPageClient() {
           </div>
           <h2 className="mt-4 text-base font-bold">Your cart is empty.</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-500">
-            Add a product from the marketplace to review it here before checkout.
+            Add an item from the live RUXS marketplace to review it here.
           </p>
-          <Link href={CUSTOMER_ROUTES.search} className="mt-5 inline-flex h-10 items-center rounded-full bg-red-500 px-5 text-xs font-semibold text-white">
+          <Link
+            href={CUSTOMER_ROUTES.search}
+            className="mt-5 inline-flex h-10 items-center rounded-full bg-red-500 px-5 text-xs font-semibold text-white"
+          >
             Browse marketplace
           </Link>
         </section>
@@ -71,12 +74,18 @@ export default function CartPageClient() {
         <div className="mt-8 space-y-5">
           <section className="space-y-3">
             {cart.map((item) => (
-              <article key={item.id} className="flex items-center gap-3 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
+              <article
+                key={item.id}
+                className="flex items-center gap-3 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm"
+              >
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gray-50">
                   <img src={item.product.image} alt="" className="h-full w-full object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <Link href={`/app/product/${item.product.id}`} className="block truncate text-sm font-bold text-gray-950 hover:text-red-500">
+                  <Link
+                    href={`/app/product/${item.product.id}`}
+                    className="block truncate text-sm font-bold text-gray-950 hover:text-red-500"
+                  >
                     {item.product.name}
                   </Link>
                   <p className="mt-1 truncate text-[11px] text-gray-500">{item.product.vendorName}</p>
@@ -103,29 +112,43 @@ export default function CartPageClient() {
                 onChange={(event) => setCode(event.target.value)}
                 placeholder="Promo code"
                 className="min-w-0 flex-1 bg-transparent px-1 text-xs uppercase outline-none"
+                aria-label="Promo code"
               />
-              <button type="button" onClick={apply} className="rounded-full bg-red-500 px-4 py-2 text-xs font-bold text-white">
+              <button
+                type="button"
+                onClick={apply}
+                className="rounded-full bg-red-500 px-4 py-2 text-xs font-bold text-white"
+              >
                 Apply
               </button>
             </div>
             {message && <p className="mt-2 text-[11px] text-gray-500">{message}</p>}
 
             <div className="mt-5 space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span className="font-semibold">{formatINR(subtotalPaise as Paise)}</span></div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Subtotal</span>
+                <span className="font-semibold">{formatINR(subtotalPaise as Paise)}</span>
+              </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Delivery</span>
-                <span className="font-semibold">{deliveryFeePaise === 0 ? "Free" : formatINR(deliveryFeePaise as Paise)}</span>
+                <span className="font-semibold">
+                  {deliveryFeePaise === 0 ? "Calculated at checkout" : formatINR(deliveryFeePaise as Paise)}
+                </span>
               </div>
               {discountPaise > 0 && (
-                <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-{formatINR(discountPaise as Paise)}</span></div>
+                <div className="flex justify-between text-emerald-600">
+                  <span>Discount</span>
+                  <span>-{formatINR(discountPaise as Paise)}</span>
+                </div>
               )}
-              <div className="border-t border-gray-100 pt-3 flex justify-between text-base">
-                <span className="font-bold">Total</span><span className="font-extrabold">{formatINR(totalPaise as Paise)}</span>
+              <div className="flex justify-between border-t border-gray-100 pt-3 text-base">
+                <span className="font-bold">Estimated total</span>
+                <span className="font-extrabold">{formatINR(totalPaise as Paise)}</span>
               </div>
             </div>
 
-            <p className="mt-4 text-[10px] text-gray-400">
-              {currentGeofence.isInside ? "Delivery location verified." : "Delivery location is outside a verified society boundary; fees may apply."}
+            <p className="mt-4 text-[10px] leading-4 text-gray-400">
+              Final delivery charges and payment state are resolved by the checkout workflow once it is connected.
             </p>
 
             <DSButton
@@ -133,9 +156,9 @@ export default function CartPageClient() {
               fullWidth
               size="lg"
               className="mt-5"
-              onClick={() => window.location.assign(CUSTOMER_ROUTES.tracking)}
+              onClick={() => window.location.assign(CUSTOMER_ROUTES.services)}
             >
-              Continue to tracking
+              Continue browsing
             </DSButton>
           </section>
         </div>
