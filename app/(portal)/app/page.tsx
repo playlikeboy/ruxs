@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { getCustomerCatalog } from "@/src/modules/customer-ui/catalog-service";
 import AppClient from "./AppClient";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RUXS App · Daily Household Subscriptions, Food & Local Services",
@@ -82,30 +85,19 @@ const appStructuredData = {
       url: "https://ruxs.in/app",
       applicationCategory: "LifestyleApplication",
       operatingSystem: "All",
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.9",
-        reviewCount: "8420",
-      },
-      offers: {
-        "@type": "AggregateOffer",
-        priceCurrency: "INR",
-        lowPrice: "15",
-        highPrice: "7500",
-        offerCount: "24",
-      },
     },
   ],
 };
 
-export default function AppPage() {
+export default async function AppPage() {
+  const catalog = await getCustomerCatalog();
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(appStructuredData) }}
       />
-      <AppClient />
+      <AppClient catalog={catalog} />
     </>
   );
 }
