@@ -246,7 +246,7 @@ export default function ProductDetailClient({
                     <ul className="space-y-1.5 text-xs text-muted-foreground pl-2">
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
-                        <span>₹0 Delivery fee inside active society zone</span>
+                        <span>Delivery fee is determined by the checkout workflow</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check size={14} className="text-emerald-400" />
