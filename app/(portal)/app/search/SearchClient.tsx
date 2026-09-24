@@ -20,59 +20,51 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import {
-  CatalogProduct,
-  CatalogVendor,
-  ServiceCategoryId,
-  MOCK_PRODUCTS,
-  MOCK_VENDORS,
-  MOCK_CATEGORIES,
-  useCustomerUI,
-  CatalogSvgIllustration,
-} from "@/src/modules/customer-ui";
+import type { CatalogProduct, CatalogVendor, ServiceCategoryId } from "@/src/modules/customer-ui/types";
+import { useCustomerUI } from "@/src/modules/customer-ui/context/CustomerUIContext";
+import { CatalogSvgIllustration } from "@/src/modules/customer-ui/svg-assets";
+import { categoryFromParam } from "@/src/modules/customer-ui/routes";
 import {
   DSButton,
   DSRatingPill,
   DSCategoryPill,
 } from "@/src/design-system";
 
-const POPULAR_SEARCHES = [
-  "A2 Desi Cow Milk",
-  "20L Mineral Water Can",
-  "Homestyle Thali",
-  "Melting Cheese Pizza",
-  "Puja Flower Basket",
-  "Dog Walk",
-  "Steam Iron Pass",
-  "Krishna Fresh Dairy",
-  "Burger",
-];
-
-export default function SearchClient() {
+export default function SearchClient({
+  catalog,
+}: {
+  catalog: { products: CatalogProduct[]; vendors: CatalogVendor[]; categories: { id: ServiceCategoryId; label: string; iconName?: string; count: number }[] };
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
-  const initialCategory = (searchParams.get("category") || "ALL") as ServiceCategoryId;
+  const initialCategory = categoryFromParam(searchParams.get("category")) as ServiceCategoryId;
 
-  const { addToCart, setIsCartOpen, currentGeofence } = useCustomerUI();
+  const { addToCart, setIsCartOpen } = useCustomerUI();
 
   const [query, setQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategoryId>(initialCategory);
-  const [activeTab, setActiveTab] = useState<"ALL" | "PRODUCTS" | "VENDORS">("ALL");
-  const [priceFilter, setPriceFilter] = useState<"ALL" | "UNDER_5" | "5_TO_10" | "OVER_10">("ALL");
+  const [activeTab, setActiveTab] = useState<"ALL" | "PRODUCTS" | "VENDORS">(
+    (searchParams.get("type")?.toUpperCase() as "ALL" | "PRODUCTS" | "VENDORS") || "ALL"
+  );
+  const [priceFilter, setPriceFilter] = useState<"ALL" | "UNDER_500" | "500_TO_1000" | "OVER_1000">(
+    (searchParams.get("price")?.toUpperCase() as "ALL" | "UNDER_500" | "500_TO_1000" | "OVER_1000") || "ALL"
+  );
 
   // Keep URL in sync with search input debounced
   useEffect(() => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
     if (selectedCategory !== "ALL") params.set("category", selectedCategory);
+    if (activeTab !== "ALL") params.set("type", activeTab.toLowerCase());
+    if (priceFilter !== "ALL") params.set("price", priceFilter.toLowerCase());
     const newUrl = params.toString() ? `/app/search?${params.toString()}` : "/app/search";
     window.history.replaceState(null, "", newUrl);
-  }, [query, selectedCategory]);
+  }, [query, selectedCategory, activeTab, priceFilter]);
 
   // Filter Products
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter((p) => {
+    return catalog.products.filter((p) => {
       const matchesCategory = selectedCategory === "ALL" || p.category === selectedCategory;
       const matchesQuery =
         !query ||
@@ -82,17 +74,17 @@ export default function SearchClient() {
 
       const priceRupees = p.pricePaise / 100;
       let matchesPrice = true;
-      if (priceFilter === "UNDER_5") matchesPrice = priceRupees < 500;
-      else if (priceFilter === "5_TO_10") matchesPrice = priceRupees >= 500 && priceRupees <= 1000;
-      else if (priceFilter === "OVER_10") matchesPrice = priceRupees > 1000;
+      if (priceFilter === "UNDER_500") matchesPrice = priceRupees < 500;
+      else if (priceFilter === "500_TO_1000") matchesPrice = priceRupees >= 500 && priceRupees <= 1000;
+      else if (priceFilter === "OVER_1000") matchesPrice = priceRupees > 1000;
 
       return matchesCategory && matchesQuery && matchesPrice;
     });
-  }, [query, selectedCategory, priceFilter]);
+  }, [query, selectedCategory, priceFilter, catalog.products]);
 
   // Filter Vendors
   const filteredVendors = useMemo(() => {
-    return MOCK_VENDORS.filter((v) => {
+    return catalog.vendors.filter((v) => {
       const matchesCategory = selectedCategory === "ALL" || v.category === selectedCategory;
       const matchesQuery =
         !query ||
@@ -103,11 +95,16 @@ export default function SearchClient() {
 
       return matchesCategory && matchesQuery;
     });
-  }, [query, selectedCategory]);
+  }, [query, selectedCategory, catalog.vendors]);
 
   const totalResults =
     (activeTab === "ALL" || activeTab === "PRODUCTS" ? filteredProducts.length : 0) +
     (activeTab === "ALL" || activeTab === "VENDORS" ? filteredVendors.length : 0);
+
+  const popularSearches = useMemo(
+    () => [...catalog.products.slice(0, 6).map((product) => product.name), ...catalog.vendors.slice(0, 3).map((vendor) => vendor.name)],
+    [catalog.products, catalog.vendors]
+  );
 
   const clearAllFilters = () => {
     setQuery("");
@@ -187,9 +184,9 @@ export default function SearchClient() {
             <span className="text-gray-500 font-semibold mr-1">Price:</span>
             {[
               { id: "ALL", label: "All" },
-              { id: "UNDER_5", label: "< $5" },
-              { id: "5_TO_10", label: "$5 - $10" },
-              { id: "OVER_10", label: "> $10" },
+              { id: "UNDER_500", label: "< ₹500" },
+              { id: "500_TO_1000", label: "₹500 – ₹1,000" },
+              { id: "OVER_1000", label: "> ₹1,000" },
             ].map((p) => (
               <button
                 key={p.id}
@@ -222,7 +219,7 @@ export default function SearchClient() {
             )}
           </div>
           <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-            {MOCK_CATEGORIES.map((cat) => (
+            {catalog.categories.map((cat) => (
               <DSCategoryPill
                 key={cat.id}
                 id={cat.id}
@@ -244,7 +241,7 @@ export default function SearchClient() {
               <span>Trending Society Searches</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {POPULAR_SEARCHES.map((term) => (
+              {popularSearches.map((term) => (
                 <button
                   key={term}
                   type="button"
