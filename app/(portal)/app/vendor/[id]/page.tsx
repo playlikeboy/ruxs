@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const title = `${vendor.name} · Verified Society Merchant | RUXS`;
-  const description = `${vendor.description} Serving ${vendor.societiesCovered.join(", ")} with doorstep delivery and autopilot subscriptions.`;
+  const description = `${vendor.description} Serving ${vendor.societiesCovered.join(", ")} with doorstep delivery and recurring household subscriptions.`;
   const canonicalUrl = `https://ruxs.in/app/vendor/${vendor.id}`;
 
   return {
@@ -75,7 +75,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function VendorPage({ params }: PageProps) {
   const { id } = await params;
-  const vendor = getVendorById(id);
+  const vendor = await getCustomerVendorById(id);
 
   if (!vendor) {
     notFound();
@@ -103,7 +103,6 @@ export default async function VendorPage({ params }: PageProps) {
       bestRating: "5",
       worstRating: "1",
     },
-    priceRange: "$$",
     openingHours: vendor.openingHours,
   };
 
