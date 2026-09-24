@@ -59,7 +59,7 @@ export default function KhataPageClient() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const tenantFromUrl = new URLSearchParams(window.location.search).get("tenant") || "";
+    const [tenantFromUrl, setTenantFromUrl] = useState("");
 
   const load = async () => {
     if (!user?.id) {
@@ -99,6 +99,10 @@ export default function KhataPageClient() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setTenantFromUrl(new URLSearchParams(window.location.search).get("tenant") || "");
+  }, []);
 
   useEffect(() => {
     void load();
