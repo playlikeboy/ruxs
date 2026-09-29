@@ -11,6 +11,7 @@ const PUBLIC_API = new Set([
   "/api/hello",
   "/api/marketplace/vendors",
   "/api/vendor/profile",
+  "/api/vendor/onboard",
   "/api/payments/webhook",
   "/api/webhooks/whatsapp",
 ]);
