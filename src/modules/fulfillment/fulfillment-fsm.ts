@@ -371,7 +371,7 @@ export class FulfillmentStateMachine {
    * Seeds default demo fulfillments for today if store is empty
    */
   static seedDefaultFulfillmentsIfEmpty(): void {
-    if (fulfillmentStore.size > 0) return;
+    if (!isTestEnv || fulfillmentStore.size > 0) return;
 
     const todayStr = new Date().toISOString().split("T")[0];
     const cutoffMorning = `${todayStr}T06:30:00.000Z`;
