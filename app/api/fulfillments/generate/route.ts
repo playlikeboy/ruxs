@@ -2,6 +2,7 @@ import { FulfillmentGenerator } from "@/src/modules/fulfillment/fulfillment-gene
 import { SubscriptionEngine } from "@/src/modules/subscriptions/subscription-engine";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { requireSession, requireRole, assertTenant } from "@/src/shared/auth/request";
+import { VacationService } from "@/src/modules/vacation/vacation-service";
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +11,7 @@ export async function POST(request: Request) {
     const body = await request.json() as { tenantId?: string; serviceDate?: string; cutoffTimeStr?: string };
     const serviceDate = body.serviceDate || new Date().toISOString().split("T")[0];
     const requestedTenantId = body.tenantId;
+    await VacationService.hydrate();
 
     if (!requestedTenantId || requestedTenantId === "ALL") {
       if (session.role !== "PLATFORM_ADMIN") return Response.json(createErrorResponse("FORBIDDEN", "Only platform administrators can generate fulfillments for all tenants"), { status: 403 });
