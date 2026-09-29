@@ -13,11 +13,12 @@ export async function POST(request: Request) {
     if (!tenantId || tenantId === "ALL") {
       if (session.role !== "PLATFORM_ADMIN") return Response.json(createErrorResponse("FORBIDDEN", "Only platform administrators can lock all tenants"), { status: 403 });
       const all = await AdminService.listVendorsAsync();
-      const updated = await Promise.all(all.map(t => CutoffEngine.lockExpiredCutoffsAsync(t.id, serviceDate, body.evaluationTime)).flatMap(r => r.updatedFulfillments);
+      const results = await Promise.all(all.map(t => CutoffEngine.lockExpiredCutoffsAsync(t.id, serviceDate, body.evaluationTime)));
+      const updated = results.flatMap(r => r.updatedFulfillments);
       return Response.json(createSuccessResponse({ lockedCount: updated.length, updatedFulfillments: updated }));
     }
     assertTenant(session, tenantId);
-    return Response.json(createSuccessResponse(CutoffEngine.lockExpiredCutoffs(tenantId, serviceDate, body.evaluationTime)));
+    return Response.json(createSuccessResponse(await CutoffEngine.lockExpiredCutoffsAsync(tenantId, serviceDate, body.evaluationTime)));
   } catch (error) {
     if (error instanceof Error && error.name === "AuthorizationError") return Response.json(createErrorResponse((error as any).code, error.message), { status: (error as any).code === "UNAUTHORIZED" ? 401 : 403 });
     return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to lock cutoff"), { status: 500 });
