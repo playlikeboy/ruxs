@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     }
     if (validated.action === "CHANGE_TIER") {
       if (!validated.vendorId || !validated.tier) return Response.json(createErrorResponse("VALIDATION_FAILED", "vendorId and tier are required"), { status: 400 });
-      return Response.json(createSuccessResponse(AdminService.updateVendorTier(validated.vendorId, validated.tier, adminUser)));
+      return Response.json(createSuccessResponse(await AdminService.updateVendorTierAsync(validated.vendorId, validated.tier, adminUser)));
     }
     if (validated.action === "PROVISION_DIRECT") {
       if (!validated.directProvision) return Response.json(createErrorResponse("VALIDATION_FAILED", "directProvision details required"), { status: 400 });
