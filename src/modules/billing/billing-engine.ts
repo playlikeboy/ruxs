@@ -19,7 +19,7 @@ export class BillingEngine {
    */
   static async generateInvoice(rawInput: unknown): Promise<Invoice> {
     const validated = GenerateInvoiceSchema.parse(rawInput);
-    const invoiceId = `inv_${Math.random().toString(36).substring(2, 11)}`;
+    const invoiceId = `inv_${crypto.randomUUID()}`;
     const now = new Date().toISOString();
 
     const yearMonth = validated.periodStart.substring(0, 7).replace("-", "-");
@@ -39,7 +39,7 @@ export class BillingEngine {
     for (const entry of statement.entries) {
       if (entry.direction === "DEBIT") {
         const item: InvoiceItem = {
-          id: `item_${Math.random().toString(36).substring(2, 8)}`,
+          id: `item_${crypto.randomUUID()}`,
           description: entry.description,
           quantity: 1,
           unitPricePaise: entry.amountPaise,
@@ -84,31 +84,26 @@ export class BillingEngine {
       createdAt: now,
     };
 
-    invoiceStore.set(invoiceId, invoice);
-
     if (!isTestEnv) {
-      try {
-        await db.insert(invoicesTable).values({
-          id: invoiceId,
-          tenantId: validated.tenantId,
-          customerId: validated.customerId,
-          householdId: null,
-          invoiceNumber,
-          periodStart: validated.periodStart,
-          periodEnd: validated.periodEnd,
-          dueDate,
-          subtotalPaise: subtotal,
-          discountPaise: discount,
-          taxPaise: tax,
-          totalAmountDuePaise: totalAmountDue,
-          amountPaidPaise: creditsAlreadyPaid,
-          status: totalAmountDue === 0 ? "PAID" : "ISSUED",
-        });
-      } catch (err) {
-        console.error("Failed to insert invoice into Neon DB:", err);
-      }
+      await db.insert(invoicesTable).values({
+        id: invoiceId,
+        tenantId: validated.tenantId,
+        customerId: validated.customerId,
+        householdId: null,
+        invoiceNumber,
+        periodStart: validated.periodStart,
+        periodEnd: validated.periodEnd,
+        dueDate,
+        subtotalPaise: subtotal,
+        discountPaise: discount,
+        taxPaise: tax,
+        totalAmountDuePaise: totalAmountDue,
+        amountPaidPaise: creditsAlreadyPaid,
+        status: totalAmountDue === 0 ? "PAID" : "ISSUED",
+      });
     }
 
+    invoiceStore.set(invoiceId, invoice);
     return invoice;
   }
 
@@ -135,22 +130,17 @@ export class BillingEngine {
       inv.status = "PARTIALLY_PAID";
     }
 
-    invoiceStore.set(invoiceId, inv);
-
     if (!isTestEnv) {
-      try {
-        await db
-          .update(invoicesTable)
-          .set({
-            amountPaidPaise: newAmountPaid,
-            status: inv.status,
-          })
-          .where(eq(invoicesTable.id, invoiceId));
-      } catch (err) {
-        console.error("Failed to update invoice payment in Neon DB:", err);
-      }
+      await db
+        .update(invoicesTable)
+        .set({
+          amountPaidPaise: newAmountPaid,
+          status: inv.status,
+        })
+        .where(eq(invoicesTable.id, invoiceId));
     }
 
+    invoiceStore.set(invoiceId, inv);
     return inv;
   }
 
