@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     if (!tenantId || tenantId === "ALL") {
       if (session.role !== "PLATFORM_ADMIN") return Response.json(createErrorResponse("FORBIDDEN", "Only platform administrators can lock all tenants"), { status: 403 });
       const all = await AdminService.listVendorsAsync();
-      const updated = all.map(t => CutoffEngine.lockExpiredCutoffs(t.id, serviceDate, body.evaluationTime)).flatMap(r => r.updatedFulfillments);
+      const updated = await Promise.all(all.map(t => CutoffEngine.lockExpiredCutoffsAsync(t.id, serviceDate, body.evaluationTime)).flatMap(r => r.updatedFulfillments);
       return Response.json(createSuccessResponse({ lockedCount: updated.length, updatedFulfillments: updated }));
     }
     assertTenant(session, tenantId);
