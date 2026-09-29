@@ -147,31 +147,29 @@ export class AdminService {
     });
 
     if (!isTestEnv) {
-      try {
-        await db
-          .insert(tenantsTable)
-          .values({
-            id: vendorId,
-            businessName: input.businessName,
-            slug,
-            phone: input.phone,
-            upiId: input.upiId || "merchant@upi",
-            vendorType: input.vendorType,
-            planTier: input.tier || "STARTER",
-            address: `${input.locality}, ${input.city || "Bengaluru"}`,
+      await db
+        .insert(tenantsTable)
+        .values({
+          id: vendorId,
+          businessName: input.businessName,
+          slug,
+          phone: input.phone,
+          upiId: input.upiId || "merchant@upi",
+          vendorType: input.vendorType,
+          planTier: input.tier || "STARTER",
+          address: `${input.locality}, ${input.city || "Bengaluru"}`,
+          status: "VERIFIED",
+          typeConfig: JSON.stringify(profile.typeConfig),
+          credentials: JSON.stringify(credentials),
+        })
+        .onConflictDoUpdate({
+          target: tenantsTable.id,
+          set: {
             status: "VERIFIED",
-            typeConfig: JSON.stringify(profile.typeConfig),
             credentials: JSON.stringify(credentials),
-          })
-          .onConflictDoUpdate({
-            target: tenantsTable.id,
-            set: {
-              status: "VERIFIED",
-              credentials: JSON.stringify(credentials),
-              updatedAt: new Date(),
-            },
-          });
-      }
+            updatedAt: new Date(),
+          },
+        });
     }
 
     return profile;
