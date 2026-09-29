@@ -90,6 +90,9 @@ export async function verifySessionJwt(token: string, secret: string): Promise<S
     if (parts.length !== 3) return null;
 
     const [encodedHeader, encodedPayload, encodedSignature] = parts;
+    const headerJson = base64UrlDecode(encodedHeader);
+    const header = JSON.parse(headerJson) as { alg?: string; typ?: string };
+    if (header.alg !== "HS256") return null;
     const data = `${encodedHeader}.${encodedPayload}`;
 
     // Verify signature
@@ -115,12 +118,26 @@ export async function verifySessionJwt(token: string, secret: string): Promise<S
 
     const payloadJson = base64UrlDecode(encodedPayload);
     const claims = JSON.parse(payloadJson) as SessionClaims;
+    if (
+      typeof claims.sub !== "string" ||
+      typeof claims.phone !== "string" ||
+      typeof claims.role !== "string" ||
+      !Number.isFinite(claims.iat) ||
+      !Number.isFinite(claims.exp)
+    ) return null;
 
-    // Check expiration
+    const validRoles: UserRole[] = [
+      "CUSTOMER",
+      "VENDOR_ADMIN",
+      "DELIVERY_STAFF",
+      "HOUSEHOLD_MEMBER",
+      "PLATFORM_ADMIN",
+    ];
+    if (!validRoles.includes(claims.role)) return null;
+
     const now = Math.floor(Date.now() / 1000);
-    if (claims.exp && claims.exp < now) {
-      return null;
-    }
+    if (claims.exp <= now || claims.iat > now + 60) return null;
+    if (claims.exp - claims.iat > 24 * 60 * 60) return null;
 
     return claims;
   } catch {
