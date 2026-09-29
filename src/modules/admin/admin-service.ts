@@ -104,10 +104,10 @@ export class AdminService {
     },
     adminUser: { userId: string; email: string }
   ): Promise<AdminVendorProfile> {
-    const vendorId = `ten_${Math.random().toString(36).substring(2, 11)}`;
+    const vendorId = `ten_${crypto.randomUUID()}`;
     const slug = generateVendorSlug(input.businessName, input.locality);
-    const token = `vtok_${slug}_${Math.random().toString(36).substring(2, 8)}`;
-    const pin = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = `vtok_${slug}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+    const pin = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
 
     const credentials = {
       loginToken: token,
@@ -172,8 +172,6 @@ export class AdminService {
               updatedAt: new Date(),
             },
           });
-      } catch (err) {
-        console.warn("Could not insert direct vendor in Neon DB:", err);
       }
     }
 
@@ -197,8 +195,8 @@ export class AdminService {
     vendor.updatedAt = new Date().toISOString();
 
     if (!vendor.credentials) {
-      const token = `vtok_${vendor.slug}_${Math.random().toString(36).substring(2, 8)}`;
-      const pin = Math.floor(100000 + Math.random() * 900000).toString();
+      const token = `vtok_${vendor.slug}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+      const pin = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
       vendor.credentials = {
         loginToken: token,
         accessPin: pin,
@@ -285,8 +283,8 @@ export class AdminService {
       throw new Error(`Vendor ${vendorIdOrSlug} not found`);
     }
 
-    const token = `vtok_${vendor.slug}_${Math.random().toString(36).substring(2, 8)}`;
-    const pin = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = `vtok_${vendor.slug}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+    const pin = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
     const directUrl = `https://ruxs.in/login?vendorToken=${token}&slug=${vendor.slug}`;
 
     const creds = {
@@ -369,7 +367,7 @@ Manage deliveries, daily cutoffs, and digital khata.`;
     ipAddress?: string;
   }): PlatformAuditLog {
     const log = PlatformAuditLogSchema.parse({
-      id: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      id: `aud_${crypto.randomUUID()}`,
       adminUserId: input.adminUserId,
       adminEmail: input.adminEmail,
       action: input.action,
