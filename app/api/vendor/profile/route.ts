@@ -11,18 +11,11 @@ export async function GET(request: Request) {
     const adminVendors = await AdminService.listVendorsAsync();
     const defaultVendor = adminVendors[0];
     const identifier = slug || tenantId || defaultVendor?.slug || defaultVendor?.id;
+    if (!identifier) return Response.json(createErrorResponse("NOT_FOUND", "Vendor profile not found"), { status: 404 });
 
-    if (!identifier) {
-      return Response.json(createErrorResponse("NOT_FOUND", "No vendors found in system"), { status: 404 });
-    }
-
-    // 1. Try VendorService
     let vendor = await VendorService.getVendorBySlug(identifier);
-    if (!vendor && tenantId) {
-      vendor = await VendorService.getVendorById(tenantId);
-    }
+    if (!vendor && tenantId) vendor = await VendorService.getVendorById(tenantId);
 
-    // 2. If not found, check AdminService list
     if (!vendor) {
       const match = adminVendors.find((v) => v.slug === identifier || v.id === identifier);
       if (match) {
@@ -46,18 +39,13 @@ export async function GET(request: Request) {
       }
     }
 
-    if (!vendor) {
-      return Response.json(createErrorResponse("NOT_FOUND", "Vendor profile not found"), { status: 404 });
-    }
+    if (!vendor) return Response.json(createErrorResponse("NOT_FOUND", "Vendor profile not found"), { status: 404 });
 
-    return Response.json(createSuccessResponse(vendor));
-  } catch (error) {
-    return Response.json(
-      createErrorResponse(
-        "INTERNAL_SERVER_ERROR",
-        error instanceof Error ? error.message : "Failed to load vendor profile"
-      ),
-      { status: 500 }
-    );
+    const { credentials: _credentials, ...publicVendor } = vendor;
+    return Response.json(createSuccessResponse(publicVendor), {
+      headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
+    });
+  } catch {
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to load vendor profile"), { status: 500 });
   }
 }
