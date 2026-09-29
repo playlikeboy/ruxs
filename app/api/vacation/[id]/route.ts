@@ -6,7 +6,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const session = await requireSession();
     const { id } = await params;
-    const mine = VacationService.listByCustomer(session.sub).find((v) => v.id === id);
+    const mine = (await VacationService.listByCustomerAsync(session.sub)).find((v) => v.id === id);
     if (!mine) return Response.json(createErrorResponse("FORBIDDEN", "This vacation pause does not belong to you"), { status: 403 });
 
     const body = await request.json() as { action?: "resume_early" | "extend"; newEndDate?: string };
