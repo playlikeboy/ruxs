@@ -323,6 +323,167 @@ Manage deliveries, daily cutoffs, and digital khata.`;
     return { ...creds, shareCardText };
   }
 
+  private static async loadVendorForMutation(vendorIdOrSlug: string): Promise<AdminVendorProfile | undefined> {
+    let vendor = vendorsStore.get(vendorIdOrSlug);
+    if (!vendor && !isTestEnv) {
+      await this.listVendorsAsync();
+      vendor = vendorsStore.get(vendorIdOrSlug);
+    }
+    return vendor;
+  }
+
+  static async verifyVendorAsync(
+    vendorIdOrSlug: string,
+    adminUser: { userId: string; email: string }
+  ): Promise<AdminVendorProfile> {
+    const vendor = await this.loadVendorForMutation(vendorIdOrSlug);
+    if (!vendor) throw new Error(`Vendor ${vendorIdOrSlug} not found`);
+
+    if (!isTestEnv) {
+      await db.update(tenantsTable)
+        .set({
+          status: "VERIFIED",
+          credentials: vendor.credentials ? JSON.stringify(vendor.credentials) : null,
+          updatedAt: new Date(),
+        })
+        .where(eq(tenantsTable.id, vendor.id));
+    }
+
+    vendor.status = "VERIFIED";
+    vendor.verifiedAt = new Date().toISOString();
+    vendor.updatedAt = new Date().toISOString();
+    if (!vendor.credentials) {
+      const token = `vtok_${vendor.slug}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+      const pin = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
+      vendor.credentials = {
+        loginToken: token,
+        accessPin: pin,
+        directUrl: `https://ruxs.in/login?vendorToken=${token}&slug=${vendor.slug}`,
+        generatedAt: new Date().toISOString(),
+      };
+      if (!isTestEnv) {
+        await db.update(tenantsTable)
+          .set({ credentials: JSON.stringify(vendor.credentials), updatedAt: new Date() })
+          .where(eq(tenantsTable.id, vendor.id));
+      }
+    }
+
+    vendorsStore.set(vendor.id, vendor);
+    vendorsStore.set(vendor.slug, vendor);
+    this.logAction({
+      adminUserId: adminUser.userId,
+      adminEmail: adminUser.email,
+      action: "VENDOR_APPROVED",
+      targetType: "VENDOR",
+      targetId: vendor.id,
+      details: `Vendor '${vendor.businessName}' verified and approved for society onboarding`,
+    });
+    return vendor;
+  }
+
+  static async suspendVendorAsync(
+    vendorId: string,
+    reason: string,
+    adminUser: { userId: string; email: string }
+  ): Promise<AdminVendorProfile> {
+    const vendor = await this.loadVendorForMutation(vendorId);
+    if (!vendor) throw new Error(`Vendor ${vendorId} not found`);
+
+    if (!isTestEnv) {
+      await db.update(tenantsTable)
+        .set({ status: "SUSPENDED", updatedAt: new Date() })
+        .where(eq(tenantsTable.id, vendor.id));
+    }
+
+    vendor.status = "SUSPENDED";
+    vendor.updatedAt = new Date().toISOString();
+    vendorsStore.set(vendor.id, vendor);
+    vendorsStore.set(vendor.slug, vendor);
+    this.logAction({
+      adminUserId: adminUser.userId,
+      adminEmail: adminUser.email,
+      action: "VENDOR_SUSPENDED",
+      targetType: "VENDOR",
+      targetId: vendor.id,
+      details: `Reason: ${reason}`,
+    });
+    return vendor;
+  }
+
+  static async generateCredentialsAsync(
+    vendorIdOrSlug: string,
+    adminUser: { userId: string; email: string }
+  ): Promise<{ loginToken: string; accessPin: string; directUrl: string; shareCardText: string }> {
+    const vendor = await this.loadVendorForMutation(vendorIdOrSlug);
+    if (!vendor) throw new Error(`Vendor ${vendorIdOrSlug} not found`);
+
+    const token = `vtok_${vendor.slug}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+    const pin = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
+    const creds = {
+      loginToken: token,
+      accessPin: pin,
+      directUrl: `https://ruxs.in/login?vendorToken=${token}&slug=${vendor.slug}`,
+      generatedAt: new Date().toISOString(),
+    };
+
+    if (!isTestEnv) {
+      await db.update(tenantsTable)
+        .set({ credentials: JSON.stringify(creds), updatedAt: new Date() })
+        .where(eq(tenantsTable.id, vendor.id));
+    }
+
+    vendor.credentials = creds;
+    vendor.updatedAt = new Date().toISOString();
+    vendorsStore.set(vendor.id, vendor);
+    vendorsStore.set(vendor.slug, vendor);
+
+    this.logAction({
+      adminUserId: adminUser.userId,
+      adminEmail: adminUser.email,
+      action: "CREDENTIALS_GENERATED",
+      targetType: "VENDOR",
+      targetId: vendor.id,
+      details: `New merchant credentials issued for '${vendor.businessName}'`,
+    });
+
+    return {
+      ...creds,
+      shareCardText: `RUXS Merchant Access: ${vendor.businessName}
+Your merchant operations cockpit is ready.
+Direct Login: ${creds.directUrl}
+Access PIN: ${creds.accessPin}
+Manage deliveries, daily cutoffs, and digital khata.`,
+    };
+  }
+
+  static async reactivateVendorAsync(
+    vendorId: string,
+    adminUser: { userId: string; email: string }
+  ): Promise<AdminVendorProfile> {
+    const vendor = await this.loadVendorForMutation(vendorId);
+    if (!vendor) throw new Error(`Vendor ${vendorId} not found`);
+
+    if (!isTestEnv) {
+      await db.update(tenantsTable)
+        .set({ status: "VERIFIED", updatedAt: new Date() })
+        .where(eq(tenantsTable.id, vendor.id));
+    }
+
+    vendor.status = "VERIFIED";
+    vendor.updatedAt = new Date().toISOString();
+    vendorsStore.set(vendor.id, vendor);
+    vendorsStore.set(vendor.slug, vendor);
+    this.logAction({
+      adminUserId: adminUser.userId,
+      adminEmail: adminUser.email,
+      action: "VENDOR_APPROVED",
+      targetType: "VENDOR",
+      targetId: vendor.id,
+      details: `Vendor '${vendor.businessName}' re-activated by admin`,
+    });
+    return vendor;
+  }
+
   /**
    * Updates a vendor's plan tier
    */
