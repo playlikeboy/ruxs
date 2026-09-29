@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireSession();
     const body = await request.json();
-    const result = HouseholdService.inviteMember({ ...body, invitedByUserId: session.sub });
+    const result = await HouseholdService.inviteMemberAsync({ ...body, invitedByUserId: session.sub });
     return Response.json(createSuccessResponse(result), { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
@@ -27,7 +27,7 @@ export async function DELETE(request: Request) {
     if (!actor || !["PRIMARY_OWNER", "ADMIN"].includes(actor.role)) {
       return Response.json(createErrorResponse("FORBIDDEN", "Only household owners or admins may remove members"), { status: 403 });
     }
-    return Response.json(createSuccessResponse(HouseholdService.removeMember(householdId, memberUserId, session.sub)));
+    return Response.json(createSuccessResponse(await HouseholdService.removeMemberAsync(householdId, memberUserId, session.sub)));
   } catch {
     return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to remove household member"), { status: 500 });
   }
