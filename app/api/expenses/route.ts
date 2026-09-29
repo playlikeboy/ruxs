@@ -2,43 +2,36 @@ import { ExpenseSplitter } from "@/src/modules/expenses/expense-splitter";
 import { HouseholdService } from "@/src/modules/households/household-service";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { ZodError } from "zod";
+import { requireSession } from "@/src/shared/auth/request";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  let householdId = searchParams.get("householdId");
-  const userId = searchParams.get("userId");
-
-  if (!householdId && userId) {
-    const userHousehold = await HouseholdService.getHouseholdForUserAsync(userId);
-    if (userHousehold) {
-      householdId = userHousehold.id;
+  try {
+    const session = await requireSession();
+    const requested = new URL(request.url).searchParams.get("householdId");
+    let householdId = requested;
+    if (householdId) {
+      const household = await HouseholdService.getHouseholdAsync(householdId);
+      if (!household || !household.members.some((m) => m.userId === session.sub)) return Response.json(createErrorResponse("FORBIDDEN", "You may only access your household expenses"), { status: 403 });
+    } else {
+      householdId = (await HouseholdService.getHouseholdForUserAsync(session.sub))?.id || null;
     }
+    if (!householdId) return Response.json(createErrorResponse("NOT_FOUND", "No household found for this user"), { status: 404 });
+    return Response.json(createSuccessResponse(await ExpenseSplitter.listByHouseholdAsync(householdId)), { headers: { "Cache-Control": "private, no-store" }});
+  } catch {
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to load household expenses"), { status: 500 });
   }
-
-  if (!householdId) {
-    householdId = "hh_sobha_b402";
-  }
-
-  const list = await ExpenseSplitter.listByHouseholdAsync(householdId);
-  return Response.json(createSuccessResponse(list));
 }
 
 export async function POST(request: Request) {
   try {
+    const session = await requireSession();
+    const household = await HouseholdService.getHouseholdForUserAsync(session.sub);
+    if (!household || !household.members.some((m) => m.userId === session.sub)) return Response.json(createErrorResponse("FORBIDDEN", "You must belong to a household"), { status: 403 });
     const body = await request.json();
-    const expense = ExpenseSplitter.createExpense(body);
+    const expense = ExpenseSplitter.createExpense({ ...body, householdId: household.id, paidByUserId: session.sub });
     return Response.json(createSuccessResponse(expense), { status: 201 });
   } catch (error) {
-    if (error instanceof ZodError) {
-      const msg = error.issues[0]?.message || "Validation failed";
-      return Response.json(createErrorResponse("VALIDATION_FAILED", msg), { status: 400 });
-    }
-    return Response.json(
-      createErrorResponse(
-        "INTERNAL_SERVER_ERROR",
-        error instanceof Error ? error.message : "Internal Server Error"
-      ),
-      { status: 400 }
-    );
+    if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to create expense"), { status: 500 });
   }
 }
