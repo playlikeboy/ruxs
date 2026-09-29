@@ -58,7 +58,8 @@
 		"NEXT_PUBLIC_APP_URL": "https://ruxs.in",
 		"APP_URL": "https://ruxs.in",
 		"PRIMARY_DOMAIN": "ruxs.in",
-		"NEXT_PUBLIC_BRAND_NAME": "RUXS"
+		"NEXT_PUBLIC_BRAND_NAME": "RUXS",
+		"APP_ENV": "production"
 	}
 	/**
 	 * Service Bindings (communicate between multiple Workers)
