@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireSession();
     const body = await request.json();
-    const dispute = DisputeService.fileDispute({ ...body, customerId: session.sub });
+    const dispute = await DisputeService.fileDisputeAsync({ ...body, customerId: session.sub });
     return Response.json(createSuccessResponse(dispute), { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
