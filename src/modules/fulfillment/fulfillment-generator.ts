@@ -4,6 +4,8 @@ import { DailyFulfillment, FulfillmentItemSnapshot } from "./fulfillment-schema"
 import { FulfillmentStateMachine } from "./fulfillment-fsm";
 import { VacationService } from "../vacation/vacation-service";
 import { Paise } from "../../shared/types/money";
+import { db, isTestEnv, dailyFulfillments } from "../../shared/db";
+import { and, eq, inArray } from "drizzle-orm";
 
 export interface GenerateFulfillmentsOptions {
   serviceDate: string; // YYYY-MM-DD
@@ -15,6 +17,50 @@ export class FulfillmentGenerator {
   /**
    * Generates daily fulfillment records for all active subscriptions scheduled on serviceDate
    */
+  static async generateForDateAsync(
+    subscriptions: Subscription[],
+    options: GenerateFulfillmentsOptions
+  ): Promise<DailyFulfillment[]> {
+    if (isTestEnv) return this.generateForDate(subscriptions, options);
+
+    const { serviceDate, shift = "LUNCH" } = options;
+    const subscriptionIds = subscriptions.map((s) => s.id);
+    const existingRows = subscriptionIds.length
+      ? await db.select({
+          subscriptionId: dailyFulfillments.subscriptionId,
+          shift: dailyFulfillments.shift,
+        }).from(dailyFulfillments).where(and(
+          eq(dailyFulfillments.serviceDate, serviceDate),
+          inArray(dailyFulfillments.subscriptionId, subscriptionIds),
+        ))
+      : [];
+
+    const existing = new Set(existingRows.map((r) => `${r.subscriptionId}:${r.shift}`));
+    const pending = subscriptions.filter((sub) => !existing.has(`${sub.id}:${shift}`));
+    const generated = this.generateForDate(pending, options);
+
+    for (const fulfillment of generated) {
+      await db.insert(dailyFulfillments).values({
+        id: fulfillment.id,
+        tenantId: fulfillment.tenantId,
+        subscriptionId: fulfillment.subscriptionId,
+        customerId: fulfillment.customerId,
+        householdId: fulfillment.householdId || null,
+        serviceDate: fulfillment.serviceDate,
+        shift: fulfillment.shift,
+        status: fulfillment.status,
+        quantity: fulfillment.items[0]?.quantity || 0,
+        unitPricePaise: Number(fulfillment.items[0]?.unitPricePaise || 0),
+        totalPricePaise: Number(fulfillment.totalPricePaise),
+        cutoffTime: new Date(fulfillment.cutoffTime),
+        deliveredAt: fulfillment.deliveredAt ? new Date(fulfillment.deliveredAt) : null,
+        notes: fulfillment.notes || null,
+      });
+    }
+
+    return generated;
+  }
+
   static generateForDate(
     subscriptions: Subscription[],
     options: GenerateFulfillmentsOptions
@@ -36,7 +82,7 @@ export class FulfillmentGenerator {
         continue;
       }
 
-      const fulfillmentId = `ful_${Math.random().toString(36).substring(2, 11)}`;
+      const fulfillmentId = `ful_${crypto.randomUUID()}`;
       const totalAmountPaise = (sub.unitPricePaise * sub.defaultQuantity) as Paise;
 
       // Freeze product and price snapshot
