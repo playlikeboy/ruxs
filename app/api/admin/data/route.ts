@@ -101,12 +101,12 @@ export async function POST(request: Request) {
 
     switch (action) {
       case "VERIFY_VENDOR": {
-        const vendor = AdminService.verifyVendor(payload.vendorId, adminUser);
+        const vendor = await AdminService.verifyVendorAsync(payload.vendorId, adminUser);
         return NextResponse.json(createSuccessResponse({ vendor, message: "Vendor verified and activated" }));
       }
 
       case "SUSPEND_VENDOR": {
-        const vendor = AdminService.suspendVendor(payload.vendorId, payload.reason || "Administrative suspension", adminUser);
+        const vendor = await AdminService.suspendVendorAsync(payload.vendorId, payload.reason || "Administrative suspension", adminUser);
         return NextResponse.json(createSuccessResponse({ vendor, message: "Vendor suspended" }));
       }
 
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       }
 
       case "CHANGE_TIER": {
-        const vendor = AdminService.updateVendorTier(payload.vendorId, payload.tier, adminUser);
+        const vendor = await AdminService.updateVendorTierAsync(payload.vendorId, payload.tier, adminUser);
         return NextResponse.json(createSuccessResponse({ vendor, message: `Vendor plan tier updated to ${payload.tier}` }));
       }
 
