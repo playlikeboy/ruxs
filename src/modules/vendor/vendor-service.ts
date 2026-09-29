@@ -145,17 +145,9 @@ export class VendorService {
     vendorStore.set(vendor.slug, vendor);
 
     if (!isTestEnv) {
-      try {
-        await db
-          .update(tenantsTable)
-          .set({
-            credentials: JSON.stringify(credentials),
-            updatedAt: new Date(),
-          })
-          .where(eq(tenantsTable.id, vendor.id));
-      } catch (err) {
-        console.warn("Could not update credentials in Neon:", err);
-      }
+      await db.update(tenantsTable)
+        .set({ credentials: JSON.stringify(credentials), updatedAt: new Date() })
+        .where(eq(tenantsTable.id, vendor.id));
     }
 
     return credentials;
@@ -237,7 +229,45 @@ export class VendorService {
    * Retrieves a vendor by id
    */
   static async getVendorById(id: string): Promise<VendorProfile | null> {
-    return vendorStore.get(id) || null;
+    const inMem = vendorStore.get(id);
+    if (inMem) return inMem;
+    if (isTestEnv) return null;
+
+    const rows = await db.select().from(tenantsTable).where(eq(tenantsTable.id, id)).limit(1);
+    const row = rows[0];
+    if (!row) return null;
+
+    let parsedConfig: Record<string, unknown> = {};
+    let parsedCreds: VendorCredentials | undefined;
+    try {
+      if (row.typeConfig) parsedConfig = JSON.parse(row.typeConfig);
+      if (row.credentials) parsedCreds = JSON.parse(row.credentials);
+    } catch {
+      throw new Error("Stored vendor profile is invalid");
+    }
+
+    const profile: VendorProfile = {
+      id: row.id,
+      businessName: row.businessName,
+      slug: row.slug,
+      phone: row.phone,
+      upiId: row.upiId || "",
+      vendorType: (row.vendorType as VendorType) || "TIFFIN",
+      primaryCategory: row.vendorType === "MILKMAN" ? "MILK" : row.vendorType === "WATER_SERVICE" ? "WATER" : "TIFFIN",
+      typeConfig: parsedConfig,
+      locality: row.address ? row.address.split(",")[0] : "Bengaluru",
+      city: row.address ? row.address.split(",")[1]?.trim() || "Bengaluru" : "Bengaluru",
+      coveredSocieties: (parsedConfig as any).coveredSocieties || [],
+      inviteUrl: `https://ruxs.in/v/${row.slug}`,
+      qrPayload: `upi://pay?pa=${row.upiId || ""}&pn=${encodeURIComponent(row.businessName)}&cu=INR`,
+      status: (row.status as VendorApprovalStatus) || "PENDING_APPROVAL",
+      credentials: parsedCreds,
+      createdAt: row.createdAt.toISOString(),
+    };
+
+    vendorStore.set(row.id, profile);
+    vendorStore.set(row.slug, profile);
+    return profile;
   }
 
   /**
