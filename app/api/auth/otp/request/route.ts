@@ -34,9 +34,11 @@ export async function POST(request: Request) {
       })
     );
   } catch (err: any) {
+    const message = typeof err?.message === "string" ? err.message : "Failed to process OTP request";
+    const isRateLimited = message.includes("Too many OTP requests");
     return NextResponse.json(
-      createErrorResponse("INTERNAL_SERVER_ERROR", err.message || "Failed to process OTP request"),
-      { status: 400 }
+      createErrorResponse(isRateLimited ? "RATE_LIMITED" : "INTERNAL_SERVER_ERROR", isRateLimited ? message : "Failed to process OTP request"),
+      { status: isRateLimited ? 429 : 500 }
     );
   }
 }
