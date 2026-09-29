@@ -7,8 +7,6 @@ import { CutoffEngine } from "@/src/modules/cutoff/cutoff-engine";
 import { AssetLedgerService } from "@/src/modules/assets/asset-ledger";
 import { KhataLedgerService } from "@/src/modules/khata/khata-ledger";
 import { NotificationService } from "@/src/modules/notifications/notification-service";
-import { hexclaveServerApp } from "@/src/hexclave/server";
-import { isTestEnv } from "@/src/shared/db";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { Paise } from "@/src/shared/types/money";
 import { requireSession, requireRole } from "@/src/shared/auth/request";
@@ -177,26 +175,40 @@ export async function POST(request: Request) {
       case "TRANSITION_FULFILLMENT": {
         const f = FulfillmentStateMachine.getById(payload.fulfillmentId);
         if (!f) throw new Error(`Fulfillment ${payload.fulfillmentId} not found`);
-        f.status = payload.toStatus;
-        if (payload.toStatus === "DELIVERED") {
-          f.deliveredAt = new Date().toISOString();
-        }
-        if (payload.notes) {
-          f.notes = payload.notes;
-        }
-        f.updatedAt = new Date().toISOString();
-        FulfillmentStateMachine.save(f);
+
+        const transitionByStatus: Record<string, any> = {
+          CONFIRMATION_REQUIRED: { action: "REQUEST_CONFIRMATION" },
+          CONFIRMED: { action: "CONFIRM" },
+          IN_PREPARATION: { action: "START_PREP" },
+          OUT_FOR_DELIVERY: { action: "DISPATCH" },
+          DELIVERED: { action: "MARK_DELIVERED" },
+          FAILED: { action: "MARK_FAILED" },
+          DISPUTED: { action: "DISPUTE" },
+          CANCELLED: { action: "CANCEL" },
+          SKIPPED: { action: "SKIP" },
+          LATE_SKIP: { action: "SKIP" },
+        };
+
+        const action = transitionByStatus[payload.toStatus];
+        if (!action) throw new Error(`Unsupported fulfillment target state: ${payload.toStatus}`);
+
+        const updated = FulfillmentStateMachine.transition(f, {
+          ...action,
+          notes: payload.notes,
+          actionTime: new Date().toISOString(),
+          driverId: session.sub,
+        });
 
         AdminService.logAction({
           adminUserId: adminUser.userId,
           adminEmail: adminUser.email,
           action: "FULFILLMENT_TRANSITIONED",
           targetType: "FULFILLMENT",
-          targetId: f.id,
-          details: `Admin transitioned fulfillment ${f.id} to ${payload.toStatus}`,
+          targetId: updated.id,
+          details: `Admin transitioned fulfillment ${updated.id} to ${updated.status}`,
         });
 
-        return NextResponse.json(createSuccessResponse({ fulfillment: f, message: `Status transitioned to ${payload.toStatus}` }));
+        return NextResponse.json(createSuccessResponse({ fulfillment: updated, message: `Status transitioned to ${updated.status}` }));
       }
 
       case "LOCK_CUTOFF": {
