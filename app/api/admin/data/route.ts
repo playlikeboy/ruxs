@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       skippedCount: fulfillments.filter((f) => f.status === "SKIPPED" || f.status === "LATE_SKIP").length,
       openDisputesCount: disputes.filter((d) => d.status === "OPEN").length,
       totalAssetHoldingsCount: assetHoldings.reduce((sum, a) => sum + a.holdingCount, 0),
-      monthlyGmvPaise: 184000000 as Paise, // ₹18.4L GMV
+      monthlyGmvPaise: 0 as Paise, // Replaced with live aggregation when payment analytics are enabled
       dbConnected: true,
       serviceDate: todayStr,
     };
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
     );
   } catch (error: any) {
     return NextResponse.json(
-      createErrorResponse("INTERNAL_SERVER_ERROR", error.message || "Failed to fetch admin dashboard data"),
+      createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to fetch admin dashboard data"),
       { status: 500 }
     );
   }
@@ -246,13 +246,16 @@ export async function POST(request: Request) {
       }
 
       case "RECORD_ASSET_EXCHANGE": {
+        if (!payload.tenantId || !payload.customerId || !payload.assetType) {
+          return NextResponse.json(createErrorResponse("VALIDATION_FAILED", "tenantId, customerId, and assetType are required"), { status: 400 });
+        }
         const exchange = await AssetLedgerService.recordExchange({
-          tenantId: payload.tenantId || "ten_pureaqua_water",
-          customerId: payload.customerId || "usr_priya",
-          assetType: payload.assetType || "WATER_JAR_20L",
+          tenantId: payload.tenantId,
+          customerId: payload.customerId,
+          assetType: payload.assetType,
           quantityDelivered: payload.quantityDelivered || 0,
           quantityCollected: payload.quantityCollected || 0,
-          driverStaffId: "drv_admin_ops",
+          driverStaffId: session.sub,
         });
 
         AdminService.logAction({
@@ -268,10 +271,14 @@ export async function POST(request: Request) {
       }
 
       case "ADD_KHATA_ENTRY": {
-        const defaultVendorId = (await AdminService.listVendorsAsync())[0]?.id || "ten_sharma_tiffin";
+        const defaultVendorId = (await AdminService.listVendorsAsync())[0]?.id;
+        const tenantId = payload.tenantId || defaultVendorId;
+        if (!tenantId || !payload.customerId || !payload.direction || !payload.amountPaise) {
+          return NextResponse.json(createErrorResponse("VALIDATION_FAILED", "tenantId, customerId, direction, and amountPaise are required"), { status: 400 });
+        }
         const entry = await KhataLedgerService.recordEntry({
-          tenantId: payload.tenantId || defaultVendorId,
-          customerId: payload.customerId || "usr_priya",
+          tenantId,
+          customerId: payload.customerId,
           entryType: payload.direction === "CREDIT" ? "PAYMENT_RECEIVED" : "DELIVERY_CHARGE",
           direction: payload.direction, // "CREDIT" | "DEBIT"
           amountPaise: (payload.amountPaise || 10000) as Paise,
@@ -293,10 +300,14 @@ export async function POST(request: Request) {
       }
 
       case "DISPATCH_NOTIFICATION": {
-        const defaultVendorId = (await AdminService.listVendorsAsync())[0]?.id || "ten_sharma_tiffin";
+        const defaultVendorId = (await AdminService.listVendorsAsync())[0]?.id;
+        const tenantId = payload.tenantId || defaultVendorId;
+        if (!tenantId || !payload.customerId || !payload.phone) {
+          return NextResponse.json(createErrorResponse("VALIDATION_FAILED", "tenantId, customerId, and phone are required"), { status: 400 });
+        }
         const notif = await NotificationService.dispatchNotification({
-          tenantId: payload.tenantId || defaultVendorId,
-          customerId: payload.customerId || "usr_priya",
+          tenantId,
+          customerId: payload.customerId,
           recipientPhone: payload.phone || "+919876543212",
           eventType: "DAILY_POLL",
           params: payload.data || { cutoffTime: "10:00 AM", name: "Priya Sharma", serviceName: "Homestyle Lunch Thali" },
