@@ -35,7 +35,7 @@ export class KhataLedgerService {
       newBalance = subtractPaise(currentBalance, amount);
     }
 
-    const entryId = `kht_${Math.random().toString(36).substring(2, 11)}`;
+    const entryId = `kht_${crypto.randomUUID()}`;
     const newEntry: KhataEntry = {
       id: entryId,
       tenantId: validated.tenantId,
@@ -51,29 +51,24 @@ export class KhataLedgerService {
       createdAt: new Date().toISOString(),
     };
 
-    entries.push(newEntry);
-    ledgerStore.set(key, entries);
-
     if (!isTestEnv) {
-      try {
-        await db.insert(khataEntriesTable).values({
-          id: entryId,
-          tenantId: validated.tenantId,
-          customerId: validated.customerId,
-          householdId: validated.householdId,
-          entryType: validated.entryType,
-          direction: validated.direction,
-          amountPaise: Number(amount),
-          runningBalancePaise: Number(newBalance),
-          referenceType: validated.referenceType,
-          referenceId: validated.referenceId,
-          description: validated.description,
-        });
-      } catch {
-        // In-memory fallback
-      }
+      await db.insert(khataEntriesTable).values({
+        id: entryId,
+        tenantId: validated.tenantId,
+        customerId: validated.customerId,
+        householdId: validated.householdId,
+        entryType: validated.entryType,
+        direction: validated.direction,
+        amountPaise: Number(amount),
+        runningBalancePaise: Number(newBalance),
+        referenceType: validated.referenceType,
+        referenceId: validated.referenceId,
+        description: validated.description,
+      });
     }
 
+    entries.push(newEntry);
+    ledgerStore.set(key, entries);
     return newEntry;
   }
 
@@ -136,7 +131,7 @@ export class KhataLedgerService {
           };
         }
       } catch {
-        // Fallback to in-memory store
+        throw new Error("Database unavailable while loading account statement");
       }
     }
 
@@ -213,7 +208,7 @@ export class KhataLedgerService {
           return bal;
         }
       } catch {
-        // Fallback to in-memory store
+        throw new Error("Database unavailable while loading account balance");
       }
     }
 
