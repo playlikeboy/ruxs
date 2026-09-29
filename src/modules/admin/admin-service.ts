@@ -354,6 +354,42 @@ Manage deliveries, daily cutoffs, and digital khata.`;
     return vendor;
   }
 
+  static async updateVendorTierAsync(
+    vendorIdOrSlug: string,
+    newTier: VendorPlanTier,
+    adminUser: { userId: string; email: string }
+  ): Promise<AdminVendorProfile> {
+    let vendor = vendorsStore.get(vendorIdOrSlug);
+    if (!vendor && !isTestEnv) {
+      await this.listVendorsAsync();
+      vendor = vendorsStore.get(vendorIdOrSlug);
+    }
+    if (!vendor) throw new Error(`Vendor ${vendorIdOrSlug} not found`);
+
+    const oldTier = vendor.tier;
+    if (!isTestEnv) {
+      await db.update(tenantsTable)
+        .set({ planTier: newTier, updatedAt: new Date() })
+        .where(eq(tenantsTable.id, vendor.id));
+    }
+
+    vendor.tier = newTier;
+    vendor.updatedAt = new Date().toISOString();
+    vendorsStore.set(vendor.id, vendor);
+    vendorsStore.set(vendor.slug, vendor);
+
+    this.logAction({
+      adminUserId: adminUser.userId,
+      adminEmail: adminUser.email,
+      action: "PLAN_UPGRADED",
+      targetType: "VENDOR",
+      targetId: vendor.id,
+      details: `Plan tier updated from ${oldTier} to ${newTier}`,
+    });
+
+    return vendor;
+  }
+
   /**
    * Records an audit log entry
    */
@@ -411,7 +447,7 @@ Manage deliveries, daily cutoffs, and digital khata.`;
               t.slug.includes("milk") ? "MILKMAN" : t.slug.includes("water") ? "WATER_SERVICE" : "TIFFIN"
             );
 
-            return {
+            const mappedVendor = {
               id: t.id,
               businessName: t.businessName,
               slug: t.slug,
@@ -429,6 +465,9 @@ Manage deliveries, daily cutoffs, and digital khata.`;
               createdAt: t.createdAt.toISOString(),
               updatedAt: t.updatedAt.toISOString(),
             };
+            vendorsStore.set(mappedVendor.id, mappedVendor);
+            vendorsStore.set(mappedVendor.slug, mappedVendor);
+            return mappedVendor;
           });
 
           if (status) {
