@@ -2,60 +2,57 @@ import { DeliveryEngine } from "@/src/modules/delivery/delivery-engine";
 import { GenerateRunSheetInputSchema } from "@/src/modules/delivery/delivery-schema";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { ZodError } from "zod";
+import { requireSession, requireRole, assertTenant } from "@/src/shared/auth/request";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const runId = searchParams.get("runId");
-  const driverId = searchParams.get("driverId") || undefined;
-  const tenantId = searchParams.get("tenantId") || undefined;
-  const shift = searchParams.get("shift") || undefined;
-  const list = searchParams.get("list") === "true";
+  try {
+    const session = await requireSession();
+    requireRole(session, ["DELIVERY_STAFF", "VENDOR_ADMIN", "PLATFORM_ADMIN"]);
+    const p = new URL(request.url).searchParams;
+    const runId = p.get("runId");
+    const driverId = p.get("driverId") || undefined;
+    const tenantId = p.get("tenantId") || undefined;
+    const shift = p.get("shift") || undefined;
 
-  if (list) {
-    const runs = await DeliveryEngine.listRunsAsync({ tenantId, driverId, shift });
-    return Response.json(createSuccessResponse(runs));
-  }
-
-  if (runId) {
-    const run = await DeliveryEngine.getRunSheetAsync(runId);
-    if (!run) {
-      return Response.json(
-        createErrorResponse("NOT_FOUND", `Run sheet ${runId} not found`),
-        { status: 404 }
-      );
+    if (session.role === "DELIVERY_STAFF") {
+      if (driverId && driverId !== session.sub) return Response.json(createErrorResponse("FORBIDDEN", "Drivers may only view their own runs"), { status: 403 });
     }
-    return Response.json(createSuccessResponse(run));
-  }
+    if (tenantId && session.role !== "PLATFORM_ADMIN") assertTenant(session, tenantId);
 
-  // If no runId passed, load latest active run for driver/tenant
-  const latestRun = await DeliveryEngine.getLatestRunAsync({ tenantId, driverId });
-  if (!latestRun) {
-    return Response.json(
-      createErrorResponse("NOT_FOUND", "No active delivery runs found"),
-      { status: 404 }
-    );
-  }
+    if (p.get("list") === "true") {
+      const effectiveDriverId = session.role === "DELIVERY_STAFF" ? session.sub : driverId;
+      const runs = await DeliveryEngine.listRunsAsync({ tenantId, driverId: effectiveDriverId, shift });
+      return Response.json(createSuccessResponse(runs), { headers: { "Cache-Control": "private, no-store" }});
+    }
 
-  return Response.json(createSuccessResponse(latestRun));
+    if (runId) {
+      const run = await DeliveryEngine.getRunSheetAsync(runId);
+      if (!run) return Response.json(createErrorResponse("NOT_FOUND", "Run sheet not found"), { status: 404 });
+      if (session.role === "DELIVERY_STAFF" && run.driverId !== session.sub) return Response.json(createErrorResponse("FORBIDDEN", "This run does not belong to you"), { status: 403 });
+      if (session.role === "VENDOR_ADMIN") assertTenant(session, run.tenantId);
+      return Response.json(createSuccessResponse(run), { headers: { "Cache-Control": "private, no-store" }});
+    }
+
+    const latest = await DeliveryEngine.getLatestRunAsync({ tenantId, driverId: session.role === "DELIVERY_STAFF" ? session.sub : driverId });
+    return latest ? Response.json(createSuccessResponse(latest), { headers: { "Cache-Control": "private, no-store" }}) : Response.json(createErrorResponse("NOT_FOUND", "No active delivery runs found"), { status: 404 });
+  } catch (error) {
+    if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
+    if (error instanceof Error && error.name === "AuthorizationError") return Response.json(createErrorResponse((error as any).code, error.message), { status: (error as any).code === "UNAUTHORIZED" ? 401 : 403 });
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to load delivery run"), { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const validated = GenerateRunSheetInputSchema.parse(body);
-    const run = DeliveryEngine.generateRunSheet(validated);
-    return Response.json(createSuccessResponse(run), { status: 201 });
+    const session = await requireSession();
+    requireRole(session, ["DELIVERY_STAFF", "VENDOR_ADMIN", "PLATFORM_ADMIN"]);
+    const validated = GenerateRunSheetInputSchema.parse(await request.json());
+    if (session.role === "DELIVERY_STAFF" && validated.driverId !== session.sub) return Response.json(createErrorResponse("FORBIDDEN", "Drivers may only create their own run sheets"), { status: 403 });
+    if (session.role !== "PLATFORM_ADMIN") assertTenant(session, validated.tenantId);
+    return Response.json(createSuccessResponse(DeliveryEngine.generateRunSheet(validated)), { status: 201 });
   } catch (error) {
-    if (error instanceof ZodError) {
-      const msg = error.issues[0]?.message || "Validation failed";
-      return Response.json(createErrorResponse("VALIDATION_FAILED", msg), { status: 400 });
-    }
-    return Response.json(
-      createErrorResponse(
-        "INTERNAL_SERVER_ERROR",
-        error instanceof Error ? error.message : "Internal Server Error"
-      ),
-      { status: 500 }
-    );
+    if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
+    if (error instanceof Error && error.name === "AuthorizationError") return Response.json(createErrorResponse((error as any).code, error.message), { status: (error as any).code === "UNAUTHORIZED" ? 401 : 403 });
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to generate delivery run"), { status: 500 });
   }
 }
