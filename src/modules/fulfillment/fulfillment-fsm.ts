@@ -143,17 +143,30 @@ export class FulfillmentStateMachine {
     fulfillment: DailyFulfillment,
     action: TransitionAction
   ): Promise<DailyFulfillment> {
+    const previous = {
+      ...fulfillment,
+      items: fulfillment.items.map((item) => ({ ...item })),
+    };
     const updated = this.transition(fulfillment, action, { persist: false });
-    if (!isTestEnv) {
-      await db.update(dailyFulfillments)
-        .set({
-          status: updated.status,
-          deliveredAt: updated.deliveredAt ? new Date(updated.deliveredAt) : null,
-          notes: updated.notes || null,
-          actionTakenAt: action.actionTime ? new Date(action.actionTime) : new Date(),
-        })
-        .where(eq(dailyFulfillments.id, updated.id));
+
+    try {
+      if (!isTestEnv) {
+        await db.update(dailyFulfillments)
+          .set({
+            status: updated.status,
+            deliveredAt: updated.deliveredAt ? new Date(updated.deliveredAt) : null,
+            lateFeePaise: updated.lateFeePaise ? Number(updated.lateFeePaise) : 0,
+            notes: updated.notes || null,
+            actionTakenAt: action.actionTime ? new Date(action.actionTime) : new Date(),
+          })
+          .where(eq(dailyFulfillments.id, updated.id));
+      }
+    } catch (error) {
+      Object.assign(fulfillment, previous);
+      fulfillmentStore.set(fulfillment.id, fulfillment);
+      throw error;
     }
+
     fulfillmentStore.set(updated.id, updated);
     return updated;
   }
