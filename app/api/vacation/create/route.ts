@@ -1,23 +1,15 @@
 import { VacationService } from "@/src/modules/vacation/vacation-service";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { ZodError } from "zod";
+import { requireSession } from "@/src/shared/auth/request";
 
 export async function POST(request: Request) {
   try {
+    const session = await requireSession();
     const body = await request.json();
-    const vacation = await VacationService.createVacation(body);
-    return Response.json(createSuccessResponse(vacation), { status: 201 });
+    return Response.json(createSuccessResponse(await VacationService.createVacation({ ...body, customerId: session.sub })), { status: 201 });
   } catch (error) {
-    if (error instanceof ZodError) {
-      const msg = error.issues[0]?.message || "Validation failed";
-      return Response.json(createErrorResponse("VALIDATION_FAILED", msg), { status: 400 });
-    }
-    return Response.json(
-      createErrorResponse(
-        "INTERNAL_SERVER_ERROR",
-        error instanceof Error ? error.message : "Failed to create vacation pause"
-      ),
-      { status: 500 }
-    );
+    if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to create vacation pause"), { status: 500 });
   }
 }
