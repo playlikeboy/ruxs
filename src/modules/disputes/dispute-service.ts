@@ -22,7 +22,7 @@ export class DisputeService {
    */
   static fileDispute(rawInput: unknown): Dispute {
     const input: FileDisputeInput = FileDisputeInputSchema.parse(rawInput);
-    const disputeId = `dsp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const disputeId = `dsp_${crypto.randomUUID()}`;
 
     // Transition underlying fulfillment state if exists
     try {
@@ -79,6 +79,154 @@ export class DisputeService {
     }
 
     return dispute;
+  }
+
+  static async fileDisputeAsync(rawInput: unknown): Promise<Dispute> {
+    const input: FileDisputeInput = FileDisputeInputSchema.parse(rawInput);
+    const disputeId = `dsp_${crypto.randomUUID()}`;
+    const now = new Date().toISOString();
+    const dispute = DisputeSchema.parse({
+      id: disputeId,
+      tenantId: input.tenantId,
+      customerId: input.customerId,
+      customerName: input.customerName,
+      customerPhone: input.customerPhone,
+      fulfillmentId: input.fulfillmentId,
+      reason: input.reason,
+      disputedAmountPaise: input.disputedAmountPaise,
+      evidence: {
+        driverDeliveredAt: input.driverDeliveredAt,
+        driverDropNotes: input.driverDropNotes,
+        customerComment: input.customerComment,
+        customerPhotoUrl: input.customerPhotoUrl,
+      },
+      status: "OPEN",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    if (!isTestEnv) {
+      await db.insert(disputesTable).values({
+        id: dispute.id,
+        tenantId: dispute.tenantId,
+        customerId: dispute.customerId,
+        customerName: dispute.customerName,
+        customerPhone: dispute.customerPhone,
+        fulfillmentId: dispute.fulfillmentId,
+        reason: dispute.reason,
+        disputedAmountPaise: Number(dispute.disputedAmountPaise),
+        status: dispute.status,
+        driverDeliveredAt: dispute.evidence?.driverDeliveredAt,
+        driverDropNotes: dispute.evidence?.driverDropNotes,
+        customerComment: dispute.evidence?.customerComment,
+      });
+    }
+
+    try {
+      const fulfillment = await FulfillmentStateMachine.getByIdAsync(input.fulfillmentId);
+      if (fulfillment) {
+        await FulfillmentStateMachine.transitionAsync(fulfillment, {
+          action: "DISPUTE",
+          notes: input.customerComment,
+          actionTime: now,
+        });
+      }
+    } catch (error) {
+      throw new Error("Dispute could not be linked to the fulfillment");
+    }
+
+    disputesStore.set(dispute.id, dispute);
+    return dispute;
+  }
+
+  static async getDisputeAsync(id: string): Promise<Dispute | null> {
+    const memory = disputesStore.get(id);
+    if (memory) return memory;
+    if (isTestEnv) return null;
+
+    const rows = await db.select().from(disputesTable).where(eq(disputesTable.id, id)).limit(1);
+    const d = rows[0];
+    if (!d) return null;
+
+    const dispute: Dispute = {
+      id: d.id,
+      tenantId: d.tenantId,
+      customerId: d.customerId,
+      customerName: d.customerName,
+      customerPhone: d.customerPhone,
+      fulfillmentId: d.fulfillmentId,
+      reason: d.reason as any,
+      disputedAmountPaise: d.disputedAmountPaise as Paise,
+      status: d.status as any,
+      evidence: {
+        driverDeliveredAt: d.driverDeliveredAt ?? undefined,
+        driverDropNotes: d.driverDropNotes ?? undefined,
+        customerComment: d.customerComment ?? "No comment provided",
+      },
+      resolution: d.decision ? {
+        decision: d.decision as any,
+        refundPaise: d.refundPaise ?? 0,
+        resolutionNotes: d.resolutionNotes ?? "",
+        resolvedBy: d.resolvedBy ?? "",
+        resolvedAt: d.resolvedAt ? d.resolvedAt.toISOString() : new Date().toISOString(),
+      } : undefined,
+      createdAt: d.createdAt.toISOString(),
+      updatedAt: d.updatedAt.toISOString(),
+    };
+
+    disputesStore.set(id, dispute);
+    return dispute;
+  }
+
+  static async resolveDisputeAsync(
+    disputeId: string,
+    rawResolution: unknown
+  ): Promise<{ dispute: Dispute; compensatingEntry?: KhataEntry }> {
+    const dispute = await this.getDisputeAsync(disputeId);
+    if (!dispute) throw new Error(`Dispute ${disputeId} not found`);
+    if (dispute.status === "REFUNDED" || dispute.status === "REJECTED") {
+      throw new Error(`Dispute ${disputeId} is already resolved with status ${dispute.status}`);
+    }
+
+    const resolution: DisputeResolution = DisputeResolutionSchema.parse(rawResolution);
+    let compensatingEntry: KhataEntry | undefined;
+
+    if (resolution.decision === "FULL_REFUND" || resolution.decision === "PARTIAL_REFUND") {
+      if (resolution.refundPaise <= 0) throw new Error("Refund amount must be greater than zero for refund decisions");
+      if (resolution.refundPaise > dispute.disputedAmountPaise) throw new Error("Refund amount cannot exceed the disputed amount");
+
+      compensatingEntry = await KhataLedgerService.recordEntry({
+        tenantId: dispute.tenantId,
+        customerId: dispute.customerId,
+        entryType: "REFUND_CREDIT",
+        direction: "CREDIT",
+        amountPaise: resolution.refundPaise as Paise,
+        referenceType: "DISPUTE",
+        referenceId: dispute.id,
+        description: `Dispute Refund: ${dispute.reason} - ${resolution.resolutionNotes}`,
+      });
+      dispute.status = "REFUNDED";
+    } else {
+      dispute.status = "REJECTED";
+    }
+
+    dispute.resolution = resolution;
+    dispute.updatedAt = new Date().toISOString();
+
+    if (!isTestEnv) {
+      await db.update(disputesTable).set({
+        status: dispute.status,
+        decision: resolution.decision,
+        refundPaise: resolution.refundPaise,
+        resolutionNotes: resolution.resolutionNotes,
+        resolvedBy: resolution.resolvedBy,
+        resolvedAt: new Date(),
+        updatedAt: new Date(),
+      }).where(eq(disputesTable.id, dispute.id));
+    }
+
+    disputesStore.set(dispute.id, dispute);
+    return { dispute, compensatingEntry };
   }
 
   /**
@@ -178,7 +326,7 @@ export class DisputeService {
           .where(eq(disputesTable.tenantId, tenantId))
           .orderBy(desc(disputesTable.createdAt));
 
-        if (rows && rows.length > 0) {
+        if (rows) {
           const mapped: Dispute[] = rows.map((d) => ({
             id: d.id,
             tenantId: d.tenantId,
@@ -213,10 +361,10 @@ export class DisputeService {
           return mapped;
         }
       } catch {
-        // Fallback
+        throw new Error("Database unavailable while loading tenant disputes");
       }
     }
-    return this.listByTenant(tenantId, status);
+    return [];
   }
 
   /**
@@ -238,7 +386,7 @@ export class DisputeService {
           .where(eq(disputesTable.customerId, customerId))
           .orderBy(desc(disputesTable.createdAt));
 
-        if (rows && rows.length > 0) {
+        if (rows) {
           return rows.map((d) => ({
             id: d.id,
             tenantId: d.tenantId,
@@ -268,17 +416,17 @@ export class DisputeService {
           }));
         }
       } catch {
-        // Fallback
+        throw new Error("Database unavailable while loading customer disputes");
       }
     }
-    return this.listByCustomer(customerId);
+    return [];
   }
 
   /**
    * Seeds realistic demo disputes if store is empty
    */
   static seedDefaultDisputesIfEmpty(): void {
-    if (disputesStore.size > 0) return;
+    if (!isTestEnv || disputesStore.size > 0) return;
 
     const sample1: Dispute = {
       id: "dsp_demo_01",
@@ -361,7 +509,7 @@ export class DisputeService {
           .from(disputesTable)
           .orderBy(desc(disputesTable.createdAt));
 
-        if (rows && rows.length > 0) {
+        if (rows) {
           const mapped: Dispute[] = rows.map((d) => ({
             id: d.id,
             tenantId: d.tenantId,
@@ -396,9 +544,9 @@ export class DisputeService {
           return mapped;
         }
       } catch {
-        // Fallback
+        throw new Error("Database unavailable while loading disputes");
       }
     }
-    return this.listAll(status);
+    return [];
   }
 }
