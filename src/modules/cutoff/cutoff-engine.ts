@@ -64,6 +64,37 @@ export class CutoffEngine {
   /**
    * Aggregates kitchen prep demand by shift and SKU
    */
+  static async lockExpiredCutoffsAsync(
+    tenantId: string,
+    serviceDate: string,
+    evaluationTime?: string
+  ): Promise<{ lockedCount: number; updatedFulfillments: DailyFulfillment[] }> {
+    const list = await FulfillmentStateMachine.listByTenantAndDateAsync(tenantId, serviceDate);
+    const now = evaluationTime ? new Date(evaluationTime) : new Date();
+    const updatedFulfillments: DailyFulfillment[] = [];
+
+    for (const f of list) {
+      if (now.getTime() < new Date(f.cutoffTime).getTime()) continue;
+
+      if (f.status === "CONFIRMATION_REQUIRED") {
+        updatedFulfillments.push(await FulfillmentStateMachine.transitionAsync(f, {
+          action: "CONFIRM",
+          actionTime: now.toISOString(),
+        }));
+      } else if (f.status === "CONFIRMED") {
+        updatedFulfillments.push(await FulfillmentStateMachine.transitionAsync(f, {
+          action: "START_PREP",
+          actionTime: now.toISOString(),
+        }));
+      }
+    }
+
+    return {
+      lockedCount: updatedFulfillments.length,
+      updatedFulfillments,
+    };
+  }
+
   static getKitchenBatchCounter(
     tenantId: string,
     serviceDate: string,
