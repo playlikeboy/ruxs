@@ -1,18 +1,35 @@
-import {
-  PaymentRecord,
-  CreatePaymentOrderSchema,
-} from "./payment-schema";
+import { PaymentRecord, CreatePaymentOrderSchema } from "./payment-schema";
 import { KhataLedgerService } from "../khata/khata-ledger";
 import { BillingEngine } from "../billing/billing-engine";
 import { Paise } from "../../shared/types/money";
+import { db, isTestEnv, payments as paymentsTable } from "../../shared/db";
+import { eq, and } from "drizzle-orm";
 
 const paymentsStore = new Map<string, PaymentRecord>();
 const processedGatewayIds = new Set<string>();
 
+function mapDbPayment(row: typeof paymentsTable.$inferSelect): PaymentRecord {
+  return {
+    id: row.id,
+    tenantId: row.tenantId,
+    customerId: row.customerId,
+    invoiceId: row.invoiceId || undefined,
+    amountPaise: row.amountPaise as Paise,
+    method: row.method as PaymentRecord["method"],
+    status: row.status as PaymentRecord["status"],
+    gatewayOrderId: row.gatewayOrderId || "",
+    gatewayPaymentId: row.gatewayPaymentId || undefined,
+    bankUtr: row.bankUtr || undefined,
+    khataEntryId: row.khataEntryId || undefined,
+    settledAt: row.settledAt ? row.settledAt.toISOString() : undefined,
+    upiDeepLink: undefined,
+    qrPayload: undefined,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.settledAt ? row.settledAt.toISOString() : row.createdAt.toISOString(),
+  };
+}
+
 export class PaymentService {
-  /**
-   * Generates a UPI intent URL compliant with NPCI specifications
-   */
   static generateUpiIntentUrl(params: {
     upiId: string;
     recipientName: string;
@@ -32,25 +49,17 @@ export class PaymentService {
     return `upi://pay?${query.toString()}`;
   }
 
-  /**
-   * Cryptographic Web Crypto HMAC-SHA256 signature verifier
-   */
-  static async verifyHmacSha256(
-    payload: string,
-    signatureHex: string,
-    secret: string
-  ): Promise<boolean> {
+  static async verifyHmacSha256(payload: string, signatureHex: string, secret: string): Promise<boolean> {
     try {
+      if (!/^[0-9a-fA-F]{64}$/.test(signatureHex)) return false;
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         "raw",
         encoder.encode(secret),
         { name: "HMAC", hash: "SHA-256" },
         false,
-        ["sign"]
+        ["verify"]
       );
-
-      if (!/^[0-9a-fA-F]{64}$/.test(signatureHex)) return false;
       const signatureBytes = new Uint8Array(signatureHex.match(/.{2}/g)!.map((hex) => parseInt(hex, 16)));
       return await crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(payload));
     } catch {
@@ -58,9 +67,6 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Computes HMAC-SHA256 hex signature for testing / webhook simulation
-   */
   static async signPayload(payload: string, secret: string): Promise<string> {
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
@@ -71,26 +77,19 @@ export class PaymentService {
       ["sign"]
     );
     const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
-    return Array.from(new Uint8Array(sig))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
-  /**
-   * Creates an order with UPI intent and dynamic QR payload
-   */
   static async createPaymentOrder(rawInput: unknown): Promise<PaymentRecord> {
     const validated = CreatePaymentOrderSchema.parse(rawInput);
-
     const paymentId = `pay_${crypto.randomUUID()}`;
     const gatewayOrderId = `order_${crypto.randomUUID()}`;
     const now = new Date().toISOString();
 
-    const amountRupees = validated.amountPaise / 100;
     const upiDeepLink = this.generateUpiIntentUrl({
       upiId: validated.recipientUpiId,
       recipientName: validated.recipientName,
-      amountRupees,
+      amountRupees: validated.amountPaise / 100,
       transactionNote: `Payment for RUXS #${validated.invoiceId || paymentId}`,
       orderId: gatewayOrderId,
     });
@@ -110,15 +109,24 @@ export class PaymentService {
       updatedAt: now,
     };
 
+    if (!isTestEnv) {
+      await db.insert(paymentsTable).values({
+        id: payment.id,
+        tenantId: payment.tenantId,
+        customerId: payment.customerId,
+        invoiceId: payment.invoiceId || null,
+        amountPaise: Number(payment.amountPaise),
+        method: payment.method,
+        status: payment.status,
+        gatewayOrderId: payment.gatewayOrderId,
+      });
+    }
+
     paymentsStore.set(paymentId, payment);
     paymentsStore.set(gatewayOrderId, payment);
     return payment;
   }
 
-  /**
-   * Idempotent payment webhook reconciliation
-   * Guarantees zero double-crediting if duplicate webhooks are delivered
-   */
   static async handleWebhookPaymentSuccess(params: {
     gatewayOrderId: string;
     gatewayPaymentId: string;
@@ -127,43 +135,32 @@ export class PaymentService {
     signature: string;
     webhookSecret: string;
   }): Promise<{ payment: PaymentRecord; wasAlreadyProcessed: boolean }> {
-    // 1. Verify signature
-    const isValid = await this.verifyHmacSha256(
-      params.rawPayload,
-      params.signature,
-      params.webhookSecret
-    );
-    if (!isValid) {
+    if (!await this.verifyHmacSha256(params.rawPayload, params.signature, params.webhookSecret)) {
       throw new Error("Invalid cryptographic webhook signature");
     }
 
-    // 2. Idempotency Guard: check if this payment ID was already processed
-    if (processedGatewayIds.has(params.gatewayPaymentId)) {
-      const existing = paymentsStore.get(params.gatewayOrderId);
-      if (!existing) throw new Error("Order not found");
-      return { payment: existing, wasAlreadyProcessed: true };
+    let payment = paymentsStore.get(params.gatewayOrderId);
+    if (!payment && !isTestEnv) {
+      const rows = await db.select().from(paymentsTable)
+        .where(eq(paymentsTable.gatewayOrderId, params.gatewayOrderId))
+        .limit(1);
+      if (rows[0]) {
+        payment = mapDbPayment(rows[0]);
+        paymentsStore.set(payment.id, payment);
+        paymentsStore.set(payment.gatewayOrderId, payment);
+      }
     }
 
-    // 3. Find target order
-    const payment = paymentsStore.get(params.gatewayOrderId);
-    if (!payment) {
-      throw new Error(`Order ${params.gatewayOrderId} not found`);
+    if (!payment) throw new Error("Payment order not found");
+
+    if (processedGatewayIds.has(params.gatewayPaymentId) || payment.status === "SUCCESS") {
+      if (payment.gatewayPaymentId === params.gatewayPaymentId || payment.status === "SUCCESS") {
+        processedGatewayIds.add(params.gatewayPaymentId);
+        return { payment, wasAlreadyProcessed: true };
+      }
     }
 
-    if (payment.status === "SUCCESS") {
-      processedGatewayIds.add(params.gatewayPaymentId);
-      return { payment, wasAlreadyProcessed: true };
-    }
-
-    // 4. Atomic settlement: Update status, append Khata credit, and update invoice
     const now = new Date().toISOString();
-    payment.status = "SUCCESS";
-    payment.gatewayPaymentId = params.gatewayPaymentId;
-    payment.bankUtr = params.bankUtr;
-    payment.settledAt = now;
-    payment.updatedAt = now;
-
-    // Append to Digital Khata
     const khataEntry = await KhataLedgerService.recordEntry({
       tenantId: payment.tenantId,
       customerId: payment.customerId,
@@ -175,18 +172,35 @@ export class PaymentService {
       description: `UPI Payment Settled (UTR: ${params.bankUtr})`,
     });
 
-    payment.khataEntryId = khataEntry.id;
-
-    // Update invoice if applicable
     if (payment.invoiceId) {
       await BillingEngine.recordInvoicePayment(payment.invoiceId, payment.amountPaise);
     }
 
-    // Mark as processed
+    payment.status = "SUCCESS";
+    payment.gatewayPaymentId = params.gatewayPaymentId;
+    payment.bankUtr = params.bankUtr;
+    payment.settledAt = now;
+    payment.khataEntryId = khataEntry.id;
+    payment.updatedAt = now;
+
+    if (!isTestEnv) {
+      await db.update(paymentsTable)
+        .set({
+          status: "SUCCESS",
+          gatewayPaymentId: params.gatewayPaymentId,
+          bankUtr: params.bankUtr,
+          khataEntryId: khataEntry.id,
+          settledAt: new Date(now),
+        })
+        .where(and(
+          eq(paymentsTable.id, payment.id),
+          eq(paymentsTable.status, "INITIATED")
+        ));
+    }
+
     processedGatewayIds.add(params.gatewayPaymentId);
     paymentsStore.set(payment.id, payment);
     paymentsStore.set(payment.gatewayOrderId, payment);
-
     return { payment, wasAlreadyProcessed: false };
   }
 
