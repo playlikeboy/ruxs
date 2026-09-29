@@ -1,7 +1,7 @@
 import { SubscriptionEngine } from "@/src/modules/subscriptions/subscription-engine";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { ZodError } from "zod";
-import { requireSession, assertSelf, assertTenant } from "@/src/shared/auth/request";
+import { requireSession, requireRole, assertTenant } from "@/src/shared/auth/request";
 
 export async function GET(request: Request) {
   try {
@@ -11,11 +11,14 @@ export async function GET(request: Request) {
     const tenantId = searchParams.get("tenantId");
 
     if (customerId) {
-      assertSelf(session, customerId);
-      return Response.json(createSuccessResponse(await SubscriptionEngine.listByCustomer(session.sub)), { headers: { "Cache-Control": "private, no-store" }});
+      if (session.role !== "PLATFORM_ADMIN") {
+        if (session.sub !== customerId) return Response.json(createErrorResponse("FORBIDDEN", "You may only access your own subscriptions"), { status: 403 });
+      }
+      return Response.json(createSuccessResponse(await SubscriptionEngine.listByCustomer(customerId)), { headers: { "Cache-Control": "private, no-store" }});
     }
     if (tenantId) {
-      assertTenant(session, tenantId);
+      requireRole(session, ["VENDOR_ADMIN", "PLATFORM_ADMIN"]);
+      if (session.role === "VENDOR_ADMIN") assertTenant(session, tenantId);
       return Response.json(createSuccessResponse(await SubscriptionEngine.listByTenant(tenantId)), { headers: { "Cache-Control": "private, no-store" }});
     }
     return Response.json(createErrorResponse("VALIDATION_FAILED", "Please provide customerId or tenantId"), { status: 400 });
@@ -28,9 +31,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await requireSession();
+    requireRole(session, ["CUSTOMER", "HOUSEHOLD_MEMBER", "VENDOR_ADMIN", "PLATFORM_ADMIN"]);
     const body = await request.json();
     const sub = await SubscriptionEngine.createSubscription({ ...body, customerId: session.sub });
-    if (session.role !== "PLATFORM_ADMIN" && session.role !== "VENDOR_ADMIN") return Response.json(createErrorResponse("FORBIDDEN", "Only authorized service accounts can create subscriptions"), { status: 403 });
     if (session.role === "VENDOR_ADMIN") assertTenant(session, sub.tenantId);
     return Response.json(createSuccessResponse(sub), { status: 201 });
   } catch (error) {
