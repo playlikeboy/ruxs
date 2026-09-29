@@ -1,43 +1,26 @@
 import { FulfillmentGenerator } from "@/src/modules/fulfillment/fulfillment-generator";
 import { SubscriptionEngine } from "@/src/modules/subscriptions/subscription-engine";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
+import { requireSession, requireRole, assertTenant } from "@/src/shared/auth/request";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as {
-      tenantId?: string;
-      serviceDate?: string;
-      cutoffTimeStr?: string;
-    };
-
+    const session = await requireSession();
+    requireRole(session, ["VENDOR_ADMIN", "PLATFORM_ADMIN"]);
+    const body = await request.json() as { tenantId?: string; serviceDate?: string; cutoffTimeStr?: string };
     const serviceDate = body.serviceDate || new Date().toISOString().split("T")[0];
     const requestedTenantId = body.tenantId;
 
     if (!requestedTenantId || requestedTenantId === "ALL") {
-      const allSubscriptions = await SubscriptionEngine.listAllAsync();
-      const generated = FulfillmentGenerator.generateForDate(allSubscriptions, {
-        serviceDate,
-        cutoffTimeStr: body.cutoffTimeStr || "10:00",
-        shift: "LUNCH",
-      });
-      return Response.json(createSuccessResponse(generated), { status: 201 });
+      if (session.role !== "PLATFORM_ADMIN") return Response.json(createErrorResponse("FORBIDDEN", "Only platform administrators can generate fulfillments for all tenants"), { status: 403 });
+      return Response.json(createSuccessResponse(FulfillmentGenerator.generateForDate(await SubscriptionEngine.listAllAsync(), { serviceDate, cutoffTimeStr: body.cutoffTimeStr || "10:00", shift: "LUNCH" })), { status: 201 });
     }
 
+    assertTenant(session, requestedTenantId);
     const subscriptions = await SubscriptionEngine.listByTenant(requestedTenantId);
-    const generated = FulfillmentGenerator.generateForDate(subscriptions, {
-      serviceDate,
-      cutoffTimeStr: body.cutoffTimeStr || "10:00",
-      shift: "LUNCH",
-    });
-
-    return Response.json(createSuccessResponse(generated), { status: 201 });
+    return Response.json(createSuccessResponse(FulfillmentGenerator.generateForDate(subscriptions, { serviceDate, cutoffTimeStr: body.cutoffTimeStr || "10:00", shift: "LUNCH" })), { status: 201 });
   } catch (error) {
-    return Response.json(
-      createErrorResponse(
-        "INTERNAL_SERVER_ERROR",
-        error instanceof Error ? error.message : "Internal Server Error"
-      ),
-      { status: 500 }
-    );
+    if (error instanceof Error && error.name === "AuthorizationError") return Response.json(createErrorResponse((error as any).code, error.message), { status: (error as any).code === "UNAUTHORIZED" ? 401 : 403 });
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to generate fulfillments"), { status: 500 });
   }
 }
