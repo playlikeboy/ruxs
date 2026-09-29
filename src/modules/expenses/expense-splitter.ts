@@ -209,6 +209,76 @@ export class ExpenseSplitter {
     return expense;
   }
 
+  static async settleParticipantDebtAsync(
+    expenseId: string,
+    participantUserId: string
+  ): Promise<HouseholdExpense> {
+    if (isTestEnv) return this.settleParticipantDebt(expenseId, participantUserId);
+
+    const rows = await db.select().from(householdExpensesTable)
+      .where(eq(householdExpensesTable.id, expenseId)).limit(1);
+    const exp = rows[0];
+    if (!exp) throw new Error(`Expense ${expenseId} not found`);
+
+    const partRows = await db.select().from(householdExpenseParticipantsTable)
+      .where(eq(householdExpenseParticipantsTable.expenseId, expenseId));
+    const participant = partRows.find((p) => p.userId === participantUserId);
+    if (!participant) throw new Error(`Participant ${participantUserId} not in expense ${expenseId}`);
+    if (participant.isSettled) {
+      const current = this.buildExpenseFromRows(exp, partRows);
+      expensesStore.set(current.id, current);
+      return current;
+    }
+
+    await db.update(householdExpenseParticipantsTable)
+      .set({ isSettled: true, settledAt: new Date() })
+      .where(and(
+        eq(householdExpenseParticipantsTable.expenseId, expenseId),
+        eq(householdExpenseParticipantsTable.userId, participantUserId),
+      ));
+
+    const updatedParts = partRows.map((p) =>
+      p.userId === participantUserId ? { ...p, isSettled: true, settledAt: new Date() } : p
+    );
+    const fullySettled = updatedParts.every((p) => p.isSettled);
+    await db.update(householdExpensesTable)
+      .set({ isFullySettled: fullySettled, updatedAt: new Date() })
+      .where(eq(householdExpensesTable.id, expenseId));
+
+    const updated = this.buildExpenseFromRows({ ...exp, isFullySettled: fullySettled }, updatedParts);
+    expensesStore.set(updated.id, updated);
+    return updated;
+  }
+
+  private static buildExpenseFromRows(
+    exp: typeof householdExpensesTable.$inferSelect,
+    partRows: Array<typeof householdExpenseParticipantsTable.$inferSelect>
+  ): HouseholdExpense {
+    return {
+      id: exp.id,
+      householdId: exp.householdId,
+      invoiceId: exp.invoiceId ?? undefined,
+      description: exp.description,
+      totalAmountPaise: exp.totalAmountPaise,
+      paidByUserId: exp.paidByUserId,
+      paidByName: exp.paidByName,
+      paidByUpi: exp.paidByUpi,
+      strategy: exp.strategy as any,
+      participants: partRows.map((p) => ({
+        userId: p.userId,
+        name: p.name,
+        phone: p.phone,
+        sharePaise: p.sharePaise,
+        isSettled: p.isSettled,
+        settledAt: p.settledAt ? p.settledAt.toISOString() : undefined,
+        upiId: p.upiId ?? undefined,
+      })),
+      isFullySettled: exp.isFullySettled,
+      createdAt: exp.createdAt.toISOString(),
+      updatedAt: exp.updatedAt.toISOString(),
+    };
+  }
+
   /**
    * Lists all expenses for a household
    */
