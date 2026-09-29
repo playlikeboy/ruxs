@@ -185,8 +185,8 @@ export class BillingEngine {
             createdAt: r.createdAt ? r.createdAt.toISOString() : new Date().toISOString(),
           };
         }
-      } catch (err) {
-        console.error("Failed to fetch invoice by ID from Neon DB:", err);
+      } catch {
+        throw new Error("Database unavailable while loading invoice");
       }
     }
 
@@ -201,7 +201,7 @@ export class BillingEngine {
           .from(invoicesTable)
           .where(eq(invoicesTable.customerId, customerId));
 
-        if (rows.length > 0) {
+        if (rows.length >= 0) {
           return rows.map((r) => ({
             id: r.id,
             invoiceNumber: r.invoiceNumber,
@@ -230,12 +230,12 @@ export class BillingEngine {
             createdAt: r.createdAt ? r.createdAt.toISOString() : new Date().toISOString(),
           }));
         }
-      } catch (err) {
-        console.error("Failed to list invoices by customer from Neon DB:", err);
+      } catch {
+        throw new Error("Database unavailable while loading customer invoices");
       }
     }
 
-    return Array.from(invoiceStore.values()).filter((i) => i.customerId === customerId);
+    return [];
   }
 
   static async listByTenant(tenantId: string): Promise<Invoice[]> {
@@ -275,12 +275,12 @@ export class BillingEngine {
             createdAt: r.createdAt ? r.createdAt.toISOString() : new Date().toISOString(),
           }));
         }
-      } catch (err) {
-        console.error("Failed to list invoices by tenant from Neon DB:", err);
+      } catch {
+        throw new Error("Database unavailable while loading tenant invoices");
       }
     }
 
-    return Array.from(invoiceStore.values()).filter((i) => i.tenantId === tenantId);
+    return [];
   }
 
   static clearStore(): void {
