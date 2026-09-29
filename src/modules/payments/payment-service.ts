@@ -50,12 +50,9 @@ export class PaymentService {
         ["sign"]
       );
 
-      const calculatedSig = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
-      const calculatedHex = Array.from(new Uint8Array(calculatedSig))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-
-      return calculatedHex.toLowerCase() === signatureHex.toLowerCase();
+      if (!/^[0-9a-fA-F]{64}$/.test(signatureHex)) return false;
+      const signatureBytes = new Uint8Array(signatureHex.match(/.{2}/g)!.map((hex) => parseInt(hex, 16)));
+      return await crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(payload));
     } catch {
       return false;
     }
@@ -85,8 +82,8 @@ export class PaymentService {
   static async createPaymentOrder(rawInput: unknown): Promise<PaymentRecord> {
     const validated = CreatePaymentOrderSchema.parse(rawInput);
 
-    const paymentId = `pay_${Math.random().toString(36).substring(2, 11)}`;
-    const gatewayOrderId = `order_${Math.random().toString(36).substring(2, 11)}`;
+    const paymentId = `pay_${crypto.randomUUID()}`;
+    const gatewayOrderId = `order_${crypto.randomUUID()}`;
     const now = new Date().toISOString();
 
     const amountRupees = validated.amountPaise / 100;
