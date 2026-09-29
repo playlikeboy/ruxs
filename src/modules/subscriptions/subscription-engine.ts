@@ -20,7 +20,7 @@ export class SubscriptionEngine {
   static async createSubscription(rawInput: unknown): Promise<Subscription> {
     const validated = CreateSubscriptionSchema.parse(rawInput);
 
-    const subscriptionId = `sub_${Math.random().toString(36).substring(2, 11)}`;
+    const subscriptionId = `sub_${crypto.randomUUID()}`;
     const now = new Date().toISOString();
 
     const subscription: Subscription = {
@@ -44,31 +44,26 @@ export class SubscriptionEngine {
       updatedAt: now,
     };
 
-    subscriptionsStore.set(subscriptionId, subscription);
-
     if (!isTestEnv) {
-      try {
-        await db.insert(subscriptionsTable).values({
-          id: subscriptionId,
-          tenantId: validated.tenantId,
-          customerId: validated.customerId,
-          householdId: validated.householdId || null,
-          productId: validated.productId,
-          cadence: validated.cadence,
-          shift: validated.shift || "MORNING",
-          selectedDays: validated.selectedDays ? validated.selectedDays.join(",") : null,
-          defaultQuantity: validated.defaultQuantity,
-          autopilotDefault: validated.autopilotDefault,
-          instructions: validated.instructions || null,
-          status: "ACTIVE",
-          startDate: validated.startDate,
-          endDate: validated.endDate || null,
-        });
-      } catch (err) {
-        console.error("Failed to insert subscription into Neon DB:", err);
-      }
+      await db.insert(subscriptionsTable).values({
+        id: subscriptionId,
+        tenantId: validated.tenantId,
+        customerId: validated.customerId,
+        householdId: validated.householdId || null,
+        productId: validated.productId,
+        cadence: validated.cadence,
+        shift: validated.shift || "MORNING",
+        selectedDays: validated.selectedDays ? validated.selectedDays.join(",") : null,
+        defaultQuantity: validated.defaultQuantity,
+        autopilotDefault: validated.autopilotDefault,
+        instructions: validated.instructions || null,
+        status: "ACTIVE",
+        startDate: validated.startDate,
+        endDate: validated.endDate || null,
+      });
     }
 
+    subscriptionsStore.set(subscriptionId, subscription);
     return subscription;
   }
 
@@ -134,8 +129,6 @@ export class SubscriptionEngine {
           .update(subscriptionsTable)
           .set({ status: "PAUSED" })
           .where(eq(subscriptionsTable.id, id));
-      } catch (err) {
-        console.error("Failed to update subscription in Neon DB:", err);
       }
     }
 
@@ -163,8 +156,6 @@ export class SubscriptionEngine {
           .update(subscriptionsTable)
           .set({ status: "ACTIVE" })
           .where(eq(subscriptionsTable.id, id));
-      } catch (err) {
-        console.error("Failed to update subscription in Neon DB:", err);
       }
     }
 
@@ -191,8 +182,6 @@ export class SubscriptionEngine {
           .update(subscriptionsTable)
           .set({ status: "CANCELLED" })
           .where(eq(subscriptionsTable.id, id));
-      } catch (err) {
-        console.error("Failed to update subscription in Neon DB:", err);
       }
     }
 
@@ -239,8 +228,6 @@ export class SubscriptionEngine {
             updatedAt: row.sub.createdAt ? row.sub.createdAt.toISOString() : new Date().toISOString(),
           };
         }
-      } catch (err) {
-        console.error("Failed to fetch subscription by ID from Neon DB:", err);
       }
     }
 
@@ -284,7 +271,7 @@ export class SubscriptionEngine {
           }));
         }
       } catch (err) {
-        console.error("Failed to list subscriptions for customer from Neon DB:", err);
+        throw new Error("Database unavailable while loading subscriptions");
       }
     }
 
@@ -325,7 +312,7 @@ export class SubscriptionEngine {
           }));
         }
       } catch (err) {
-        console.error("Failed to list subscriptions for tenant from Neon DB:", err);
+        throw new Error("Database unavailable while loading subscriptions");
       }
     }
 
@@ -365,7 +352,7 @@ export class SubscriptionEngine {
           }));
         }
       } catch (err) {
-        console.error("Failed to list all subscriptions from Neon DB:", err);
+        throw new Error("Database unavailable while loading subscriptions");
       }
     }
 
