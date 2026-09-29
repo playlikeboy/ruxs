@@ -12,7 +12,7 @@ import {
   householdMembers as householdMembersTable,
   users as usersTable,
 } from "../../shared/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 const householdStore = new Map<string, Household>();
 const userHouseholdIndex = new Map<string, string>(); // userId -> householdId
@@ -141,7 +141,7 @@ export class HouseholdService {
     if (!household.members.some((m) => m.userId === memberUserId)) throw new Error(`Member ${memberUserId} not found in household`);
 
     if (!isTestEnv) {
-      await db.delete(householdMembersTable).where(eq(householdMembersTable.userId, memberUserId));
+      await db.delete(householdMembersTable).where(and(eq(householdMembersTable.householdId, householdId), eq(householdMembersTable.userId, memberUserId)));
     }
 
     userHouseholdIndex.delete(memberUserId);
@@ -322,7 +322,7 @@ export class HouseholdService {
           };
         }
       } catch {
-        // Fallback
+        throw new Error("Database unavailable while loading household");
       }
     }
     return this.getHousehold(id);
@@ -352,7 +352,7 @@ export class HouseholdService {
           return this.getHouseholdAsync(mRow.householdId);
         }
       } catch {
-        // Fallback
+        throw new Error("Database unavailable while loading household membership");
       }
     }
     return this.getHouseholdForUser(userId);
@@ -430,7 +430,7 @@ export class HouseholdService {
    * Seeds default demo households if empty
    */
   static seedDefaultHouseholdsIfEmpty() {
-    if (householdStore.size > 0) return;
+    if (!isTestEnv || householdStore.size > 0) return;
 
     const sample1: Household = {
       id: "hh_sobha_402",
@@ -542,7 +542,7 @@ export class HouseholdService {
     if (!isTestEnv) {
       try {
         const hRows = await db.select().from(householdsTable);
-        if (hRows && hRows.length > 0) {
+        if (hRows) {
           const list: Household[] = [];
           for (const hRow of hRows) {
             const mRows = await db
@@ -580,8 +580,8 @@ export class HouseholdService {
           }
           return list;
         }
-      } catch (err) {
-        console.error("Failed to query households from Neon DB:", err);
+      } catch {
+        throw new Error("Database unavailable while loading households");
       }
     }
     return this.listHouseholds();
