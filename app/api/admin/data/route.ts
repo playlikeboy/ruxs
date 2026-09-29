@@ -11,27 +11,12 @@ import { hexclaveServerApp } from "@/src/hexclave/server";
 import { isTestEnv } from "@/src/shared/db";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { Paise } from "@/src/shared/types/money";
+import { requireSession, requireRole } from "@/src/shared/auth/request";
 
 export async function GET(request: Request) {
   try {
-    // Authorization Check: Strict restriction to sh20raj@gmail.com
-    if (!isTestEnv) {
-      try {
-        const authUser = await hexclaveServerApp.getUser({ tokenStore: request });
-        const email = authUser?.primaryEmail || (authUser as any)?.email;
-        if (!authUser || email !== "sh20raj@gmail.com") {
-          return NextResponse.json(
-            createErrorResponse("FORBIDDEN", "Only sh20raj@gmail.com is authorized to access platform administration data"),
-            { status: 403 }
-          );
-        }
-      } catch {
-        return NextResponse.json(
-          createErrorResponse("UNAUTHORIZED", "Authentication with sh20raj@gmail.com is required to access admin data"),
-          { status: 401 }
-        );
-      }
-    }
+    const session = await requireSession();
+    requireRole(session, ["PLATFORM_ADMIN"]);
 
     const todayStr = new Date().toISOString().split("T")[0];
 
@@ -105,29 +90,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    // Authorization Check: Strict restriction to sh20raj@gmail.com
-    let adminEmail = "sh20raj@gmail.com";
-    let adminUserId = "usr_super_admin";
-
-    if (!isTestEnv) {
-      try {
-        const authUser = await hexclaveServerApp.getUser({ tokenStore: request });
-        const email = authUser?.primaryEmail || (authUser as any)?.email;
-        if (!authUser || email !== "sh20raj@gmail.com") {
-          return NextResponse.json(
-            createErrorResponse("FORBIDDEN", "Only sh20raj@gmail.com is authorized to execute platform administration operations"),
-            { status: 403 }
-          );
-        }
-        adminEmail = email;
-        adminUserId = authUser.id;
-      } catch {
-        return NextResponse.json(
-          createErrorResponse("UNAUTHORIZED", "Authentication with sh20raj@gmail.com is required"),
-          { status: 401 }
-        );
-      }
-    }
+    const session = await requireSession();
+    requireRole(session, ["PLATFORM_ADMIN"]);
+    const adminUser = { userId: session.sub, email: session.phone };
 
     const body = ((await request.json().catch(() => ({}))) || {}) as any;
     const { action, payload } = body;
