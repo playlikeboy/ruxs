@@ -15,38 +15,37 @@ import { SEEDED_VENDORS } from "../../shared/db/seed";
 const vendorsStore = new Map<string, AdminVendorProfile>();
 const auditLogsStore: PlatformAuditLog[] = [];
 
-// Seed baseline in-memory vendors
-for (const sv of SEEDED_VENDORS) {
-  const token = `vtok_${sv.slug}_seed`;
-  const pin = "123456";
-  const profile: AdminVendorProfile = {
-    id: sv.id,
-    businessName: sv.businessName,
-    slug: sv.slug,
-    phone: sv.phone,
-    vendorType: sv.vendorType,
-    serviceCategories: [sv.vendorType === "MILKMAN" ? "MILK" : sv.vendorType === "WATER_SERVICE" ? "WATER" : "TIFFIN"],
-    coveredSocieties: sv.coveredSocieties,
-    status: sv.status as VendorApprovalStatus,
-    tier: sv.planTier,
-    subscriberCount: sv.status === "VERIFIED" ? 28 : 0,
-    monthlyVolumePaise: sv.status === "VERIFIED" ? 3500000 : 0,
-    typeConfig: {
-      shifts: sv.shifts,
-      varieties: sv.varieties || [],
-    },
-    credentials: {
-      loginToken: token,
-      accessPin: pin,
-      directUrl: `https://ruxs.in/login?vendorToken=${token}&slug=${sv.slug}`,
-      generatedAt: new Date().toISOString(),
-    },
-    verifiedAt: sv.status === "VERIFIED" ? new Date().toISOString() : undefined,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  vendorsStore.set(profile.id, profile);
-  vendorsStore.set(profile.slug, profile);
+// Development/test fixtures only. Production reads vendors exclusively from Postgres.
+if (isTestEnv) {
+  for (const sv of SEEDED_VENDORS) {
+    const token = `vtok_${sv.slug}_seed`;
+    const pin = "123456";
+    const profile: AdminVendorProfile = {
+      id: sv.id,
+      businessName: sv.businessName,
+      slug: sv.slug,
+      phone: sv.phone,
+      vendorType: sv.vendorType,
+      serviceCategories: [sv.vendorType === "MILKMAN" ? "MILK" : sv.vendorType === "WATER_SERVICE" ? "WATER" : "TIFFIN"],
+      coveredSocieties: sv.coveredSocieties,
+      status: sv.status as VendorApprovalStatus,
+      tier: sv.planTier,
+      subscriberCount: sv.status === "VERIFIED" ? 28 : 0,
+      monthlyVolumePaise: sv.status === "VERIFIED" ? 3500000 : 0,
+      typeConfig: { shifts: sv.shifts, varieties: sv.varieties || [] },
+      credentials: {
+        loginToken: token,
+        accessPin: pin,
+        directUrl: `https://ruxs.in/login?vendorToken=${token}&slug=${sv.slug}`,
+        generatedAt: new Date().toISOString(),
+      },
+      verifiedAt: sv.status === "VERIFIED" ? new Date().toISOString() : undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    vendorsStore.set(profile.id, profile);
+    vendorsStore.set(profile.slug, profile);
+  }
 }
 
 export class AdminService {
