@@ -4,6 +4,7 @@ import { HouseholdService } from "@/src/modules/households/household-service";
 import { FulfillmentStateMachine } from "@/src/modules/fulfillment/fulfillment-fsm";
 import { FulfillmentGenerator } from "@/src/modules/fulfillment/fulfillment-generator";
 import { VacationService } from "@/src/modules/vacation/vacation-service";
+import { SubscriptionEngine } from "@/src/modules/subscriptions/subscription-engine";
 import { DisputeService } from "@/src/modules/disputes/dispute-service";
 import { CutoffEngine } from "@/src/modules/cutoff/cutoff-engine";
 import { AssetLedgerService } from "@/src/modules/assets/asset-ledger";
@@ -45,11 +46,7 @@ export async function GET(request: Request) {
 
     // Default kitchen batch aggregation for lunch shift
     const defaultVendorId = vendors[0]?.id || "ten_sharma_tiffin";
-    const kitchenBatches = CutoffEngine.getKitchenBatchCounter(
-      defaultVendorId,
-      todayStr,
-      "LUNCH"
-    );
+    const kitchenBatches = await CutoffEngine.getKitchenBatchCounterAsync(defaultVendorId, todayStr, "LUNCH");
 
     const overview = {
       totalVendors: vendors.length,
@@ -165,7 +162,7 @@ export async function POST(request: Request) {
       }
 
       case "TRANSITION_FULFILLMENT": {
-        const f = FulfillmentStateMachine.getById(payload.fulfillmentId);
+        const f = await FulfillmentStateMachine.getByIdAsync(payload.fulfillmentId);
         if (!f) throw new Error(`Fulfillment ${payload.fulfillmentId} not found`);
 
         const transitionByStatus: Record<string, any> = {
