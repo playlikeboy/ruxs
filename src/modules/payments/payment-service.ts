@@ -153,55 +153,97 @@ export class PaymentService {
 
     if (!payment) throw new Error("Payment order not found");
 
-    if (processedGatewayIds.has(params.gatewayPaymentId) || payment.status === "SUCCESS") {
-      if (payment.gatewayPaymentId === params.gatewayPaymentId || payment.status === "SUCCESS") {
+    if (isTestEnv) {
+      if (processedGatewayIds.has(params.gatewayPaymentId) || payment.status === "SUCCESS") {
         processedGatewayIds.add(params.gatewayPaymentId);
         return { payment, wasAlreadyProcessed: true };
+      }
+    } else {
+      const claim = await db.update(paymentsTable)
+        .set({
+          status: "PENDING",
+          gatewayPaymentId: params.gatewayPaymentId,
+          bankUtr: params.bankUtr,
+        })
+        .where(and(
+          eq(paymentsTable.id, payment.id),
+          eq(paymentsTable.status, "INITIATED"),
+        ))
+        .returning({ id: paymentsTable.id });
+
+      if (claim.length === 0) {
+        const currentRows = await db.select().from(paymentsTable)
+          .where(eq(paymentsTable.id, payment.id))
+          .limit(1);
+        const current = currentRows[0];
+        if (current?.status === "SUCCESS" || current?.status === "PENDING") {
+          return { payment: current ? mapDbPayment(current) : payment, wasAlreadyProcessed: true };
+        }
+        throw new Error("Payment order is not available for processing");
       }
     }
 
     const now = new Date().toISOString();
-    const khataEntry = await KhataLedgerService.recordEntry({
-      tenantId: payment.tenantId,
-      customerId: payment.customerId,
-      entryType: "PAYMENT_CREDIT",
-      direction: "CREDIT",
-      amountPaise: payment.amountPaise,
-      referenceType: "PAYMENT",
-      referenceId: payment.id,
-      description: `UPI Payment Settled (UTR: ${params.bankUtr})`,
-    });
 
-    if (payment.invoiceId) {
-      await BillingEngine.recordInvoicePayment(payment.invoiceId, payment.amountPaise);
+    try {
+      const khataEntry = await KhataLedgerService.recordEntry({
+        tenantId: payment.tenantId,
+        customerId: payment.customerId,
+        entryType: "PAYMENT_CREDIT",
+        direction: "CREDIT",
+        amountPaise: payment.amountPaise,
+        referenceType: "PAYMENT",
+        referenceId: payment.id,
+        description: `UPI Payment Settled (UTR: ${params.bankUtr})`,
+      });
+
+      if (payment.invoiceId) {
+        await BillingEngine.recordInvoicePayment(payment.invoiceId, payment.amountPaise);
+      }
+
+      payment.status = "SUCCESS";
+      payment.gatewayPaymentId = params.gatewayPaymentId;
+      payment.bankUtr = params.bankUtr;
+      payment.settledAt = now;
+      payment.khataEntryId = khataEntry.id;
+      payment.updatedAt = now;
+
+      if (!isTestEnv) {
+        await db.update(paymentsTable)
+          .set({
+            status: "SUCCESS",
+            gatewayPaymentId: params.gatewayPaymentId,
+            bankUtr: params.bankUtr,
+            khataEntryId: khataEntry.id,
+            settledAt: new Date(now),
+          })
+          .where(and(
+            eq(paymentsTable.id, payment.id),
+            eq(paymentsTable.status, "PENDING"),
+            eq(paymentsTable.gatewayPaymentId, params.gatewayPaymentId),
+          ));
+      }
+
+      if (isTestEnv) processedGatewayIds.add(params.gatewayPaymentId);
+      paymentsStore.set(payment.id, payment);
+      paymentsStore.set(payment.gatewayOrderId, payment);
+      return { payment, wasAlreadyProcessed: false };
+    } catch (error) {
+      if (!isTestEnv) {
+        await db.update(paymentsTable)
+          .set({
+            status: "INITIATED",
+            gatewayPaymentId: null,
+            bankUtr: null,
+          })
+          .where(and(
+            eq(paymentsTable.id, payment.id),
+            eq(paymentsTable.status, "PENDING"),
+            eq(paymentsTable.gatewayPaymentId, params.gatewayPaymentId),
+          ));
+      }
+      throw error;
     }
-
-    payment.status = "SUCCESS";
-    payment.gatewayPaymentId = params.gatewayPaymentId;
-    payment.bankUtr = params.bankUtr;
-    payment.settledAt = now;
-    payment.khataEntryId = khataEntry.id;
-    payment.updatedAt = now;
-
-    if (!isTestEnv) {
-      await db.update(paymentsTable)
-        .set({
-          status: "SUCCESS",
-          gatewayPaymentId: params.gatewayPaymentId,
-          bankUtr: params.bankUtr,
-          khataEntryId: khataEntry.id,
-          settledAt: new Date(now),
-        })
-        .where(and(
-          eq(paymentsTable.id, payment.id),
-          eq(paymentsTable.status, "INITIATED")
-        ));
-    }
-
-    processedGatewayIds.add(params.gatewayPaymentId);
-    paymentsStore.set(payment.id, payment);
-    paymentsStore.set(payment.gatewayOrderId, payment);
-    return { payment, wasAlreadyProcessed: false };
   }
 
   static getById(id: string): PaymentRecord | null {
