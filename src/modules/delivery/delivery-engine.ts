@@ -409,14 +409,14 @@ export class DeliveryEngine {
       const fulfillment = await FulfillmentStateMachine.getByIdAsync(stop.fulfillmentId);
       if (fulfillment) {
         if (fulfillment.status === "IN_PREPARATION" || fulfillment.status === "CONFIRMED") {
-          FulfillmentStateMachine.transition(fulfillment, {
+          FulfillmentStateMachine.transitionAsync(fulfillment, {
             action: "DISPATCH",
             actionTime: stop.deliveredAt,
             driverId: run.driverId,
           });
         }
         if (fulfillment.status === "OUT_FOR_DELIVERY") {
-          FulfillmentStateMachine.transition(fulfillment, {
+          FulfillmentStateMachine.transitionAsync(fulfillment, {
             action: "MARK_DELIVERED",
             actionTime: stop.deliveredAt,
             driverId: run.driverId,
@@ -516,14 +516,14 @@ export class DeliveryEngine {
       const fulfillment = await FulfillmentStateMachine.getByIdAsync(stop.fulfillmentId);
       if (fulfillment) {
         if (fulfillment.status === "IN_PREPARATION" || fulfillment.status === "CONFIRMED") {
-          FulfillmentStateMachine.transition(fulfillment, {
+          FulfillmentStateMachine.transitionAsync(fulfillment, {
             action: "DISPATCH",
             actionTime: new Date().toISOString(),
             driverId: run.driverId,
           });
         }
         if (fulfillment.status === "OUT_FOR_DELIVERY") {
-          FulfillmentStateMachine.transition(fulfillment, {
+          FulfillmentStateMachine.transitionAsync(fulfillment, {
             action: "MARK_FAILED",
             actionTime: new Date().toISOString(),
             notes: params.failureReason,
