@@ -437,10 +437,10 @@ Manage deliveries, daily cutoffs, and digital khata.`;
           return mapped;
         }
       } catch {
-        // Fallback
+        throw new Error("Database unavailable while loading vendors");
       }
     }
-    const list = Array.from(new Set(vendorsStore.values()));
+    return [];
     if (status) {
       return list.filter((v) => v.status === status);
     }
@@ -494,8 +494,10 @@ Manage deliveries, daily cutoffs, and digital khata.`;
             createdAt: l.createdAt.toISOString(),
           }));
         }
-      } catch {}
+      } catch {
+        throw new Error("Database unavailable while loading audit logs");
+      }
     }
-    return this.getAuditLogs(limit);
+    return [];
   }
 }
