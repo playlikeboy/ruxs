@@ -2,13 +2,12 @@ import {
   AssetHolding,
   AssetLedgerEntry,
   AssetType,
-  RecordAssetExchangeInput,
   RecordAssetExchangeSchema,
 } from "./asset-schema";
 import { KhataLedgerService } from "../khata/khata-ledger";
-import { Paise, addPaise, subtractPaise } from "../../shared/types/money";
-import { db, isTestEnv } from "../../shared/db";
-import { assetHoldings as assetHoldingsTable } from "../../shared/db/schema";
+import { Paise } from "../../shared/types/money";
+import { db, isTestEnv, assetHoldings as assetHoldingsTable, assetMovements as assetMovementsTable } from "../../shared/db";
+import { and, eq } from "drizzle-orm";
 
 const holdingsStore = new Map<string, AssetHolding>();
 const ledgerStore = new Map<string, AssetLedgerEntry[]>();
@@ -18,43 +17,56 @@ export class AssetLedgerService {
     return `${tenantId}:${customerId}:${assetType}`;
   }
 
-  /**
-   * Records a doorstep container exchange (e.g. delivered 1 full water jar, collected 1 empty jar)
-   */
-  static async recordExchange(rawInput: unknown): Promise<{
-    holding: AssetHolding;
-    entry: AssetLedgerEntry;
-  }> {
+  static async recordExchange(rawInput: unknown): Promise<{ holding: AssetHolding; entry: AssetLedgerEntry }> {
     const validated = RecordAssetExchangeSchema.parse(rawInput);
     const key = this.getKey(validated.tenantId, validated.customerId, validated.assetType);
+    let holding = holdingsStore.get(key);
 
-    const holding = holdingsStore.get(key) || {
+    if (!holding && !isTestEnv) {
+      const rows = await db.select().from(assetHoldingsTable).where(and(
+        eq(assetHoldingsTable.tenantId, validated.tenantId),
+        eq(assetHoldingsTable.customerId, validated.customerId),
+        eq(assetHoldingsTable.assetType, validated.assetType),
+      )).limit(1);
+      const row = rows[0];
+      if (row) {
+        holding = {
+          tenantId: row.tenantId,
+          customerId: row.customerId,
+          assetType: row.assetType as AssetType,
+          holdingCount: row.holdingCount,
+          depositPerUnitPaise: row.depositPerUnitPaise as Paise,
+          totalDepositHeldPaise: row.totalDepositHeldPaise as Paise,
+          updatedAt: row.updatedAt.toISOString(),
+        };
+      }
+    }
+
+    holding ??= {
       tenantId: validated.tenantId,
       customerId: validated.customerId,
       assetType: validated.assetType,
       holdingCount: 0,
-      depositPerUnitPaise: 15000 as Paise, // ₹150 standard container deposit
+      depositPerUnitPaise: 15000 as Paise,
       totalDepositHeldPaise: 0 as Paise,
       updatedAt: new Date().toISOString(),
     };
 
     const netDelta = validated.quantityDelivered - validated.quantityCollected;
     const resultingHolding = holding.holdingCount + netDelta;
-
     if (resultingHolding < 0) {
-      throw new Error(
-        `Invalid exchange: cannot collect ${validated.quantityCollected} containers when customer holds only ${holding.holdingCount}`
-      );
+      throw new Error(`Invalid exchange: cannot collect ${validated.quantityCollected} containers when customer holds only ${holding.holdingCount}`);
     }
 
-    holding.holdingCount = resultingHolding;
-    holding.totalDepositHeldPaise = (resultingHolding * holding.depositPerUnitPaise) as Paise;
-    holding.updatedAt = new Date().toISOString();
-    holdingsStore.set(key, holding);
-
-    const entryId = `asl_${Math.random().toString(36).substring(2, 11)}`;
+    const now = new Date();
+    const updatedHolding: AssetHolding = {
+      ...holding,
+      holdingCount: resultingHolding,
+      totalDepositHeldPaise: (resultingHolding * holding.depositPerUnitPaise) as Paise,
+      updatedAt: now.toISOString(),
+    };
     const entry: AssetLedgerEntry = {
-      id: entryId,
+      id: `asl_${crypto.randomUUID()}`,
       tenantId: validated.tenantId,
       customerId: validated.customerId,
       assetType: validated.assetType,
@@ -64,139 +76,128 @@ export class AssetLedgerService {
       resultingHoldingCount: resultingHolding,
       fulfillmentId: validated.fulfillmentId,
       notes: validated.notes,
-      createdAt: new Date().toISOString(),
+      createdAt: now.toISOString(),
     };
 
+    if (!isTestEnv) {
+      const existing = await db.select({ id: assetHoldingsTable.id })
+        .from(assetHoldingsTable)
+        .where(and(
+          eq(assetHoldingsTable.tenantId, validated.tenantId),
+          eq(assetHoldingsTable.customerId, validated.customerId),
+          eq(assetHoldingsTable.assetType, validated.assetType),
+        )).limit(1);
+
+      if (existing[0]) {
+        await db.update(assetHoldingsTable).set({
+          holdingCount: updatedHolding.holdingCount,
+          totalDepositHeldPaise: Number(updatedHolding.totalDepositHeldPaise),
+          updatedAt: now,
+        }).where(eq(assetHoldingsTable.id, existing[0].id));
+      } else {
+        await db.insert(assetHoldingsTable).values({
+          id: crypto.randomUUID(),
+          tenantId: updatedHolding.tenantId,
+          customerId: updatedHolding.customerId,
+          assetType: updatedHolding.assetType,
+          holdingCount: updatedHolding.holdingCount,
+          depositPerUnitPaise: Number(updatedHolding.depositPerUnitPaise),
+          totalDepositHeldPaise: Number(updatedHolding.totalDepositHeldPaise),
+          updatedAt: now,
+        });
+      }
+
+      await db.insert(assetMovementsTable).values({
+        id: entry.id,
+        tenantId: entry.tenantId,
+        customerId: entry.customerId,
+        assetType: entry.assetType,
+        quantityDelivered: entry.quantityDelivered,
+        quantityCollected: entry.quantityCollected,
+        netDelta: entry.netDelta,
+        resultingHoldingCount: entry.resultingHoldingCount,
+        fulfillmentId: entry.fulfillmentId || null,
+        notes: entry.notes || null,
+        createdAt: now,
+      });
+    }
+
+    holdingsStore.set(key, updatedHolding);
     const entries = ledgerStore.get(key) || [];
     entries.push(entry);
     ledgerStore.set(key, entries);
 
-    return { holding, entry };
+    return { holding: updatedHolding, entry };
   }
 
-  /**
-   * Reconciles asset returns upon subscription termination and refunds deposit to Khata if all containers are returned
-   */
-  static async reconcileAndRefundDeposit(
-    tenantId: string,
-    customerId: string,
-    assetType: AssetType
-  ): Promise<{ refunded: boolean; message: string; refundPaise: Paise }> {
-    const key = this.getKey(tenantId, customerId, assetType);
-    const holding = holdingsStore.get(key);
-
+  static async reconcileAndRefundDeposit(tenantId: string, customerId: string, assetType: AssetType) {
+    const holding = await this.getHoldingAsync(tenantId, customerId, assetType);
     if (!holding || holding.holdingCount === 0) {
-      return {
-        refunded: false,
-        message: "No containers or active deposits found for this customer",
-        refundPaise: 0 as Paise,
-      };
+      return { refunded: false, message: "No containers or active deposits found for this customer", refundPaise: 0 as Paise };
     }
 
-    // Acceptance Criteria: verify 0 unreturned containers before deposit refund
-    if (holding.holdingCount > 0) {
-      throw new Error(
-        `Cannot refund deposit: customer still holds ${holding.holdingCount} unreturned ${assetType} containers`
-      );
-    }
-
-    const refundAmount = holding.totalDepositHeldPaise;
-
-    // Credit Khata with deposit refund
-    await KhataLedgerService.recordEntry({
-      tenantId,
-      customerId,
-      entryType: "REFUND_CREDIT",
-      direction: "CREDIT",
-      amountPaise: refundAmount,
-      description: `Security Deposit Refund for returned ${assetType}`,
-    });
-
-    holding.totalDepositHeldPaise = 0 as Paise;
-    holding.updatedAt = new Date().toISOString();
-    holdingsStore.set(key, holding);
-
-    return {
-      refunded: true,
-      message: `Successfully refunded ₹${refundAmount / 100} deposit to Khata`,
-      refundPaise: refundAmount,
-    };
+    throw new Error(`Cannot refund deposit: customer still holds ${holding.holdingCount} unreturned ${assetType} containers`);
   }
 
   static getHolding(tenantId: string, customerId: string, assetType: AssetType): AssetHolding | null {
     return holdingsStore.get(this.getKey(tenantId, customerId, assetType)) || null;
   }
 
-  /**
-   * Seeds default demo asset container holdings if store is empty
-   */
-  static seedDefaultHoldingsIfEmpty(): void {
-    if (holdingsStore.size > 0) return;
+  static async getHoldingAsync(tenantId: string, customerId: string, assetType: AssetType): Promise<AssetHolding | null> {
+    const memory = this.getHolding(tenantId, customerId, assetType);
+    if (memory) return memory;
+    if (isTestEnv) return null;
 
-    const sample1: AssetHolding = {
-      tenantId: "ten_pureaqua_water",
-      customerId: "usr_priya",
-      assetType: "WATER_JAR_20L",
-      holdingCount: 2,
-      depositPerUnitPaise: 15000 as Paise,
-      totalDepositHeldPaise: 30000 as Paise,
-      updatedAt: new Date().toISOString(),
+    const rows = await db.select().from(assetHoldingsTable).where(and(
+      eq(assetHoldingsTable.tenantId, tenantId),
+      eq(assetHoldingsTable.customerId, customerId),
+      eq(assetHoldingsTable.assetType, assetType),
+    )).limit(1);
+    const row = rows[0];
+    if (!row) return null;
+
+    const holding: AssetHolding = {
+      tenantId: row.tenantId,
+      customerId: row.customerId,
+      assetType: row.assetType as AssetType,
+      holdingCount: row.holdingCount,
+      depositPerUnitPaise: row.depositPerUnitPaise as Paise,
+      totalDepositHeldPaise: row.totalDepositHeldPaise as Paise,
+      updatedAt: row.updatedAt.toISOString(),
     };
-
-    const sample2: AssetHolding = {
-      tenantId: "ten_sharma_tiffin",
-      customerId: "usr_priya",
-      assetType: "TIFFIN_BOX_STEEL",
-      holdingCount: 1,
-      depositPerUnitPaise: 30000 as Paise,
-      totalDepositHeldPaise: 30000 as Paise,
-      updatedAt: new Date().toISOString(),
-    };
-
-    const sample3: AssetHolding = {
-      tenantId: "ten_pureaqua_water",
-      customerId: "usr_verma",
-      assetType: "WATER_JAR_20L",
-      holdingCount: 3,
-      depositPerUnitPaise: 15000 as Paise,
-      totalDepositHeldPaise: 45000 as Paise,
-      updatedAt: new Date().toISOString(),
-    };
-
-    holdingsStore.set(this.getKey(sample1.tenantId, sample1.customerId, sample1.assetType), sample1);
-    holdingsStore.set(this.getKey(sample2.tenantId, sample2.customerId, sample2.assetType), sample2);
-    holdingsStore.set(this.getKey(sample3.tenantId, sample3.customerId, sample3.assetType), sample3);
+    holdingsStore.set(this.getKey(tenantId, customerId, assetType), holding);
+    return holding;
   }
 
-  /**
-   * Lists all physical asset container holdings across households
-   */
+  static seedDefaultHoldingsIfEmpty(): void {
+    if (holdingsStore.size > 0) return;
+    if (!isTestEnv) return;
+
+    const samples: AssetHolding[] = [
+      { tenantId: "ten_pureaqua_water", customerId: "usr_priya", assetType: "WATER_JAR_20L", holdingCount: 2, depositPerUnitPaise: 15000 as Paise, totalDepositHeldPaise: 30000 as Paise, updatedAt: new Date().toISOString() },
+      { tenantId: "ten_sharma_tiffin", customerId: "usr_priya", assetType: "TIFFIN_BOX_STEEL", holdingCount: 1, depositPerUnitPaise: 30000 as Paise, totalDepositHeldPaise: 30000 as Paise, updatedAt: new Date().toISOString() },
+      { tenantId: "ten_pureaqua_water", customerId: "usr_verma", assetType: "WATER_JAR_20L", holdingCount: 3, depositPerUnitPaise: 15000 as Paise, totalDepositHeldPaise: 45000 as Paise, updatedAt: new Date().toISOString() },
+    ];
+    for (const sample of samples) holdingsStore.set(this.getKey(sample.tenantId, sample.customerId, sample.assetType), sample);
+  }
+
   static listAllHoldings(): AssetHolding[] {
     this.seedDefaultHoldingsIfEmpty();
     return Array.from(holdingsStore.values());
   }
 
-  /**
-   * Lists all physical asset container holdings from Neon DB
-   */
   static async listAllHoldingsAsync(): Promise<AssetHolding[]> {
     if (!isTestEnv) {
-      try {
-        const rows = await db.select().from(assetHoldingsTable);
-        if (rows && rows.length > 0) {
-          return rows.map((r) => ({
-            tenantId: r.tenantId,
-            customerId: r.customerId,
-            assetType: r.assetType as any,
-            holdingCount: r.holdingCount,
-            depositPerUnitPaise: r.depositPerUnitPaise as Paise,
-            totalDepositHeldPaise: r.totalDepositHeldPaise as Paise,
-            updatedAt: r.updatedAt.toISOString(),
-          }));
-        }
-      } catch {
-        // Fallback
-      }
+      const rows = await db.select().from(assetHoldingsTable);
+      return rows.map((r) => ({
+        tenantId: r.tenantId,
+        customerId: r.customerId,
+        assetType: r.assetType as AssetType,
+        holdingCount: r.holdingCount,
+        depositPerUnitPaise: r.depositPerUnitPaise as Paise,
+        totalDepositHeldPaise: r.totalDepositHeldPaise as Paise,
+        updatedAt: r.updatedAt.toISOString(),
+      }));
     }
     return this.listAllHoldings();
   }
