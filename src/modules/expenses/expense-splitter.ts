@@ -105,7 +105,7 @@ export class ExpenseSplitter {
 
     const allSettled = computedParticipants.every((p) => p.isSettled);
 
-    const expenseId = `exp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const expenseId = `exp_${crypto.randomUUID()}`;
     const expense: HouseholdExpense = HouseholdExpenseSchema.parse({
       id: expenseId,
       householdId: input.householdId,
@@ -122,40 +122,35 @@ export class ExpenseSplitter {
       updatedAt: new Date().toISOString(),
     });
 
-    expensesStore.set(expenseId, expense);
-
     if (!isTestEnv) {
-      db.insert(householdExpensesTable)
-        .values({
-          id: expenseId,
-          householdId: input.householdId,
-          invoiceId: input.invoiceId,
-          description: input.description,
-          totalAmountPaise: totalPaise,
-          paidByUserId: input.paidByUserId,
-          paidByName: input.paidByName,
-          paidByUpi: input.paidByUpi,
-          strategy: input.strategy,
-          isFullySettled: allSettled,
-        })
-        .catch(() => {});
+      await db.insert(householdExpensesTable).values({
+        id: expenseId,
+        householdId: input.householdId,
+        invoiceId: input.invoiceId,
+        description: input.description,
+        totalAmountPaise: totalPaise,
+        paidByUserId: input.paidByUserId,
+        paidByName: input.paidByName,
+        paidByUpi: input.paidByUpi,
+        strategy: input.strategy,
+        isFullySettled: allSettled,
+      });
 
       for (const p of computedParticipants) {
-        db.insert(householdExpenseParticipantsTable)
-          .values({
-            id: `part_${expenseId}_${p.userId}`,
-            expenseId,
-            userId: p.userId,
-            name: p.name,
-            phone: p.phone,
-            sharePaise: p.sharePaise,
-            isSettled: p.isSettled,
-            upiId: p.upiId,
-          })
-          .catch(() => {});
+        await db.insert(householdExpenseParticipantsTable).values({
+          id: `part_${expenseId}_${p.userId}`,
+          expenseId,
+          userId: p.userId,
+          name: p.name,
+          phone: p.phone,
+          sharePaise: p.sharePaise,
+          isSettled: p.isSettled,
+          upiId: p.upiId,
+        });
       }
     }
 
+    expensesStore.set(expenseId, expense);
     return expense;
   }
 
@@ -197,31 +192,20 @@ export class ExpenseSplitter {
 
     expense.isFullySettled = expense.participants.every((p) => p.isSettled);
     expense.updatedAt = new Date().toISOString();
-    expensesStore.set(expense.id, expense);
-
     if (!isTestEnv) {
-      db.update(householdExpenseParticipantsTable)
-        .set({
-          isSettled: true,
-          settledAt: new Date(),
-        })
-        .where(
-          and(
-            eq(householdExpenseParticipantsTable.expenseId, expenseId),
-            eq(householdExpenseParticipantsTable.userId, participantUserId)
-          )
-        )
-        .catch(() => {});
+      await db.update(householdExpenseParticipantsTable)
+        .set({ isSettled: true, settledAt: new Date() })
+        .where(and(
+          eq(householdExpenseParticipantsTable.expenseId, expenseId),
+          eq(householdExpenseParticipantsTable.userId, participantUserId)
+        ));
 
-      db.update(householdExpensesTable)
-        .set({
-          isFullySettled: expense.isFullySettled,
-          updatedAt: new Date(),
-        })
-        .where(eq(householdExpensesTable.id, expenseId))
-        .catch(() => {});
+      await db.update(householdExpensesTable)
+        .set({ isFullySettled: expense.isFullySettled, updatedAt: new Date() })
+        .where(eq(householdExpensesTable.id, expenseId));
     }
 
+    expensesStore.set(expense.id, expense);
     return expense;
   }
 
