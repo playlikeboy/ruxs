@@ -85,11 +85,8 @@ export class VendorService {
       verifiedAt: options?.autoApprove ? new Date().toISOString() : undefined,
     };
 
-    vendorStore.set(vendorId, profile);
-    vendorStore.set(slug, profile);
-
     if (!isTestEnv) {
-      try {
+      
         await db
           .insert(tenantsTable)
           .values({
@@ -118,11 +115,10 @@ export class VendorService {
               updatedAt: new Date(),
             },
           });
-      } catch (err) {
-        console.warn("Could not persist vendor to Neon, keeping in-memory:", err);
-      }
     }
 
+    vendorStore.set(vendorId, profile);
+    vendorStore.set(slug, profile);
     return profile;
   }
 
@@ -135,7 +131,7 @@ export class VendorService {
       throw new Error(`Vendor not found: ${vendorIdOrSlug}`);
     }
 
-    const token = `vtok_${vendor.slug}_${Math.random().toString(36).substring(2, 8)}`;
+    const token = `vtok_${vendor.slug}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
     const pin = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
     const credentials: VendorCredentials = {
       loginToken: token,
@@ -180,17 +176,9 @@ export class VendorService {
     vendorStore.set(vendor.slug, vendor);
 
     if (!isTestEnv) {
-      try {
-        await db
-          .update(tenantsTable)
-          .set({
-            status: "VERIFIED",
-            updatedAt: new Date(),
-          })
-          .where(eq(tenantsTable.id, vendor.id));
-      } catch (err) {
-        console.warn("Could not update approval in Neon:", err);
-      }
+      await db.update(tenantsTable)
+        .set({ status: "VERIFIED", updatedAt: new Date() })
+        .where(eq(tenantsTable.id, vendor.id));
     }
 
     return vendor;
@@ -237,8 +225,8 @@ export class VendorService {
           vendorStore.set(row.slug, profile);
           return profile;
         }
-      } catch (err) {
-        console.warn("Error fetching vendor from Neon:", err);
+      } catch {
+        throw new Error("Database unavailable while loading vendor");
       }
     }
 
