@@ -18,6 +18,139 @@ const householdStore = new Map<string, Household>();
 const userHouseholdIndex = new Map<string, string>(); // userId -> householdId
 
 export class HouseholdService {
+  static async createHouseholdAsync(rawInput: unknown): Promise<Household> {
+    const input: CreateHouseholdInput = CreateHouseholdSchema.parse(rawInput);
+    const householdId = `hh_${crypto.randomUUID()}`;
+    const ownerMemberId = `hm_${crypto.randomUUID()}`;
+    const now = new Date().toISOString();
+
+    const household: Household = {
+      id: householdId,
+      name: input.name,
+      primaryOwnerId: input.primaryOwnerId,
+      societyName: input.societyName,
+      towerWing: input.towerWing,
+      floor: input.floor,
+      flatNumber: input.flatNumber,
+      city: input.city,
+      members: [{
+        id: ownerMemberId,
+        householdId,
+        userId: input.primaryOwnerId,
+        name: input.ownerName,
+        phone: input.ownerPhone,
+        role: "PRIMARY_OWNER",
+        canManageSubscriptions: true,
+        canSkipDeliveries: true,
+        joinedAt: now,
+      }],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    if (!isTestEnv) {
+      try {
+        await db.insert(householdsTable).values({
+          id: household.id,
+          name: household.name,
+          primaryOwnerId: household.primaryOwnerId,
+          societyName: household.societyName,
+          towerWing: household.towerWing,
+          floor: String(household.floor),
+          flatNumber: household.flatNumber,
+          city: household.city,
+        });
+
+        await db.insert(householdMembersTable).values({
+          id: ownerMemberId,
+          householdId,
+          userId: input.primaryOwnerId,
+          role: "PRIMARY_OWNER",
+        });
+      } catch (error) {
+        try { await db.delete(householdsTable).where(eq(householdsTable.id, householdId)); } catch {}
+        throw error;
+      }
+    }
+
+    householdStore.set(householdId, household);
+    userHouseholdIndex.set(input.primaryOwnerId, householdId);
+    return household;
+  }
+
+  static async inviteMemberAsync(rawInput: unknown): Promise<{ household: Household; member: HouseholdMember }> {
+    const input: InviteMemberInput = InviteMemberSchema.parse(rawInput);
+    if (input.role === "PRIMARY_OWNER") throw new Error("A household may only have one primary owner");
+
+    const household = await this.getHouseholdAsync(input.householdId);
+    if (!household) throw new Error(`Household ${input.householdId} not found`);
+
+    const inviter = household.members.find((m) => m.userId === input.invitedByUserId);
+    if (!inviter || !["PRIMARY_OWNER", "ADMIN"].includes(inviter.role)) {
+      throw new Error("Only household owners or admins can invite new members");
+    }
+    if (household.members.some((m) => m.phone === input.phone)) {
+      throw new Error(`A member with phone ${input.phone} already belongs to this household`);
+    }
+
+    const existingUser = !isTestEnv
+      ? (await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.phone, input.phone)).limit(1))[0]
+      : undefined;
+    const memberUserId = existingUser?.id || `usr_${crypto.randomUUID()}`;
+    const now = new Date();
+
+    if (!isTestEnv && !existingUser) {
+      await db.insert(usersTable).values({
+        id: memberUserId,
+        phone: input.phone,
+        fullName: input.name,
+        role: "CUSTOMER",
+        whatsappOptIn: true,
+        status: "ACTIVE",
+      });
+    }
+
+    const memberId = `hm_${crypto.randomUUID()}`;
+    if (!isTestEnv) {
+      await db.insert(householdMembersTable).values({
+        id: memberId,
+        householdId: input.householdId,
+        userId: memberUserId,
+        role: input.role,
+      });
+    }
+
+    const refreshed = await this.getHouseholdAsync(input.householdId);
+    if (!refreshed) throw new Error("Household no longer exists");
+
+    const member = refreshed.members.find((m) => m.userId === memberUserId);
+    if (!member) throw new Error("Household member was not persisted");
+    void now;
+    return { household: refreshed, member };
+  }
+
+  static async removeMemberAsync(householdId: string, memberUserId: string, requestedByUserId: string): Promise<Household> {
+    const household = await this.getHouseholdAsync(householdId);
+    if (!household) throw new Error(`Household ${householdId} not found`);
+
+    const requester = household.members.find((m) => m.userId === requestedByUserId);
+    if (!requester || !["PRIMARY_OWNER", "ADMIN"].includes(requester.role)) {
+      throw new Error("Only household owners or admins can remove members");
+    }
+    if (memberUserId === household.primaryOwnerId) throw new Error("Cannot remove primary owner from household");
+    if (!household.members.some((m) => m.userId === memberUserId)) throw new Error(`Member ${memberUserId} not found in household`);
+
+    if (!isTestEnv) {
+      await db.delete(householdMembersTable).where(eq(householdMembersTable.userId, memberUserId));
+    }
+
+    userHouseholdIndex.delete(memberUserId);
+    const updated = await this.getHouseholdAsync(householdId);
+    if (!updated) throw new Error("Household no longer exists");
+    householdStore.set(updated.id, updated);
+    return updated;
+  }
+
   /**
    * Creates a unified household with the creator as PRIMARY_OWNER
    */
