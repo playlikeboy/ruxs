@@ -1,46 +1,25 @@
 import { CutoffEngine } from "@/src/modules/cutoff/cutoff-engine";
 import { AdminService } from "@/src/modules/admin/admin-service";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
+import { requireSession, requireRole, assertTenant } from "@/src/shared/auth/request";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as {
-      tenantId?: string;
-      serviceDate?: string;
-      evaluationTime?: string;
-    };
-
-    const requestedTenantId = body.tenantId;
+    const session = await requireSession();
+    requireRole(session, ["VENDOR_ADMIN", "PLATFORM_ADMIN"]);
+    const body = await request.json() as { tenantId?: string; serviceDate?: string; evaluationTime?: string };
     const serviceDate = body.serviceDate || new Date().toISOString().split("T")[0];
-
-    if (!requestedTenantId || requestedTenantId === "ALL") {
-      const allTenants = await AdminService.listVendorsAsync();
-      let totalLocked = 0;
-      const allUpdated: any[] = [];
-
-      for (const t of allTenants) {
-        const res = CutoffEngine.lockExpiredCutoffs(t.id, serviceDate, body.evaluationTime);
-        totalLocked += res.lockedCount;
-        allUpdated.push(...res.updatedFulfillments);
-      }
-
-      return Response.json(createSuccessResponse({ lockedCount: totalLocked, updatedFulfillments: allUpdated }));
+    const tenantId = body.tenantId;
+    if (!tenantId || tenantId === "ALL") {
+      if (session.role !== "PLATFORM_ADMIN") return Response.json(createErrorResponse("FORBIDDEN", "Only platform administrators can lock all tenants"), { status: 403 });
+      const all = await AdminService.listVendorsAsync();
+      const updated = all.map(t => CutoffEngine.lockExpiredCutoffs(t.id, serviceDate, body.evaluationTime)).flatMap(r => r.updatedFulfillments);
+      return Response.json(createSuccessResponse({ lockedCount: updated.length, updatedFulfillments: updated }));
     }
-
-    const result = CutoffEngine.lockExpiredCutoffs(
-      requestedTenantId,
-      serviceDate,
-      body.evaluationTime
-    );
-
-    return Response.json(createSuccessResponse(result));
+    assertTenant(session, tenantId);
+    return Response.json(createSuccessResponse(CutoffEngine.lockExpiredCutoffs(tenantId, serviceDate, body.evaluationTime)));
   } catch (error) {
-    return Response.json(
-      createErrorResponse(
-        "INTERNAL_SERVER_ERROR",
-        error instanceof Error ? error.message : "Internal Server Error"
-      ),
-      { status: 500 }
-    );
+    if (error instanceof Error && error.name === "AuthorizationError") return Response.json(createErrorResponse((error as any).code, error.message), { status: (error as any).code === "UNAUTHORIZED" ? 401 : 403 });
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to lock cutoff"), { status: 500 });
   }
 }
