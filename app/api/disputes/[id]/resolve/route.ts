@@ -9,7 +9,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     requireRole(session, ["PLATFORM_ADMIN"]);
     const { id } = await params;
     const body = await request.json();
-    const result = await DisputeService.resolveDispute(id, { ...body, resolvedBy: session.sub });
+    const result = await DisputeService.resolveDisputeAsync(id, { ...body, resolvedBy: session.sub });
     return Response.json(createSuccessResponse(result));
   } catch (error) {
     if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
