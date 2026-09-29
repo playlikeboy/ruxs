@@ -54,7 +54,7 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
 export async function signSessionJwt(
   claims: Omit<SessionClaims, "iat" | "exp">,
   secret: string,
-  expiresInSeconds: number = 30 * 24 * 60 * 60 // 30 days default
+  expiresInSeconds: number = 12 * 60 * 60 // 12 hours default
 ): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const fullClaims: SessionClaims = {
