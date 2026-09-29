@@ -35,15 +35,15 @@ export class VendorService {
       else resolvedType = "TIFFIN";
     }
 
-    const vendorId = options?.customId || `ten_${Math.random().toString(36).substring(2, 11)}`;
+    const vendorId = options?.customId || `ten_${crypto.randomUUID()}`;
     const slug = generateVendorSlug(validated.businessName, validated.locality);
     const inviteUrl = `https://ruxs.in/v/${slug}`;
     const qrPayload = `upi://pay?pa=${validated.upiId}&pn=${encodeURIComponent(
       validated.businessName
     )}&cu=INR`;
 
-    const token = `vtok_${slug}_${Math.random().toString(36).substring(2, 8)}`;
-    const pin = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = `vtok_${slug}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+    const pin = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
     const credentials: VendorCredentials = {
       loginToken: token,
       accessPin: pin,
@@ -136,7 +136,7 @@ export class VendorService {
     }
 
     const token = `vtok_${vendor.slug}_${Math.random().toString(36).substring(2, 8)}`;
-    const pin = Math.floor(100000 + Math.random() * 900000).toString();
+    const pin = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
     const credentials: VendorCredentials = {
       loginToken: token,
       accessPin: pin,
