@@ -15,12 +15,12 @@ export async function POST(request: Request) {
 
     if (!requestedTenantId || requestedTenantId === "ALL") {
       if (session.role !== "PLATFORM_ADMIN") return Response.json(createErrorResponse("FORBIDDEN", "Only platform administrators can generate fulfillments for all tenants"), { status: 403 });
-      return Response.json(createSuccessResponse(FulfillmentGenerator.generateForDate(await SubscriptionEngine.listAllAsync(), { serviceDate, cutoffTimeStr: body.cutoffTimeStr || "10:00", shift: "LUNCH" })), { status: 201 });
+      return Response.json(createSuccessResponse(FulfillmentGenerator.generateForDateAsync(await SubscriptionEngine.listAllAsync(), { serviceDate, cutoffTimeStr: body.cutoffTimeStr || "10:00", shift: "LUNCH" })), { status: 201 });
     }
 
     assertTenant(session, requestedTenantId);
     const subscriptions = await SubscriptionEngine.listByTenant(requestedTenantId);
-    return Response.json(createSuccessResponse(FulfillmentGenerator.generateForDate(subscriptions, { serviceDate, cutoffTimeStr: body.cutoffTimeStr || "10:00", shift: "LUNCH" })), { status: 201 });
+    return Response.json(createSuccessResponse(FulfillmentGenerator.generateForDateAsync(subscriptions, { serviceDate, cutoffTimeStr: body.cutoffTimeStr || "10:00", shift: "LUNCH" })), { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.name === "AuthorizationError") return Response.json(createErrorResponse((error as any).code, error.message), { status: (error as any).code === "UNAUTHORIZED" ? 401 : 403 });
     return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to generate fulfillments"), { status: 500 });
