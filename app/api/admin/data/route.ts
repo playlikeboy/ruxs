@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { AdminService } from "@/src/modules/admin/admin-service";
 import { HouseholdService } from "@/src/modules/households/household-service";
 import { FulfillmentStateMachine } from "@/src/modules/fulfillment/fulfillment-fsm";
+import { FulfillmentGenerator } from "@/src/modules/fulfillment/fulfillment-generator";
+import { VacationService } from "@/src/modules/vacation/vacation-service";
 import { DisputeService } from "@/src/modules/disputes/dispute-service";
 import { CutoffEngine } from "@/src/modules/cutoff/cutoff-engine";
 import { AssetLedgerService } from "@/src/modules/assets/asset-ledger";
@@ -39,7 +41,7 @@ export async function GET(request: Request) {
       })
     );
 
-    const fulfillments = FulfillmentStateMachine.listAll();
+    const fulfillments = await FulfillmentStateMachine.listAllAsync();
 
     // Default kitchen batch aggregation for lunch shift
     const defaultVendorId = vendors[0]?.id || "ten_sharma_tiffin";
@@ -111,18 +113,7 @@ export async function POST(request: Request) {
       }
 
       case "REACTIVATE_VENDOR": {
-        const vendor = AdminService.getVendor(payload.vendorId);
-        if (!vendor) throw new Error("Vendor not found");
-        vendor.status = "VERIFIED";
-        vendor.updatedAt = new Date().toISOString();
-        AdminService.logAction({
-          adminUserId: adminUser.userId,
-          adminEmail: adminUser.email,
-          action: "VENDOR_APPROVED",
-          targetType: "VENDOR",
-          targetId: vendor.id,
-          details: `Vendor '${vendor.businessName}' re-activated by admin`,
-        });
+        const vendor = await AdminService.reactivateVendorAsync(payload.vendorId, adminUser);
         return NextResponse.json(createSuccessResponse({ vendor, message: "Vendor re-activated successfully" }));
       }
 
@@ -132,29 +123,31 @@ export async function POST(request: Request) {
       }
 
       case "CREATE_VENDOR": {
-        const newVendor = AdminService.registerVendor({
-          id: `ten_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-          businessName: payload.businessName,
-          slug: payload.slug || payload.businessName.toLowerCase().replace(/\s+/g, "-"),
-          phone: payload.phone,
-          serviceCategories: payload.serviceCategories || ["TIFFIN"],
-          coveredSocieties: payload.coveredSocieties || ["Sobha Classic"],
+        const categories = Array.isArray(payload.serviceCategories) ? payload.serviceCategories : ["TIFFIN"];
+        const vendorType = categories.includes("MILK") ? "MILKMAN" : categories.includes("WATER") ? "WATER_SERVICE" : "TIFFIN";
+        const newVendor = await AdminService.provisionVendorDirect({
+          businessName: String(payload.businessName || ""),
+          phone: String(payload.phone || ""),
+          vendorType,
+          locality: String(payload.locality || "Bengaluru"),
+          city: String(payload.city || "Bengaluru"),
+          coveredSocieties: Array.isArray(payload.coveredSocieties) && payload.coveredSocieties.length ? payload.coveredSocieties : ["Sobha Classic"],
+          upiId: payload.upiId ? String(payload.upiId) : undefined,
           tier: payload.tier || "STARTER",
-          status: "VERIFIED",
-        });
-        AdminService.logAction({
-          adminUserId: adminUser.userId,
-          adminEmail: adminUser.email,
-          action: "VENDOR_CREATED",
-          targetType: "VENDOR",
-          targetId: newVendor.id,
-          details: `New vendor '${newVendor.businessName}' onboarded and approved directly by platform admin`,
-        });
-        return NextResponse.json(createSuccessResponse({ vendor: newVendor, message: "New vendor registered" }));
+          typeConfig: payload.typeConfig || {},
+        }, adminUser);
+        return NextResponse.json(createSuccessResponse({ vendor: newVendor, message: "New vendor registered" }), { status: 201 });
       }
 
       case "TRIGGER_OVERNIGHT": {
         const date = payload.serviceDate || new Date().toISOString().split("T")[0];
+        await VacationService.hydrate();
+        const generated = await FulfillmentGenerator.generateForDateAsync(
+          await (payload.tenantId && payload.tenantId !== "ALL"
+            ? SubscriptionEngine.listByTenant(payload.tenantId)
+            : SubscriptionEngine.listAllAsync()),
+          { serviceDate: date, cutoffTimeStr: payload.cutoffTimeStr || "10:00", shift: payload.shift || "LUNCH" }
+        );
         AdminService.logAction({
           adminUserId: adminUser.userId,
           adminEmail: adminUser.email,
@@ -166,7 +159,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           createSuccessResponse({
             message: `Overnight fulfillment generation executed for ${date}`,
-            fulfillments: FulfillmentStateMachine.listAll(),
+            fulfillments: generated,
           })
         );
       }
@@ -219,7 +212,7 @@ export async function POST(request: Request) {
           : allVendors.map((v) => v.id);
 
         for (const tId of targetTenants) {
-          const res = CutoffEngine.lockExpiredCutoffs(tId, date);
+          const res = await CutoffEngine.lockExpiredCutoffsAsync(tId, date);
           totalLocked += res.lockedCount;
         }
 
