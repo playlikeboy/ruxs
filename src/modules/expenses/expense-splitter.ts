@@ -227,7 +227,7 @@ export class ExpenseSplitter {
           .from(householdExpensesTable)
           .where(eq(householdExpensesTable.householdId, householdId));
 
-        if (expRows && expRows.length > 0) {
+        if (expRows) {
           const result: HouseholdExpense[] = [];
           for (const exp of expRows) {
             const partRows = await db
@@ -262,7 +262,7 @@ export class ExpenseSplitter {
           return result;
         }
       } catch {
-        // Fallback
+        throw new Error("Database unavailable while loading household expenses");
       }
     }
     return this.listByHousehold(householdId);
