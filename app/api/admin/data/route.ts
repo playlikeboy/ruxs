@@ -191,7 +191,7 @@ export async function POST(request: Request) {
         const action = transitionByStatus[payload.toStatus];
         if (!action) throw new Error(`Unsupported fulfillment target state: ${payload.toStatus}`);
 
-        const updated = FulfillmentStateMachine.transition(f, {
+        const updated = await FulfillmentStateMachine.transitionAsync(f, {
           ...action,
           notes: payload.notes,
           actionTime: new Date().toISOString(),
