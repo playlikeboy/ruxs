@@ -1,42 +1,33 @@
 import { PaymentService } from "@/src/modules/payments/payment-service";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
+import { getEnv } from "@/src/shared/config/env";
 
 export async function POST(request: Request) {
   try {
     const rawPayload = await request.text();
-    const signature = request.headers.get("x-ruxs-signature") || "";
-    const webhookSecret = process.env.PAYMENT_WEBHOOK_SECRET || "default_test_webhook_secret_key";
+    const signature = request.headers.get("x-ruxs-signature");
+    const env = getEnv();
 
-    const body = JSON.parse(rawPayload) as {
-      orderId: string;
-      paymentId: string;
-      utr: string;
-    };
+    if (!signature || !env.PAYMENT_WEBHOOK_SECRET) {
+      return Response.json(createErrorResponse("FORBIDDEN", "Webhook signature required"), { status: 403 });
+    }
 
-    if (!body.orderId || !body.paymentId) {
-      return Response.json(
-        createErrorResponse("VALIDATION_FAILED", "Missing orderId or paymentId in webhook payload"),
-        { status: 400 }
-      );
+    const body = JSON.parse(rawPayload) as { orderId?: string; paymentId?: string; utr?: string };
+    if (!body.orderId || !body.paymentId || !body.utr) {
+      return Response.json(createErrorResponse("VALIDATION_FAILED", "Missing required payment webhook fields"), { status: 400 });
     }
 
     const result = await PaymentService.handleWebhookPaymentSuccess({
       gatewayOrderId: body.orderId,
       gatewayPaymentId: body.paymentId,
-      bankUtr: body.utr || `UTR_${Date.now()}`,
+      bankUtr: body.utr,
       rawPayload,
       signature,
-      webhookSecret,
+      webhookSecret: env.PAYMENT_WEBHOOK_SECRET,
     });
 
     return Response.json(createSuccessResponse(result));
-  } catch (error) {
-    return Response.json(
-      createErrorResponse(
-        "PAYMENT_FAILED",
-        error instanceof Error ? error.message : "Payment processing failed"
-      ),
-      { status: 400 }
-    );
+  } catch {
+    return Response.json(createErrorResponse("PAYMENT_FAILED", "Payment webhook could not be processed"), { status: 400 });
   }
 }
