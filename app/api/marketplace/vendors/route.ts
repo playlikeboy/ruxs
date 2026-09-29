@@ -1,4 +1,4 @@
-import { seedDatabase, SEEDED_VENDORS, SeededVendorData } from "@/src/shared/db/seed";
+import { SEEDED_VENDORS, SeededVendorData } from "@/src/shared/db/seed";
 import { db, isTestEnv } from "@/src/shared/db";
 import { tenants as tenantsTable } from "@/src/shared/db/schema";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
@@ -10,13 +10,7 @@ export async function GET(request: Request) {
     const category = searchParams.get("category") || "ALL"; // ALL, MILK, WATER, TIFFIN, FLOWERS, PETS, LAUNDRY
     const shift = searchParams.get("shift") || "ALL"; // ALL, MORNING, AFTERNOON, EVENING, NIGHT
     const society = searchParams.get("society") || undefined;
-    const forceSeed = searchParams.get("seed") === "true";
     const geofencedOnly = searchParams.get("geofenced") === "true";
-
-    // Only seed on demand or initial setup to keep queries sub-millisecond
-    if (forceSeed) {
-      await seedDatabase(true);
-    }
 
     let vendors: SeededVendorData[] = [];
 
