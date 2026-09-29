@@ -94,7 +94,6 @@ export async function POST(request: Request) {
 
     const body = ((await request.json().catch(() => ({}))) || {}) as any;
     const { action, payload } = body;
-    const adminUser = { userId: adminUserId, email: adminEmail };
 
     if (!action) {
       return NextResponse.json(createErrorResponse("VALIDATION_FAILED", "Action is required"), { status: 400 });
