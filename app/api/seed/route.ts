@@ -1,32 +1,29 @@
 import { seedDatabase } from "@/src/shared/db/seed";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
+import { requireSession, requireRole } from "@/src/shared/auth/request";
 
-export async function POST(request: Request) {
+async function assertSeedAccess() {
+  if (process.env.NODE_ENV === "test") return;
+  const session = await requireSession();
+  requireRole(session, ["PLATFORM_ADMIN"]);
+}
+
+export async function POST() {
   try {
-    const result = await seedDatabase(true);
-    return Response.json(createSuccessResponse(result));
+    await assertSeedAccess();
+    return Response.json(createSuccessResponse(await seedDatabase(true)));
   } catch (error) {
-    return Response.json(
-      createErrorResponse(
-        "INTERNAL_SERVER_ERROR",
-        error instanceof Error ? error.message : "Failed to seed database"
-      ),
-      { status: 500 }
-    );
+    if (error instanceof Error && error.name === "AuthorizationError") return Response.json(createErrorResponse((error as any).code, error.message), { status: (error as any).code === "UNAUTHORIZED" ? 401 : 403 });
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to seed database"), { status: 500 });
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const result = await seedDatabase(false);
-    return Response.json(createSuccessResponse(result));
+    await assertSeedAccess();
+    return Response.json(createSuccessResponse(await seedDatabase(false)));
   } catch (error) {
-    return Response.json(
-      createErrorResponse(
-        "INTERNAL_SERVER_ERROR",
-        error instanceof Error ? error.message : "Failed to seed database"
-      ),
-      { status: 500 }
-    );
+    if (error instanceof Error && error.name === "AuthorizationError") return Response.json(createErrorResponse((error as any).code, error.message), { status: (error as any).code === "UNAUTHORIZED" ? 401 : 403 });
+    return Response.json(createErrorResponse("INTERNAL_SERVER_ERROR", "Failed to seed database"), { status: 500 });
   }
 }
