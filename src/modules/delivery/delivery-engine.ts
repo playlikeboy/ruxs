@@ -404,21 +404,28 @@ export class DeliveryEngine {
 
     run.status = "IN_PROGRESS";
 
-    // Reconcile with underlying Fulfillment FSM if exists
+    // Reconcile with underlying Fulfillment FSM without bypassing transition rules.
     try {
-      const fulfillment = FulfillmentStateMachine.getById(stop.fulfillmentId);
+      const fulfillment = await FulfillmentStateMachine.getByIdAsync(stop.fulfillmentId);
       if (fulfillment) {
-        if (fulfillment.status !== "OUT_FOR_DELIVERY") {
-          fulfillment.status = "OUT_FOR_DELIVERY";
+        if (fulfillment.status === "IN_PREPARATION" || fulfillment.status === "CONFIRMED") {
+          FulfillmentStateMachine.transition(fulfillment, {
+            action: "DISPATCH",
+            actionTime: stop.deliveredAt,
+            driverId: run.driverId,
+          });
         }
-        FulfillmentStateMachine.transition(fulfillment, {
-          action: "MARK_DELIVERED",
-          actionTime: stop.deliveredAt,
-          driverId: run.driverId,
-        });
+        if (fulfillment.status === "OUT_FOR_DELIVERY") {
+          FulfillmentStateMachine.transition(fulfillment, {
+            action: "MARK_DELIVERED",
+            actionTime: stop.deliveredAt,
+            driverId: run.driverId,
+          });
+        }
       }
-    } catch {
-      // Pass if mock / direct test
+    } catch (error) {
+      console.error("Failed to reconcile fulfillment state", error);
+      throw new Error("Delivery was not recorded because fulfillment state reconciliation failed");
     }
 
     // Record asset container exchange if tracked
@@ -504,21 +511,29 @@ export class DeliveryEngine {
 
     run.status = "IN_PROGRESS";
 
-    // Reconcile with underlying Fulfillment FSM
+    // Reconcile with underlying Fulfillment FSM without bypassing transition rules.
     try {
-      const fulfillment = FulfillmentStateMachine.getById(stop.fulfillmentId);
+      const fulfillment = await FulfillmentStateMachine.getByIdAsync(stop.fulfillmentId);
       if (fulfillment) {
-        if (fulfillment.status !== "OUT_FOR_DELIVERY") {
-          fulfillment.status = "OUT_FOR_DELIVERY";
+        if (fulfillment.status === "IN_PREPARATION" || fulfillment.status === "CONFIRMED") {
+          FulfillmentStateMachine.transition(fulfillment, {
+            action: "DISPATCH",
+            actionTime: new Date().toISOString(),
+            driverId: run.driverId,
+          });
         }
-        FulfillmentStateMachine.transition(fulfillment, {
-          action: "MARK_FAILED",
-          notes: params.failureReason,
-          driverId: run.driverId,
-        });
+        if (fulfillment.status === "OUT_FOR_DELIVERY") {
+          FulfillmentStateMachine.transition(fulfillment, {
+            action: "MARK_FAILED",
+            actionTime: new Date().toISOString(),
+            notes: params.failureReason,
+            driverId: run.driverId,
+          });
+        }
       }
-    } catch {
-      // Pass
+    } catch (error) {
+      console.error("Failed to reconcile fulfillment state", error);
+      throw new Error("Delivery was not recorded because fulfillment state reconciliation failed");
     }
 
     const unresolvedStops = run.stops.filter((s) => s.status === "PENDING");
