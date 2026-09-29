@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireSession();
     const body = await request.json();
-    const household = HouseholdService.createHousehold({ ...body, primaryOwnerId: session.sub });
+    const household = await HouseholdService.createHouseholdAsync({ ...body, primaryOwnerId: session.sub });
     return Response.json(createSuccessResponse(household), { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
