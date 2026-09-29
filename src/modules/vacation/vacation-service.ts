@@ -11,7 +11,7 @@ function fromDb(row: typeof vacationsTable.$inferSelect): VacationPause {
   return {
     id: row.id,
     customerId: row.customerId,
-    householdId: row.customerId,
+    householdId: undefined,
     startDate: row.startDate,
     endDate: row.endDate,
     subscriptionIds: row.subscriptionIds ? JSON.parse(row.subscriptionIds) : [],
