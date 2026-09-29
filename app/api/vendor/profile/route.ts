@@ -41,14 +41,6 @@ export async function GET(request: Request) {
           inviteUrl: `https://ruxs.in/v/${match.slug}`,
           qrPayload: `upi://pay?pa=merchant@upi&pn=${encodeURIComponent(match.businessName)}&cu=INR`,
           status: (match.status === "PENDING_VERIFICATION" ? "PENDING_APPROVAL" : match.status) as any,
-          credentials: match.credentials
-            ? {
-                loginToken: match.credentials.loginToken,
-                accessPin: match.credentials.accessPin,
-                directUrl: match.credentials.directUrl,
-                generatedAt: match.credentials.generatedAt || new Date().toISOString(),
-              }
-            : undefined,
           createdAt: match.createdAt,
         };
       }
