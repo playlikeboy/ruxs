@@ -22,7 +22,8 @@ export class FulfillmentStateMachine {
    */
   static transition(
     fulfillment: DailyFulfillment,
-    action: TransitionAction
+    action: TransitionAction,
+    options: { persist?: boolean } = {}
   ): DailyFulfillment {
     const current = fulfillment.status;
     const now = action.actionTime ? new Date(action.actionTime) : new Date();
@@ -123,7 +124,7 @@ export class FulfillmentStateMachine {
     fulfillment.updatedAt = now.toISOString();
     fulfillmentStore.set(fulfillment.id, fulfillment);
 
-    if (!isTestEnv) {
+    if (!isTestEnv && options.persist !== false) {
       db.update(dailyFulfillments)
         .set({
           status: fulfillment.status,
@@ -136,6 +137,25 @@ export class FulfillmentStateMachine {
     }
 
     return fulfillment;
+  }
+
+  static async transitionAsync(
+    fulfillment: DailyFulfillment,
+    action: TransitionAction
+  ): Promise<DailyFulfillment> {
+    const updated = this.transition(fulfillment, action, { persist: false });
+    if (!isTestEnv) {
+      await db.update(dailyFulfillments)
+        .set({
+          status: updated.status,
+          deliveredAt: updated.deliveredAt ? new Date(updated.deliveredAt) : null,
+          notes: updated.notes || null,
+          actionTakenAt: action.actionTime ? new Date(action.actionTime) : new Date(),
+        })
+        .where(eq(dailyFulfillments.id, updated.id));
+    }
+    fulfillmentStore.set(updated.id, updated);
+    return updated;
   }
 
   static getById(id: string): DailyFulfillment | null {
