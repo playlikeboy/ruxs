@@ -1,0 +1,57 @@
+import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+
+const hexclaveApi = process.env.NEXT_PUBLIC_HEXCLAVE_API_URL ?? "https://api.hexclave.com";
+
+const securityHeaders = [
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      `connect-src 'self' ${hexclaveApi} https://*.hexclave.com`,
+      "frame-ancestors 'self'",
+      "base-uri 'self'",
+      "form-action 'self' https://*.hexclave.com",
+    ].join("; "),
+  },
+];
+
+const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  typedRoutes: false,
+  async headers() {
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        source: "/c/:path*",
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "private, no-store" },
+        ],
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.ruxs.in" }],
+        destination: "https://ruxs.in/:path*",
+        permanent: true,
+      },
+    ];
+  },
+};
+
+export default nextConfig;
+
+initOpenNextCloudflareForDev();
