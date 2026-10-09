@@ -42,6 +42,7 @@ export interface DailyFulfillment {
   items: FulfillmentItemSnapshot[];
   totalPricePaise: Paise;
   lateFeePaise?: Paise;
+  lateCancellationFeePercent?: number;
   cutoffTime: string; // ISO String or "HH:MM"
   deliveredAt?: string;
   notes?: string;
@@ -65,6 +66,7 @@ export const TransitionActionSchema = z.object({
   actionTime: z.string().optional(), // ISO Date string for simulation/testing
   notes: z.string().optional(),
   driverId: z.string().optional(),
+  lateCancellationFeePercent: z.number().min(0).max(100).optional(),
 });
 
 export type TransitionAction = z.infer<typeof TransitionActionSchema>;

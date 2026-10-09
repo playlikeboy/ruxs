@@ -33,22 +33,24 @@ export function DSCategoryPill({
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex flex-col items-center justify-center rounded-2xl p-3 min-w-[76px] select-none ${
+      className={`relative flex flex-col items-center justify-center rounded-2xl p-2.5 sm:p-3 min-w-[74px] sm:min-w-[80px] transition-all select-none cursor-pointer ${
         isActive
-          ? "border border-red-300 bg-red-50/60 text-red-600 shadow-xs"
-          : "border border-gray-100 bg-gray-50/90 text-gray-700 hover:bg-gray-100 hover:border-gray-200"
+          ? "border-2 border-action bg-surface-raised text-action shadow-card scale-[1.02]"
+          : "border border-border bg-surface-raised text-ink-muted hover:bg-surface-band hover:border-border-strong hover:text-ink"
       } ${className}`}
     >
       <div
-        className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-          isActive ? "bg-red-100/50 text-red-600" : "bg-white text-gray-700 shadow-xs"
+        className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${
+          isActive
+            ? "bg-coral/15 text-action shadow-xs"
+            : "bg-surface-band text-ink-muted"
         }`}
       >
         {renderIcon()}
       </div>
       <span
-        className={`mt-2 text-xs font-semibold tracking-tight line-clamp-1 ${
-          isActive ? "text-red-600 font-bold" : "text-gray-800"
+        className={`mt-2 text-xs font-semibold tracking-tight line-clamp-1 transition-colors ${
+          isActive ? "text-ink font-bold" : "text-ink-muted"
         }`}
       >
         {label}
@@ -56,7 +58,7 @@ export function DSCategoryPill({
       {count !== undefined && (
         <span
           className={`mt-0.5 text-[10px] ${
-            isActive ? "text-red-500 font-medium" : "text-gray-400"
+            isActive ? "text-action font-semibold" : "text-ink-subtle"
           }`}
         >
           {count} items

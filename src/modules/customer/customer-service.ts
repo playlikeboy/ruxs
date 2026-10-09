@@ -79,7 +79,97 @@ export class CustomerService {
   }
 
   static async getCustomerByPhone(phone: string): Promise<CustomerProfile | null> {
-    return customerStore.get(phone) || null;
+    const memory = customerStore.get(phone);
+    if (memory) return memory;
+
+    if (!isTestEnv) {
+      try {
+        const rows = await db
+          .select({
+            user: users,
+            household: households,
+          })
+          .from(users)
+          .leftJoin(householdMembers, eq(users.id, householdMembers.userId))
+          .leftJoin(households, eq(householdMembers.householdId, households.id))
+          .where(eq(users.phone, phone))
+          .limit(1);
+
+        if (rows.length > 0) {
+          const r = rows[0];
+          const profile: CustomerProfile = {
+            userId: r.user.id,
+            fullName: r.user.fullName || "",
+            phone: r.user.phone,
+            whatsappOptIn: r.user.whatsappOptIn ?? true,
+            whatsappOptInAt: r.user.createdAt.toISOString(),
+            householdId: r.household?.id || "",
+            societyName: r.household?.societyName || "",
+            towerWing: r.household?.towerWing || "",
+            floor: String(r.household?.floor || ""),
+            flatNumber: r.household?.flatNumber || "",
+            deliveryDropPreference: "DOOR_BAG",
+            deliveryNotes: "",
+            linkedTenantSlug: "",
+            createdAt: r.user.createdAt.toISOString(),
+          };
+          customerStore.set(r.user.id, profile);
+          customerStore.set(phone, profile);
+          return profile;
+        }
+      } catch (err) {
+        console.error("Failed to query customer by phone from Neon DB:", err);
+      }
+    }
+
+    return null;
+  }
+
+  static async getCustomerById(userId: string): Promise<CustomerProfile | null> {
+    const memory = customerStore.get(userId);
+    if (memory) return memory;
+
+    if (!isTestEnv) {
+      try {
+        const rows = await db
+          .select({
+            user: users,
+            household: households,
+          })
+          .from(users)
+          .leftJoin(householdMembers, eq(users.id, householdMembers.userId))
+          .leftJoin(households, eq(householdMembers.householdId, households.id))
+          .where(eq(users.id, userId))
+          .limit(1);
+
+        if (rows.length > 0) {
+          const r = rows[0];
+          const profile: CustomerProfile = {
+            userId: r.user.id,
+            fullName: r.user.fullName || "",
+            phone: r.user.phone,
+            whatsappOptIn: r.user.whatsappOptIn ?? true,
+            whatsappOptInAt: r.user.createdAt.toISOString(),
+            householdId: r.household?.id || "",
+            societyName: r.household?.societyName || "",
+            towerWing: r.household?.towerWing || "",
+            floor: String(r.household?.floor || ""),
+            flatNumber: r.household?.flatNumber || "",
+            deliveryDropPreference: "DOOR_BAG",
+            deliveryNotes: "",
+            linkedTenantSlug: "",
+            createdAt: r.user.createdAt.toISOString(),
+          };
+          customerStore.set(userId, profile);
+          customerStore.set(profile.phone, profile);
+          return profile;
+        }
+      } catch (err) {
+        console.error("Failed to query customer by id from Neon DB:", err);
+      }
+    }
+
+    return null;
   }
 
   static clearStore(): void {

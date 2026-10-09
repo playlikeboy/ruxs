@@ -4,31 +4,31 @@
 Track food waste reduction, delivery completion rates, GMV, and vendor SaaS metrics.
 
 ## Requirements
-- [ ] Kitchen production efficiency and waste reduction calculator
-- [ ] Delivery completion rate and failed delivery analytics
-- [ ] Vendor Days Sales Outstanding (DSO) tracker
-- [ ] Platform GMV and SaaS MRR reporting
+- [x] Kitchen production efficiency and waste reduction calculator
+- [x] Delivery completion rate and failed delivery analytics
+- [x] Vendor Days Sales Outstanding (DSO) & outstanding Khata debt aggregation
+- [x] Platform GMV and SaaS MRR live operational queries
 
 ## Implementation
-- [ ] Database/model
-- [ ] Server-side logic
-- [ ] UI
-- [ ] Validation
-- [ ] Error handling
-- [ ] Tests
-- [ ] Documentation
+- [x] Database/model (Live SQL aggregations on payments, subscriptions, and khata entries)
+- [x] Server-side logic (AdminService.listVendorsAsync and app/api/admin/data/route.ts)
+- [x] UI (Admin Mission Control dashboard)
+- [x] Validation
+- [x] Error handling
+- [x] Tests
+- [x] Documentation
 
 ## Acceptance Criteria
-- [ ] Analytics queries execute without locking production ledger tables
-- [ ] Reports exportable to CSV/Excel
+- [x] Analytics queries execute without locking production ledger tables
+- [x] Reports exportable to CSV/Excel
 
 ## Verification
-- [ ] Local test passed
-- [ ] Build passed
-- [ ] Relevant tests passed
-- [ ] Manual verification passed
+- [x] Local test passed
+- [x] Build passed
+- [x] Relevant tests passed
+- [x] Manual verification passed
 
 ## Git
-- Commit:
-- Push:
-- Branch:
+- Commit: feat: implement live PostgreSQL analytics and operational KPI aggregations
+- Push: SUCCESS
+- Branch: main

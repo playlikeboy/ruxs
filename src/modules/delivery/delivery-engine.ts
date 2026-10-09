@@ -513,17 +513,17 @@ export class DeliveryEngine {
 
     // Reconcile with underlying Fulfillment FSM without bypassing transition rules.
     try {
-      const fulfillment = await FulfillmentStateMachine.getByIdAsync(stop.fulfillmentId);
+      const fulfillment = FulfillmentStateMachine.getById(stop.fulfillmentId);
       if (fulfillment) {
         if (fulfillment.status === "IN_PREPARATION" || fulfillment.status === "CONFIRMED") {
-          FulfillmentStateMachine.transitionAsync(fulfillment, {
+          FulfillmentStateMachine.transition(fulfillment, {
             action: "DISPATCH",
             actionTime: new Date().toISOString(),
             driverId: run.driverId,
           });
         }
         if (fulfillment.status === "OUT_FOR_DELIVERY") {
-          FulfillmentStateMachine.transitionAsync(fulfillment, {
+          FulfillmentStateMachine.transition(fulfillment, {
             action: "MARK_FAILED",
             actionTime: new Date().toISOString(),
             notes: params.failureReason,
@@ -544,25 +544,52 @@ export class DeliveryEngine {
     run.updatedAt = new Date().toISOString();
     runsStore.set(run.id, run);
 
+    return { run, stop };
+  }
+
+  static async failStopAsync(params: {
+    runId: string;
+    stopId: string;
+    failureReason: string;
+  }): Promise<{ run: DeliveryRun; stop: DeliveryStop }> {
+    const res = this.failStop(params);
+
     if (!isTestEnv) {
-      db.update(deliveryStopsTable)
+      await db.update(deliveryStopsTable)
         .set({
           status: "FAILED",
           failureReason: params.failureReason,
         })
-        .where(eq(deliveryStopsTable.id, params.stopId))
-        .catch(() => {});
+        .where(eq(deliveryStopsTable.id, params.stopId));
 
-      db.update(deliveryRunsTable)
+      await db.update(deliveryRunsTable)
         .set({
-          failedStops: run.failedStops,
-          status: run.status,
+          failedStops: res.run.failedStops,
+          status: res.run.status,
           updatedAt: new Date(),
         })
-        .where(eq(deliveryRunsTable.id, params.runId))
-        .catch(() => {});
+        .where(eq(deliveryRunsTable.id, params.runId));
+
+      const fulfillment = await FulfillmentStateMachine.getByIdAsync(res.stop.fulfillmentId);
+      if (fulfillment) {
+        if (fulfillment.status === "IN_PREPARATION" || fulfillment.status === "CONFIRMED") {
+          await FulfillmentStateMachine.transitionAsync(fulfillment, {
+            action: "DISPATCH",
+            actionTime: new Date().toISOString(),
+            driverId: res.run.driverId,
+          });
+        }
+        if (fulfillment.status === "OUT_FOR_DELIVERY") {
+          await FulfillmentStateMachine.transitionAsync(fulfillment, {
+            action: "MARK_FAILED",
+            actionTime: new Date().toISOString(),
+            notes: params.failureReason,
+            driverId: res.run.driverId,
+          });
+        }
+      }
     }
 
-    return { run, stop };
+    return res;
   }
 }

@@ -25,8 +25,9 @@ export interface NotificationRecord {
   title: string;
   body: string;
   actionUrl?: string;
-  status: "SENT" | "FAILED" | "FALLBACK_TRIGGERED";
+  status: "SENT" | "FAILED" | "FALLBACK_TRIGGERED" | "PENDING";
   fallbackChannel?: z.infer<typeof NotificationChannelEnum>;
+  providerMessageId?: string;
   metadata?: Record<string, any>;
   createdAt: string;
 }

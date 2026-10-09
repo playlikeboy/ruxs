@@ -8,7 +8,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const session = await requireSession();
     requireRole(session, ["PLATFORM_ADMIN"]);
     const { id } = await params;
-    const body = await request.json();
+    const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
     const result = await DisputeService.resolveDisputeAsync(id, { ...body, resolvedBy: session.sub });
     return Response.json(createSuccessResponse(result));
   } catch (error) {

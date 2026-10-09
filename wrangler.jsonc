@@ -5,6 +5,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "ruxs",
+	"account_id": "091539408595ba99a0ef106d42391d5b",
 	"compatibility_date": "2026-09-11",
 	"main": "vinext/server/fetch-handler",
 	"assets": {
@@ -23,6 +24,15 @@
 	},
 	"upload_source_maps": true,
 	"workers_dev": true,
+	"triggers": {
+		"crons": [
+			"0 0 * * *",
+			"30 1 * * *",
+			"*/15 * * * *",
+			"*/10 * * * *",
+			"0 0 1 * *"
+		]
+	},
 	"routes": [
 		{
 			"pattern": "ruxs.in",

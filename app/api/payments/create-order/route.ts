@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 export async function POST(request: Request) {
   try {
     const session = await requireSession();
-    const body = await request.json();
+    const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
 
     if (body.customerId && body.customerId !== session.sub) {
       return Response.json(createErrorResponse("FORBIDDEN", "Customer identity must come from the session"), { status: 403 });

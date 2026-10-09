@@ -18,29 +18,29 @@ export function GeofenceModal() {
     <DSBottomSheet
       isOpen={isGeofenceModalOpen}
       onClose={() => setIsGeofenceModalOpen(false)}
-      title="Society Geofence & Location"
+      title="Society Hub & Cluster"
       subtitle="Select your gated apartment society"
       maxWidth="max-w-md"
     >
-      <div className="space-y-4 pb-4 text-gray-900 font-sans">
+      <div className="space-y-4 pb-4 text-ink font-sans">
         {/* Status Card */}
-        <div className="rounded-2xl border border-red-100 bg-red-50/50 p-4 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500 text-white shadow-xs">
+        <div className="rounded-2xl border border-coral/30 bg-coral/10 p-4 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-action text-white shadow-xs">
             <Navigation size={22} className="stroke-[2.5]" />
           </div>
-          <h3 className="mt-3 text-sm font-bold text-gray-950">
+          <h3 className="mt-3 text-sm font-bold text-ink font-display">
             {currentGeofence.isInside
               ? "Inside Active Society Geofence"
-              : "Outside Society Boundary"}
+              : "Pre-cleared Society Hub"}
           </h3>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-ink-muted">
             {currentGeofence.deliveryGuarantee}
           </p>
         </div>
 
         {/* Society List */}
         <div className="space-y-2">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">
             Available Society Clusters
           </label>
           {geofenceList.map((geo) => {
@@ -53,18 +53,18 @@ export function GeofenceModal() {
                   selectGeofence(geo.id);
                   setIsGeofenceModalOpen(false);
                 }}
-                className={`flex w-full items-center justify-between rounded-2xl border p-3.5 text-left select-none ${
+                className={`flex w-full items-center justify-between rounded-2xl border p-3.5 text-left select-none transition-all cursor-pointer ${
                   isSelected
-                    ? "border-red-300 bg-red-50/60 shadow-xs"
-                    : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50"
+                    ? "border-action bg-coral/10 shadow-xs"
+                    : "border-border bg-surface-raised hover:border-border-strong hover:bg-surface-band"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex h-9 w-9 items-center justify-center rounded-xl ${
                       isSelected
-                        ? "bg-red-500 text-white"
-                        : "bg-gray-100 text-gray-500"
+                        ? "bg-action text-white font-bold"
+                        : "bg-surface-band text-ink-muted"
                     }`}
                   >
                     <MapPin size={18} />
@@ -72,21 +72,21 @@ export function GeofenceModal() {
                   <div>
                     <p
                       className={`text-xs font-bold ${
-                        isSelected ? "text-red-600" : "text-gray-900"
+                        isSelected ? "text-action" : "text-ink"
                       }`}
                     >
                       {geo.societyName}
                     </p>
-                    <p className="text-[11px] text-gray-400">
-                      Radius: {geo.radiusMeters}m · Gate Pass: Pre-cleared
+                    <p className="text-[11px] text-ink-muted">
+                      Gate Pass: Pre-cleared · 6–8 AM Doorstep
                     </p>
                   </div>
                 </div>
 
                 {isSelected ? (
-                  <CheckCircle2 size={18} className="text-red-500 shrink-0" />
+                  <CheckCircle2 size={18} className="text-[#2E7D32] shrink-0" />
                 ) : (
-                  <span className="text-xs font-medium text-gray-400">Select</span>
+                  <span className="text-xs font-bold text-ink-muted">Select</span>
                 )}
               </button>
             );

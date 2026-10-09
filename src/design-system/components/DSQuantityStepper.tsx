@@ -9,7 +9,7 @@ export interface DSQuantityStepperProps {
   min?: number;
   max?: number;
   size?: "sm" | "md" | "lg";
-  variant?: "pill" | "green-pill" | "bordered";
+  variant?: "pill" | "coral-pill" | "bordered";
   className?: string;
   disabled?: boolean;
 }
@@ -54,19 +54,19 @@ export function DSQuantityStepper({
     iconSize = 14;
   }
 
-  if (variant === "green-pill") {
-    containerStyle += " rounded-full bg-red-50 border border-red-200 text-red-600";
-    btnStyle += " rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center justify-center font-bold";
-    textStyle = "font-bold text-red-600 min-w-[20px] text-center";
+  if (variant === "coral-pill") {
+    containerStyle += " rounded-full bg-coral/10 border border-coral/30 text-action";
+    btnStyle += " rounded-full bg-action text-white hover:bg-action-hover flex items-center justify-center font-bold transition-all cursor-pointer";
+    textStyle = "font-bold text-action min-w-[20px] text-center font-mono";
   } else if (variant === "bordered") {
-    containerStyle += " rounded-xl border border-gray-200 bg-white";
-    btnStyle += " rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 flex items-center justify-center";
-    textStyle = "font-semibold text-gray-900 min-w-[24px] text-center font-mono";
+    containerStyle += " rounded-xl border border-border bg-surface-raised";
+    btnStyle += " rounded-lg bg-surface-band hover:bg-surface-subtle text-ink flex items-center justify-center transition-all cursor-pointer";
+    textStyle = "font-bold text-ink min-w-[24px] text-center font-mono";
   } else {
-    // pill (default matching reference Cart)
-    containerStyle += " rounded-full bg-gray-50 border border-gray-200";
-    btnStyle += " rounded-full bg-red-100 hover:bg-red-200 text-red-600 flex items-center justify-center";
-    textStyle = "font-semibold text-gray-900 min-w-[22px] text-center font-mono";
+    // pill (default warm ivory)
+    containerStyle += " rounded-full bg-surface-raised border border-border shadow-xs";
+    btnStyle += " rounded-full bg-surface-band hover:bg-coral/20 text-ink hover:text-action flex items-center justify-center font-bold transition-all cursor-pointer";
+    textStyle = "font-bold text-ink min-w-[22px] text-center font-mono";
   }
 
   return (

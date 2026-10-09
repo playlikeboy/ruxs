@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export function RuxsSpinner({
   className = "w-5 h-5",
-  color = "text-primary",
+  color = "text-action",
   size,
 }: {
   className?: string;
@@ -68,11 +68,11 @@ export function RuxsPageLoading({
         fullPage ? "min-h-[70vh]" : "min-h-[260px]"
       }`}
     >
-      <div className="w-full max-w-xs bg-gradient-to-b from-sky-50/50 to-white rounded-3xl border border-blue-100/80 shadow-lg shadow-black/[0.03] p-7 flex flex-col items-center text-center text-black">
+      <div className="w-full max-w-xs bg-surface-raised rounded-3xl border border-border shadow-card p-7 flex flex-col items-center text-center text-ink">
         {/* Minimal squircle icon badge */}
-        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white mb-4 shadow-sm border border-blue-50">
+        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-coral/15 mb-4 shadow-xs border border-coral/30">
           <svg
-            className="animate-spin w-5 h-5 text-gray-800"
+            className="animate-spin w-5 h-5 text-action"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -87,25 +87,25 @@ export function RuxsPageLoading({
         </div>
 
         {/* Minimal Pill */}
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-50 border border-blue-100 text-[10px] font-medium text-blue-900 mb-2">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-coral/15 border border-coral/30 text-[10px] font-bold text-action mb-2">
           {badge}
         </div>
 
         {/* Title */}
-        <h3 className="text-sm font-semibold text-gray-900 tracking-tight">{title}</h3>
+        <h3 className="text-sm font-bold text-ink tracking-tight font-display">{title}</h3>
 
         {/* Description */}
         {description && (
-          <p className="mt-1.5 text-xs text-gray-500 leading-relaxed max-w-[220px]">
+          <p className="mt-1.5 text-xs text-ink-muted leading-relaxed max-w-[220px]">
             {description}
           </p>
         )}
 
         {/* Minimal 3-dot pulse */}
         <div className="flex items-center gap-1.5 mt-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-pulse" />
-          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse [animation-delay:150ms]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-pulse [animation-delay:300ms]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-coral/40 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-coral animate-pulse [animation-delay:150ms]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-coral/40 animate-pulse [animation-delay:300ms]" />
         </div>
       </div>
     </div>

@@ -13,7 +13,7 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const viewport: Viewport = {
-  themeColor: "#0b0d0c",
+  themeColor: "#FFF8ED",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,

@@ -42,7 +42,12 @@ function statusIndex(status: string) {
 }
 
 export default function TrackingPageClient() {
-  const user = useUser();
+  let user = null;
+  try {
+    user = useUser();
+  } catch {
+    user = null;
+  }
   const [fulfillments, setFulfillments] = useState<Fulfillment[]>([]);
   const [loading, setLoading] = useState(true);
   const [requestedFulfillmentId, setRequestedFulfillmentId] = useState("");
@@ -58,8 +63,10 @@ export default function TrackingPageClient() {
       const response = await fetch(`/api/fulfillments?customerId=${encodeURIComponent(user.id)}`, {
         cache: "no-store",
       });
-      const payload = await readApiEnvelope<Fulfillment[]>(response);
-      setFulfillments(payload.success && Array.isArray(payload.data) ? payload.data : []);
+      if (response.ok) {
+        const payload = await readApiEnvelope<Fulfillment[]>(response);
+        setFulfillments(payload.success && Array.isArray(payload.data) ? payload.data : []);
+      }
     } catch {
       setFulfillments([]);
     } finally {
@@ -82,23 +89,25 @@ export default function TrackingPageClient() {
   const activeIndex = latest ? statusIndex(String(latest.status || "SCHEDULED")) : -1;
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-5 text-gray-900 sm:px-6">
+    <main className="mx-auto w-full max-w-xl px-4 pb-28 pt-5 text-ink font-sans">
       <header className="flex items-center justify-between">
         <Link
           href={CUSTOMER_ROUTES.home}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-raised text-ink shadow-xs hover:bg-surface-band transition-colors cursor-pointer"
           aria-label="Back to home"
         >
           <ArrowLeft size={18} />
         </Link>
         <div className="text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Customer app</p>
-          <h1 className="mt-1 text-xl font-bold">Delivery tracking</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-coral">
+            Customer App
+          </p>
+          <h1 className="mt-1 text-lg font-bold font-display">Delivery Tracking</h1>
         </div>
         <button
           type="button"
           onClick={() => void load()}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-raised text-ink-muted hover:text-ink hover:bg-surface-band shadow-xs transition-colors cursor-pointer"
           aria-label="Refresh tracking"
         >
           <RefreshCw size={17} />
@@ -106,83 +115,106 @@ export default function TrackingPageClient() {
       </header>
 
       {loading ? (
-        <div className="mt-8 animate-pulse space-y-4">
-          <div className="h-32 rounded-3xl bg-gray-100" />
-          <div className="h-56 rounded-3xl bg-gray-100" />
+        <div className="mt-6 animate-pulse space-y-4">
+          <div className="h-32 rounded-3xl bg-surface-band" />
+          <div className="h-56 rounded-3xl bg-surface-band" />
         </div>
       ) : !latest ? (
-        <section className="mt-8 rounded-3xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-            <Truck size={22} />
+        <section className="mt-6 rounded-3xl border border-dashed border-border bg-surface-raised p-10 text-center shadow-card">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-coral/15 text-action">
+            <Truck size={24} />
           </div>
-          <h2 className="mt-4 text-base font-bold">No delivery is active yet.</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
-            Once you have a scheduled household fulfillment, its live state will appear here.
+          <h2 className="mt-4 text-base font-bold text-ink font-display">No active delivery right now</h2>
+          <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-ink-muted">
+            Once you subscribe to milk, drinking water, or daily meals, your live fulfillment status and morning delivery progress will appear here.
           </p>
           <Link
-            href={CUSTOMER_ROUTES.services}
-            className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-red-500 px-5 text-xs font-semibold text-white"
+            href={CUSTOMER_ROUTES.home}
+            className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-action px-5 text-xs font-bold text-white shadow-xs hover:bg-action-hover transition-all"
           >
-            Browse services
+            Explore marketplace
           </Link>
         </section>
       ) : (
-        <div className="mt-8 space-y-5">
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="mt-6 space-y-4">
+          {/* Active Fulfillment Card */}
+          <section className="rounded-3xl border border-border bg-surface-raised p-5 shadow-card sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">Fulfillment</p>
-                <h2 className="mt-1 text-lg font-bold text-gray-950">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-muted">
+                  Today&apos;s Fulfillment
+                </p>
+                <h2 className="mt-1 text-base sm:text-lg font-bold text-ink font-display">
                   {latest.items?.[0]?.productName || "Household service"}
                 </h2>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-0.5 text-xs text-ink-muted">
                   {latest.serviceDate || "Today"}{latest.shift ? ` · ${latest.shift}` : ""}
                 </p>
               </div>
-              <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-bold text-red-600">
+              <span className="rounded-full bg-coral/15 border border-coral/30 px-3 py-1 text-[11px] font-bold text-action">
                 {String(latest.status || "SCHEDULED").replaceAll("_", " ")}
               </span>
             </div>
-            <div className="mt-6 flex items-center gap-3 rounded-2xl bg-gray-50 p-4">
-              <MapPin className="h-5 w-5 text-red-500" />
+            <div className="mt-5 flex items-center gap-3 rounded-2xl bg-surface-band border border-border p-3.5">
+              <MapPin className="h-5 w-5 text-coral shrink-0" />
               <div>
-                <p className="text-xs font-semibold text-gray-900">Household destination</p>
-                <p className="mt-0.5 text-[11px] text-gray-500">Delivery instructions are taken from the active routine.</p>
+                <p className="text-xs font-bold text-ink">Society Gate Destination</p>
+                <p className="mt-0.5 text-[11px] text-ink-muted">
+                  Gate pass pre-cleared for 7:00 AM doorstep drop.
+                </p>
               </div>
             </div>
           </section>
 
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-            <h3 className="text-sm font-bold text-gray-950">Progress</h3>
-            <div className="mt-6 space-y-5">
+          {/* Stepper Progress */}
+          <section className="rounded-3xl border border-border bg-surface-raised p-5 shadow-card sm:p-6">
+            <h3 className="text-sm font-bold text-ink font-display">Delivery Timeline</h3>
+            <div className="mt-5 space-y-4">
               {STATUS_STEPS.map((step, index) => {
                 const complete = activeIndex >= index;
                 const Icon = step.icon;
                 return (
-                  <div key={step.id} className="flex items-center gap-3">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-full ${complete ? "bg-red-500 text-white" : "bg-gray-100 text-gray-400"}`}>
+                  <div key={step.id} className="flex items-center gap-3.5">
+                    <div
+                      className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${
+                        complete
+                          ? "bg-[#2E7D32] text-white font-bold shadow-xs"
+                          : "bg-surface-band text-ink-muted"
+                      }`}
+                    >
                       <Icon size={16} />
                     </div>
                     <div className="flex-1">
-                      <p className={`text-xs font-bold ${complete ? "text-gray-950" : "text-gray-400"}`}>{step.title}</p>
+                      <p
+                        className={`text-xs font-bold ${
+                          complete ? "text-ink" : "text-ink-muted"
+                        }`}
+                      >
+                        {step.title}
+                      </p>
                       {latest.cutoffTime && index === 0 && (
-                        <p className="mt-0.5 text-[10px] text-gray-400">Cutoff {latest.cutoffTime}</p>
+                        <p className="mt-0.5 text-[10px] text-ink-muted">
+                          Cutoff {latest.cutoffTime}
+                        </p>
                       )}
                     </div>
-                    {complete && <CheckCircle2 size={15} className="text-emerald-500" />}
+                    {complete && <CheckCircle2 size={16} className="text-[#2E7D32]" />}
                   </div>
                 );
               })}
             </div>
           </section>
 
-          <section className="rounded-3xl border border-gray-200 bg-gray-50 p-5">
+          {/* Total & Notes Card */}
+          <section className="rounded-3xl border border-border bg-surface-raised p-5 shadow-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-gray-950">Fulfillment total</p>
-                <p className="mt-1 text-[11px] text-gray-500">{latest.notes || "No extra delivery notes."}</p>
+                <p className="text-xs font-bold text-ink">Fulfillment Total</p>
+                <p className="mt-0.5 text-[11px] text-ink-muted">
+                  {latest.notes || "Recorded on digital khata."}
+                </p>
               </div>
-              <p className="text-base font-extrabold text-gray-950">
+              <p className="text-base font-extrabold text-action">
                 {formatINR(Number(latest.totalPricePaise || 0) as Paise)}
               </p>
             </div>

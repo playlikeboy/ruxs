@@ -129,6 +129,9 @@ export class SubscriptionEngine {
           .update(subscriptionsTable)
           .set({ status: "PAUSED" })
           .where(eq(subscriptionsTable.id, id));
+      } catch (err) {
+        console.error("Failed to pause subscription in DB:", err);
+        throw err;
       }
     }
 
@@ -156,6 +159,9 @@ export class SubscriptionEngine {
           .update(subscriptionsTable)
           .set({ status: "ACTIVE" })
           .where(eq(subscriptionsTable.id, id));
+      } catch (err) {
+        console.error("Failed to resume subscription in DB:", err);
+        throw err;
       }
     }
 
@@ -182,6 +188,9 @@ export class SubscriptionEngine {
           .update(subscriptionsTable)
           .set({ status: "CANCELLED" })
           .where(eq(subscriptionsTable.id, id));
+      } catch (err) {
+        console.error("Failed to cancel subscription in DB:", err);
+        throw err;
       }
     }
 
@@ -228,6 +237,8 @@ export class SubscriptionEngine {
             updatedAt: row.sub.createdAt ? row.sub.createdAt.toISOString() : new Date().toISOString(),
           };
         }
+      } catch (err) {
+        console.error("Failed to fetch subscription from DB:", err);
       }
     }
 

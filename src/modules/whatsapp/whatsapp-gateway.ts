@@ -4,6 +4,9 @@ import {
   WhatsAppWebhookEntrySchema,
 } from "./whatsapp-schema";
 import { FulfillmentStateMachine } from "../fulfillment/fulfillment-fsm";
+import { db, isTestEnv, webhookEvents, users } from "../../shared/db";
+import { normalizeIndianPhone } from "../../shared/auth/phone";
+import { eq, and } from "drizzle-orm";
 
 const processedMessageIds = new Set<string>();
 const optedOutPhones = new Set<string>();
@@ -94,7 +97,8 @@ export class WhatsAppGateway {
   }
 
   /**
-   * Processes inbound webhook from Meta and routes button replies to fulfillment state machine
+   * Processes inbound webhook from Meta and routes button replies to fulfillment state machine.
+   * Utilizes durable webhook_events in PostgreSQL for cluster-wide deduplication.
    */
   static async processInboundWebhook(rawPayload: unknown): Promise<{
     processedCount: number;
@@ -109,10 +113,45 @@ export class WhatsAppGateway {
         const messages = change.value.messages || [];
 
         for (const msg of messages) {
-          // Deduplication Guard: Ignore if already processed
+          // Durable Deduplication Guard: Check database and memory cache
           if (processedMessageIds.has(msg.id)) {
             continue;
           }
+
+          if (!isTestEnv) {
+            try {
+              const existingEvent = await db
+                .select()
+                .from(webhookEvents)
+                .where(
+                  and(
+                    eq(webhookEvents.provider, "WHATSAPP"),
+                    eq(webhookEvents.eventId, msg.id)
+                  )
+                )
+                .limit(1);
+
+              if (existingEvent.length > 0) {
+                processedMessageIds.add(msg.id);
+                continue;
+              }
+
+              await db
+                .insert(webhookEvents)
+                .values({
+                  id: `wbev_${crypto.randomUUID()}`,
+                  provider: "WHATSAPP",
+                  eventId: msg.id,
+                  eventType: msg.type || "MESSAGE",
+                  payload: JSON.stringify(msg),
+                  status: "PROCESSED",
+                })
+                .onConflictDoNothing();
+            } catch (err) {
+              console.error("Failed to check or record WhatsApp webhook event in DB:", err);
+            }
+          }
+
           processedMessageIds.add(msg.id);
           processedCount++;
 
@@ -123,6 +162,19 @@ export class WhatsAppGateway {
             const bodyClean = msg.text.body.trim().toUpperCase();
             if (bodyClean === "STOP" || bodyClean === "UNSUBSCRIBE") {
               optedOutPhones.add(fromPhone);
+
+              if (!isTestEnv) {
+                try {
+                  const normalized = normalizeIndianPhone(fromPhone);
+                  await db
+                    .update(users)
+                    .set({ whatsappOptIn: false, updatedAt: new Date() })
+                    .where(eq(users.phone, normalized));
+                } catch (err) {
+                  console.error("Failed to persist WhatsApp opt-out to users table:", err);
+                }
+              }
+
               actionsTaken.push(`OPT_OUT_${fromPhone}`);
               continue;
             }
@@ -134,9 +186,9 @@ export class WhatsAppGateway {
 
             if (buttonId.startsWith("CONFIRM_")) {
               const fulfillmentId = buttonId.replace("CONFIRM_", "");
-              const fulfillment = FulfillmentStateMachine.getById(fulfillmentId);
+              const fulfillment = (await FulfillmentStateMachine.getByIdAsync(fulfillmentId)) || FulfillmentStateMachine.getById(fulfillmentId);
               if (fulfillment) {
-                FulfillmentStateMachine.transition(fulfillment, {
+                await FulfillmentStateMachine.transitionAsync(fulfillment, {
                   action: "CONFIRM",
                   notes: "Confirmed via WhatsApp 1-tap button",
                 });
@@ -144,9 +196,9 @@ export class WhatsAppGateway {
               }
             } else if (buttonId.startsWith("SKIP_")) {
               const fulfillmentId = buttonId.replace("SKIP_", "");
-              const fulfillment = FulfillmentStateMachine.getById(fulfillmentId);
+              const fulfillment = (await FulfillmentStateMachine.getByIdAsync(fulfillmentId)) || FulfillmentStateMachine.getById(fulfillmentId);
               if (fulfillment) {
-                FulfillmentStateMachine.transition(fulfillment, {
+                await FulfillmentStateMachine.transitionAsync(fulfillment, {
                   action: "SKIP",
                   notes: "Skipped via WhatsApp 1-tap button",
                 });
@@ -163,6 +215,27 @@ export class WhatsAppGateway {
 
   static isPhoneOptedOut(phone: string): boolean {
     return optedOutPhones.has(phone);
+  }
+
+  static async isPhoneOptedOutAsync(phone: string): Promise<boolean> {
+    if (optedOutPhones.has(phone)) return true;
+    if (!isTestEnv) {
+      try {
+        const normalized = normalizeIndianPhone(phone);
+        const rows = await db
+          .select({ whatsappOptIn: users.whatsappOptIn })
+          .from(users)
+          .where(eq(users.phone, normalized))
+          .limit(1);
+
+        if (rows.length > 0) {
+          return !rows[0].whatsappOptIn;
+        }
+      } catch (err) {
+        console.error("Failed to check user opt-out status from DB:", err);
+      }
+    }
+    return false;
   }
 
   static clearStore(): void {

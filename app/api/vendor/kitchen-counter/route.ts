@@ -8,9 +8,9 @@ export async function GET(request: Request) {
     const session = await requireSession();
     requireRole(session, ["VENDOR_ADMIN", "PLATFORM_ADMIN"]);
     const { searchParams } = new URL(request.url);
-    let tenantId = searchParams.get("tenantId");
-    if (!tenantId && session.role === "VENDOR_ADMIN") tenantId = session.tenantId || undefined;
-    if (!tenantId && session.role === "PLATFORM_ADMIN") tenantId = (await AdminService.listVendorsAsync())[0]?.id;
+    let tenantId: string | null = searchParams.get("tenantId");
+    if (!tenantId && session.role === "VENDOR_ADMIN") tenantId = session.tenantId || null;
+    if (!tenantId && session.role === "PLATFORM_ADMIN") tenantId = (await AdminService.listVendorsAsync())[0]?.id || null;
     if (!tenantId) return Response.json(createErrorResponse("NOT_FOUND", "No vendor found"), { status: 404 });
     if (session.role === "VENDOR_ADMIN") assertTenant(session, tenantId);
     const date = searchParams.get("date") || new Date().toISOString().split("T")[0];

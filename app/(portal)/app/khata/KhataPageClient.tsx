@@ -57,13 +57,17 @@ async function json<T>(url: string): Promise<T | null> {
 }
 
 export default function KhataPageClient() {
-  const user = useUser();
+  let user = null;
+  try {
+    user = useUser();
+  } catch {
+    user = null;
+  }
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [khata, setKhata] = useState<Khata | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-
-    const [tenantFromUrl, setTenantFromUrl] = useState("");
+  const [tenantFromUrl, setTenantFromUrl] = useState("");
 
   const load = async () => {
     if (!user?.id) {
@@ -73,20 +77,17 @@ export default function KhataPageClient() {
       setLoading(false);
       return;
     }
-
     setLoading(true);
     try {
-      const [subs, invs] = await Promise.all([
+      const [subsPayload, invsPayload] = await Promise.all([
         json<Subscription[]>(`/api/subscriptions?customerId=${encodeURIComponent(user.id)}`),
         json<Invoice[]>(`/api/billing/invoices?customerId=${encodeURIComponent(user.id)}`),
       ]);
-
-      const nextSubs = Array.isArray(subs) ? subs : [];
-      const nextInvoices = Array.isArray(invs) ? invs : [];
+      const nextSubs = subsPayload || [];
       setSubscriptions(nextSubs);
-      setInvoices(nextInvoices);
+      setInvoices(invsPayload || []);
 
-      const tenantId = tenantFromUrl || nextSubs[0]?.tenantId;
+      const tenantId = tenantFromUrl || nextSubs[0]?.tenantId || "";
       if (tenantId) {
         const statement = await json<Khata>(
           `/api/khata?tenantId=${encodeURIComponent(tenantId)}&customerId=${encodeURIComponent(user.id)}`
@@ -116,30 +117,37 @@ export default function KhataPageClient() {
   const outstanding = useMemo(
     () =>
       invoices.reduce(
-        (sum, invoice) => sum + Math.max(Number(invoice.totalAmountDuePaise || 0) - Number(invoice.amountPaidPaise || 0), 0),
+        (sum, invoice) =>
+          sum +
+          Math.max(
+            Number(invoice.totalAmountDuePaise || 0) - Number(invoice.amountPaidPaise || 0),
+            0
+          ),
         0
       ),
     [invoices]
   );
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-5 text-gray-900 sm:px-6">
+    <main className="mx-auto w-full max-w-xl px-4 pb-28 pt-5 text-ink font-sans">
       <header className="flex items-center justify-between">
         <Link
           href={CUSTOMER_ROUTES.home}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-raised text-ink shadow-xs hover:bg-surface-band transition-colors cursor-pointer"
           aria-label="Back to home"
         >
           <ArrowLeft size={18} />
         </Link>
         <div className="text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Customer app</p>
-          <h1 className="mt-1 text-xl font-bold">Digital Khata</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-coral">
+            Customer App
+          </p>
+          <h1 className="mt-1 text-lg font-bold font-display">Digital Khata</h1>
         </div>
         <button
           type="button"
           onClick={() => void load()}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-raised text-ink-muted hover:text-ink hover:bg-surface-band shadow-xs transition-colors cursor-pointer"
           aria-label="Refresh khata"
         >
           <RefreshCw size={17} />
@@ -147,70 +155,89 @@ export default function KhataPageClient() {
       </header>
 
       {loading ? (
-        <div className="mt-8 animate-pulse space-y-4">
-          <div className="h-32 rounded-3xl bg-gray-100" />
-          <div className="h-48 rounded-3xl bg-gray-100" />
+        <div className="mt-6 animate-pulse space-y-4">
+          <div className="h-32 rounded-3xl bg-surface-band" />
+          <div className="h-48 rounded-3xl bg-surface-band" />
         </div>
       ) : (
-        <div className="mt-8 space-y-5">
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
+        <div className="mt-6 space-y-4">
+          {/* Main Balance Card */}
+          <section className="rounded-3xl border border-border bg-surface-raised p-5 shadow-card sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">Current balance</p>
-                <h2 className="mt-2 text-3xl font-extrabold text-gray-950">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-muted">
+                  Running Ledger Balance
+                </p>
+                <h2 className="mt-1.5 text-3xl font-black text-ink font-display">
                   {formatINR(balance as Paise)}
                 </h2>
-                <p className="mt-1 text-xs text-gray-500">
-                  {balance > 0 ? "Amount currently due in the selected ledger." : "No outstanding ledger balance."}
+                <p className="mt-1 text-xs text-ink-muted">
+                  {balance > 0
+                    ? "Amount due in active vendor account."
+                    : "Zero outstanding ledger balance."}
                 </p>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-red-500">
-                <ShieldCheck size={20} />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-coral/15 border border-coral/30 text-action">
+                <ShieldCheck size={22} />
               </div>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-[10px] uppercase tracking-wider text-gray-400">Active routines</p>
-                <p className="mt-1 text-lg font-bold">{subscriptions.filter((s) => s.status === "ACTIVE").length}</p>
+
+            {/* Metric Pills */}
+            <div className="mt-5 grid grid-cols-3 gap-2.5">
+              <div className="rounded-2xl bg-surface-band border border-border p-3 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-ink-muted font-bold">Routines</p>
+                <p className="mt-1 text-base font-extrabold text-ink">
+                  {subscriptions.filter((s) => s.status === "ACTIVE").length}
+                </p>
               </div>
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-[10px] uppercase tracking-wider text-gray-400">Invoice outstanding</p>
-                <p className="mt-1 text-lg font-bold">{formatINR(outstanding as Paise)}</p>
+              <div className="rounded-2xl bg-surface-band border border-border p-3 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-ink-muted font-bold">Invoiced</p>
+                <p className="mt-1 text-base font-extrabold text-ink">
+                  {formatINR(outstanding as Paise)}
+                </p>
               </div>
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-[10px] uppercase tracking-wider text-gray-400">Ledger entries</p>
-                <p className="mt-1 text-lg font-bold">{khata?.entries?.length || 0}</p>
+              <div className="rounded-2xl bg-surface-band border border-border p-3 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-ink-muted font-bold">Entries</p>
+                <p className="mt-1 text-base font-extrabold text-ink">
+                  {khata?.entries?.length || 0}
+                </p>
               </div>
             </div>
           </section>
 
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
+          {/* Active Household Services */}
+          <section className="rounded-3xl border border-border bg-surface-raised p-5 shadow-card sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold">Active household services</h2>
-              <Link href={CUSTOMER_ROUTES.services} className="text-xs font-semibold text-red-500">Add service</Link>
+              <h2 className="text-sm font-bold text-ink font-display">Active Subscriptions</h2>
+              <Link
+                href={CUSTOMER_ROUTES.services}
+                className="text-xs font-bold text-action hover:underline"
+              >
+                Add service
+              </Link>
             </div>
             {subscriptions.length === 0 ? (
-              <p className="mt-6 rounded-2xl border border-dashed border-gray-200 p-7 text-center text-xs text-gray-500">
-                No recurring services are linked to this account yet.
+              <p className="mt-4 rounded-2xl border border-dashed border-border p-6 text-center text-xs text-ink-muted bg-surface-band">
+                No recurring services are currently linked. Start an autopilot routine from the Discover tab.
               </p>
             ) : (
-              <div className="mt-4 divide-y divide-gray-100">
+              <div className="mt-4 divide-y divide-border">
                 {subscriptions.map((subscription) => (
-                  <div key={subscription.id} className="flex items-center justify-between gap-4 py-4">
+                  <div key={subscription.id} className="flex items-center justify-between gap-3 py-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-50">
-                        <Building2 size={17} className="text-red-500" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-coral/10 text-action">
+                        <Building2 size={17} />
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-gray-900">
+                        <p className="truncate text-xs font-bold text-ink">
                           {subscription.productName || "Recurring service"}
                         </p>
-                        <p className="mt-1 truncate text-[11px] text-gray-500">
-                          {subscription.vendorName || subscription.businessName || "Local merchant"} · {subscription.cadence || "DAILY"} · {subscription.shift || "Scheduled"}
+                        <p className="mt-0.5 truncate text-[11px] text-ink-muted">
+                          {subscription.vendorName || subscription.businessName || "Merchant"} · {subscription.cadence || "DAILY"}
                         </p>
                       </div>
                     </div>
-                    <span className="shrink-0 text-xs font-bold text-gray-900">
+                    <span className="shrink-0 text-xs font-bold text-ink">
                       {formatINR(Number(subscription.unitPricePaise || 0) as Paise)}
                     </span>
                   </div>
@@ -219,33 +246,42 @@ export default function KhataPageClient() {
             )}
           </section>
 
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
+          {/* Invoices */}
+          <section className="rounded-3xl border border-border bg-surface-raised p-5 shadow-card sm:p-6">
             <div className="flex items-center gap-2">
-              <FileText size={17} className="text-red-500" />
-              <h2 className="text-sm font-bold">Invoices</h2>
+              <FileText size={17} className="text-action" />
+              <h2 className="text-sm font-bold text-ink font-display">Monthly Invoices</h2>
             </div>
             {invoices.length === 0 ? (
-              <p className="mt-6 text-xs text-gray-500">No invoices are available for this account.</p>
+              <p className="mt-4 text-xs text-ink-muted">
+                Invoices generate automatically on the 1st of each calendar month.
+              </p>
             ) : (
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 space-y-2.5">
                 {invoices.map((invoice) => {
-                  const due = Math.max(Number(invoice.totalAmountDuePaise || 0) - Number(invoice.amountPaidPaise || 0), 0);
+                  const due = Math.max(
+                    Number(invoice.totalAmountDuePaise || 0) - Number(invoice.amountPaidPaise || 0),
+                    0
+                  );
                   return (
-                    <div key={invoice.id} className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
-                      <div className="flex items-start justify-between gap-4">
+                    <div
+                      key={invoice.id}
+                      className="rounded-2xl border border-border bg-surface-band p-3.5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-xs font-bold text-gray-900">{invoice.invoiceNumber}</p>
-                          <p className="mt-1 text-[11px] text-gray-500">
-                            {invoice.periodStart} – {invoice.periodEnd} · Due {invoice.dueDate}
+                          <p className="text-xs font-bold text-ink">{invoice.invoiceNumber}</p>
+                          <p className="mt-0.5 text-[11px] text-ink-muted">
+                            Due {invoice.dueDate} · {invoice.periodStart} – {invoice.periodEnd}
                           </p>
                         </div>
-                        <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-gray-600 ring-1 ring-gray-200">
+                        <span className="rounded-full bg-surface-raised border border-border px-2.5 py-0.5 text-[10px] font-bold text-ink">
                           {invoice.status}
                         </span>
                       </div>
                       <div className="mt-3 flex items-center justify-between text-xs">
-                        <span className="text-gray-500">Outstanding</span>
-                        <span className="font-extrabold text-gray-950">{formatINR(due as Paise)}</span>
+                        <span className="text-ink-muted">Outstanding</span>
+                        <span className="font-extrabold text-action">{formatINR(due as Paise)}</span>
                       </div>
                     </div>
                   );
@@ -254,20 +290,28 @@ export default function KhataPageClient() {
             )}
           </section>
 
+          {/* Ledger Activity */}
           {khata?.entries?.length ? (
-            <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-              <h2 className="text-sm font-bold">Recent ledger activity</h2>
-              <div className="mt-4 divide-y divide-gray-100">
-                {khata.entries.slice(0, 12).map((entry) => (
-                  <div key={entry.id} className="flex items-center justify-between gap-4 py-3">
+            <section className="rounded-3xl border border-border bg-surface-raised p-5 shadow-card sm:p-6">
+              <h2 className="text-sm font-bold text-ink font-display">Recent Ledger Activity</h2>
+              <div className="mt-4 divide-y divide-border">
+                {khata.entries.slice(0, 10).map((entry) => (
+                  <div key={entry.id} className="flex items-center justify-between gap-3 py-3">
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold text-gray-900">{entry.description}</p>
-                      <p className="mt-1 text-[10px] text-gray-400">
+                      <p className="truncate text-xs font-semibold text-ink">
+                        {entry.description}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-ink-muted">
                         {entry.createdAt ? new Date(entry.createdAt).toLocaleString("en-IN") : entry.entryType}
                       </p>
                     </div>
-                    <span className={`shrink-0 text-xs font-bold ${entry.direction === "CREDIT" ? "text-emerald-600" : "text-gray-900"}`}>
-                      {entry.direction === "CREDIT" ? "-" : "+"}{formatINR(Number(entry.amountPaise || 0) as Paise)}
+                    <span
+                      className={`shrink-0 text-xs font-bold ${
+                        entry.direction === "CREDIT" ? "text-[#2E7D32]" : "text-action"
+                      }`}
+                    >
+                      {entry.direction === "CREDIT" ? "-" : "+"}
+                      {formatINR(Number(entry.amountPaise || 0) as Paise)}
                     </span>
                   </div>
                 ))}

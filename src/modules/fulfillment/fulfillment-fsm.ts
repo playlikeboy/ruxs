@@ -56,8 +56,8 @@ export class FulfillmentStateMachine {
         // Cutoff Guard: check if current action time is past the cutoff deadline
         if (now.getTime() > cutoff.getTime()) {
           fulfillment.status = "LATE_SKIP";
-          // Calculate 50% late cancellation fee
-          fulfillment.lateFeePaise = calculatePercentage(fulfillment.totalPricePaise, 50);
+          const feePercent = action.lateCancellationFeePercent ?? fulfillment.lateCancellationFeePercent ?? 50;
+          fulfillment.lateFeePaise = calculatePercentage(fulfillment.totalPricePaise, feePercent);
           fulfillment.notes = action.notes || "Late skip received past cutoff deadline";
         } else {
           fulfillment.status = "SKIPPED";
@@ -129,6 +129,7 @@ export class FulfillmentStateMachine {
         .set({
           status: fulfillment.status,
           deliveredAt: fulfillment.deliveredAt ? new Date(fulfillment.deliveredAt) : null,
+          lateFeePaise: fulfillment.lateFeePaise ? Number(fulfillment.lateFeePaise) : 0,
           notes: fulfillment.notes || null,
           actionTakenAt: now,
         })
@@ -521,6 +522,67 @@ export class FulfillmentStateMachine {
   static listAll(): DailyFulfillment[] {
     this.seedDefaultFulfillmentsIfEmpty();
     return Array.from(fulfillmentStore.values());
+  }
+
+  /**
+   * Authoritative DB query for all fulfillments across tenants
+   */
+  static async listAllAsync(): Promise<DailyFulfillment[]> {
+    if (!isTestEnv) {
+      try {
+        const rows = await db
+          .select({
+            f: dailyFulfillments,
+            customerName: users.fullName,
+            customerPhone: users.phone,
+            productName: products.name,
+            productId: products.id,
+            societyName: households.societyName,
+            towerWing: households.towerWing,
+            flatNumber: households.flatNumber,
+          })
+          .from(dailyFulfillments)
+          .leftJoin(users, eq(dailyFulfillments.customerId, users.id))
+          .leftJoin(subscriptions, eq(dailyFulfillments.subscriptionId, subscriptions.id))
+          .leftJoin(products, eq(subscriptions.productId, products.id))
+          .leftJoin(households, eq(dailyFulfillments.householdId, households.id));
+
+        if (rows.length > 0) {
+          return rows.map((r) => ({
+            id: r.f.id,
+            tenantId: r.f.tenantId,
+            subscriptionId: r.f.subscriptionId,
+            customerId: r.f.customerId,
+            customerName: r.customerName || undefined,
+            customerPhone: r.customerPhone || undefined,
+            householdId: r.f.householdId || undefined,
+            addressSummary: r.societyName ? `${r.societyName}, ${r.towerWing}-${r.flatNumber}` : undefined,
+            serviceDate: r.f.serviceDate,
+            shift: r.f.shift as any,
+            status: r.f.status as any,
+            items: [
+              {
+                productId: r.productId || "prod_default",
+                productName: r.productName || "Standard Daily Service",
+                quantity: r.f.quantity,
+                unitPricePaise: r.f.unitPricePaise as Paise,
+                totalPricePaise: r.f.totalPricePaise as Paise,
+              },
+            ],
+            totalPricePaise: r.f.totalPricePaise as Paise,
+            cutoffTime: r.f.cutoffTime ? r.f.cutoffTime.toISOString() : "10:00 AM",
+            deliveredAt: r.f.deliveredAt ? r.f.deliveredAt.toISOString() : undefined,
+            notes: r.f.notes || undefined,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to query all fulfillments from Neon DB:", err);
+      }
+    }
+
+    return this.listAll();
   }
 
   static clearStore(): void {

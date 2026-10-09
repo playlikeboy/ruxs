@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db, isTestEnv } from "@/src/shared/db";
 import {
   products as productsTable,
@@ -108,7 +108,10 @@ export async function getCustomerCatalog(): Promise<CustomerCatalog> {
   }
 
   const [tenantRows, serviceRows, productRows] = await Promise.all([
-    db.select().from(tenantsTable).where(eq(tenantsTable.status, "VERIFIED")),
+    db
+      .select()
+      .from(tenantsTable)
+      .where(inArray(tenantsTable.status, ["VERIFIED", "ACTIVE"])),
     db.select().from(servicesTable).where(eq(servicesTable.isActive, true)),
     db.select().from(productsTable).where(eq(productsTable.isActive, true)),
   ]);

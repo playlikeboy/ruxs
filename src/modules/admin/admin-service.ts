@@ -7,8 +7,13 @@ import {
   VendorPlanTier,
 } from "./admin-schema";
 import { db, isTestEnv } from "../../shared/db";
-import { tenants as tenantsTable, auditLogs as auditLogsTable, subscriptions as subscriptionsTable } from "../../shared/db/schema";
-import { eq, desc } from "drizzle-orm";
+import {
+  tenants as tenantsTable,
+  auditLogs as auditLogsTable,
+  subscriptions as subscriptionsTable,
+  khataEntries as khataEntriesTable,
+} from "../../shared/db/schema";
+import { eq, desc, sql } from "drizzle-orm";
 import { generateVendorSlug, VendorType } from "../vendor/vendor-schema";
 import { SEEDED_VENDORS } from "../../shared/db/seed";
 
@@ -573,6 +578,49 @@ Manage deliveries, daily cutoffs, and digital khata.`,
     });
 
     auditLogsStore.unshift(log);
+
+    if (!isTestEnv) {
+      db.insert(auditLogsTable)
+        .values({
+          id: log.id,
+          adminUserId: log.adminUserId,
+          adminEmail: log.adminEmail,
+          action: log.action,
+          targetType: log.targetType,
+          targetId: log.targetId,
+          details: log.details,
+        })
+        .catch((err) => console.error("Failed to persist audit log to Neon DB:", err));
+    }
+
+    return log;
+  }
+
+  static async logActionAsync(input: {
+    adminUserId: string;
+    adminEmail: string;
+    action: any;
+    targetType: string;
+    targetId: string;
+    details: string;
+    ipAddress?: string;
+  }): Promise<PlatformAuditLog> {
+    const log = this.logAction(input);
+    if (!isTestEnv) {
+      try {
+        await db.insert(auditLogsTable).values({
+          id: log.id,
+          adminUserId: log.adminUserId,
+          adminEmail: log.adminEmail,
+          action: log.action,
+          targetType: log.targetType,
+          targetId: log.targetId,
+          details: log.details,
+        });
+      } catch (err) {
+        console.error("Failed to persist audit log async to Neon DB:", err);
+      }
+    }
     return log;
   }
 
@@ -591,6 +639,36 @@ Manage deliveries, daily cutoffs, and digital khata.`,
       try {
         const rows = await db.select().from(tenantsTable);
         if (rows && rows.length > 0) {
+          // Live aggregated subscriber counts per tenant
+          const subCounts = await db
+            .select({
+              tenantId: subscriptionsTable.tenantId,
+              subscriberCount: sql<number>`count(distinct ${subscriptionsTable.customerId})::int`,
+            })
+            .from(subscriptionsTable)
+            .where(eq(subscriptionsTable.status, "ACTIVE"))
+            .groupBy(subscriptionsTable.tenantId);
+
+          const subCountMap = new Map<string, number>();
+          for (const sc of subCounts) {
+            subCountMap.set(sc.tenantId, sc.subscriberCount);
+          }
+
+          // Live aggregated monthly debit volume per tenant
+          const volumeCounts = await db
+            .select({
+              tenantId: khataEntriesTable.tenantId,
+              volumePaise: sql<number>`coalesce(sum(${khataEntriesTable.amountPaise}), 0)::int`,
+            })
+            .from(khataEntriesTable)
+            .where(eq(khataEntriesTable.direction, "DEBIT"))
+            .groupBy(khataEntriesTable.tenantId);
+
+          const volumeMap = new Map<string, number>();
+          for (const vc of volumeCounts) {
+            volumeMap.set(vc.tenantId, vc.volumePaise);
+          }
+
           const mapped: AdminVendorProfile[] = rows.map((t) => {
             let parsedConfig = {};
             let parsedCreds;
@@ -605,7 +683,7 @@ Manage deliveries, daily cutoffs, and digital khata.`,
               t.slug.includes("milk") ? "MILKMAN" : t.slug.includes("water") ? "WATER_SERVICE" : "TIFFIN"
             );
 
-            const mappedVendor = {
+            const mappedVendor: AdminVendorProfile = {
               id: t.id,
               businessName: t.businessName,
               slug: t.slug,
@@ -615,8 +693,8 @@ Manage deliveries, daily cutoffs, and digital khata.`,
               coveredSocieties: (parsedConfig as any).coveredSocieties || baseline?.coveredSocieties || ["Sobha Classic", "Purva Fairmont"],
               status: (t.status === "ACTIVE" ? "VERIFIED" : t.status) as VendorApprovalStatus,
               tier: (t.planTier || "STARTER") as VendorPlanTier,
-              subscriberCount: 25,
-              monthlyVolumePaise: 3000000,
+              subscriberCount: subCountMap.get(t.id) ?? 0,
+              monthlyVolumePaise: volumeMap.get(t.id) ?? 0,
               typeConfig: parsedConfig,
               credentials: parsedCreds,
               verifiedAt: t.createdAt.toISOString(),
@@ -633,11 +711,13 @@ Manage deliveries, daily cutoffs, and digital khata.`,
           }
           return mapped;
         }
-      } catch {
+      } catch (err) {
+        console.error("Database error while loading vendors:", err);
         throw new Error("Database unavailable while loading vendors");
       }
     }
-    return [];
+
+    const list = Array.from(new Set(vendorsStore.values()));
     if (status) {
       return list.filter((v) => v.status === status);
     }

@@ -44,7 +44,9 @@
     "deploy": "vinext-cloudflare deploy --config dist/server/wrangler.json",
     "preview": "bun run build && bun run start",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit --incremental false",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun run src/shared/db/migrate.ts",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv ./worker-configuration.d.ts"
   }
 }

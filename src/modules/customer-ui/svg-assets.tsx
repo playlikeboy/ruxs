@@ -401,3 +401,133 @@ export function CatalogSvgIllustration({
   // Default fallback
   return <PizzaSvg className={className} size={size} />;
 }
+
+/**
+ * Cute Hand-Drawn Style Pastel Cat Mascot SVG
+ * Colors: soft cat-blue, cat-yellow, cat-pink, ivory and warm-brown ink (#5A554B)
+ */
+export function CuteCatMascotSvg({
+  className = "",
+  size = 48,
+  variant = "happy",
+}: {
+  className?: string;
+  size?: number;
+  variant?: "happy" | "sleeping" | "curious";
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      {/* Soft background pastel halo */}
+      <circle cx="32" cy="32" r="28" fill="#FFE59C" fillOpacity="0.35" />
+      
+      {/* Cat Ears */}
+      <path
+        d="M20 28L15 14C15 14 24 16 27 21"
+        fill="#FFC9C4"
+        stroke="#5A554B"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M44 28L49 14C49 14 40 16 37 21"
+        fill="#FFC9C4"
+        stroke="#5A554B"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Inner Ears */}
+      <path d="M18 19L19 24L24 23" fill="#F2A4A4" />
+      <path d="M46 19L45 24L40 23" fill="#F2A4A4" />
+
+      {/* Cat Head */}
+      <ellipse
+        cx="32"
+        cy="34"
+        rx="18"
+        ry="15"
+        fill="#FFF8ED"
+        stroke="#5A554B"
+        strokeWidth="2.5"
+      />
+
+      {/* Eyes */}
+      {variant === "sleeping" ? (
+        <>
+          <path d="M24 33C24 35 27 35 27 33" stroke="#5A554B" strokeWidth="2" strokeLinecap="round" />
+          <path d="M37 33C37 35 40 35 40 33" stroke="#5A554B" strokeWidth="2" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <circle cx="25" cy="33" r="2.5" fill="#5A554B" />
+          <circle cx="26" cy="32" r="0.8" fill="#FFFFFF" />
+          <circle cx="39" cy="33" r="2.5" fill="#5A554B" />
+          <circle cx="40" cy="32" r="0.8" fill="#FFFFFF" />
+        </>
+      )}
+
+      {/* Cute Blush Cheeks */}
+      <ellipse cx="20" cy="37" rx="3" ry="1.8" fill="#F2A4A4" fillOpacity="0.65" />
+      <ellipse cx="44" cy="37" rx="3" ry="1.8" fill="#F2A4A4" fillOpacity="0.65" />
+
+      {/* Nose & Mouth */}
+      <path d="M31 36L33 36L32 37.5Z" fill="#FF804E" />
+      <path
+        d="M30 38.5C31 39.5 32 39.5 32 38.5C32 39.5 33 39.5 34 38.5"
+        stroke="#5A554B"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+
+      {/* Whiskers */}
+      <path d="M14 34L20 35" stroke="#5A554B" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M13 38L19 38" stroke="#5A554B" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M44 35L50 34" stroke="#5A554B" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M45 38L51 38" stroke="#5A554B" strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* Little Collar Bell */}
+      <circle cx="32" cy="49" r="3" fill="#FFE59C" stroke="#5A554B" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+/**
+ * Cute Decorative Heart SVG
+ */
+export function CuteHeartSvg({
+  className = "",
+  size = 18,
+  fill = "#F2A4A4",
+}: {
+  className?: string;
+  size?: number;
+  fill?: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z"
+        fill={fill}
+        stroke="#5A554B"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+

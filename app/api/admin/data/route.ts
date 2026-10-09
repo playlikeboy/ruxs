@@ -13,6 +13,9 @@ import { NotificationService } from "@/src/modules/notifications/notification-se
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { Paise } from "@/src/shared/types/money";
 import { requireSession, requireRole } from "@/src/shared/auth/request";
+import { db } from "@/src/shared/db";
+import { subscriptions as subscriptionsTable, payments as paymentsTable } from "@/src/shared/db/schema";
+import { eq, sql } from "drizzle-orm";
 
 export async function GET(request: Request) {
   try {
@@ -22,13 +25,25 @@ export async function GET(request: Request) {
     const todayStr = new Date().toISOString().split("T")[0];
 
     // Live queries directly from Neon PostgreSQL
-    const [vendors, auditLogs, rawHouseholds, disputes, assetHoldings] = await Promise.all([
+    const [vendors, auditLogs, rawHouseholds, disputes, assetHoldings, subCounts, gmvRows] = await Promise.all([
       AdminService.listVendorsAsync(),
       AdminService.getAuditLogsAsync(40),
       HouseholdService.listHouseholdsAsync(),
       DisputeService.listAllAsync(),
       AssetLedgerService.listAllHoldingsAsync(),
+      db.select({
+        customerId: subscriptionsTable.customerId,
+        count: sql<number>`count(*)::int`,
+      }).from(subscriptionsTable).where(eq(subscriptionsTable.status, "ACTIVE")).groupBy(subscriptionsTable.customerId).catch(() => []),
+      db.select({
+        gmv: sql<number>`coalesce(sum(${paymentsTable.amountPaise}), 0)::int`,
+      }).from(paymentsTable).where(eq(paymentsTable.status, "SUCCESS")).catch(() => [{ gmv: 0 }]),
     ]);
+
+    const custSubMap = new Map<string, number>();
+    for (const sc of subCounts) {
+      custSubMap.set(sc.customerId, sc.count);
+    }
 
     // Compute live real khata balance dynamically per household
     const households = await Promise.all(
@@ -37,7 +52,7 @@ export async function GET(request: Request) {
         return {
           ...h,
           khataBalancePaise: balancePaise,
-          activeSubscriptionsCount: 2,
+          activeSubscriptionsCount: custSubMap.get(h.primaryOwnerId) ?? 0,
         };
       })
     );
@@ -47,6 +62,8 @@ export async function GET(request: Request) {
     // Default kitchen batch aggregation for lunch shift
     const defaultVendorId = vendors[0]?.id || "ten_sharma_tiffin";
     const kitchenBatches = await CutoffEngine.getKitchenBatchCounterAsync(defaultVendorId, todayStr, "LUNCH");
+
+    const monthlyGmvPaise = (gmvRows[0]?.gmv || 0) as Paise;
 
     const overview = {
       totalVendors: vendors.length,
@@ -60,7 +77,7 @@ export async function GET(request: Request) {
       skippedCount: fulfillments.filter((f) => f.status === "SKIPPED" || f.status === "LATE_SKIP").length,
       openDisputesCount: disputes.filter((d) => d.status === "OPEN").length,
       totalAssetHoldingsCount: assetHoldings.reduce((sum, a) => sum + a.holdingCount, 0),
-      monthlyGmvPaise: 0 as Paise, // Replaced with live aggregation when payment analytics are enabled
+      monthlyGmvPaise,
       dbConnected: true,
       serviceDate: todayStr,
     };

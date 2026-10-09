@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await requireSession();
-    const body = await request.json();
+    const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
     const dispute = await DisputeService.fileDisputeAsync({ ...body, customerId: session.sub });
     return Response.json(createSuccessResponse(dispute), { status: 201 });
   } catch (error) {

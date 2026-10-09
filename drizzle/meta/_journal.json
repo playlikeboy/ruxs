@@ -15,6 +15,20 @@
       "when": 1789135914756,
       "tag": "0001_late_roland_deschain",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791183524893,
+      "tag": "0002_soft_norrin_radd",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791183829802,
+      "tag": "0003_tearful_mattie_franklin",
+      "breakpoints": true
     }
   ]
 }

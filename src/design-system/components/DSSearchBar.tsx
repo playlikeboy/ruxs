@@ -16,7 +16,7 @@ export interface DSSearchBarProps {
 export function DSSearchBar({
   value,
   onChange,
-  placeholder = "Search your place here",
+  placeholder = "Search fresh milk, water, tiffins, flowers...",
   onFilterClick,
   showFilter = true,
   className = "",
@@ -24,35 +24,37 @@ export function DSSearchBar({
 }: DSSearchBarProps) {
   return (
     <div
-      className={`relative flex items-center gap-2 rounded-2xl sm:rounded-3xl border border-gray-200/80 bg-white px-3.5 py-1.5 shadow-xs focus-within:border-red-400 focus-within:ring-2 focus-within:ring-red-100 ${className}`}
+      className={`relative flex items-center gap-2.5 rounded-full border border-border bg-surface-raised px-4 py-1.5 shadow-card transition-all focus-within:border-action focus-within:ring-2 focus-within:ring-coral/20 hover:shadow-soft ${className}`}
     >
-      <Search className="h-4 w-4 shrink-0 text-gray-400" />
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-coral/10 text-action">
+        <Search className="h-4 w-4" />
+      </div>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className="h-10 w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none font-normal"
+        className="h-10 w-full bg-transparent text-sm text-ink placeholder:text-ink-subtle outline-none font-medium"
       />
       {value ? (
         <button
           type="button"
           onClick={() => onChange("")}
-          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:text-gray-800"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-band text-ink-muted hover:text-ink transition-colors cursor-pointer"
           aria-label="Clear search"
         >
-          <X className="h-3 w-3" />
+          <X className="h-3.5 w-3.5" />
         </button>
       ) : null}
       {showFilter && (
         <button
           type="button"
           onClick={onFilterClick}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500 text-white shadow-xs hover:bg-red-600 active:bg-red-700"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-action text-white shadow-xs hover:bg-action-hover active:scale-95 transition-all cursor-pointer"
           aria-label="Filter"
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <SlidersHorizontal className="h-3.5 w-3.5" />
         </button>
       )}
     </div>
