@@ -50,7 +50,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         ? { ...action, driverId: session.sub }
         : action;
 
-    return Response.json(createSuccessResponse(FulfillmentStateMachine.transitionAsync(fulfillment, effectiveAction)));
+    return Response.json(createSuccessResponse(await FulfillmentStateMachine.transitionAsync(fulfillment, effectiveAction)));
   } catch (error) {
     if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
     if (error instanceof Error && error.name === "AuthorizationError") {

@@ -5,6 +5,8 @@ import { users, subscriptions, householdMembers } from "@/src/shared/db/schema";
 import { eq } from "drizzle-orm";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 
+import { checkRateLimit, getClientIp } from "@/src/shared/utils/rate-limit";
+
 /**
  * DPDP Act Compliance: Right to Erasure / Account Deletion
  * Anonymizes PII, cancels active subscriptions, and revokes access while maintaining regulatory financial audit trail.
@@ -13,6 +15,15 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireSession();
     const userId = session.sub;
+
+    const ip = getClientIp(request.headers);
+    const limit = await checkRateLimit(`del_acct:${userId}:${ip}`, 3, 3600);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        createErrorResponse("RATE_LIMITED", "Too many account deletion requests. Please try again later."),
+        { status: 429, headers: { "Retry-After": String(limit.resetSeconds) } }
+      );
+    }
 
     if (!isTestEnv) {
       // 1. Cancel active subscriptions

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCustomerCatalog } from "@/src/modules/customer-ui/catalog-service";
 import AppClient from "./AppClient";
+import { safeJsonLdStringify } from "@/src/shared/utils/security";
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +96,7 @@ export default async function AppPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(appStructuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(appStructuredData) }}
       />
       <AppClient catalog={catalog} />
     </>

@@ -142,13 +142,15 @@ const rootStructuredData = {
   ],
 };
 
+import { safeJsonLdStringify } from "@/src/shared/utils/security";
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={cn("dark", geist.variable)}>
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(rootStructuredData) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(rootStructuredData) }}
         />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">

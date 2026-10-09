@@ -2,8 +2,16 @@ import { PaymentService } from "@/src/modules/payments/payment-service";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { getEnv } from "@/src/shared/config/env";
 
+import { checkRateLimit, getClientIp } from "@/src/shared/utils/rate-limit";
+
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request.headers);
+    const ipLimit = await checkRateLimit(`pay_wh_ip:${ip}`, 100, 60);
+    if (!ipLimit.allowed) {
+      return Response.json(createErrorResponse("RATE_LIMITED", "Too many webhook requests"), { status: 429 });
+    }
+
     const rawPayload = await request.text();
     const signature = request.headers.get("x-ruxs-signature");
     const env = getEnv();

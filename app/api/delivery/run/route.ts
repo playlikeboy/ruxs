@@ -4,6 +4,19 @@ import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors"
 import { ZodError } from "zod";
 import { requireSession, requireRole, assertTenant } from "@/src/shared/auth/request";
 
+import { maskIndianPhone } from "@/src/shared/auth/phone";
+
+function maskRunForStaff(run: any): any {
+  if (!run || !Array.isArray(run.stops)) return run;
+  return {
+    ...run,
+    stops: run.stops.map((stop: any) => ({
+      ...stop,
+      customerPhone: maskIndianPhone(stop.customerPhone),
+    })),
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const session = await requireSession();
@@ -30,11 +43,14 @@ export async function GET(request: Request) {
       if (!run) return Response.json(createErrorResponse("NOT_FOUND", "Run sheet not found"), { status: 404 });
       if (session.role === "DELIVERY_STAFF" && run.driverId !== session.sub) return Response.json(createErrorResponse("FORBIDDEN", "This run does not belong to you"), { status: 403 });
       if (session.role === "VENDOR_ADMIN") assertTenant(session, run.tenantId);
-      return Response.json(createSuccessResponse(run), { headers: { "Cache-Control": "private, no-store" }});
+      const safeRun = session.role === "DELIVERY_STAFF" ? maskRunForStaff(run) : run;
+      return Response.json(createSuccessResponse(safeRun), { headers: { "Cache-Control": "private, no-store" }});
     }
 
     const latest = await DeliveryEngine.getLatestRunAsync({ tenantId, driverId: session.role === "DELIVERY_STAFF" ? session.sub : driverId });
-    return latest ? Response.json(createSuccessResponse(latest), { headers: { "Cache-Control": "private, no-store" }}) : Response.json(createErrorResponse("NOT_FOUND", "No active delivery runs found"), { status: 404 });
+    if (!latest) return Response.json(createErrorResponse("NOT_FOUND", "No active delivery runs found"), { status: 404 });
+    const safeLatest = session.role === "DELIVERY_STAFF" ? maskRunForStaff(latest) : latest;
+    return Response.json(createSuccessResponse(safeLatest), { headers: { "Cache-Control": "private, no-store" }});
   } catch (error) {
     if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });
     if (error instanceof Error && error.name === "AuthorizationError") return Response.json(createErrorResponse((error as any).code, error.message), { status: (error as any).code === "UNAUTHORIZED" ? 401 : 403 });

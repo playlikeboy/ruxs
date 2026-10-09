@@ -74,8 +74,27 @@ export async function checkRateLimit(
     }
   }
 
-  // In-memory sliding window fallback
+  // In-memory sliding window fallback with bounded eviction
   const now = Date.now();
+
+  // Prune expired entries to maintain bounded memory
+  if (memoryRateLimitStore.size > 2000) {
+    for (const [k, v] of memoryRateLimitStore.entries()) {
+      if (v.expiresAt <= now) {
+        memoryRateLimitStore.delete(k);
+      }
+    }
+    // If still oversized, drop excess keys
+    if (memoryRateLimitStore.size > 2000) {
+      const excess = memoryRateLimitStore.size - 2000;
+      let dropped = 0;
+      for (const k of memoryRateLimitStore.keys()) {
+        memoryRateLimitStore.delete(k);
+        if (++dropped >= excess) break;
+      }
+    }
+  }
+
   const record = memoryRateLimitStore.get(key);
 
   if (!record || record.expiresAt <= now) {
