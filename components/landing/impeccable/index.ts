@@ -1,9 +1,0 @@
-export { ImpeccableHeader } from "./ImpeccableHeader";
-export { ImpeccableHero } from "./ImpeccableHero";
-export { ImpeccableHeroProof } from "./ImpeccableHeroProof";
-export { ImpeccableCommandConsole } from "./ImpeccableCommandConsole";
-export { ImpeccableSteering } from "./ImpeccableSteering";
-export { ImpeccableBento } from "./ImpeccableBento";
-export { ImpeccableTestimonials } from "./ImpeccableTestimonials";
-export { ImpeccableFaq } from "./ImpeccableFaq";
-export { ImpeccableFooter } from "./ImpeccableFooter";
