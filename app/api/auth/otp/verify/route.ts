@@ -7,6 +7,7 @@ import { createErrorResponse, createSuccessResponse } from "@/src/shared/errors"
 import { getEnv } from "@/src/shared/config/env";
 import { db, isTestEnv, users } from "@/src/shared/db";
 import { eq } from "drizzle-orm";
+import { checkRateLimit, getClientIp } from "@/src/shared/utils/rate-limit";
 
 const VerifyOtpSchema = z.object({
   phone: z.string().min(10),
@@ -15,6 +16,15 @@ const VerifyOtpSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request.headers);
+    const ipLimit = await checkRateLimit(`otp_ver_ip:${ip}`, 15, 60);
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        createErrorResponse("RATE_LIMITED", "Too many verification attempts from this IP. Please wait a minute."),
+        { status: 429 }
+      );
+    }
+
     const parsed = VerifyOtpSchema.safeParse(await request.json().catch(() => ({})));
     if (!parsed.success) return NextResponse.json(
       createErrorResponse("VALIDATION_FAILED", "Invalid OTP verification payload", parsed.error.format()),

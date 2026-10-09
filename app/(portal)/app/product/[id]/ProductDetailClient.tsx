@@ -10,11 +10,11 @@ import {
   Store,
   ShieldCheck,
   Clock,
-  Flame,
   Check,
   Truck,
   MapPin,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import {
   CatalogProduct,
@@ -71,60 +71,53 @@ export default function ProductDetailClient({
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f0d] text-foreground pb-24">
-      {/* Top Sticky Header */}
-      <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b0f0d]/90 backdrop-blur-xl px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-surface pb-32 text-ink font-sans selection:bg-coral/20">
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-30 border-b border-border bg-surface-raised/95 px-4 sm:px-6 lg:px-8 py-3.5 backdrop-blur-xl shadow-xs">
+        <div className="mx-auto max-w-5xl flex items-center justify-between">
           <Link
             href="/app"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-raised text-ink hover:bg-surface-band transition-colors shadow-xs cursor-pointer"
             aria-label="Back to App"
           >
             <ArrowLeft size={18} />
           </Link>
 
-          {/* Breadcrumbs */}
-          <nav className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Link href="/app" className="hover:text-foreground transition-colors">
-              App
-            </Link>
-            <ChevronRight size={12} />
-            <span className="capitalize">{product.category.toLowerCase().replace("_", " ")}</span>
-            <ChevronRight size={12} />
-            <span className="font-semibold text-foreground truncate max-w-[180px]">
-              {product.name}
-            </span>
-          </nav>
-        </div>
+          <span className="text-xs font-bold text-coral uppercase tracking-wider">
+            {product.category.replaceAll("_", " ")}
+          </span>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsFavorite(!isFavorite)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
-            aria-label="Favorite"
-          >
-            <Heart
-              size={18}
-              className={isFavorite ? "fill-red-500 text-red-500" : "text-foreground"}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof navigator !== "undefined" && navigator.share) {
-                navigator.share({
-                  title: `${product.name} · RUXS`,
-                  text: product.description,
-                  url: window.location.href,
-                }).catch(() => {});
-              }
-            }}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
-            aria-label="Share"
-          >
-            <Share2 size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsFavorite(!isFavorite)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-raised text-ink hover:bg-surface-band transition-colors shadow-xs cursor-pointer"
+              aria-label="Favorite"
+            >
+              <Heart
+                size={18}
+                className={isFavorite ? "fill-[#F2A4A4] text-action" : "text-ink"}
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator
+                    .share({
+                      title: product.name,
+                      text: product.description,
+                      url: window.location.href,
+                    })
+                    .catch(() => {});
+                }
+              }}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-raised text-ink hover:bg-surface-band transition-colors shadow-xs cursor-pointer"
+              aria-label="Share"
+            >
+              <Share2 size={18} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -134,55 +127,47 @@ export default function ProductDetailClient({
           {/* Left Column: Visual Showcase & Tabs */}
           <div className="space-y-6">
             {/* Hero Image Card */}
-            <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#121a15] to-[#0d120f] p-6 sm:p-10 flex flex-col items-center justify-center text-center">
-              {/* Geofence Delivery Guarantee Pill */}
-              <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
-                <span className="h-2 w-2 rounded-full bg-red-500" />
-                <span>Delivery coverage · checked at checkout</span>
+            <div className="relative overflow-hidden rounded-3xl border border-border bg-surface-raised p-6 sm:p-10 flex flex-col items-center justify-center text-center shadow-card">
+              {/* Delivery Guarantee Pill */}
+              <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-coral/30 bg-coral/10 px-3 py-1 text-xs font-bold text-action">
+                <span className="h-2 w-2 rounded-full bg-coral" />
+                <span>Pre-cleared Gate Delivery</span>
               </div>
 
               {product.isBestSeller && (
-                <div className="absolute top-4 right-4 z-10 rounded-full bg-red-500 px-3 py-1 text-[11px] font-bold text-white shadow-xs">
-                  BEST SELLER
+                <div className="absolute top-4 right-4 z-10 rounded-full bg-coral px-3 py-1 text-[11px] font-bold text-white shadow-xs">
+                  TOP ESSENTIAL
                 </div>
               )}
 
-              {/* Large Circular Food / Item Photo with Realistic Drop Shadow */}
+              {/* Product Image */}
               <div className="relative my-6 h-60 w-60 sm:h-72 sm:w-72 flex items-center justify-center">
-                <div className="absolute inset-x-8 bottom-0 h-10 rounded-full bg-black/80 blur-2xl" />
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="relative z-10 h-full w-full rounded-full object-cover shadow-[0_20px_50px_rgba(0,0,0,0.8)] ring-1 ring-white/10"
+                  className="relative z-10 h-full w-full rounded-3xl object-cover shadow-soft border border-border"
                 />
-                {/* Floating SVG Artwork Badge */}
-                <div className="absolute -bottom-2 -right-2 z-20 h-16 w-16 rounded-3xl bg-[#121714] border-2 border-emerald-500/40 p-2.5 shadow-2xl flex items-center justify-center">
-                  <CatalogSvgIllustration idOrCategory={product.category} size={44} />
+                <div className="absolute -bottom-2 -right-2 z-20 h-16 w-16 rounded-2xl bg-surface-raised border border-border p-2.5 shadow-card flex items-center justify-center">
+                  <CatalogSvgIllustration idOrCategory={product.category} size={40} />
                 </div>
               </div>
 
               {/* Quick Meta Pills */}
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                {product.calories !== undefined && (
-                  <div className="flex items-center gap-1.5 rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-300">
-                    <Flame size={14} className="fill-orange-400" />
-                    <span>{product.calories} Calories</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs text-muted-foreground">
-                  <Clock size={14} className="text-emerald-400" />
-                  <span>{product.deliveryWindow || "Scheduled"}</span>
+                <div className="flex items-center gap-1.5 rounded-full border border-border bg-surface-band px-3 py-1 text-xs text-ink-muted font-medium">
+                  <Clock size={14} className="text-coral" />
+                  <span>{product.deliveryWindow || "Morning 6–8 AM"}</span>
                 </div>
-                <div className="flex items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs text-muted-foreground">
-                  <Truck size={14} className="text-emerald-400" />
-                  <span>Scheduled doorstep delivery</span>
+                <div className="flex items-center gap-1.5 rounded-full border border-border bg-surface-band px-3 py-1 text-xs text-ink-muted font-medium">
+                  <Truck size={14} className="text-coral" />
+                  <span>Direct doorstep delivery</span>
                 </div>
               </div>
             </div>
 
             {/* Information Tabs */}
-            <div className="rounded-3xl border border-white/[0.08] bg-[#121714] p-5 sm:p-6">
-              <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
+            <div className="rounded-3xl border border-border bg-surface-raised p-5 sm:p-6 shadow-card">
+              <div className="flex items-center gap-2 border-b border-border pb-3">
                 {[
                   { id: "overview", label: "Overview" },
                   { id: "guarantee", label: "Delivery Guarantee" },
@@ -192,10 +177,10 @@ export default function ProductDetailClient({
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                    className={`rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer ${
                       activeTab === tab.id
-                        ? "bg-emerald-500 text-black shadow-md shadow-emerald-500/20"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                        ? "bg-action text-white shadow-xs"
+                        : "text-ink-muted hover:text-ink hover:bg-surface-band"
                     }`}
                   >
                     {tab.label}
@@ -203,29 +188,29 @@ export default function ProductDetailClient({
                 ))}
               </div>
 
-              <div className="pt-4 text-xs leading-relaxed text-muted-foreground">
+              <div className="pt-4 text-xs leading-relaxed text-ink-muted">
                 {activeTab === "overview" && (
                   <div className="space-y-3">
-                    <p className="text-sm text-foreground leading-relaxed">
+                    <p className="text-sm text-ink leading-relaxed font-medium">
                       {product.description}
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
-                      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
-                        <span className="text-[10px] uppercase text-subtle font-bold">Standard Unit</span>
-                        <p className="mt-1 text-xs font-bold text-foreground capitalize">
+                      <div className="rounded-2xl border border-border bg-surface-band p-3">
+                        <span className="text-[10px] uppercase text-ink-muted font-bold">Standard Unit</span>
+                        <p className="mt-1 text-xs font-bold text-ink capitalize">
                           1 {product.unit}
                         </p>
                       </div>
-                      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
-                        <span className="text-[10px] uppercase text-subtle font-bold">Preparation</span>
-                        <p className="mt-1 text-xs font-bold text-foreground">
-                          {product.prepTimeMinutes ? `${product.prepTimeMinutes} mins` : "Same-day fresh"}
+                      <div className="rounded-2xl border border-border bg-surface-band p-3">
+                        <span className="text-[10px] uppercase text-ink-muted font-bold">Verification</span>
+                        <p className="mt-1 text-xs font-bold text-[#2E7D32]">
+                          Passed Quality Check
                         </p>
                       </div>
-                      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
-                        <span className="text-[10px] uppercase text-subtle font-bold">Packaging</span>
-                        <p className="mt-1 text-xs font-bold text-foreground">
-                          Sealed & Sanitized
+                      <div className="rounded-2xl border border-border bg-surface-band p-3">
+                        <span className="text-[10px] uppercase text-ink-muted font-bold">Cadence</span>
+                        <p className="mt-1 text-xs font-bold text-ink">
+                          Daily / Alternate
                         </p>
                       </div>
                     </div>
@@ -234,97 +219,61 @@ export default function ProductDetailClient({
 
                 {activeTab === "guarantee" && (
                   <div className="space-y-3">
-                    <div className="flex items-start gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-foreground">
-                      <ShieldCheck size={20} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-3">
+                      <ShieldCheck size={20} className="text-[#2E7D32] shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-bold text-sm">Geofence Autopilot Guarantee</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Orders for {currentGeofence.societyName} are delivered silently to your doorstep without gate pass friction. Direct elevator access enabled for verified couriers.
+                        <h4 className="text-sm font-bold text-ink font-display">Society Autopilot SLA</h4>
+                        <p className="mt-1 text-xs text-ink-muted leading-relaxed">
+                          Deliveries are coordinated with your society security guards before 7:00 AM. In case of delay, 1-tap credits are instantly posted to your digital Khata.
                         </p>
                       </div>
                     </div>
-                    <ul className="space-y-1.5 text-xs text-muted-foreground pl-2">
-                      <li className="flex items-center gap-2">
-                        <Check size={14} className="text-emerald-400" />
-                        <span>Delivery fee is determined by the checkout workflow</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check size={14} className="text-emerald-400" />
-                        <span>Service cutoff is shown from the selected merchant</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check size={14} className="text-emerald-400" />
-                        <span>1-tap instant pause / skip anytime</span>
-                      </li>
-                    </ul>
                   </div>
                 )}
 
                 {activeTab === "vendor" && (
-                  <div className="space-y-3">
-                    {vendor ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-bold text-foreground">{vendor.name}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{vendor.address}</p>
-                          </div>
-                          <Link
-                            href={`/app/vendor/${vendor.id}`}
-                            className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition"
-                          >
-                            View Store
-                          </Link>
-                        </div>
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">FSSAI Registration</span>
-                          <span className="font-mono font-bold text-foreground">{vendor.fssaiNumber}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          {vendor.description}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">Verified local society vendor partner.</p>
-                    )}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-bold text-ink font-display">{product.vendorName}</h4>
+                    <p className="text-xs text-ink-muted">
+                      Local verified service partner servicing {currentGeofence.societyName.split(",")[0]}.
+                    </p>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right Column: Title, Configuration & Order Action */}
+          {/* Right Column: Pricing & Options Card */}
           <div className="space-y-6">
-            {/* Title & Rating Header */}
-            <div className="rounded-3xl border border-white/[0.08] bg-[#121714] p-5 sm:p-6 space-y-4">
+            <div className="rounded-3xl border border-border bg-surface-raised p-6 shadow-card space-y-6">
               <div>
                 {vendor && (
                   <Link
                     href={`/app/vendor/${vendor.id}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:underline mb-2"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-action hover:underline mb-2"
                   >
-                    <Store size={14} />
+                    <Store size={14} className="text-coral" />
                     <span>{vendor.name}</span>
                     <ChevronRight size={12} />
                   </Link>
                 )}
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-ink font-display">
                   {product.name}
                 </h1>
               </div>
 
               {/* Price & Rating Bar */}
-              <div className="flex items-center justify-between border-y border-white/[0.06] py-3">
+              <div className="flex items-center justify-between border-y border-border py-3">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-extrabold text-white">
+                  <span className="text-3xl font-extrabold text-ink font-display">
                     {formatINR(unitPrice as Paise)}
                   </span>
                   {product.originalPricePaise && (
-                    <span className="text-sm text-muted-foreground line-through">
+                    <span className="text-sm text-ink-subtle line-through">
                       {formatINR(product.originalPricePaise as Paise)}
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground font-medium">/ {product.unit}</span>
+                  <span className="text-xs text-ink-muted font-medium">/ {product.unit}</span>
                 </div>
 
                 <DSRatingPill
@@ -337,33 +286,33 @@ export default function ProductDetailClient({
               {/* Size Selector */}
               {product.sizes && product.sizes.length > 0 && (
                 <div className="space-y-2.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Select Size / Package
+                  <label className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+                    Select Package / Size
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {product.sizes.map((size) => {
                       const isSelected = selectedSize?.id === size.id;
-                      const sizePrice = (basePrice + size.priceDeltaPaise) / 100;
+                      const sizePricePaise = basePrice + size.priceDeltaPaise;
                       return (
                         <button
                           key={size.id}
                           type="button"
                           onClick={() => setSelectedSize(size)}
-                          className={`flex flex-col items-center justify-center rounded-2xl p-3 border transition-all text-center ${
+                          className={`flex flex-col items-center justify-center rounded-2xl p-3 border transition-all text-center cursor-pointer ${
                             isSelected
-                              ? "border-emerald-500 bg-emerald-500/10 shadow-[0_0_16px_rgba(16,185,129,0.18)]"
-                              : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.14]"
+                              ? "border-action bg-coral/10 shadow-xs"
+                              : "border-border bg-surface-band hover:border-border-strong hover:bg-surface-subtle"
                           }`}
                         >
-                          <span className="text-xs font-bold text-foreground">
+                          <span className="text-xs font-bold text-ink">
                             {size.name}
                           </span>
                           <span
-                            className={`text-xs mt-0.5 font-semibold ${
-                              isSelected ? "text-emerald-400" : "text-muted-foreground"
+                            className={`text-xs mt-0.5 font-bold ${
+                              isSelected ? "text-action" : "text-ink-muted"
                             }`}
                           >
-                            ₹{sizePrice.toFixed(2)}
+                            {formatINR(sizePricePaise as Paise)}
                           </span>
                         </button>
                       );
@@ -375,7 +324,7 @@ export default function ProductDetailClient({
               {/* Add-ons Checklist */}
               {product.addOns && product.addOns.length > 0 && (
                 <div className="space-y-2.5 pt-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <label className="text-xs font-bold uppercase tracking-wider text-ink-muted">
                     Optional Add-ons & Extras
                   </label>
                   <div className="space-y-2">
@@ -386,15 +335,15 @@ export default function ProductDetailClient({
                           key={addon.id}
                           type="button"
                           onClick={() => toggleAddOn(addon)}
-                          className={`flex w-full items-center justify-between rounded-2xl border p-3 text-left transition-all ${
+                          className={`flex w-full items-center justify-between rounded-2xl border p-3 text-left transition-all cursor-pointer ${
                             isChecked
-                              ? "border-emerald-500/40 bg-emerald-500/[0.08]"
-                              : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.14]"
+                              ? "border-action bg-coral/10"
+                              : "border-border bg-surface-band hover:border-border-strong hover:bg-surface-subtle"
                           }`}
                         >
                           <div>
-                            <p className="text-xs font-bold text-foreground">{addon.name}</p>
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs font-bold text-ink">{addon.name}</p>
+                            <p className="text-[11px] text-ink-muted">
                               {addon.subtitle ? `${addon.subtitle} · ` : ""}
                               +{formatINR(addon.pricePaise as Paise)}
                             </p>
@@ -403,8 +352,8 @@ export default function ProductDetailClient({
                           <div
                             className={`flex h-5 w-5 items-center justify-center rounded-lg border transition ${
                               isChecked
-                                ? "border-emerald-500 bg-emerald-500 text-black"
-                                : "border-white/[0.2] bg-transparent"
+                                ? "border-action bg-action text-white"
+                                : "border-border bg-transparent"
                             }`}
                           >
                             {isChecked && <Check size={12} className="stroke-[3]" />}
@@ -417,9 +366,9 @@ export default function ProductDetailClient({
               )}
 
               {/* Order Controls & Action Bar */}
-              <div className="pt-4 border-t border-white/[0.08] space-y-3">
+              <div className="pt-4 border-t border-border space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <span className="text-xs font-bold text-ink-muted uppercase tracking-wider">
                     Quantity
                   </span>
                   <DSQuantityStepper
@@ -427,13 +376,13 @@ export default function ProductDetailClient({
                     onChange={setQuantity}
                     min={1}
                     size="md"
-                    variant="pill"
+                    variant="coral-pill"
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                <div className="flex items-center justify-between text-xs text-ink-muted pt-1">
                   <span>Subtotal ({quantity} item{quantity > 1 ? "s" : ""}):</span>
-                  <span className="text-base font-extrabold text-white">
+                  <span className="text-base font-extrabold text-action">
                     {formatINR(totalPrice as Paise)}
                   </span>
                 </div>
@@ -443,58 +392,29 @@ export default function ProductDetailClient({
                   size="lg"
                   fullWidth
                   onClick={handleAddToCart}
-                  className="mt-2 text-sm font-bold shadow-lg shadow-emerald-500/25"
+                  className="mt-2 text-sm font-bold"
                 >
                   Add to Cart · {formatINR(totalPrice as Paise)}
                 </DSButton>
 
-                <p className="text-center text-[10px] text-muted-foreground">
-                  Free doorstep delivery · Cancel or pause anytime in 1 tap
+                <p className="text-center text-[10px] text-ink-muted">
+                  Free doorstep delivery · Reconciled to digital Khata ledger
                 </p>
               </div>
             </div>
-
-            {/* Vendor Mini-Card */}
-            {vendor && (
-              <div className="rounded-3xl border border-white/[0.08] bg-[#121714] p-5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={vendor.image}
-                    alt={vendor.name}
-                    className="h-12 w-12 rounded-2xl object-cover border border-white/[0.1]"
-                  />
-                  <div>
-                    <h3 className="text-xs font-bold text-white">{vendor.name}</h3>
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <MapPin size={11} className="text-emerald-400" />
-                      {vendor.address.split(",")[0]} · ★ {vendor.rating}
-                    </p>
-                  </div>
-                </div>
-
-                <Link
-                  href={`/app/vendor/${vendor.id}`}
-                  className="rounded-full border border-white/[0.12] bg-white/[0.04] px-3.5 py-1.5 text-xs font-bold text-foreground hover:bg-white/[0.08] transition"
-                >
-                  Visit
-                </Link>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Related Products from Category */}
+        {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-12 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold tracking-tight text-white">
-                  More Items You May Need
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Frequently ordered together in {currentGeofence.societyName.split(",")[0]}
-                </p>
-              </div>
+            <div>
+              <h2 className="text-lg font-bold tracking-tight text-ink font-display">
+                More Items You May Need
+              </h2>
+              <p className="text-xs text-ink-muted">
+                Frequently paired in {currentGeofence.societyName.split(",")[0]}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
@@ -502,30 +422,30 @@ export default function ProductDetailClient({
                 <Link
                   key={item.id}
                   href={`/app/product/${item.id}`}
-                  className="group flex flex-col justify-between rounded-3xl border border-white/[0.08] bg-[#121714] p-3.5"
+                  className="group flex flex-col justify-between rounded-3xl border border-border bg-surface-raised p-3.5 shadow-card hover:shadow-soft transition-all"
                 >
                   <div>
-                    <div className="relative mx-auto h-24 w-24 sm:h-28 sm:w-28 my-1 flex items-center justify-center">
+                    <div className="relative mx-auto h-24 w-24 sm:h-28 sm:w-28 my-1 flex items-center justify-center rounded-2xl bg-surface-band border border-border overflow-hidden">
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="h-full w-full rounded-full object-cover"
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
                       />
                     </div>
-                    <h3 className="mt-2 text-xs font-bold text-white line-clamp-1 group-hover:text-red-400 transition-colors">
+                    <h3 className="mt-2 text-xs font-bold text-ink line-clamp-1 group-hover:text-action transition-colors font-display">
                       {item.name}
                     </h3>
-                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                    <p className="text-[10px] text-ink-muted truncate mt-0.5">
                       {item.vendorName}
                     </p>
-                    <p className="mt-1 text-sm font-extrabold text-white">
+                    <p className="mt-1 text-sm font-extrabold text-ink">
                       {formatINR(item.pricePaise as Paise)}
                     </p>
                   </div>
 
-                  <div className="mt-3 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span>★ {item.rating}</span>
-                    <span className="font-bold text-emerald-400">View</span>
+                  <div className="mt-3 pt-2 border-t border-border flex items-center justify-between text-[10px] text-ink-muted">
+                    <span className="font-bold text-[#B45309]">★ {item.rating}</span>
+                    <span className="font-bold text-action">View →</span>
                   </div>
                 </Link>
               ))}

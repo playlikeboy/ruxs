@@ -3,7 +3,7 @@
 import React from "react";
 
 export interface DSCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "elevated" | "glass" | "bordered" | "hero";
+  variant?: "default" | "elevated" | "glass" | "bordered" | "hero" | "blush";
   children: React.ReactNode;
   className?: string;
   isHoverable?: boolean;
@@ -16,33 +16,46 @@ export function DSCard({
   isHoverable = false,
   ...props
 }: DSCardProps) {
-  let baseStyle = "relative overflow-hidden rounded-3xl";
+  const baseStyle =
+    "relative overflow-hidden rounded-2xl md:rounded-3xl transition-all duration-200";
+  const hoverStyle = isHoverable
+    ? "hover:-translate-y-0.5 hover:shadow-soft hover:border-border-strong cursor-pointer"
+    : "";
 
   let variantStyle = "";
   switch (variant) {
     case "elevated":
       variantStyle =
-        "border border-gray-100 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)]";
+        "border border-border bg-surface-raised shadow-soft text-ink";
       break;
     case "glass":
       variantStyle =
-        "border border-gray-200/80 bg-white/90 shadow-sm";
+        "border border-border/80 bg-surface-raised/90 backdrop-blur-xl shadow-card text-ink";
       break;
     case "bordered":
-      variantStyle = "border border-gray-200 bg-transparent";
+      variantStyle =
+        "border border-border bg-transparent text-ink";
+      break;
+    case "blush":
+      variantStyle =
+        "border border-canvas/40 bg-gradient-to-br from-surface-raised via-surface to-canvas-soft/20 shadow-card text-ink";
       break;
     case "hero":
       variantStyle =
-        "border border-red-100 bg-gradient-to-r from-red-50/50 via-white to-orange-50/30 shadow-xs";
+        "border border-coral/25 bg-gradient-to-br from-surface-raised via-surface-band to-[#FFEADB]/40 shadow-soft text-ink";
       break;
     case "default":
     default:
-      variantStyle = "border border-gray-100 bg-white shadow-xs";
+      variantStyle =
+        "border border-border bg-surface-raised text-ink shadow-card";
       break;
   }
 
   return (
-    <div className={`${baseStyle} ${variantStyle} ${className}`} {...props}>
+    <div
+      className={`${baseStyle} ${variantStyle} ${hoverStyle} ${className}`}
+      {...props}
+    >
       {children}
     </div>
   );

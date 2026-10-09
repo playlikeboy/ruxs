@@ -12,12 +12,12 @@ export async function GET(request: Request) {
     const session = await requireSession();
     requireRole(session, ["VENDOR_ADMIN", "PLATFORM_ADMIN"]);
     const { searchParams } = new URL(request.url);
-    let tenantId = searchParams.get("tenantId");
+    let tenantId: string | null = searchParams.get("tenantId");
     if (!tenantId) {
       const slug = searchParams.get("slug");
-      if (slug) tenantId = (await AdminService.getVendorDetailBySlug(slug))?.vendor?.id;
+      if (slug) tenantId = (await AdminService.getVendorDetailBySlug(slug))?.vendor?.id || null;
     }
-    if (!tenantId) tenantId = session.role === "VENDOR_ADMIN" ? session.tenantId || undefined : (await AdminService.listVendorsAsync())[0]?.id;
+    if (!tenantId) tenantId = session.role === "VENDOR_ADMIN" ? session.tenantId || null : (await AdminService.listVendorsAsync())[0]?.id || null;
     if (!tenantId) return Response.json(createErrorResponse("NOT_FOUND", "Vendor not found"), { status: 404 });
     if (session.role === "VENDOR_ADMIN") assertTenant(session, tenantId);
     const todayStr = searchParams.get("date") || new Date().toISOString().split("T")[0];

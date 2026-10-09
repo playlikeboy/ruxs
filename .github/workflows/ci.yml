@@ -33,6 +33,12 @@ jobs:
       - name: Compile Edge Production Build
         run: bun run build
 
+      - name: Run Database Migrations
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        run: bun run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Deploy to Cloudflare Workers
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
         run: bun run deploy

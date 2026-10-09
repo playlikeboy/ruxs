@@ -4,7 +4,7 @@ import React, { forwardRef, ButtonHTMLAttributes } from "react";
 import { Loader2 } from "lucide-react";
 
 export interface DSButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "glass";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "coral" | "pastel" | "glass";
   size?: "sm" | "md" | "lg" | "icon" | "icon-sm";
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -28,20 +28,17 @@ export const DSButton = forwardRef<HTMLButtonElement, DSButtonProps>(
     },
     ref
   ) => {
-    // Base classes without animations
     let classes =
-      "inline-flex items-center justify-center font-medium tracking-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50 disabled:pointer-events-none select-none";
+      "inline-flex items-center justify-center font-medium tracking-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/60 disabled:opacity-50 disabled:pointer-events-none select-none transition-all duration-150 cursor-pointer";
 
-    // Full width
     if (fullWidth) classes += " w-full";
 
-    // Size variants
     switch (size) {
       case "sm":
-        classes += " text-xs px-3.5 py-1.5 h-8 gap-1.5 rounded-full";
+        classes += " text-xs px-3.5 py-1.5 h-8 gap-1.5 rounded-full font-semibold";
         break;
       case "lg":
-        classes += " text-base px-6 py-3 h-12 gap-2.5 rounded-full font-semibold";
+        classes += " text-base px-6 py-3 h-12 gap-2.5 rounded-full font-bold";
         break;
       case "icon":
         classes += " h-10 w-10 p-0 rounded-full flex-shrink-0";
@@ -51,34 +48,43 @@ export const DSButton = forwardRef<HTMLButtonElement, DSButtonProps>(
         break;
       case "md":
       default:
-        classes += " text-sm px-5 py-2.5 h-10 gap-2 rounded-full font-medium";
+        classes += " text-sm px-5 py-2.5 h-10 gap-2 rounded-full font-semibold";
         break;
     }
 
-    // Color/Style variants
     switch (variant) {
       case "secondary":
         classes +=
-          " bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200";
+          " bg-surface-raised hover:bg-surface-band text-ink border border-border shadow-xs";
+        break;
+      case "coral":
+        classes +=
+          " bg-coral hover:brightness-95 active:scale-[0.98] text-white font-bold shadow-sm";
+        break;
+      case "pastel":
+        classes +=
+          " bg-cat-yellow/30 hover:bg-cat-yellow/50 text-ink border border-ink/10";
         break;
       case "outline":
         classes +=
-          " bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 shadow-xs";
+          " bg-transparent hover:bg-surface-band text-ink border border-border";
         break;
       case "ghost":
-        classes += " bg-transparent hover:bg-gray-100 text-gray-600 hover:text-gray-900";
+        classes +=
+          " bg-transparent hover:bg-surface-band text-ink-muted hover:text-ink";
         break;
       case "danger":
-        classes += " bg-red-50 hover:bg-red-100 text-red-600 border border-red-200";
+        classes +=
+          " bg-[#C62828]/10 hover:bg-[#C62828]/20 text-[#C62828] border border-[#C62828]/20";
         break;
       case "glass":
         classes +=
-          " bg-white/90 hover:bg-white text-gray-900 border border-gray-200 shadow-sm";
+          " bg-surface-raised/90 hover:bg-surface-raised text-ink border border-border backdrop-blur-md shadow-xs";
         break;
       case "primary":
       default:
         classes +=
-          " bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold shadow-xs";
+          " bg-action hover:bg-action-hover active:scale-[0.98] text-white font-bold shadow-[0_4px_14px_-2px_rgba(189,75,42,0.28)]";
         break;
     }
 
@@ -90,7 +96,7 @@ export const DSButton = forwardRef<HTMLButtonElement, DSButtonProps>(
         {...props}
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 text-current" />
+          <Loader2 className="h-4 w-4 animate-spin text-current" />
         ) : (
           <>
             {leftIcon && <span className="shrink-0">{leftIcon}</span>}

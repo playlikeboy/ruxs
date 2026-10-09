@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireSession();
     requireRole(session, ["CUSTOMER", "HOUSEHOLD_MEMBER"]);
-    const body = await request.json();
+    const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
 
     if (body.customerId && body.customerId !== session.sub) {
       return Response.json(createErrorResponse("FORBIDDEN", "Customer identity must come from the session"), { status: 403 });
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       }
     }
 
-    let input = { ...body, customerId: session.sub };
+    let input: Record<string, any> = { ...body, customerId: session.sub };
 
     if (!isTestEnv) {
       const productId = String(body.productId || "");

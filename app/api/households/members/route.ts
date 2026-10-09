@@ -6,7 +6,7 @@ import { requireSession } from "@/src/shared/auth/request";
 export async function POST(request: Request) {
   try {
     const session = await requireSession();
-    const body = await request.json();
+    const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
     const result = await HouseholdService.inviteMemberAsync({ ...body, invitedByUserId: session.sub });
     return Response.json(createSuccessResponse(result), { status: 201 });
   } catch (error) {

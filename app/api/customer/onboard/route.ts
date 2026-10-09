@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireSession();
     requireRole(session, ["CUSTOMER", "HOUSEHOLD_MEMBER"]);
-    const body = await request.json();
+    const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
     const customer = await CustomerService.onboardCustomer(
       { ...body, phone: session.phone },
       { userId: session.sub }

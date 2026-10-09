@@ -44,7 +44,7 @@ export function CategoryIcon({
 }: CategoryIconProps) {
   const upper = id.toUpperCase();
 
-  const strokeColor = isActive ? "text-red-500" : "text-gray-700";
+  const strokeColor = isActive ? "text-primary" : "text-muted-foreground";
 
   switch (upper) {
     case "ALL":

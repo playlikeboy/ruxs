@@ -12,14 +12,19 @@ import {
   Star,
   ShieldCheck,
   Plus,
+  ShoppingBag,
+  Sparkles,
+  Calendar,
+  CheckCircle2,
 } from "lucide-react";
 import { useCustomerUI } from "../context/CustomerUIContext";
 import type { CatalogProduct, CatalogVendor, ServiceCategory } from "../types";
 import { useUser } from "@hexclave/next";
-import { CatalogSvgIllustration } from "../svg-assets";
+import { CatalogSvgIllustration, CuteHeartSvg, CuteCatMascotSvg } from "../svg-assets";
 import {
   DSCategoryPill,
   DSSearchBar,
+  DSRatingPill,
 } from "@/src/design-system";
 
 export function DiscoveryView({
@@ -42,6 +47,9 @@ export function DiscoveryView({
     currentGeofence,
     routines,
     toggleRoutinePause,
+    cartCount,
+    totalPaise,
+    setIsCartOpen,
   } = useCustomerUI();
 
   // Filter products by category and search
@@ -58,76 +66,119 @@ export function DiscoveryView({
     });
   }, [activeCategory, searchQuery, products]);
 
-  // Featured vendor for the Screen 1 "Asian Kitchen" card layout
-  const user = useUser();
-  const displayName = String((user as any)?.firstName || (user as any)?.name || (user as any)?.fullName || "there");
-  const todayLabel = new Intl.DateTimeFormat("en-IN", { weekday: "long", month: "short", day: "numeric" }).format(new Date());
+  // Safe user profile resolution
+  let displayName = "Neighbor";
+  try {
+    const user = useUser();
+    if (user) {
+      displayName =
+        String(
+          (user as any)?.firstName ||
+            (user as any)?.name ||
+            (user as any)?.fullName ||
+            "Neighbor"
+        );
+    }
+  } catch {
+    displayName = "Neighbor";
+  }
+
+  const todayLabel = new Intl.DateTimeFormat("en-IN", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(new Date());
+
   const featuredVendor = vendors[0];
 
   return (
-    <div className="space-y-6 pb-24 text-gray-900 font-sans">
+    <div className="mx-auto w-full max-w-md sm:max-w-xl lg:max-w-3xl px-4 pt-3 pb-32 text-ink font-sans space-y-6 select-none">
       {/* =====================================================================
-          1. TOP LOCATION BAR & USER PROFILE (Screen 1)
+          1. TOP LOCATION BAR & USER PROFILE (Airbnb header style)
          ===================================================================== */}
       <header className="flex items-center justify-between pt-1">
-        {/* Current Location Pill */}
+        {/* Current Society Location Pill */}
         <button
           type="button"
           onClick={() => router.push("/app/location")}
-          className="flex items-center gap-3 text-left focus:outline-none"
+          className="flex items-center gap-3 text-left focus:outline-none group transition-opacity hover:opacity-90 cursor-pointer"
         >
-          {/* Squircle Location Icon */}
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-50 border border-red-100 text-red-500 shadow-xs">
-            <MapPin size={20} className="fill-red-500 text-red-500" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-coral/15 border border-coral/30 text-action shadow-xs">
+            <MapPin size={20} className="fill-action text-action" />
           </div>
 
           <div className="min-w-0">
-            <p className="text-[11px] font-medium text-gray-400 leading-none">
-              Current Location
-            </p>
-            <p className="mt-1 text-sm font-bold text-gray-900 truncate max-w-[190px] sm:max-w-[260px]">
-              {currentGeofence.societyName.split(",")[0]}{currentGeofence.city ? `, ${currentGeofence.city}` : ""}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-action uppercase tracking-wider leading-none">
+                Society Hub
+              </span>
+              <span className="h-1 w-1 rounded-full bg-coral" />
+              <span className="text-[10px] font-semibold text-ink-muted">
+                {currentGeofence.name || "Gate Pre-cleared"}
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-extrabold text-ink truncate max-w-[190px] sm:max-w-[280px]">
+              {currentGeofence.societyName.split(",")[0]}
+              {currentGeofence.city ? `, ${currentGeofence.city}` : ""}
             </p>
           </div>
         </button>
 
         {/* Right: Notifications & User Avatar */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => router.push("/app/notifications")}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 shadow-xs"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-raised text-ink-muted hover:text-ink hover:bg-surface-band transition-colors shadow-xs cursor-pointer"
             aria-label="Notifications"
           >
             <Bell size={18} />
             {unreadNotifCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-red-500" />
+              <span className="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-coral ring-2 ring-surface-raised" />
             )}
           </button>
 
-          {/* User Avatar */}
-          <div className="h-10 w-10 shrink-0 rounded-full border border-gray-200 overflow-hidden shadow-xs">
-            <span className="flex h-full w-full items-center justify-center bg-gray-900 text-xs font-bold text-white">
+          {/* User Profile / Digital Khata Link */}
+          <Link
+            href="/app/khata"
+            className="h-10 w-10 shrink-0 rounded-full border border-border bg-surface-band overflow-hidden shadow-xs hover:border-action/40 transition-colors flex items-center justify-center"
+            aria-label="Digital Khata profile"
+          >
+            <span className="text-xs font-black text-ink">
               {displayName.slice(0, 1).toUpperCase()}
             </span>
-          </div>
+          </Link>
         </div>
       </header>
 
       {/* =====================================================================
-          2. GREETING HEADER (Screen 1)
+          2. GREETING WITH CUTE MASCOT TOUCH
          ===================================================================== */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-950">
-          Hello! <span className="font-extrabold text-red-500">{displayName}</span>
-        </h1>
-        <p className="mt-0.5 text-xs text-gray-400 font-medium">
-          {todayLabel} · Today
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink font-display">
+              Good morning, <span className="text-action">{displayName}</span>
+            </h1>
+            <CuteHeartSvg size={20} fill="#F2A4A4" />
+          </div>
+          <p className="mt-1 flex items-center gap-2 text-xs text-ink-muted font-medium">
+            <span>{todayLabel}</span>
+            <span>·</span>
+            <span className="inline-flex items-center gap-1 text-[#2E7D32] font-bold">
+              <CheckCircle2 size={12} />
+              Gate Clearance Active
+            </span>
+          </p>
+        </div>
+
+        <div className="hidden sm:flex shrink-0">
+          <CuteCatMascotSvg size={44} variant="happy" />
+        </div>
       </div>
 
       {/* =====================================================================
-          3. SEARCH BAR WITH CORAL FILTER BUTTON (Screen 1)
+          3. AIRBNB-INSPIRED FLOATING SEARCH PILL
          ===================================================================== */}
       <form
         onSubmit={(e) => {
@@ -142,13 +193,13 @@ export function DiscoveryView({
         <DSSearchBar
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Search your place here"
+          placeholder="Search fresh milk, water jar, dabba tiffin, flowers..."
           onFilterClick={() => router.push("/app/location")}
         />
       </form>
 
       {/* =====================================================================
-          4. CATEGORIES HORIZONTAL SQUIRCLES (Screen 1 - Zero Emojis)
+          4. CATEGORIES HORIZONTAL CAROUSEL
          ===================================================================== */}
       <div>
         <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
@@ -158,6 +209,7 @@ export function DiscoveryView({
               id={cat.id}
               label={cat.label}
               icon={cat.id}
+              count={cat.count}
               isActive={activeCategory === cat.id}
               onClick={() => {
                 setActiveCategory(cat.id);
@@ -169,125 +221,127 @@ export function DiscoveryView({
       </div>
 
       {/* =====================================================================
-          5. NEARBY RESTAURANTS / VENDORS (Screen 1 - "Asian Kitchen" Card)
+          5. FEATURED SOCIETY MERCHANT (Airbnb Host Card style)
          ===================================================================== */}
-      <div>
-        <div className="mb-3.5 flex items-center justify-between">
-          <h2 className="text-lg font-bold tracking-tight text-gray-950">
-            Nearby services
-          </h2>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveCategory("ALL");
-              router.replace("/app");
-            }}
-            className="text-xs font-semibold text-gray-500 hover:text-red-500"
-          >
-            View all
-          </button>
-        </div>
+      {featuredVendor && (
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-bold tracking-tight text-ink font-display">
+              Featured Society Partner
+            </h2>
+            <Link
+              href="/app/services"
+              className="text-xs font-bold text-action hover:underline"
+            >
+              See all
+            </Link>
+          </div>
 
-        {/* Featured Big Card matching Screen 1 "Asian Kitchen" */}
-        {featuredVendor && (
           <Link
             href={`/app/vendor/${featuredVendor.id}`}
-            className="group relative block w-full overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm"
+            className="group relative block w-full overflow-hidden rounded-3xl border border-border bg-surface-raised shadow-card transition-all hover:border-border-strong hover:shadow-soft"
           >
-            {/* Banner Image */}
-            <div className="relative h-56 sm:h-64 w-full">
+            {/* Banner Image / Luxury Illustration Cover */}
+            <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-surface-band">
               <img
                 src={featuredVendor.bannerImage || featuredVendor.image}
                 alt={featuredVendor.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
 
-              {/* Top Bar on Card: User Avatar badge + Red "Open now" pill */}
+              {/* Top Badges on Banner */}
               <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
-                      <div className="flex items-center gap-2 rounded-full bg-white/90 px-2.5 py-1 shadow-xs backdrop-blur-md">
-                  <ShieldCheck size={13} className="text-emerald-600" />
-                  <span className="text-[11px] font-semibold text-gray-800">
-                    {featuredVendor.badge || "Verified merchant"}
-                  </span>
+                <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-ink shadow-xs backdrop-blur-md">
+                  <ShieldCheck size={14} className="text-[#2E7D32]" />
+                  <span>{featuredVendor.badge || "Verified Society Merchant"}</span>
                 </div>
 
-                <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-xs">
-                  {featuredVendor.openingHours || "Scheduled"}
+                <span className="rounded-full bg-coral px-3 py-1 text-xs font-bold text-white shadow-xs">
+                  {featuredVendor.openingHours || "Scheduled Daily"}
                 </span>
               </div>
 
-              {/* Bottom Frosted Glass Card Banner from Screen 1 */}
-              <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/40 bg-white/80 p-3.5 backdrop-blur-lg shadow-sm flex items-center justify-between">
+              {/* Bottom Frosted Card Banner */}
+              <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-border/60 bg-surface-raised/95 p-3.5 backdrop-blur-xl shadow-md flex items-center justify-between">
                 <div className="min-w-0 pr-2">
-                  <h3 className="text-base font-bold text-gray-950 truncate">
+                  <h3 className="text-base font-bold text-ink truncate font-display">
                     {featuredVendor.name}
                   </h3>
-                  <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-600">
+                  <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-muted">
                     <span className="flex items-center gap-1">
-                      <MapPin size={12} className="text-red-500 shrink-0" />
+                      <MapPin size={12} className="text-action shrink-0" />
                       <span className="truncate">{featuredVendor.address.split(",")[0]}</span>
                     </span>
-                    <span className="flex items-center gap-1 font-semibold text-gray-800 shrink-0">
-                      <Star size={12} className="fill-amber-400 text-amber-400" />
-                      <span>{featuredVendor.rating} ratings ({featuredVendor.reviewCount})</span>
+                    <span>·</span>
+                    <span className="flex items-center gap-1 font-bold text-[#B45309] shrink-0">
+                      <Star size={12} className="fill-[#F59E0B] text-[#F59E0B]" />
+                      <span>{featuredVendor.rating.toFixed(1)}</span>
                     </span>
                   </div>
                 </div>
 
-                {/* White Circular Action Button on Right */}
-                <div className="h-9 w-9 shrink-0 rounded-full bg-white text-gray-800 shadow-sm flex items-center justify-center border border-gray-200">
+                <div className="h-9 w-9 shrink-0 rounded-full bg-action text-white shadow-xs flex items-center justify-center transition-transform group-hover:translate-x-0.5">
                   <ArrowRight size={15} />
                 </div>
               </div>
             </div>
           </Link>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* =====================================================================
-          6. LIST OF FOOD & PRODUCTS (Grid / Cards)
+          6. POPULAR DISHES & ITEMS (Airbnb Listing Grid)
          ===================================================================== */}
       <div>
         <div className="mb-3.5 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold tracking-tight text-gray-950">
-              Popular Dishes & Items
+            <h2 className="text-base font-bold tracking-tight text-ink font-display">
+              Popular Society Essentials
             </h2>
-            <p className="text-xs text-gray-400">
-              Fresh daily doorstep options in {currentGeofence.societyName.split(",")[0]}
+            <p className="text-xs text-ink-muted">
+              Pre-cleared morning doorstep drops in {currentGeofence.societyName.split(",")[0]}
             </p>
           </div>
           <button
             type="button"
             onClick={() => setActiveCategory("ALL")}
-            className="text-xs font-semibold text-gray-500 hover:text-red-500"
+            className="text-xs font-bold text-action hover:underline cursor-pointer"
           >
-            See All
+            View All
           </button>
         </div>
 
-        {/* 2-Column Clean White Product Cards */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {/* 2-Column Responsive Product Cards Grid */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
           {filteredProducts.map((product) => (
             <Link
               key={product.id}
               href={`/app/product/${product.id}`}
-              className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-white p-3.5 sm:p-4 shadow-xs select-none"
+              className="group flex flex-col justify-between rounded-3xl border border-border bg-surface-raised p-3.5 sm:p-4 shadow-card transition-all hover:border-border-strong hover:shadow-soft"
             >
               <div>
-                {/* Circular Product Image */}
-                <div className="relative mx-auto flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center my-1">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full w-full rounded-2xl object-cover"
-                  />
-                  {/* Floating SVG Illustration Badge */}
-                  <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-white border border-gray-200 p-0.5 shadow-xs flex items-center justify-center">
+                {/* Product Image / Cute Pastel Container */}
+                <div className="relative mx-auto flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center my-1 rounded-2xl bg-surface-band border border-border overflow-hidden">
+                  {product.image && product.image !== "/icon.svg" ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cat-yellow/20 via-surface-raised to-cat-blue/20 p-3">
+                      <CatalogSvgIllustration idOrCategory={product.category} size={54} />
+                    </div>
+                  )}
+
+                  {/* Micro Category Pill */}
+                  <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-surface-raised border border-border p-0.5 shadow-xs flex items-center justify-center">
                     <CatalogSvgIllustration idOrCategory={product.category} size={18} />
                   </div>
+
                   {product.isBestSeller && (
-                    <span className="absolute top-1 right-1 rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-bold text-white shadow-xs">
+                    <span className="absolute top-1 right-1 rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold text-white shadow-xs">
                       TOP
                     </span>
                   )}
@@ -295,35 +349,37 @@ export function DiscoveryView({
 
                 {/* Title & Vendor */}
                 <div className="mt-3">
-                  <h3 className="text-sm font-bold text-gray-900 line-clamp-1">
+                  <h3 className="text-sm font-bold text-ink line-clamp-1 group-hover:text-action transition-colors font-display">
                     {product.name}
                   </h3>
-                  <p className="text-[11px] text-gray-400 line-clamp-1 mt-0.5">
+                  <p className="text-[11px] text-ink-muted line-clamp-1 mt-0.5">
                     {product.vendorName}
                   </p>
                 </div>
 
-                {/* Price */}
+                {/* Price (Integer Paise formatted) */}
                 <div className="mt-1 flex items-baseline gap-1.5">
-                  <span className="text-base font-extrabold text-gray-950">
+                  <span className="text-base font-extrabold text-ink">
                     {formatINR(product.pricePaise as Paise)}
                   </span>
                   {product.originalPricePaise && (
-                    <span className="text-xs text-gray-400 line-through">
+                    <span className="text-xs text-ink-subtle line-through">
                       {formatINR(product.originalPricePaise as Paise)}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Bottom Meta & Red Action Button (+) */}
-              <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
-                  <Clock size={11} />
-                  <span>{product.deliveryWindow || "Scheduled"}</span>
+              {/* Bottom Meta & Action Button (+) */}
+              <div className="mt-3 pt-2.5 border-t border-border flex items-center justify-between">
+                <div className="flex items-center gap-1 text-[10px] text-ink-muted font-semibold">
+                  <Clock size={11} className="text-coral" />
+                  <span className="truncate max-w-[85px] sm:max-w-[110px]">
+                    {product.deliveryWindow || "Morning 6–8 AM"}
+                  </span>
                 </div>
 
-                {/* Red Circular Add Button (+) */}
+                {/* 1-tap Add Button (+) */}
                 <button
                   type="button"
                   onClick={(e) => {
@@ -331,7 +387,7 @@ export function DiscoveryView({
                     e.stopPropagation();
                     openProductModal(product);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-xs hover:bg-red-600 active:bg-red-700"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-action text-white shadow-xs hover:bg-action-hover active:scale-95 transition-all cursor-pointer"
                   aria-label={`Add ${product.name}`}
                 >
                   <Plus size={16} className="stroke-[3]" />
@@ -343,48 +399,50 @@ export function DiscoveryView({
       </div>
 
       {/* =====================================================================
-          7. MORE NEARBY VENDORS (List Row Cards)
+          7. MORE NEARBY SOCIETY VENDORS
          ===================================================================== */}
       <div>
         <div className="mb-3.5 flex items-center justify-between">
-          <h2 className="text-lg font-bold tracking-tight text-gray-950">
+          <h2 className="text-base font-bold tracking-tight text-ink font-display">
             More Society Vendors
           </h2>
-          <span className="text-xs font-semibold text-gray-400">Direct Gate Access</span>
+          <span className="text-xs font-bold text-[#2E7D32]">Pre-cleared Gate Pass</span>
         </div>
 
         <div className="space-y-3">
-          {vendors.slice(1, 4).map((vendor) => (
+          {vendors.slice(1, 5).map((vendor) => (
             <Link
               key={vendor.id}
               href={`/app/vendor/${vendor.id}`}
-              className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-3 shadow-xs"
+              className="flex items-center justify-between rounded-2xl border border-border bg-surface-raised p-3 shadow-card hover:border-border-strong hover:bg-surface-band transition-all"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <img
-                  src={vendor.image}
-                  alt={vendor.name}
-                  className="h-14 w-14 rounded-xl object-cover shrink-0"
-                />
+                <div className="h-14 w-14 rounded-xl bg-surface-band border border-border overflow-hidden shrink-0">
+                  <img
+                    src={vendor.image}
+                    alt={vendor.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
                 <div className="min-w-0">
-                  <h3 className="text-sm font-bold text-gray-900 truncate">
+                  <h3 className="text-sm font-bold text-ink truncate font-display">
                     {vendor.name}
                   </h3>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                  <p className="text-xs text-ink-muted truncate mt-0.5">
                     {vendor.address.split(",")[0]}
                   </p>
-                  <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-400 font-medium">
-                    <span className="flex items-center gap-0.5 font-bold text-gray-800">
-                      <Star size={11} className="fill-amber-400 text-amber-400" />
-                      {vendor.rating}
+                  <div className="mt-1 flex items-center gap-2 text-[11px] text-ink-muted font-medium">
+                    <span className="flex items-center gap-0.5 font-bold text-[#B45309]">
+                      <Star size={11} className="fill-[#F59E0B] text-[#F59E0B]" />
+                      {vendor.rating.toFixed(1)}
                     </span>
                     <span>·</span>
-                    <span>{vendor.deliveryWindow}</span>
+                    <span className="truncate">{vendor.deliveryWindow}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="h-8 w-8 shrink-0 rounded-full bg-gray-50 border border-gray-200 text-gray-600 flex items-center justify-center">
+              <div className="h-8 w-8 shrink-0 rounded-full bg-surface-band border border-border text-ink-muted flex items-center justify-center">
                 <ArrowRight size={14} />
               </div>
             </Link>
@@ -393,20 +451,20 @@ export function DiscoveryView({
       </div>
 
       {/* =====================================================================
-          8. ACTIVE HOUSEHOLD ROUTINES
+          8. ACTIVE HOUSEHOLD ROUTINES OR ONBOARDING PROMPT
          ===================================================================== */}
-      {routines.length > 0 && (
-        <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-xs">
+      {routines.length > 0 ? (
+        <div className="rounded-3xl border border-border bg-surface-raised p-5 shadow-card">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-coral/15 text-action">
                 <ShieldCheck size={16} />
               </div>
-              <h2 className="text-sm font-bold text-gray-900">
-                Your Active Household Routines ({routines.length})
+              <h2 className="text-sm font-bold text-ink font-display">
+                Active Household Routines ({routines.length})
               </h2>
             </div>
-            <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+            <span className="text-[11px] font-bold text-[#2E7D32] bg-[#E8F5E9] px-2.5 py-0.5 rounded-full border border-[#2E7D32]/20">
               Autopilot Active
             </span>
           </div>
@@ -415,19 +473,21 @@ export function DiscoveryView({
             {routines.map((routine) => (
               <div
                 key={routine.id}
-                className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/60 p-3"
+                className="flex items-center justify-between rounded-2xl border border-border bg-surface-band p-3"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <img
-                    src={routine.image}
-                    alt={routine.productName}
-                    className="h-10 w-10 rounded-xl object-cover"
-                  />
+                  <div className="h-10 w-10 rounded-xl bg-surface-raised overflow-hidden shrink-0 border border-border">
+                    <img
+                      src={routine.image}
+                      alt={routine.productName}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-gray-900 truncate">
+                    <p className="text-xs font-bold text-ink truncate">
                       {routine.productName}
                     </p>
-                    <p className="text-[10px] text-gray-500 truncate">
+                    <p className="text-[10px] text-ink-muted truncate">
                       {routine.nextDelivery}
                     </p>
                   </div>
@@ -436,10 +496,10 @@ export function DiscoveryView({
                 <button
                   type="button"
                   onClick={() => toggleRoutinePause(routine.id)}
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold transition-colors cursor-pointer ${
                     routine.status === "ACTIVE"
-                      ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                      : "bg-red-500 text-white hover:bg-red-600"
+                      ? "bg-surface-raised border border-border text-ink hover:bg-surface-subtle"
+                      : "bg-action text-white hover:bg-action-hover"
                   }`}
                 >
                   {routine.status === "ACTIVE" ? "Pause" : "Resume"}
@@ -448,6 +508,57 @@ export function DiscoveryView({
             ))}
           </div>
         </div>
+      ) : (
+        <div className="rounded-3xl border border-border bg-gradient-to-br from-surface-raised via-surface to-canvas-soft/20 p-5 shadow-card flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-coral/15 border border-coral/30 text-action">
+              <Calendar size={20} />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-ink font-display">
+                Set and Forget Daily Deliveries
+              </h3>
+              <p className="mt-0.5 text-[11px] text-ink-muted">
+                Tap (+) on milk, water, or meals to start a recurring morning routine.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/app/services")}
+            className="shrink-0 rounded-full bg-surface-raised border border-border px-3.5 py-1.5 text-xs font-bold text-ink hover:bg-surface-band transition-colors cursor-pointer shadow-xs"
+          >
+            Explore
+          </button>
+        </div>
+      )}
+
+      {/* =====================================================================
+          9. FLOATING CART ACTION PILL (Airbnb Floating Bar Style)
+         ===================================================================== */}
+      {cartCount > 0 && (
+        <aside
+          aria-label="Active cart checkout bar"
+          className="fixed inset-x-1/2 bottom-20 z-40 flex w-[min(calc(100vw-32px),480px)] -translate-x-1/2 items-center justify-between rounded-full border border-action/40 bg-action px-5 py-3 text-white shadow-pill backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-200"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+              <ShoppingBag size={15} />
+            </div>
+            <span className="text-xs font-extrabold">
+              {cartCount} {cartCount === 1 ? "item" : "items"} · {formatINR(totalPaise as Paise)}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsCartOpen(true)}
+            className="flex items-center gap-1 text-xs font-black hover:underline cursor-pointer"
+          >
+            <span>View Cart</span>
+            <ArrowRight size={14} />
+          </button>
+        </aside>
       )}
     </div>
   );

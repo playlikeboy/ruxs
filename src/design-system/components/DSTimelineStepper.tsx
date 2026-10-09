@@ -30,7 +30,7 @@ export function DSTimelineStepper({ steps, className = "" }: DSTimelineStepperPr
             {!isLast && (
               <div
                 className={`absolute left-[13px] top-[26px] bottom-[-24px] w-[2px] ${
-                  isCompleted ? "bg-emerald-500" : "border-l-2 border-dashed border-white/[0.15]"
+                  isCompleted ? "bg-[#2E7D32]" : "border-l-2 border-dashed border-border-strong"
                 }`}
               />
             )}
@@ -38,16 +38,16 @@ export function DSTimelineStepper({ steps, className = "" }: DSTimelineStepperPr
             {/* Step Icon / Dot */}
             <div className="relative z-10 flex shrink-0">
               {isCompleted ? (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2E7D32] text-white font-bold shadow-xs">
                   <Check size={14} className="stroke-[3]" />
                 </div>
               ) : isCurrent ? (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-red-500 bg-red-50">
-                  <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-action bg-coral/15 shadow-xs">
+                  <div className="h-2.5 w-2.5 rounded-full bg-action animate-pulse" />
                 </div>
               ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-gray-50">
-                  <div className="h-2 w-2 rounded-full bg-gray-300" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-surface-band">
+                  <div className="h-2 w-2 rounded-full bg-ink-subtle/40" />
                 </div>
               )}
             </div>
@@ -57,17 +57,17 @@ export function DSTimelineStepper({ steps, className = "" }: DSTimelineStepperPr
               <div>
                 <p
                   className={`text-sm font-semibold tracking-tight ${
-                    isCompleted || isCurrent ? "text-foreground" : "text-muted-foreground"
+                    isCompleted || isCurrent ? "text-ink" : "text-ink-muted"
                   }`}
                 >
                   {step.title}
                 </p>
                 {step.subtitle && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">{step.subtitle}</p>
+                  <p className="mt-0.5 text-xs text-ink-muted">{step.subtitle}</p>
                 )}
               </div>
               {step.time && (
-                <span className="shrink-0 text-xs font-mono font-medium text-muted-foreground">
+                <span className="shrink-0 text-xs font-mono font-medium text-ink-subtle">
                   {step.time}
                 </span>
               )}

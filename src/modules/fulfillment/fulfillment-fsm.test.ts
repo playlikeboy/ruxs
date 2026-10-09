@@ -155,6 +155,30 @@ describe("Daily Fulfillment FSM & Overnight Generator", () => {
     });
     expect(lateFulfillment.status).toBe("LATE_SKIP");
     expect(lateFulfillment.lateFeePaise).toBe(6000 as Paise); // 50% of 12000
+
+    // Scenario C: Custom late fee percentage (e.g. 75%)
+    const customLateFulfillment: DailyFulfillment = {
+      id: "ful_late_custom",
+      tenantId: "ten_sharma_tiffin",
+      subscriptionId: "sub_1",
+      customerId: "usr_priya",
+      serviceDate: "2026-09-12",
+      shift: "LUNCH",
+      status: "CONFIRMED",
+      items: [],
+      totalPricePaise: 10000 as Paise,
+      cutoffTime,
+      lateCancellationFeePercent: 75,
+      createdAt: "2026-09-12T00:01:00.000Z",
+      updatedAt: "2026-09-12T00:01:00.000Z",
+    };
+
+    FulfillmentStateMachine.transition(customLateFulfillment, {
+      action: "SKIP",
+      actionTime: "2026-09-12T10:15:00.000Z",
+    });
+    expect(customLateFulfillment.status).toBe("LATE_SKIP");
+    expect(customLateFulfillment.lateFeePaise).toBe(7500 as Paise); // 75% of 10000
   });
 
   it("rejects invalid state transitions", () => {

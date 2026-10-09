@@ -233,6 +233,7 @@ export const dailyFulfillments = pgTable(
     unitPricePaise: integer("unit_price_paise").notNull(),
     totalPricePaise: integer("total_price_paise").notNull(),
     status: varchar("status", { length: 30 }).default("SCHEDULED").notNull(), // SCHEDULED, CONFIRMED, OUT_FOR_DELIVERY, DELIVERED, SKIPPED, LATE_CANCELLATION, FAILED
+    lateFeePaise: integer("late_fee_paise").default(0).notNull(),
     cutoffTime: timestamp("cutoff_time", { withTimezone: true }),
     actionTakenAt: timestamp("action_taken_at", { withTimezone: true }),
     deliveredAt: timestamp("delivered_at", { withTimezone: true }),
@@ -286,6 +287,7 @@ export const invoices = pgTable(
     periodEnd: varchar("period_end", { length: 10 }).notNull(),
     dueDate: varchar("due_date", { length: 10 }).notNull(),
     subtotalPaise: integer("subtotal_paise").notNull(),
+    previousBalancePaise: integer("previous_balance_paise").default(0).notNull(),
     discountPaise: integer("discount_paise").default(0).notNull(),
     taxPaise: integer("tax_paise").default(0).notNull(),
     totalAmountDuePaise: integer("total_amount_due_paise").notNull(),
@@ -295,6 +297,7 @@ export const invoices = pgTable(
   },
   (table) => [
     uniqueIndex("invoices_number_idx").on(table.invoiceNumber),
+    uniqueIndex("invoices_tenant_customer_period_idx").on(table.tenantId, table.customerId, table.periodStart, table.periodEnd),
     index("invoices_tenant_customer_idx").on(table.tenantId, table.customerId),
   ]
 );
@@ -312,7 +315,7 @@ export const payments = pgTable(
     amountPaise: integer("amount_paise").notNull(),
     method: varchar("method", { length: 30 }).default("UPI_INTENT").notNull(), // UPI_INTENT, UPI_QR, CASH, NET_BANKING
     status: varchar("status", { length: 20 }).default("CREATED").notNull(), // CREATED, INITIATED, PENDING, SUCCESS, FAILED, REFUNDED
-    gatewayOrderId: varchar("gateway_order_id", { length: 100 }),
+    gatewayOrderId: varchar("gateway_order_id", { length: 100 }).unique(),
     gatewayPaymentId: varchar("gateway_payment_id", { length: 100 }),
     bankUtr: varchar("bank_utr", { length: 100 }),
     khataEntryId: varchar("khata_entry_id", { length: 36 }),
@@ -320,8 +323,9 @@ export const payments = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
+    uniqueIndex("payments_gateway_order_unique_idx").on(table.gatewayOrderId),
+    uniqueIndex("payments_gateway_payment_unique_idx").on(table.gatewayPaymentId),
     index("payments_tenant_customer_idx").on(table.tenantId, table.customerId),
-    index("payments_gateway_order_idx").on(table.gatewayOrderId),
     index("payments_status_idx").on(table.status),
   ]
 );
@@ -533,4 +537,79 @@ export const householdExpenseParticipants = pgTable(
     index("expense_participants_exp_idx").on(table.expenseId),
   ]
 );
+
+// ---------------------------------------------------------------------------
+// 17. Inbound Webhook Events & Idempotency Store
+// ---------------------------------------------------------------------------
+export const webhookEvents = pgTable(
+  "webhook_events",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    provider: varchar("provider", { length: 50 }).notNull(), // WHATSAPP, PAYMENT, CRON
+    eventId: varchar("event_id", { length: 255 }).notNull(),
+    eventType: varchar("event_type", { length: 50 }),
+    payload: text("payload"),
+    status: varchar("status", { length: 30 }).default("PROCESSED").notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("webhook_events_provider_event_idx").on(table.provider, table.eventId),
+    index("webhook_events_processed_at_idx").on(table.processedAt),
+  ]
+);
+
+// ---------------------------------------------------------------------------
+// 18. Multi-Channel Notifications (Durable Outbox)
+// ---------------------------------------------------------------------------
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    tenantId: varchar("tenant_id", { length: 36 }).references(() => tenants.id),
+    customerId: varchar("customer_id", { length: 36 }).references(() => users.id),
+    recipientPhone: varchar("recipient_phone", { length: 20 }).notNull(),
+    channel: varchar("channel", { length: 20 }).notNull(), // WHATSAPP, SMS, WEB_PUSH, IN_APP
+    eventType: varchar("event_type", { length: 50 }).notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    body: text("body").notNull(),
+    status: varchar("status", { length: 30 }).default("PENDING").notNull(), // PENDING, SENT, FAILED, FALLBACK_TRIGGERED
+    fallbackChannel: varchar("fallback_channel", { length: 20 }),
+    providerMessageId: varchar("provider_message_id", { length: 100 }),
+    scheduledTime: timestamp("scheduled_time", { withTimezone: true }),
+    sentTime: timestamp("sent_time", { withTimezone: true }),
+    failedTime: timestamp("failed_time", { withTimezone: true }),
+    retryCount: integer("retry_count").default(0).notNull(),
+    errorMessage: text("error_message"),
+    idempotencyKey: varchar("idempotency_key", { length: 128 }).unique(),
+    metadata: text("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("notifications_status_scheduled_idx").on(table.status, table.scheduledTime),
+    index("notifications_tenant_cust_idx").on(table.tenantId, table.customerId),
+    uniqueIndex("notifications_idempotency_idx").on(table.idempotencyKey),
+  ]
+);
+
+// ---------------------------------------------------------------------------
+// 19. Background Automation Jobs
+// ---------------------------------------------------------------------------
+export const backgroundJobs = pgTable(
+  "background_jobs",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    jobName: varchar("job_name", { length: 100 }).notNull(),
+    jobKey: varchar("job_key", { length: 255 }).notNull().unique(),
+    status: varchar("status", { length: 20 }).default("RUNNING").notNull(), // RUNNING, COMPLETED, FAILED
+    result: text("result"),
+    startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex("background_jobs_key_idx").on(table.jobKey),
+    index("background_jobs_status_name_idx").on(table.status, table.jobName),
+  ]
+);
+
 

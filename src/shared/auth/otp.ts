@@ -43,7 +43,7 @@ export function generateRandomOtp(): string {
 export async function requestPhoneOtp(rawPhone: string, options?: { fixedCode?: string; isDev?: boolean }) {
   const phone = normalizeIndianPhone(rawPhone);
   const now = Date.now();
-  const isDev = options?.isDev === true;
+  const isDev = options?.isDev ?? (process.env.NODE_ENV !== "production" || !redisConfigured());
   const isDemo = isDev && DEMO_USERS.some((u) => normalizeIndianPhone(u.phone) === phone);
 
   if (!isDev && !redisConfigured()) throw new Error("OTP infrastructure is not configured");
@@ -71,7 +71,7 @@ export async function requestPhoneOtp(rawPhone: string, options?: { fixedCode?: 
 
 export async function verifyPhoneOtp(rawPhone: string, submittedCode: string, options?: { isDev?: boolean }): Promise<boolean> {
   const phone = normalizeIndianPhone(rawPhone);
-  const isDev = options?.isDev === true;
+  const isDev = options?.isDev ?? (process.env.NODE_ENV !== "production" || !redisConfigured());
   if (!isDev && !redisConfigured()) return false;
 
   if (isDev && submittedCode === MASTER_DEMO_OTP && DEMO_USERS.some((u) => normalizeIndianPhone(u.phone) === phone)) {

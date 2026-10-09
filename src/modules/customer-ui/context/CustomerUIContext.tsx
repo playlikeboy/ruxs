@@ -80,18 +80,46 @@ async function readApiEnvelope<T>(response: Response): Promise<ApiEnvelope<T>> {
   return {};
 }
 
-const EMPTY_GEOFENCE: GeofenceArea = {
-  id: "unconfigured",
-  name: "Delivery location",
-  societyName: "Choose your society",
-  city: "",
-  lat: 0,
-  lng: 0,
-  radiusMeters: 0,
-  isInside: false,
-  distanceMeters: 0,
-  deliveryGuarantee: "Set your household location to see delivery coverage.",
-};
+const DEFAULT_SOCIETIES: GeofenceArea[] = [
+  {
+    id: "sobha-classic",
+    name: "Sobha Classic",
+    societyName: "Sobha Classic, Bellandur",
+    city: "Bangalore",
+    lat: 12.926,
+    lng: 77.6762,
+    radiusMeters: 500,
+    isInside: true,
+    distanceMeters: 0,
+    deliveryGuarantee: "Pre-cleared Gate Pass · 7:00 AM doorstep delivery guaranteed.",
+  },
+  {
+    id: "green-glen",
+    name: "Green Glen Layout",
+    societyName: "Green Glen Layout, Bellandur",
+    city: "Bangalore",
+    lat: 12.928,
+    lng: 77.674,
+    radiusMeters: 600,
+    isInside: true,
+    distanceMeters: 0,
+    deliveryGuarantee: "Pre-cleared Gate Pass · 7:00 AM doorstep delivery guaranteed.",
+  },
+  {
+    id: "prestige-sunnyside",
+    name: "Prestige Sunnyside",
+    societyName: "Prestige Sunnyside, Marathahalli-ORR",
+    city: "Bangalore",
+    lat: 12.934,
+    lng: 77.689,
+    radiusMeters: 750,
+    isInside: true,
+    distanceMeters: 0,
+    deliveryGuarantee: "Pre-cleared Gate Pass · 7:00 AM doorstep delivery guaranteed.",
+  },
+];
+
+const EMPTY_GEOFENCE = DEFAULT_SOCIETIES[0];
 
 function tabForPath(pathname: string): NavTabId {
   if (pathname.startsWith(CUSTOMER_ROUTES.services)) return "favorites";
@@ -129,7 +157,12 @@ export function CustomerUIProvider({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const user = useUser();
+  let user = null;
+  try {
+    user = useUser();
+  } catch {
+    user = null;
+  }
   const customerId = user?.id;
   const [activeTabState, setActiveTabState] = useState<NavTabId>(
     initialTab || tabForPath(pathname)
@@ -142,8 +175,8 @@ export function CustomerUIProvider({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isGeofenceModalOpen, setIsGeofenceModalOpen] = useState(false);
 
-  const [geofenceList, setGeofenceList] = useState<GeofenceArea[]>([EMPTY_GEOFENCE]);
-  const [currentGeofenceId, setCurrentGeofenceId] = useState(EMPTY_GEOFENCE.id);
+  const [geofenceList, setGeofenceList] = useState<GeofenceArea[]>(DEFAULT_SOCIETIES);
+  const [currentGeofenceId, setCurrentGeofenceId] = useState(DEFAULT_SOCIETIES[0].id);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState("");
@@ -175,8 +208,8 @@ export function CustomerUIProvider({
 
   useEffect(() => {
     if (!customerId) {
-      setGeofenceList([EMPTY_GEOFENCE]);
-      setCurrentGeofenceId(EMPTY_GEOFENCE.id);
+      setGeofenceList(DEFAULT_SOCIETIES);
+      setCurrentGeofenceId(DEFAULT_SOCIETIES[0].id);
       setNotifications([]);
       setRoutines([]);
       return;

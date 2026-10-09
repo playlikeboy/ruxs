@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireSession();
     requireRole(session, ["VENDOR_ADMIN", "PLATFORM_ADMIN"]);
-    const body = await request.json();
+    const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
     if (session.role === "VENDOR_ADMIN") assertTenant(session, String(body.tenantId));
     return Response.json(createSuccessResponse(await BillingEngine.generateInvoice(body)), { status: 201 });
   } catch (error) {

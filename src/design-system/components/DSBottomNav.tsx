@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Search, Clock, User, Bookmark, ShoppingBag } from "lucide-react";
+import { Compass, Sparkles, Clock, BookOpen, ShoppingBag } from "lucide-react";
 import { CUSTOMER_TAB_ROUTES } from "@/src/modules/customer-ui/routes";
 
 export type NavTabId = "home" | "favorites" | "cart" | "tracking" | "profile";
@@ -22,10 +22,10 @@ export interface DSBottomNavProps {
 }
 
 const DEFAULT_TABS: NavTabItem[] = [
-  { id: "home", label: "Search", icon: Search },
-  { id: "tracking", label: "History", icon: Clock },
-  { id: "profile", label: "Profile", icon: User },
-  { id: "favorites", label: "Projects", icon: Bookmark },
+  { id: "home", label: "Discover", icon: Compass },
+  { id: "favorites", label: "Services", icon: Sparkles },
+  { id: "tracking", label: "Routines", icon: Clock },
+  { id: "profile", label: "Khata", icon: BookOpen },
   { id: "cart", label: "Cart", icon: ShoppingBag },
 ];
 
@@ -38,7 +38,7 @@ export function DSBottomNav({
   return (
     <nav
       aria-label="Customer app navigation"
-      className={`fixed inset-x-1/2 bottom-4 z-50 flex w-[min(calc(100vw-24px),620px)] -translate-x-1/2 items-center justify-between gap-1 rounded-full border border-gray-200/90 bg-white/95 px-2 py-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.08)] backdrop-blur-xl select-none ${className}`}
+      className={`fixed inset-x-1/2 bottom-4 z-50 flex w-[min(calc(100vw-24px),520px)] -translate-x-1/2 items-center justify-between gap-1 rounded-full border border-border bg-surface-raised/95 px-2 py-1.5 shadow-floating backdrop-blur-2xl select-none ${className}`}
     >
       {DEFAULT_TABS.map((tab) => {
         const isActive = activeTab === tab.id;
@@ -55,20 +55,20 @@ export function DSBottomNav({
             onClick={() => onTabChange?.(tab.id)}
             className={
               isActive
-                ? "flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-red-500 px-3.5 text-xs font-semibold text-white shadow-sm sm:px-4"
-                : "relative flex min-h-11 min-w-11 items-center justify-center rounded-full px-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                ? "flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-action px-3.5 text-xs font-bold text-white shadow-sm sm:px-4 transition-all"
+                : "relative flex min-h-10 min-w-10 items-center justify-center rounded-full px-2 text-ink-muted transition-colors hover:bg-surface-band hover:text-ink"
             }
           >
             <Icon size={isActive ? 16 : 18} className={isActive ? "stroke-[2.5]" : undefined} />
-            <span className={isActive ? "hidden sm:inline" : "sr-only sm:not-sr-only"}>
+            <span className={isActive ? "hidden sm:inline" : "sr-only sm:not-sr-only text-[11px]"}>
               {tab.label}
             </span>
             {Boolean(badge) && (
               <span
                 className={
                   isActive
-                    ? "ml-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white px-1 text-[9px] font-bold text-red-600"
-                    : "absolute right-0.5 top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white"
+                    ? "ml-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white px-1 text-[9px] font-bold text-action"
+                    : "absolute right-0.5 top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white shadow-xs"
                 }
               >
                 {badge}

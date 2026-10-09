@@ -78,4 +78,34 @@ describe("Multi-Channel Notification Engine", () => {
     expect(fallback.status).toBe("FALLBACK_TRIGGERED");
     expect(fallback.fallbackChannel).toBe("SMS");
   });
+
+  it("formats Indian Rupee (₹) symbol properly in financial notification templates", async () => {
+    const invoiceNotif = await NotificationService.dispatchNotification({
+      tenantId: "ten_sharma_tiffin",
+      customerId: "usr_priya",
+      recipientPhone: "+919876543210",
+      eventType: "INVOICE_GENERATED",
+      scheduledTime: "2026-09-12T14:00:00",
+      params: {
+        month: "September",
+        amountRupees: "3600",
+      },
+    });
+
+    expect(invoiceNotif.body).toContain("₹3600");
+    expect(invoiceNotif.body).not.toContain("$");
+
+    const paymentNotif = await NotificationService.dispatchNotification({
+      tenantId: "ten_sharma_tiffin",
+      customerId: "usr_priya",
+      recipientPhone: "+919876543210",
+      eventType: "PAYMENT_RECEIVED",
+      params: {
+        amountRupees: "3600",
+      },
+    });
+
+    expect(paymentNotif.body).toContain("₹3600");
+    expect(paymentNotif.body).not.toContain("$");
+  });
 });

@@ -27,8 +27,8 @@ export async function POST(request: Request) {
     const session = await requireSession();
     const household = await HouseholdService.getHouseholdForUserAsync(session.sub);
     if (!household || !household.members.some((m) => m.userId === session.sub)) return Response.json(createErrorResponse("FORBIDDEN", "You must belong to a household"), { status: 403 });
-    const body = await request.json();
-    const expense = ExpenseSplitter.createExpense({ ...body, householdId: household.id, paidByUserId: session.sub });
+    const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
+    const expense = await ExpenseSplitter.createExpenseAsync({ ...body, householdId: household.id, paidByUserId: session.sub });
     return Response.json(createSuccessResponse(expense), { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) return Response.json(createErrorResponse("VALIDATION_FAILED", error.issues[0]?.message || "Validation failed"), { status: 400 });

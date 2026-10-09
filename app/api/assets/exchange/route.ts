@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireSession();
     requireRole(session, ["DELIVERY_STAFF", "VENDOR_ADMIN", "PLATFORM_ADMIN"]);
-    const body = await request.json();
+    const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
     if (session.role !== "PLATFORM_ADMIN") assertTenant(session, String(body.tenantId));
     return Response.json(createSuccessResponse(await AssetLedgerService.recordExchange(body)), { status: 201 });
   } catch (error) {
