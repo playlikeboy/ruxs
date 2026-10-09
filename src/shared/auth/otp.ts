@@ -34,6 +34,20 @@ async function redisCommand<T = unknown>(command: string, args: Array<string | n
   return data.result ?? null;
 }
 
+function isProductionEnvironment(): boolean {
+  if (typeof process === "undefined") return false;
+  return process.env.NODE_ENV === "production" || process.env.APP_ENV === "production";
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 export function generateRandomOtp(): string {
   const values = new Uint32Array(1);
   crypto.getRandomValues(values);
@@ -43,8 +57,9 @@ export function generateRandomOtp(): string {
 export async function requestPhoneOtp(rawPhone: string, options?: { fixedCode?: string; isDev?: boolean }) {
   const phone = normalizeIndianPhone(rawPhone);
   const now = Date.now();
-  const isDev = options?.isDev ?? (process.env.NODE_ENV !== "production" || !redisConfigured());
-  const isDemo = isDev && DEMO_USERS.some((u) => normalizeIndianPhone(u.phone) === phone);
+  const isProd = isProductionEnvironment();
+  const isDev = isProd ? false : (options?.isDev ?? (process.env.NODE_ENV !== "production" || !redisConfigured()));
+  const isDemo = !isProd && isDev && DEMO_USERS.some((u) => normalizeIndianPhone(u.phone) === phone);
 
   if (!isDev && !redisConfigured()) throw new Error("OTP infrastructure is not configured");
 
@@ -66,15 +81,16 @@ export async function requestPhoneOtp(rawPhone: string, options?: { fixedCode?: 
   if (isDev) otpStore.set(phone, record);
   else await redisCommand("SET", [`ruxs:otp:${phone}`, JSON.stringify(record), "EX", 300]);
 
-  return { phone, expiresAt, debugCode: isDev ? code : undefined };
+  return { phone, expiresAt, debugCode: (!isProd && isDev) ? code : undefined };
 }
 
 export async function verifyPhoneOtp(rawPhone: string, submittedCode: string, options?: { isDev?: boolean }): Promise<boolean> {
   const phone = normalizeIndianPhone(rawPhone);
-  const isDev = options?.isDev ?? (process.env.NODE_ENV !== "production" || !redisConfigured());
+  const isProd = isProductionEnvironment();
+  const isDev = isProd ? false : (options?.isDev ?? (process.env.NODE_ENV !== "production" || !redisConfigured()));
   if (!isDev && !redisConfigured()) return false;
 
-  if (isDev && submittedCode === MASTER_DEMO_OTP && DEMO_USERS.some((u) => normalizeIndianPhone(u.phone) === phone)) {
+  if (!isProd && isDev && constantTimeEqual(submittedCode, MASTER_DEMO_OTP) && DEMO_USERS.some((u) => normalizeIndianPhone(u.phone) === phone)) {
     otpStore.delete(phone);
     return true;
   }
@@ -102,7 +118,7 @@ export async function verifyPhoneOtp(rawPhone: string, submittedCode: string, op
     return false;
   }
 
-  const valid = record.code === submittedCode;
+  const valid = constantTimeEqual(record.code, submittedCode);
   if (isDev) {
     if (valid) otpStore.delete(phone); else otpStore.set(phone, record);
   } else if (valid) {

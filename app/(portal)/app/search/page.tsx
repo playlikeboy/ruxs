@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getCustomerCatalog } from "@/src/modules/customer-ui/catalog-service";
 import SearchClient from "./SearchClient";
+import { safeJsonLdStringify } from "@/src/shared/utils/security";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,7 @@ export default async function SearchPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(searchStructuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(searchStructuredData) }}
       />
       <Suspense
         fallback={

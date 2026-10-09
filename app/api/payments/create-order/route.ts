@@ -6,9 +6,21 @@ import { BillingEngine } from "@/src/modules/billing/billing-engine";
 import { db, isTestEnv, tenants } from "@/src/shared/db";
 import { eq } from "drizzle-orm";
 
+import { checkRateLimit, getClientIp } from "@/src/shared/utils/rate-limit";
+
 export async function POST(request: Request) {
   try {
     const session = await requireSession();
+
+    const ip = getClientIp(request.headers);
+    const limit = await checkRateLimit(`pay_order:${session.sub}:${ip}`, 10, 60);
+    if (!limit.allowed) {
+      return Response.json(createErrorResponse("RATE_LIMITED", "Too many payment orders generated. Please wait a moment."), {
+        status: 429,
+        headers: { "Retry-After": String(limit.resetSeconds) },
+      });
+    }
+
     const body = ((await request.json().catch(() => ({}))) || {}) as Record<string, any>;
 
     if (body.customerId && body.customerId !== session.sub) {

@@ -54,3 +54,19 @@ export function isValidIndianPhone(input: string): boolean {
     return false;
   }
 }
+
+/**
+ * DPDP Act Compliance: PII phone number masking (e.g. "+91 98*****10")
+ * Retains country code and edge digits for verification without revealing full phone number
+ */
+export function maskIndianPhone(phone: string): string {
+  try {
+    const normalized = normalizeIndianPhone(phone); // "+919876543210"
+    return `${normalized.slice(0, 5)}*****${normalized.slice(-2)}`;
+  } catch {
+    if (phone && phone.length > 5) {
+      return `${phone.slice(0, 3)}****${phone.slice(-2)}`;
+    }
+    return "****";
+  }
+}

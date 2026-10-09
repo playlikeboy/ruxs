@@ -16,6 +16,8 @@ import {
 import { eq } from "drizzle-orm";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 
+import { checkRateLimit, getClientIp } from "@/src/shared/utils/rate-limit";
+
 /**
  * DPDP Act Compliance: Right to Data Portability / Data Export
  * Exports all personal data, service subscriptions, ledger, and transactional records for the user.
@@ -24,6 +26,15 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireSession();
     const userId = session.sub;
+
+    const ip = getClientIp(request.headers);
+    const limit = await checkRateLimit(`data_exp:${userId}:${ip}`, 5, 3600);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        createErrorResponse("RATE_LIMITED", "Data export limit reached. You can request a data export up to 5 times per hour."),
+        { status: 429, headers: { "Retry-After": String(limit.resetSeconds) } }
+      );
+    }
 
     if (isTestEnv) {
       return NextResponse.json(

@@ -2,9 +2,20 @@ import { VendorService } from "@/src/modules/vendor/vendor-service";
 import { createSuccessResponse, createErrorResponse } from "@/src/shared/errors";
 import { ZodError } from "zod";
 
+import { checkRateLimit, getClientIp } from "@/src/shared/utils/rate-limit";
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const ip = getClientIp(request.headers);
+    const ipLimit = await checkRateLimit(`vnd_onb_ip:${ip}`, 5, 600);
+    if (!ipLimit.allowed) {
+      return Response.json(createErrorResponse("RATE_LIMITED", "Too many vendor onboarding attempts. Please wait a few minutes."), {
+        status: 429,
+        headers: { "Retry-After": String(ipLimit.resetSeconds) },
+      });
+    }
+
+    const body = await request.json().catch(() => ({}));
     const vendor = await VendorService.onboardVendor(body, { autoApprove: false });
     return Response.json(createSuccessResponse(vendor), { status: 201 });
   } catch (error) {

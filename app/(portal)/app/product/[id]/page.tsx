@@ -7,6 +7,7 @@ import {
   getCustomerProductsByVendor,
 } from "@/src/modules/customer-ui/catalog-service";
 import ProductDetailClient from "./ProductDetailClient";
+import { safeJsonLdStringify } from "@/src/shared/utils/security";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -151,11 +152,11 @@ export default async function ProductPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(productJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
       <ProductDetailClient product={product} vendor={vendor} relatedProducts={relatedProducts} />
     </>

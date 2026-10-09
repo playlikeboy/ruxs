@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import VendorOnboardClient from "./VendorOnboardClient";
+import { safeJsonLdStringify } from "@/src/shared/utils/security";
 
 export const metadata: Metadata = {
   title: "Vendor Partner Onboarding · Connect with Apartment Societies · RUXS",
@@ -63,7 +64,7 @@ export default function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(vendorStructuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(vendorStructuredData) }}
       />
       <VendorOnboardClient />
     </>

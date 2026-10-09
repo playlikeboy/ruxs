@@ -7,24 +7,47 @@ import {
   runNotificationRetryJob,
 } from "@/src/modules/jobs";
 
+import { checkRateLimit, getClientIp } from "@/src/shared/utils/rate-limit";
+
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 function verifyCronAuth(request: NextRequest): boolean {
+  const isProd = process.env.NODE_ENV === "production" || process.env.APP_ENV === "production";
   const secret = process.env.CRON_SECRET || process.env.ADMIN_API_KEY;
+
   if (!secret) {
-    // In dev / non-prod environments without secret set, permit execution
-    return process.env.NODE_ENV !== "production";
+    // In production, CRON_SECRET or ADMIN_API_KEY is strictly mandatory
+    if (isProd) return false;
+    return true;
   }
 
   const authHeader = request.headers.get("authorization");
   if (!authHeader) return false;
 
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  return token === secret;
+  return constantTimeEqual(token, secret);
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { jobName: string } }
+  { params }: { params: Promise<{ jobName: string }> }
 ) {
+  const ip = getClientIp(request.headers);
+  const ipLimit = await checkRateLimit(`cron_ip:${ip}`, 30, 60);
+  if (!ipLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many cron trigger attempts. Please wait." },
+      { status: 429 }
+    );
+  }
+
   if (!verifyCronAuth(request)) {
     return NextResponse.json(
       { error: "Unauthorized: Invalid or missing CRON_SECRET authorization header" },
@@ -32,7 +55,7 @@ export async function POST(
     );
   }
 
-  const { jobName } = params;
+  const { jobName } = await params;
   const body = (await request.json().catch(() => ({}))) as Record<string, any>;
   const force = Boolean(body?.force);
 

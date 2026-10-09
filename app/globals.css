@@ -342,6 +342,119 @@ textarea {
   animation: ruxs-shimmer-sweep 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* =========================================================================
+   IMPECCABLE STYLE DESIGN LANGUAGE (Kinpaku & Instrument System)
+   ========================================================================= */
+
+.ks-instrument-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  background: rgba(90, 85, 75, 0.06);
+  border: 1px solid rgba(90, 85, 75, 0.12);
+  border-radius: 9999px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ks-instrument-key {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-family: var(--font-nunito), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  border-radius: 9999px;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.ks-instrument-key:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.ks-instrument-key.is-active {
+  color: var(--ink);
+  background: #FFFFFF;
+  border-color: rgba(90, 85, 75, 0.14);
+  box-shadow: 0 1px 3px rgba(90, 85, 75, 0.08), 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.cc-led {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #9B958B;
+  transition: all 0.2s ease;
+}
+
+.cc-led.is-active,
+.cc-led.is-emerald {
+  background: #16A34A;
+  box-shadow: 0 0 8px rgba(22, 163, 74, 0.7);
+}
+
+.cc-led.is-coral {
+  background: #BD4B2A;
+  box-shadow: 0 0 8px rgba(189, 75, 42, 0.7);
+}
+
+.cc-led.is-amber {
+  background: #D97706;
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.7);
+}
+
+.t-card--plinth {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid rgba(90, 85, 75, 0.1);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 1px 2px rgba(90, 85, 75, 0.04), 0 4px 16px -2px rgba(90, 85, 75, 0.04);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.t-card--plinth:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px -2px rgba(90, 85, 75, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+  border-color: rgba(90, 85, 75, 0.18);
+}
+
+.ks-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(90, 85, 75, 0.06);
+  color: var(--ink-muted);
+  border: 1px solid rgba(90, 85, 75, 0.1);
+}
+
+.ks-bento-tile {
+  background: #FFFFFF;
+  border: 1px solid rgba(90, 85, 75, 0.1);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 1px 2px rgba(90, 85, 75, 0.03);
+  transition: all 0.2s ease;
+}
+
+.ks-bento-tile:hover {
+  border-color: rgba(90, 85, 75, 0.18);
+  box-shadow: 0 6px 24px -4px rgba(90, 85, 75, 0.06);
+}
+
 @media (max-width: 640px) {
   .ds-container {
     width: min(100% - 24px, 1180px);

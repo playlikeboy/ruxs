@@ -1,6 +1,27 @@
 import type { NextConfig } from "next";
 
+const cspHeader = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apigcp.hexclave.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://ruxs.in https://*.workers.dev",
+  "connect-src 'self' https://apigcp.hexclave.com https://app.stack-auth.com https://ruxs.in https://*.workers.dev https://*.upstash.io",
+  "frame-ancestors 'self'",
+  "form-action 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join("; ");
+
 const securityHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: cspHeader,
+  },
+  {
+    key: "Cross-Origin-Opener-Policy",
+    value: "same-origin-allow-popups",
+  },
   {
     key: "X-DNS-Prefetch-Control",
     value: "on",
