@@ -2,6 +2,8 @@
 
 Oct 9, 2026 · @Shaswat Raj
 
+> **MVP overrides live in `PROMPT.md` §2** (WhatsApp paused, 11 tables, customer link replaces the poll). Where they differ, `PROMPT.md` wins.
+>
 > This file is the build spec for the whole app. Build the MVP exactly as written, then grow it into the full app (see `RUXS_STARTUP_OVERVIEW.md` for the long-term roadmap). Deviations need an explicit decision recorded here.
 
 ## 1. Overview
