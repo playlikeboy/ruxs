@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #FAFAF7;
+  --color-surface: #FFFFFF;
+  --color-ink: #1C1B19;
+  --color-muted: #6B6862;
+  --color-line: #E7E5DF;
+  --color-accent: #BD4B2A;
+  --color-good: #2F7D4F;
+  --color-warn: #9A5B00;
+  --color-bad: #B42318;
+
+  --color-peach: #FFE8DD;
+  --color-butter: #FFF3C9;
+  --color-mint: #E1F3E7;
+  --color-sky: #E2EEFA;
+  --color-blush: #FCE4EC;
+
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  --radius-control: 10px;
+  --radius-card: 12px;
+}
+
+:root {
+  --bg: #FAFAF7;
+  --surface: #FFFFFF;
+  --ink: #1C1B19;
+  --muted: #6B6862;
+  --line: #E7E5DF;
+  --accent: #BD4B2A;
+  --good: #2F7D4F;
+  --warn: #9A5B00;
+  --bad: #B42318;
+
+  --peach: #FFE8DD;
+  --butter: #FFF3C9;
+  --mint: #E1F3E7;
+  --sky: #E2EEFA;
+  --blush: #FCE4EC;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular figures for numbers, counts, and currency */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

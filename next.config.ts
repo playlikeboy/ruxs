@@ -52,6 +52,15 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const createNextConfig = (phase: string): NextConfig => {
+  if (phase === "phase-development-server") {
+    initOpenNextCloudflareForDev().catch(() => {});
+  }
+  return nextConfig;
+};
 
-initOpenNextCloudflareForDev();
+export default createNextConfig;
+
+
+
+
