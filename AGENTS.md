@@ -1,6 +1,8 @@
 # RUXS agent rules
 
-The build spec is `docs/PRD.md`. Read it before changing anything; long-term context is in `RUXS_STARTUP_OVERVIEW.md`.
+Start with `PROMPT.md` (build order, checklists, and decisions that override the PRD). The full spec is `docs/PRD.md`; long-term context is in `RUXS_STARTUP_OVERVIEW.md`.
+
+**MVP overrides:** WhatsApp is paused — households use the private link `/c/[token]` to Deliver/Skip/Extra; no webhook, no `messages`/`webhook_events` tables, no `WHATSAPP_*` env. The schema is 11 tables (adds `vendor_invites`). See `PROMPT.md` §2.
 Hexclave handles auth — fetch its skill (https://skill.hexclave.com) before touching auth code.
 
 ## Hard lines
