@@ -15,7 +15,7 @@ import {
 export const metadata = buildMetadata({
   title: "About RUXS — Better Days for Local Essentials",
   description:
-    "Meet RUXS: the calm, reliable operating system helping neighbourhood tiffin kitchens and water suppliers leave scattered chats and paper khatas behind.",
+    "Meet RUXS: a calm, reliable operating system helping neighbourhood tiffin kitchens and water suppliers run their day and set their own prices.",
   path: "/about",
 });
 
@@ -33,7 +33,7 @@ const principles = [
   {
     number: "03",
     title: "Keep the relationship local",
-    body: "We help neighbourhood businesses serve the people they already know. No marketplace race to the bottom. No commission on the money they collect. Their customers, service and payments stay theirs.",
+    body: "Every merchant controls their own catalogue and prices. Customers pay that business directly. RUXS helps vendors grow without imposing a universal price list across different sellers.",
   },
 ];
 
@@ -58,7 +58,7 @@ const features = [
   },
   {
     title: "A khata both sides can understand",
-    text: "Itemised records and monthly bill links make the numbers easier to follow, with direct UPI payments to the business.",
+    text: "Itemised records and bill links make the numbers easier to follow, with direct UPI payments to the business.",
     illustration: <KhataCheckIllustration className="h-14 w-14" />,
     tint: "bg-mint",
   },
@@ -91,31 +91,25 @@ export default function AboutPage() {
             Essential work deserves <span className="text-accent">better tools.</span>
           </h1>
           <p className="max-w-xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
-            RUXS is building a calmer way to run the everyday services that make a house feel like home — starting with neighbourhood tiffin kitchens and 20L water suppliers.
+            RUXS is building a calmer way to run everyday services that make a house feel like home — starting with neighbourhood tiffin kitchens and 20L water suppliers.
           </p>
           <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-            <Link
-              href="/app"
-              className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              Get started for free <span aria-hidden="true" className="ml-2">→</span>
+            <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
+              Get started <span aria-hidden="true" className="ml-2">→</span>
             </Link>
-            <Link
-              href="/#how-it-works"
-              className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white"
-            >
-              Explore how it works
+            <Link href="/for/tiffin-services" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white">
+              Explore merchant tools
             </Link>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-xs font-medium text-muted">
-            <span className="inline-flex items-center gap-2"><span className="text-good">✓</span> Free to start</span>
+            <span className="inline-flex items-center gap-2"><span className="text-good">✓</span> Merchant-set prices</span>
             <span className="inline-flex items-center gap-2"><span className="text-good">✓</span> No customer app</span>
-            <span className="inline-flex items-center gap-2"><span className="text-good">✓</span> Zero payment commission</span>
+            <span className="inline-flex items-center gap-2"><span className="text-good">✓</span> Direct UPI payments</span>
           </div>
         </div>
 
         <div className="relative mx-auto w-full max-w-md">
-          <div aria-hidden="true" className="absolute inset-5 rounded-[36px] bg-peach rotate-3" />
+          <div aria-hidden="true" className="absolute inset-5 rotate-3 rounded-[36px] bg-peach" />
           <div className="relative rounded-[28px] border border-line bg-surface p-5 shadow-sm sm:p-7">
             <div className="flex items-center justify-between border-b border-line pb-4">
               <div>
@@ -142,16 +136,12 @@ export default function AboutPage() {
               <div className="rounded-[12px] border border-line p-3">
                 <span className="text-xs text-muted">Delivery run</span>
                 <p className="mt-1 text-sm font-semibold text-ink">18 stops left</p>
-                <div className="mt-2 flex items-center gap-2 text-xs font-medium text-good">
-                  <span className="h-2 w-2 rounded-full bg-good" /> Route ready
-                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs font-medium text-good"><span className="h-2 w-2 rounded-full bg-good" /> Route ready</div>
               </div>
               <div className="rounded-[12px] border border-line p-3">
                 <span className="text-xs text-muted">Household khata</span>
                 <p className="mt-1 text-sm font-semibold text-ink">All itemised</p>
-                <div className="mt-2 flex items-center gap-2 text-xs font-medium text-accent">
-                  <span aria-hidden="true">↗</span> UPI bill link
-                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs font-medium text-accent"><span aria-hidden="true">↗</span> UPI bill link</div>
               </div>
             </div>
             <p className="mt-4 text-center text-[11px] text-muted">A calmer morning starts with a clearer plan.</p>
@@ -165,7 +155,7 @@ export default function AboutPage() {
       <section className="border-y border-line bg-surface">
         <div className="mx-auto grid max-w-5xl gap-6 px-4 py-9 sm:grid-cols-3 sm:gap-10 sm:px-6 sm:py-12">
           <div><p className="text-sm font-semibold text-ink">Built around real routines</p><p className="mt-1 text-sm leading-6 text-muted">Designed for cutoffs, doorstep deliveries and monthly accounts.</p></div>
-          <div><p className="text-sm font-semibold text-ink">Your business stays yours</p><p className="mt-1 text-sm leading-6 text-muted">Customers pay the vendor directly through their own UPI setup.</p></div>
+          <div><p className="text-sm font-semibold text-ink">Your business stays yours</p><p className="mt-1 text-sm leading-6 text-muted">You set your product, deposit and subscription prices.</p></div>
           <div><p className="text-sm font-semibold text-ink">Simple from the first tap</p><p className="mt-1 text-sm leading-6 text-muted">A browser link for households, with no separate app to install.</p></div>
         </div>
       </section>
@@ -176,7 +166,7 @@ export default function AboutPage() {
           <h2 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">The everyday economy runs on people. It should not run on chaos.</h2>
           <p className="text-base leading-7 text-muted">The best local services already have what matters most: trust, consistency and relationships. We build the quiet software layer that helps them keep those promises as they grow.</p>
         </div>
-        <div className="mt-12 space-y-0">
+        <div className="mt-12">
           {principles.map((principle) => (
             <article key={principle.number} className="grid gap-3 border-t border-line py-7 sm:grid-cols-[72px_1fr] sm:gap-6 sm:py-9">
               <p className="text-sm font-semibold text-accent tabular-nums">{principle.number}</p>
@@ -199,7 +189,7 @@ export default function AboutPage() {
           <div className="mt-9 grid gap-4 sm:grid-cols-2">
             {features.map((feature) => (
               <article key={feature.title} className="flex gap-4 rounded-[16px] border border-black/5 bg-white/75 p-5 sm:p-6">
-                <div className={`flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-[14px] ${feature.tint}`}>
+                <div className={"flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-[14px] " + feature.tint}>
                   {feature.illustration}
                 </div>
                 <div className="space-y-2">
@@ -218,10 +208,10 @@ export default function AboutPage() {
         </div>
         <p className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-accent">A better kind of operating system</p>
         <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-ink sm:text-5xl">Let local businesses focus on the work they do best.</h2>
-        <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted sm:text-base">Start free, bring your regular customers, and replace a little daily uncertainty with a lot more clarity.</p>
+        <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted sm:text-base">Bring your regular customers, set up your own catalogue, and replace a little daily uncertainty with a lot more clarity.</p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Start with RUXS <span aria-hidden="true" className="ml-2">→</span></Link>
-          <Link href="/pricing" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-7 py-3 text-sm font-semibold text-ink transition hover:bg-white">See simple pricing</Link>
+          <Link href="/for/water-suppliers" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-7 py-3 text-sm font-semibold text-ink transition hover:bg-white">Explore water suppliers</Link>
         </div>
       </section>
     </div>

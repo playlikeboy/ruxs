@@ -15,6 +15,13 @@
       "when": 1791865120855,
       "tag": "0001_ledger_immutability",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791892050000,
+      "tag": "0002_owner_vendor_invites",
+      "breakpoints": true
     }
   ]
 }

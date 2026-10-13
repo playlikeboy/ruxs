@@ -3,16 +3,100 @@
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { vendors, vendorMembers, products } from "@/db/schema";
+import { vendors, vendorInvites } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
-import { hexclave } from "@/lib/auth/hexclave";
-import { vendorStatusActionSchema, createVendorAccountSchema } from "./schemas";
+import {
+  createVendorForAdminSchema,
+  vendorStatusActionSchema,
+} from "./schemas";
 
+export async function createVendorForAdmin(input: unknown) {
+  const parsed = createVendorForAdminSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const admin = await requireAdmin();
+  const db = getDb();
+  const data = parsed.data;
+  const ownerEmail = data.ownerEmail.toLowerCase().trim();
+
+  try {
+    const created = await db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select({ id: vendors.id })
+        .from(vendors)
+        .where(eq(vendors.slug, data.slug))
+        .limit(1);
+
+      if (existing) {
+        throw new Error("SLUG_ALREADY_USED");
+      }
+
+      const [vendor] = await tx
+        .insert(vendors)
+        .values({
+          name: data.name,
+          slug: data.slug,
+          phone: data.phone,
+          upiVpa: data.upiVpa,
+          city: data.city,
+          area: data.area,
+          plan: "free",
+          status: "active",
+        })
+        .returning({
+          id: vendors.id,
+          slug: vendors.slug,
+          name: vendors.name,
+        });
+
+      if (!vendor) {
+        throw new Error("VENDOR_CREATION_FAILED");
+      }
+
+      await tx.insert(vendorInvites).values({
+        vendorId: vendor.id,
+        email: ownerEmail,
+        role: "owner",
+        createdBy: admin.user.id,
+      });
+
+      return vendor;
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/app");
+
+    const inviteText =
+      "Your RUXS merchant portal is ready.\\n\\n" +
+      "Business: " + created.name + "\\n" +
+      "Login ID: " + ownerEmail + "\\n\\n" +
+      "Sign in or sign up at https://ruxs.in/app using this exact email address. Complete email verification. RUXS will link your account to the business automatically when you first open the portal.\\n\\n" +
+      "Merchant dashboard: https://ruxs.in/app/" + created.slug + "/today\\n\\n" +
+      "For security, create and manage your own password through the hosted sign-in flow. Do not send passwords in chat.";
+
+    return {
+      ok: true as const,
+      slug: created.slug,
+      ownerEmail,
+      inviteText,
+    };
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "SLUG_ALREADY_USED") {
+      return { ok: false as const, error: "That portal slug is already in use. Choose another one." };
+    }
+    return {
+      ok: false as const,
+      error: "Could not create the vendor. Check the details and try again.",
+    };
+  }
+}
 
 export async function approveVendor(input: unknown) {
   const parsed = vendorStatusActionSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
   await requireAdmin();
@@ -26,21 +110,20 @@ export async function approveVendor(input: unknown) {
       .returning();
 
     if (!updated) {
-      return { ok: false, error: "Vendor not found" };
+      return { ok: false as const, error: "Vendor not found" };
     }
 
     revalidatePath("/admin");
-    return { ok: true };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to approve vendor";
-    return { ok: false, error: msg };
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Failed to approve vendor" };
   }
 }
 
 export async function suspendVendor(input: unknown) {
   const parsed = vendorStatusActionSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
   await requireAdmin();
@@ -54,131 +137,12 @@ export async function suspendVendor(input: unknown) {
       .returning();
 
     if (!updated) {
-      return { ok: false, error: "Vendor not found" };
+      return { ok: false as const, error: "Vendor not found" };
     }
 
     revalidatePath("/admin");
-    return { ok: true };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to suspend vendor";
-    return { ok: false, error: msg };
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Failed to suspend vendor" };
   }
 }
-
-export async function createVendorWithAccount(input: unknown) {
-  const parsed = createVendorAccountSchema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      ok: false as const,
-      error: parsed.error.issues[0]?.message ?? "Invalid input",
-    };
-  }
-
-  await requireAdmin();
-  const db = getDb();
-  const data = parsed.data;
-
-  // 1. Check if slug is already taken
-  const [existingSlug] = await db
-    .select({ id: vendors.id })
-    .from(vendors)
-    .where(eq(vendors.slug, data.slug))
-    .limit(1);
-
-  if (existingSlug) {
-    return {
-      ok: false as const,
-      error: "A vendor with this slug already exists. Please choose a different slug.",
-    };
-  }
-
-  // 2. Create the user in Hexclave
-  let hexUser;
-  try {
-    hexUser = await hexclave.createUser({
-      primaryEmail: data.email.toLowerCase(),
-      password: data.password,
-      displayName: data.name,
-      primaryEmailVerified: true,
-      primaryEmailAuthEnabled: true,
-    });
-  } catch (err: unknown) {
-    const msg =
-      err instanceof Error
-        ? err.message
-        : "Failed to create vendor login user in Hexclave";
-    return { ok: false as const, error: msg };
-  }
-
-  // 3. Insert vendor into database
-  try {
-    const [vendor] = await db
-      .insert(vendors)
-      .values({
-        name: data.name,
-        slug: data.slug,
-        phone: data.phone,
-        area: data.area,
-        city: data.city,
-        status: "active",
-        plan: "free",
-        upiVpa: data.upiId || `${data.phone}@upi`,
-      })
-      .returning();
-
-    if (!vendor) {
-      return { ok: false as const, error: "Failed to create vendor record" };
-    }
-
-    // 4. Link user as owner
-    await db.insert(vendorMembers).values({
-      vendorId: vendor.id,
-      userId: hexUser.id,
-      role: "owner",
-    });
-
-    // 5. Seed default starter product
-    if (data.businessType === "tiffin") {
-      await db.insert(products).values({
-        vendorId: vendor.id,
-        kind: "tiffin",
-        name: "Standard Veg Lunch Box",
-        shift: "lunch",
-        pricePaise: 12000, // ₹120.00
-        cutoffAt: "10:00",
-        lateRule: "full",
-        assetName: "dabba",
-      });
-    } else {
-      await db.insert(products).values({
-        vendorId: vendor.id,
-        kind: "water",
-        name: "20L Mineral Water Can",
-        shift: "morning",
-        pricePaise: 8000, // ₹80.00
-        cutoffAt: "08:00",
-        lateRule: "full",
-        assetName: "can",
-      });
-    }
-
-    revalidatePath("/admin");
-
-    return {
-      ok: true as const,
-      data: {
-        vendorId: vendor.id,
-        name: vendor.name,
-        slug: vendor.slug,
-        email: data.email,
-        password: data.password,
-        portalUrl: `/app/${vendor.slug}/today`,
-      },
-    };
-  } catch (err: unknown) {
-    const msg =
-      err instanceof Error ? err.message : "Failed to save vendor to database";
-    return { ok: false as const, error: msg };
-  }
-}
-
