@@ -7,7 +7,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const publicRoutes = [
     { path: "", changeFrequency: "weekly" as const, priority: 1.0 },
     { path: "/about", changeFrequency: "monthly" as const, priority: 0.7 },
-    { path: "/pricing", changeFrequency: "monthly" as const, priority: 0.9 },
     { path: "/for/tiffin-services", changeFrequency: "weekly" as const, priority: 0.9 },
     { path: "/for/water-suppliers", changeFrequency: "weekly" as const, priority: 0.9 },
     { path: "/in/bengaluru", changeFrequency: "monthly" as const, priority: 0.8 },
@@ -16,7 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   return publicRoutes.map((route) => ({
-    url: `${baseUrl}${route.path}`,
+    url: baseUrl + route.path,
     lastModified: now,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
