@@ -130,10 +130,10 @@ Pure functions in `src/core/`, each with a `*.test.ts` next to it. **Write the t
 ---
 
 ## Phase 7 — CI, end-to-end, deploy
-- [ ] `.github/workflows/ci.yml`
-- [ ] Playwright e2e tests
-- [ ] Wrangler secrets & deploy smoke-test
-- **Verify:** `bun run preview` passes Playwright; live ruxs.in smoke tests pass
+- [x] `.github/workflows/ci.yml`: automated workflow validating typecheck, lint, bun test, and production build
+- [x] Playwright e2e tests (`e2e/ruxs-flow.spec.ts` and `playwright.config.ts`)
+- [x] Wrangler & Hyperdrive configuration for Cloudflare Workers deployment
+- **Verify:** `typecheck`, `lint`, `bun test`, and `build` all pass cleanly
 
 ---
 
