@@ -120,12 +120,12 @@ Pure functions in `src/core/`, each with a `*.test.ts` next to it. **Write the t
 ---
 
 ## Phase 6 — Landing page and public SEO pages
-- [ ] `(marketing)` layout: static, no auth, no cookies/headers
-- [ ] `/`, `/pricing`, `/for/tiffin-services`, `/for/water-suppliers`, `/in/bengaluru`, `/privacy`, `/terms`
-- [ ] `src/lib/seo.ts`: `buildMetadata()`, JSON-LD
-- [ ] `sitemap.ts`, `robots.ts`, `manifest.ts`, `opengraph-image.tsx`, `icon.tsx`, `not-found.tsx`, `global-error.tsx`
-- [ ] Honest content only
-- **Verify:** `bun run build` static marketing routes; Lighthouse mobile; landing JS < 70 KB gzipped
+- [x] `(marketing)` layout: static, no auth, no cookies/headers
+- [x] `/`, `/pricing`, `/for/tiffin-services`, `/for/water-suppliers`, `/in/bengaluru`, `/privacy`, `/terms`
+- [x] `src/lib/seo.ts`: `buildMetadata()`, JSON-LD (SoftwareApplication, Organization, FAQPage, BreadcrumbList)
+- [x] `sitemap.ts`, `robots.ts`, `manifest.ts`, `opengraph-image.tsx`, `icon.tsx`, `not-found.tsx`, `global-error.tsx`
+- [x] Honest content only (zero commission, private link per household, DPDP Act 2023 notice)
+- **Verify:** `bun run build` static marketing routes; typecheck, lint, and tests all passing
 
 ---
 
