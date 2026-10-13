@@ -58,6 +58,30 @@ export default async function TodayPage({
         </Link>
       </div>
 
+      {/* Quick Access to Inventory & Analytics */}
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <Link
+          href={`/app/${slug}/inventory`}
+          className="p-2.5 sm:p-3 bg-surface border border-line rounded-[10px] hover:border-accent transition-colors flex items-center justify-between"
+        >
+          <div>
+            <span className="font-semibold text-ink block">📦 Bottle / Dabba Inventory</span>
+            <span className="text-[10px] text-muted">Track customer holdings</span>
+          </div>
+          <span className="text-muted text-xs">→</span>
+        </Link>
+        <Link
+          href={`/app/${slug}/analytics`}
+          className="p-2.5 sm:p-3 bg-surface border border-line rounded-[10px] hover:border-accent transition-colors flex items-center justify-between"
+        >
+          <div>
+            <span className="font-semibold text-ink block">📊 Business Analytics</span>
+            <span className="text-[10px] text-muted">Revenue & fulfillment score</span>
+          </div>
+          <span className="text-muted text-xs">→</span>
+        </Link>
+      </div>
+
       {/* Big Count Cards per Product */}
       <div className="space-y-4">
         {products.length === 0 ? (

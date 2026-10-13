@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminVendors } from "@/features/admin/queries";
 import { VendorStatusButton } from "@/features/admin/components/vendor-status-button";
+import { CreateVendorModal } from "@/features/admin/components/create-vendor-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function AdminPage() {
@@ -12,13 +13,19 @@ export default async function AdminPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink">
-          RUXS Platform Admin
-        </h1>
-        <p className="text-xs text-muted">
-          Manage vendor registrations, approvals, and suspension policies.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">
+            RUXS Platform Admin
+          </h1>
+          <p className="text-xs text-muted">
+            Manage vendor registrations, accounts, and access merchant portals.
+          </p>
+        </div>
+
+        <div className="w-full sm:w-auto">
+          <CreateVendorModal />
+        </div>
       </div>
 
       {/* Metrics */}
