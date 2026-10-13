@@ -14,9 +14,11 @@ export default async function TodayPage({
   const { vendor: slug } = await params;
   const today = todayIST();
 
-  const products = await getVendorProducts(slug);
-  const todayData = await getTodayOrders(slug, today);
-  const changes = await getDayChangesForVendor(slug, today);
+  const [products, todayData, changes] = await Promise.all([
+    getVendorProducts(slug),
+    getTodayOrders(slug, today),
+    getDayChangesForVendor(slug, today),
+  ]);
 
   const ordersCountMap = new Map(
     todayData.counts.map((c) => [c.product.id, c])

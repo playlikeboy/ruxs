@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { hexclave } from "./hexclave";
 import { getDb } from "@/db";
 import { vendors, vendorMembers, customers } from "@/db/schema";
+import { getServerEnv } from "@/lib/env";
 
 export type Role = "owner" | "staff" | "driver";
 const ALL_ROLES: Role[] = ["owner", "staff", "driver"];
@@ -63,7 +64,7 @@ export const requireVendorAccess = cache(
 
 export const requireAdmin = cache(async () => {
   const user = await requireUser();
-  const rawAdminIds = process.env.ADMIN_USER_IDS || "";
+  const rawAdminIds = getServerEnv().ADMIN_USER_IDS || "";
   const adminIds = rawAdminIds
     .split(",")
     .map((s) => s.trim())

@@ -40,7 +40,7 @@ export async function getCustomerAssetBalance(
 
   const [res] = await db
     .select({
-      total: sql<number>\`coalesce(sum(\${assetMovements.delta}), 0)::int\`,
+      total: sql<number>`coalesce(sum(${assetMovements.delta}), 0)::int`,
     })
     .from(assetMovements)
     .where(and(...conditions));
@@ -70,7 +70,7 @@ export async function getVendorAssetOverview(slug: string) {
       tower: customers.tower,
       floor: customers.floor,
       flat: customers.flat,
-      balance: sql<number>\`coalesce(sum(\${assetMovements.delta}), 0)::int\`,
+      balance: sql<number>`coalesce(sum(${assetMovements.delta}), 0)::int`,
     })
     .from(assetMovements)
     .innerJoin(customers, eq(assetMovements.customerId, customers.id))

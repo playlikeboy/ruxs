@@ -23,9 +23,9 @@ export async function getVendorAnalytics(slug: string) {
   const byStatus = await db
     .select({
       status: orders.status,
-      orderCount: sql<number>\`count(*)::int\`,
-      units: sql<number>\`coalesce(sum(\${orders.qty}), 0)::int\`,
-      deliveredValuePaise: sql<number>\`coalesce(sum(case when \${orders.status} = 'delivered' then \${orders.unitPricePaise} * \${orders.qty} else 0 end), 0)::int\`,
+      orderCount: sql<number>`count(*)::int`,
+      units: sql<number>`coalesce(sum(${orders.qty}), 0)::int`,
+      deliveredValuePaise: sql<number>`coalesce(sum(case when ${orders.status} = 'delivered' then ${orders.unitPricePaise} * ${orders.qty} else 0 end), 0)::int`,
     })
     .from(orders)
     .where(and(...dateConditions))
@@ -37,16 +37,16 @@ export async function getVendorAnalytics(slug: string) {
       productName: products.name,
       kind: products.kind,
       shift: products.shift,
-      orderCount: sql<number>\`count(\${orders.id})::int\`,
-      deliveredOrders: sql<number>\`count(case when \${orders.status} = 'delivered' then 1 end)::int\`,
-      deliveredUnits: sql<number>\`coalesce(sum(case when \${orders.status} = 'delivered' then \${orders.qty} else 0 end), 0)::int\`,
-      deliveredValuePaise: sql<number>\`coalesce(sum(case when \${orders.status} = 'delivered' then \${orders.unitPricePaise} * \${orders.qty} else 0 end), 0)::int\`,
+      orderCount: sql<number>`count(${orders.id})::int`,
+      deliveredOrders: sql<number>`count(case when ${orders.status} = 'delivered' then 1 end)::int`,
+      deliveredUnits: sql<number>`coalesce(sum(case when ${orders.status} = 'delivered' then ${orders.qty} else 0 end), 0)::int`,
+      deliveredValuePaise: sql<number>`coalesce(sum(case when ${orders.status} = 'delivered' then ${orders.unitPricePaise} * ${orders.qty} else 0 end), 0)::int`,
     })
     .from(orders)
     .innerJoin(products, eq(orders.productId, products.id))
     .where(and(...dateConditions))
     .groupBy(products.id, products.name, products.kind, products.shift)
-    .orderBy(desc(sql\`coalesce(sum(case when \${orders.status} = 'delivered' then \${orders.unitPricePaise} * \${orders.qty} else 0 end), 0)\`));
+    .orderBy(desc(sql`coalesce(sum(case when ${orders.status} = 'delivered' then ${orders.unitPricePaise} * ${orders.qty} else 0 end), 0)`));
 
   return { fromDate, toDate, byStatus, byProduct };
 }

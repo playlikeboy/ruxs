@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, and, desc, lte } from "drizzle-orm";
+import { eq, and, desc, lte, gte } from "drizzle-orm";
 import { getDb } from "@/db";
 import { invoices, customers, vendors, ledgerEntries } from "@/db/schema";
 import { requireVendorAccess, requireCustomerByToken } from "@/lib/auth/session";
@@ -65,6 +65,7 @@ export async function getCustomerBillByToken(token: string, period: string) {
   const nextYear = month === 12 ? year + 1 : year;
   const nextMonth = month === 12 ? 1 : month + 1;
   const nextMonthStr = nextMonth.toString().padStart(2, "0");
+  const monthStart = istDateTime(`${yearStr}-${monthStr}-01`, "00:00:00");
   const monthEnd = istDateTime(`${nextYear}-${nextMonthStr}-01`, "00:00:00");
 
   const entries = await db
@@ -74,6 +75,7 @@ export async function getCustomerBillByToken(token: string, period: string) {
       and(
         eq(ledgerEntries.vendorId, customer.vendorId),
         eq(ledgerEntries.customerId, customer.id),
+        gte(ledgerEntries.createdAt, monthStart),
         lte(ledgerEntries.createdAt, monthEnd)
       )
     )
