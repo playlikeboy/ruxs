@@ -133,7 +133,8 @@ Pure functions in `src/core/`, each with a `*.test.ts` next to it. **Write the t
 - [x] `.github/workflows/ci.yml`: automated workflow validating typecheck, lint, bun test, and production build
 - [x] Playwright e2e tests (`e2e/ruxs-flow.spec.ts` and `playwright.config.ts`)
 - [x] Wrangler & Hyperdrive configuration for Cloudflare Workers deployment
-- **Verify:** `typecheck`, `lint`, `bun test`, and `build` all pass cleanly
+- [x] Production deployment live on Cloudflare Workers at `https://ruxs.in` with custom domain and cron triggers
+- **Verify:** `typecheck`, `lint`, `bun test`, `build`, and remote `deploy` all pass cleanly
 
 ---
 
