@@ -14,26 +14,22 @@ export default async function AppEntryPage() {
 
   const db = getDb();
 
-  // 1. Accept any pending invites for verified primary email
+  // Accept owner/staff invites only when the authentication provider confirms
+  // the primary email address. The exact email is the invite's login identity.
   const userEmail = user.primaryEmail?.toLowerCase();
-  if (userEmail) {
+  if (userEmail && user.primaryEmailVerified) {
     const pendingInvites = await db
       .select()
       .from(vendorInvites)
-      .where(
-        and(
-          eq(vendorInvites.email, userEmail),
-          isNull(vendorInvites.acceptedAt)
-        )
-      );
+      .where(and(eq(vendorInvites.email, userEmail), isNull(vendorInvites.acceptedAt)));
 
-    for (const inv of pendingInvites) {
+    for (const invitation of pendingInvites) {
       await db
         .insert(vendorMembers)
         .values({
-          vendorId: inv.vendorId,
+          vendorId: invitation.vendorId,
           userId: user.id,
-          role: inv.role,
+          role: invitation.role,
         })
         .onConflictDoNothing();
 
@@ -43,11 +39,10 @@ export default async function AppEntryPage() {
           acceptedAt: new Date(),
           acceptedUserId: user.id,
         })
-        .where(eq(vendorInvites.id, inv.id));
+        .where(eq(vendorInvites.id, invitation.id));
     }
   }
 
-  // 2. Fetch user's vendors
   const userVendors = await db
     .select({
       vendor: vendors,
@@ -62,37 +57,28 @@ export default async function AppEntryPage() {
   }
 
   if (userVendors.length === 1) {
-    redirect(`/app/${userVendors[0]!.vendor.slug}/today`);
+    redirect("/app/" + userVendors[0]!.vendor.slug + "/today");
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Select Kitchen or Business
-        </h1>
-        <p className="text-sm text-muted">
-          You have access to multiple vendors. Choose one to continue.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">Select a business</h1>
+        <p className="text-sm text-muted">Choose the merchant portal you want to manage.</p>
       </div>
-
       <div className="space-y-3">
         {userVendors.map(({ vendor, member }) => (
           <Link
             key={vendor.id}
-            href={`/app/${vendor.slug}/today`}
-            className="block p-4 bg-surface border border-line rounded-[12px] hover:border-accent transition-colors shadow-xs"
+            href={"/app/" + vendor.slug + "/today"}
+            className="block rounded-[12px] border border-line bg-surface p-4 transition-colors hover:border-accent"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-base font-medium text-ink">{vendor.name}</h2>
-                <p className="text-xs text-muted">
-                  {vendor.area}, {vendor.city}
-                </p>
+                <h2 className="font-medium text-ink">{vendor.name}</h2>
+                <p className="text-sm text-muted">{vendor.area}, {vendor.city}</p>
               </div>
-              <span className="text-xs px-2.5 py-1 bg-[#FAFAF7] border border-line rounded-full capitalize text-muted">
-                {member.role}
-              </span>
+              <span className="rounded-full border border-line bg-bg px-2.5 py-1 text-xs capitalize text-muted">{member.role}</span>
             </div>
           </Link>
         ))}
