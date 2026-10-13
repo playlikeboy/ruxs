@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatINR } from "@/core/money";
 import { todayIST } from "@/core/time";
 import { getVendorBills } from "@/features/billing/queries";
@@ -61,7 +62,13 @@ export default async function BillsPage({
                     </div>
 
                     <div className="text-xs text-muted mt-0.5">
-                      {invoice.number} • Period: {invoice.period}
+                      {invoice.number} • Period:{" "}
+                      <Link
+                        href={`/app/${slug}/bills/${invoice.period}`}
+                        className="hover:underline text-accent font-medium"
+                      >
+                        {invoice.period}
+                      </Link>
                     </div>
                   </div>
 

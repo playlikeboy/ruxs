@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, or, isNull, gte, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
 import { subscriptions, products, ledgerEntries, assetMovements, dayChanges } from "@/db/schema";
 import { requireCustomerByToken } from "@/lib/auth/session";
@@ -22,7 +22,7 @@ export default async function CustomerLinkPage({
   const today = todayIST();
   const currentPeriod = today.substring(0, 7);
 
-  // 1. Fetch subscriptions
+  // 1. Fetch active subscriptions
   const subs = await db
     .select({
       sub: subscriptions,
@@ -31,7 +31,10 @@ export default async function CustomerLinkPage({
     .from(subscriptions)
     .innerJoin(products, eq(subscriptions.productId, products.id))
     .where(
-      eq(subscriptions.customerId, customer.id)
+      and(
+        eq(subscriptions.customerId, customer.id),
+        or(isNull(subscriptions.endsOn), gte(subscriptions.endsOn, today))
+      )
     );
 
   // 2. Fetch ledger balance
@@ -48,11 +51,20 @@ export default async function CustomerLinkPage({
     .where(eq(assetMovements.customerId, customer.id));
   const cansHeld = canBalance(movements);
 
-  // 4. Fetch day changes
-  const changes = await db
-    .select()
-    .from(dayChanges)
-    .where(eq(dayChanges.vendorId, vendor.id));
+  // 4. Fetch day changes strictly for this customer's subscriptions
+  const subIds = subs.map((s) => s.sub.id);
+  const changes =
+    subIds.length > 0
+      ? await db
+          .select()
+          .from(dayChanges)
+          .where(
+            and(
+              eq(dayChanges.vendorId, vendor.id),
+              inArray(dayChanges.subscriptionId, subIds)
+            )
+          )
+      : [];
 
   // Build next 7 days in IST
   const days: {

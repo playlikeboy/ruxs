@@ -32,10 +32,10 @@ export const vendors = pgTable(
   },
   (t) => [
     index("vendors_slug_idx").on(t.slug),
-    check("vendors_plan_check", sql\`\${t.plan} in ('free', 'starter', 'pro')\`),
+    check("vendors_plan_check", sql`${t.plan} in ('free', 'starter', 'pro')`),
     check(
       "vendors_status_check",
-      sql\`\${t.status} in ('pending', 'active', 'suspended')\`
+      sql`${t.status} in ('pending', 'active', 'suspended')`
     ),
   ]
 );
@@ -55,7 +55,7 @@ export const vendorMembers = pgTable(
   (t) => [
     primaryKey({ columns: [t.vendorId, t.userId] }),
     index("vendor_members_user_id_idx").on(t.userId),
-    check("vendor_members_role_check", sql\`\${t.role} in ('owner', 'staff', 'driver')\`),
+    check("vendor_members_role_check", sql`${t.role} in ('owner', 'staff', 'driver')`),
   ]
 );
 
@@ -80,6 +80,6 @@ export const vendorInvites = pgTable(
   (t) => [
     uniqueIndex("vendor_invites_vendor_email_idx").on(t.vendorId, t.email),
     index("vendor_invites_email_idx").on(t.email),
-    check("vendor_invites_role_check", sql\`\${t.role} in ('owner', 'staff', 'driver')\`),
+    check("vendor_invites_role_check", sql`${t.role} in ('owner', 'staff', 'driver')`),
   ]
 );

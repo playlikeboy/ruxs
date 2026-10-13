@@ -34,9 +34,24 @@ export async function getDayChangesForCustomer(token: string) {
   const db = getDb();
 
   const rows = await db
-    .select()
+    .select({
+      id: dayChanges.id,
+      subscriptionId: dayChanges.subscriptionId,
+      serviceDate: dayChanges.serviceDate,
+      kind: dayChanges.kind,
+      qty: dayChanges.qty,
+      isLate: dayChanges.isLate,
+      source: dayChanges.source,
+      createdAt: dayChanges.createdAt,
+    })
     .from(dayChanges)
-    .where(eq(dayChanges.vendorId, vendorId));
+    .innerJoin(subscriptions, eq(dayChanges.subscriptionId, subscriptions.id))
+    .where(
+      and(
+        eq(dayChanges.vendorId, vendorId),
+        eq(subscriptions.customerId, customer.id)
+      )
+    );
 
   return { customer, changes: rows };
 }

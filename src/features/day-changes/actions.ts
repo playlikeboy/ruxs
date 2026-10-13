@@ -7,6 +7,7 @@ import { dayChanges, subscriptions, products, orders, ledgerEntries } from "@/db
 import { requireVendorAccess, requireCustomerByToken } from "@/lib/auth/session";
 import { isLate, lateCharge } from "@/core/cutoff";
 import { lateFeeKey } from "@/core/ledger";
+import { todayIST } from "@/core/time";
 import { setDayChangeSchema, pauseDatesSchema } from "./schemas";
 
 export async function setDayChange(input: unknown) {
@@ -19,6 +20,11 @@ export async function setDayChange(input: unknown) {
   const db = getDb();
   let vendorId: string;
   let source: "link" | "vendor" = "link";
+
+  const today = todayIST();
+  if (serviceDate < today) {
+    return { ok: false, error: "Cannot modify meal schedule for past dates" };
+  }
 
   if (token) {
     // Household authorized by private link token
@@ -46,11 +52,13 @@ export async function setDayChange(input: unknown) {
     const now = new Date();
     const tapIsLate = isLate(now, serviceDate, sub.product.cutoffAt);
 
-    if (tapIsLate && sub.product.lateRule === "locked") {
-      return {
-        ok: false,
-        error: `Cutoff passed at ${sub.product.cutoffAt} IST. Orders are locked.`,
-      };
+    if (tapIsLate) {
+      if (sub.product.lateRule === "locked" || kind !== "skip") {
+        return {
+          ok: false,
+          error: `Cutoff passed at ${sub.product.cutoffAt} IST. Kitchen count is locked.`,
+        };
+      }
     }
 
     try {
@@ -244,7 +252,22 @@ export async function pauseDates(input: unknown) {
     vendorId = auth.vendorId;
 
     if (subscriptionId) {
-      targetSubIds = [subscriptionId];
+      const [owned] = await db
+        .select({ id: subscriptions.id })
+        .from(subscriptions)
+        .where(
+          and(
+            eq(subscriptions.id, subscriptionId),
+            eq(subscriptions.customerId, auth.customer.id),
+            eq(subscriptions.vendorId, vendorId)
+          )
+        )
+        .limit(1);
+
+      if (!owned) {
+        return { ok: false, error: "Subscription not found or unauthorized" };
+      }
+      targetSubIds = [owned.id];
     } else {
       const custSubs = await db
         .select({ id: subscriptions.id })
@@ -260,22 +283,48 @@ export async function pauseDates(input: unknown) {
   } else if (slug && subscriptionId) {
     const access = await requireVendorAccess(slug, ["owner", "staff"]);
     vendorId = access.vendorId;
-    targetSubIds = [subscriptionId];
+
+    const [vendorSub] = await db
+      .select({ id: subscriptions.id })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.id, subscriptionId),
+          eq(subscriptions.vendorId, vendorId)
+        )
+      )
+      .limit(1);
+
+    if (!vendorSub) {
+      return { ok: false, error: "Subscription not found or unauthorized" };
+    }
+    targetSubIds = [vendorSub.id];
   } else {
     return { ok: false, error: "Unauthorized" };
   }
 
-  // Iterate over date range
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const now = new Date();
-
-  if (start > end) {
+  // Validate date range and bounds
+  const today = todayIST();
+  if (startDate < today) {
+    return { ok: false, error: "Cannot pause dates in the past" };
+  }
+  if (startDate > endDate) {
     return { ok: false, error: "Start date must be on or before end date" };
   }
 
+  const startMs = new Date(startDate + "T00:00:00Z").getTime();
+  const endMs = new Date(endDate + "T00:00:00Z").getTime();
+  const diffDays = Math.round((endMs - startMs) / (1000 * 60 * 60 * 24));
+  if (diffDays > 60) {
+    return { ok: false, error: "Maximum pause duration is 60 days" };
+  }
+
+  const now = new Date();
+
   try {
-    const cur = new Date(start);
+    const cur = new Date(startDate + "T00:00:00Z");
+    const end = new Date(endDate + "T00:00:00Z");
+
     while (cur <= end) {
       const serviceDate = cur.toISOString().split("T")[0]!;
 
@@ -303,7 +352,7 @@ export async function pauseDates(input: unknown) {
           });
       }
 
-      cur.setDate(cur.getDate() + 1);
+      cur.setUTCDate(cur.getUTCDate() + 1);
     }
 
     if (token) revalidatePath(`/c/${token}`);
