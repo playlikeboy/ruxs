@@ -92,14 +92,14 @@ Pure functions in `src/core/`, each with a `*.test.ts` next to it. **Write the t
 ---
 
 ## Phase 4 — Auth and features
-- [ ] Ask Hexclave's `/ask` endpoint how to set up `@hexclave/next` 1.0.125 with Next.js 16 App Router on OpenNext/Cloudflare Workers
-- [ ] `src/lib/auth/hexclave.ts`, `src/lib/auth/session.ts`: `requireUser`, `requireVendorAccess(slug, roles)`, `requireAdmin()`, `requireCustomerByToken(token)`
-- [ ] Feature folders with queries/actions/schemas
-- [ ] Server Actions transactional + idempotent + input zod parsed
-- [ ] Customer import: paste or CSV, validate, normalise phones, generate link token
-- [ ] `/api/cron/tick`: Bearer CRON_SECRET, constant-time compare, locks cutoffs & monthly bills
-- [ ] Integration tests
-- **Verify:** `bun run typecheck && bun run lint && bun test` all green
+- [x] Ask Hexclave's `/ask` endpoint how to set up `@hexclave/next` 1.0.125 with Next.js 16 App Router on OpenNext/Cloudflare Workers
+- [x] `src/lib/auth/hexclave.ts`, `src/lib/auth/session.ts`: `requireUser`, `requireVendorAccess(slug, roles)`, `requireAdmin()`, `requireCustomerByToken(token)`
+- [x] Feature folders with queries/actions/schemas (vendors, products, customers, subscriptions, day-changes, orders, ledger, assets, billing, admin)
+- [x] Server Actions transactional + idempotent + input zod parsed
+- [x] Customer import: paste or CSV, validate, normalise phones (+91), generate link token
+- [x] `/api/cron/tick`: Bearer CRON_SECRET, constant-time compare, locks cutoffs & monthly bills
+- [x] Integration tests: cutoff snapshot matches resolveDay, double-tick idempotency, billing idempotency, customer token security
+- **Verify:** `bun run typecheck && bun run lint && bun test` all green (33 tests pass)
 
 ---
 
