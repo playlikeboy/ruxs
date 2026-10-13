@@ -67,17 +67,27 @@ Tracking build progress across all 7 phases against `PROMPT.md` and `docs/PRD.md
 
 ## Phase 3 — Core rules
 Pure functions in `src/core/`, each with a `*.test.ts` next to it. **Write the tests first.**
-- [ ] `money.ts`: `formatINR(paise)` → `₹1,23,450` / `₹90.50`, `rupeesToPaise`, never floats in storage
-- [ ] `time.ts` (or inside `cutoff.ts`): IST helpers: `istDateTime(date, "HH:MM[:SS]")`, `todayIST(now)`, weekday in IST
-- [ ] `cutoff.ts`: `isLate(tapAt, serviceDate, cutoffAt)`; `lateCharge(rule, qty, unitPaise)` → free 0 / half 50% (round half up to whole paise) / full 100% / locked → `{ refused: true }`
-- [ ] `orders.ts`: `resolveDay(subscription, change | null)` → `{ status, qty }`
-- [ ] `ledger.ts`: idempotency key builders from PRD §10 rule 5; `balance(entries)`
-- [ ] `billing.ts`: `computeInvoice(entries, period)` → opening, charges, payments, closing; invoice number `RX-{YYYYMM}-{seq}`
-- [ ] `run-sheet.ts`: sort by society → tower → floor **descending** → flat (natural sort: `A-2` before `A-10`)
-- [ ] `upi.ts`: `upi://pay?pa=…&pn=…&am=…&cu=INR&tn=…` with correct encoding and 2-decimal rupees
-- [ ] `assets.ts`: `canBalance(movements)`, default stepper `{ out: qty, in: qty }`
-- **Launch-gate tests (must exist and pass):** a skip at `10:00:01` is late against `10:00:00`; 100 simulated skips → zero duplicate charges; replaying the same events twice gives an identical ledger; bill closing == khata balance for every seeded customer (integration test in Phase 4)
-- **Verify:** `bun test src/core` all green; every exported function has at least one test; coverage of `src/core` ≥ 95% (`bun test --coverage`)
+- [x] `money.ts`: `formatINR(paise)` → `₹1,23,450` / `₹90.50`, `rupeesToPaise`, never floats in storage
+- [x] `time.ts` (or inside `cutoff.ts`): IST helpers: `istDateTime(date, "HH:MM[:SS]")`, `todayIST(now)`, weekday in IST
+- [x] `cutoff.ts`: `isLate(tapAt, serviceDate, cutoffAt)`; `lateCharge(rule, qty, unitPaise)` → free 0 / half 50% (round half up to whole paise) / full 100% / locked → `{ refused: true }`
+- [x] `orders.ts`: `resolveDay(subscription, change | null)` → `{ status, qty }`
+- [x] `ledger.ts`: idempotency key builders from PRD §10 rule 5; `balance(entries)`
+- [x] `billing.ts`: `computeInvoice(entries, period)` → opening, charges, payments, closing; invoice number `RX-{YYYYMM}-{seq}`
+- [x] `run-sheet.ts`: sort by society → tower → floor **descending** → flat (natural sort: `A-2` before `A-10`)
+- [x] `upi.ts`: `upi://pay?pa=…&pn=…&am=…&cu=INR&tn=…` with correct encoding and 2-decimal rupees
+- [x] `assets.ts`: `canBalance(movements)`, default stepper `{ out: qty, in: qty }`
+- [x] **Launch-gate tests (must exist and pass):** a skip at `10:00:01` is late against `10:00:00`; 100 simulated skips → zero duplicate charges; replaying the same events twice gives an identical ledger; bill closing == khata balance for every seeded customer (integration test in Phase 4)
+- **Verify:** `bun test src/core` all green; every exported function has at least one test; coverage of `src/core` = 100% (`bun test --coverage`)
+
+### Phase 3 Self-Review
+1. Does every query/action call the right `require*()` and filter by `vendor_id`? (N/A for core rules - pure functions only, no db/io imports)
+2. Is every money change an insert with an idempotency key, inside a transaction where needed? (Key generators enforce deterministic idempotency)
+3. Is every time comparison done in Asia/Kolkata through `src/core` helpers? (Yes, `istDateTime` and `todayIST` enforce UTC+05:30)
+4. Could anything here run twice and change the result? (No, verified by Gate 2 and Gate 3 replay tests)
+5. Is there any file a newcomer couldn't understand in 2 minutes? (All core functions are concise, focused, and under 50 lines)
+6. Any `any`, unused export, dead file, TODO without an owner, or console log? (Cleaned up, 0 errors, 0 warnings)
+7. Does each screen do one job, at 360 px, with 48 px targets and words + colour for status? (N/A for core rules)
+8. Did I invent anything not in the PRD or PROMPT.md? (No, followed exact business rules)
 
 ---
 
