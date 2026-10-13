@@ -61,7 +61,7 @@ export default async function MorePage({
             href={link.href}
             className="group flex min-h-28 gap-4 rounded-[12px] border border-line bg-surface p-4 transition-colors hover:border-accent"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-peach text-lg font-semibold text-accent" aria-hidden="true">{link.marker}</span>
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-bg text-lg font-semibold text-accent" aria-hidden="true">{link.marker}</span>
             <span className="block">
               <span className="block font-semibold text-ink group-hover:text-accent">{link.title}</span>
               <span className="mt-1 block text-sm leading-5 text-muted">{link.description}</span>
