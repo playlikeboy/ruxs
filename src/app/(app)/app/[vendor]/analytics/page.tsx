@@ -1,7 +1,7 @@
-import { getVendorAnalytics } from "@/features/vendors/queries";
 import { formatINR } from "@/core/money";
+import { getVendorAnalytics } from "@/features/analytics/queries";
 
-export default async function VendorAnalyticsPage({
+export default async function AnalyticsPage({
   params,
 }: {
   params: Promise<{ vendor: string }>;
@@ -9,154 +9,106 @@ export default async function VendorAnalyticsPage({
   const { vendor: slug } = await params;
   const data = await getVendorAnalytics(slug);
 
+  const count = (status: string) =>
+    Number(data.byStatus.find((row) => row.status === status)?.orderCount ?? 0);
+  const units = (status: string) =>
+    Number(data.byStatus.find((row) => row.status === status)?.units ?? 0);
+  const deliveredValue = data.byStatus.reduce(
+    (sum, row) => sum + Number(row.deliveredValuePaise),
+    0
+  );
+  const totalOrders = data.byStatus.reduce(
+    (sum, row) => sum + Number(row.orderCount),
+    0
+  );
+
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink">
-          Business Analytics
-        </h1>
-        <p className="text-xs text-muted">
-          Monthly delivery performance, revenue, and customer retention metrics.
-        </p>
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">Business intelligence</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Analytics</h1>
+        <p className="mt-1 text-sm text-muted">Order activity from {data.fromDate} through {data.toDate}. Revenue is calculated from delivered order price snapshots, not payment settlement.</p>
       </div>
 
-      {/* Financial Health Section */}
-      <div className="space-y-3">
-        <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">
-          Financial Summary (This Month)
-        </h2>
-
-        <div className="grid grid-cols-3 gap-2.5">
-          <div className="p-3 bg-surface border border-line rounded-[12px] shadow-xs">
-            <span className="text-[11px] text-muted block">Billed</span>
-            <span className="text-base font-bold text-ink font-mono tabular-nums block mt-0.5">
-              {formatINR(data.billedPaiseThisMonth)}
-            </span>
-            <span className="text-[10px] text-muted block mt-0.5">Deliveries & fees</span>
-          </div>
-
-          <div className="p-3 bg-surface border border-line rounded-[12px] shadow-xs">
-            <span className="text-[11px] text-muted block">Collected</span>
-            <span className="text-base font-bold text-good font-mono tabular-nums block mt-0.5">
-              {formatINR(data.collectedPaiseThisMonth)}
-            </span>
-            <span className="text-[10px] text-muted block mt-0.5">Payments received</span>
-          </div>
-
-          <div className="p-3 bg-surface border border-line rounded-[12px] shadow-xs">
-            <span className="text-[11px] text-muted block">Outstanding</span>
-            <span
-              className={`text-base font-bold font-mono tabular-nums block mt-0.5 ${
-                data.outstandingBalancePaise > 0 ? "text-[#9A5B00]" : "text-ink"
-              }`}
-            >
-              {formatINR(data.outstandingBalancePaise)}
-            </span>
-            <span className="text-[10px] text-muted block mt-0.5">Khata balance</span>
-          </div>
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div className="rounded-[12px] border border-line bg-surface p-4">
+          <p className="text-xs text-muted">Orders created</p>
+          <p className="mt-2 text-3xl font-semibold tabular-nums text-ink">{totalOrders.toLocaleString("en-IN")}</p>
+          <p className="mt-1 text-xs text-muted">All statuses, 30 days</p>
         </div>
-      </div>
-
-      {/* Operations & Delivery Volume */}
-      <div className="space-y-3">
-        <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">
-          Operations & Fulfillment
-        </h2>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div className="p-3 bg-surface border border-line rounded-[12px] shadow-xs">
-            <span className="text-[11px] text-muted block">Total Delivered</span>
-            <span className="text-xl font-bold text-ink font-mono tabular-nums block mt-0.5">
-              {data.deliveredOrders}
-            </span>
-            <span className="text-[10px] text-muted block mt-0.5">
-              {data.deliveredUnits} units
-            </span>
-          </div>
-
-          <div className="p-3 bg-surface border border-line rounded-[12px] shadow-xs">
-            <span className="text-[11px] text-muted block">Fulfillment Rate</span>
-            <span className="text-xl font-bold text-good font-mono tabular-nums block mt-0.5">
-              {data.completionRate}%
-            </span>
-            <span className="text-[10px] text-muted block mt-0.5">
-              Completion score
-            </span>
-          </div>
-
-          <div className="p-3 bg-surface border border-line rounded-[12px] shadow-xs">
-            <span className="text-[11px] text-muted block">Skips Tapped</span>
-            <span className="text-xl font-bold text-accent font-mono tabular-nums block mt-0.5">
-              {data.skippedOrders}
-            </span>
-            <span className="text-[10px] text-muted block mt-0.5">
-              Via customer link
-            </span>
-          </div>
-
-          <div className="p-3 bg-surface border border-line rounded-[12px] shadow-xs">
-            <span className="text-[11px] text-muted block">Failed Stops</span>
-            <span className="text-xl font-bold text-[#B42318] font-mono tabular-nums block mt-0.5">
-              {data.failedOrders}
-            </span>
-            <span className="text-[10px] text-muted block mt-0.5">
-              Door locked / refused
-            </span>
-          </div>
+        <div className="rounded-[12px] border border-line bg-surface p-4">
+          <p className="text-xs text-muted">Delivered orders</p>
+          <p className="mt-2 text-3xl font-semibold tabular-nums text-good">{count("delivered").toLocaleString("en-IN")}</p>
+          <p className="mt-1 text-xs text-muted">{units("delivered").toLocaleString("en-IN")} units delivered</p>
         </div>
-      </div>
-
-      {/* Customers & Subscriptions */}
-      <div className="bg-surface border border-line rounded-[14px] p-4 sm:p-5 shadow-xs space-y-4">
-        <h3 className="text-sm font-semibold text-ink">
-          Customer Roster & Subscription Base
-        </h3>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-3 bg-[#FAFAF7] border border-line rounded-[10px]">
-            <span className="text-xs text-muted block">Total Customers</span>
-            <span className="text-2xl font-bold text-ink font-mono mt-1 block">
-              {data.totalCustomers}
-            </span>
-            <span className="text-[11px] text-muted block mt-0.5">
-              Onboarded households
-            </span>
-          </div>
-
-          <div className="p-3 bg-[#FAFAF7] border border-line rounded-[10px]">
-            <span className="text-xs text-muted block">Active Subscriptions</span>
-            <span className="text-2xl font-bold text-accent font-mono mt-1 block">
-              {data.activeSubscriptions}
-            </span>
-            <span className="text-[11px] text-muted block mt-0.5">
-              Recurring daily slots
-            </span>
-          </div>
+        <div className="rounded-[12px] border border-line bg-surface p-4">
+          <p className="text-xs text-muted">Still confirmed</p>
+          <p className="mt-2 text-3xl font-semibold tabular-nums text-ink">{count("confirmed").toLocaleString("en-IN")}</p>
+          <p className="mt-1 text-xs text-muted">Orders not yet closed</p>
         </div>
+        <div className="rounded-[12px] border border-line bg-surface p-4">
+          <p className="text-xs text-muted">Delivered value</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-ink">{formatINR(deliveredValue)}</p>
+          <p className="mt-1 text-xs text-muted">Based on order-time prices</p>
+        </div>
+      </section>
 
-        {/* Product Catalog */}
-        <div className="pt-2 border-t border-line/60">
-          <h4 className="text-xs font-semibold text-ink mb-2">Active Catalog</h4>
-          <div className="space-y-1.5">
-            {data.products.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between text-xs py-1.5 px-2 bg-bg rounded-[6px] border border-line/40"
-              >
-                <div>
-                  <span className="font-medium text-ink">{p.name}</span>
-                  <span className="text-muted text-[10px] ml-2 capitalize">
-                    {p.shift} shift • Cutoff {p.cutoffAt}
-                  </span>
+      <section className="rounded-[12px] border border-line bg-surface p-4 sm:p-5">
+        <h2 className="text-base font-semibold text-ink">Status breakdown</h2>
+        {data.byStatus.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">There are no orders in this 30-day window yet.</p>
+        ) : (
+          <div className="mt-3 divide-y divide-line">
+            {data.byStatus.map((row) => (
+              <div key={row.status} className="flex items-center justify-between gap-4 py-3">
+                <span className="text-sm capitalize text-ink">{row.status.replaceAll("_", " ")}</span>
+                <div className="text-right">
+                  <p className="text-sm font-semibold tabular-nums text-ink">{Number(row.orderCount).toLocaleString("en-IN")} orders</p>
+                  <p className="text-xs text-muted">{Number(row.units).toLocaleString("en-IN")} units</p>
                 </div>
-                <span className="font-mono font-bold text-ink">
-                  {formatINR(p.pricePaise)}
-                </span>
               </div>
             ))}
           </div>
+        )}
+      </section>
+
+      <section className="rounded-[12px] border border-line bg-surface p-4 sm:p-5">
+        <div>
+          <h2 className="text-base font-semibold text-ink">Product performance</h2>
+          <p className="mt-1 text-sm text-muted">Past orders keep their recorded unit price when you later change a product&apos;s price.</p>
         </div>
-      </div>
+        {data.byProduct.length === 0 ? (
+          <p className="mt-4 text-sm text-muted">Product statistics will appear after orders are created.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[620px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-line text-xs text-muted">
+                  <th className="py-3 pr-4 font-medium">Product</th>
+                  <th className="py-3 pr-4 font-medium">Shift</th>
+                  <th className="py-3 pr-4 text-right font-medium">Orders</th>
+                  <th className="py-3 pr-4 text-right font-medium">Units delivered</th>
+                  <th className="py-3 text-right font-medium">Delivered value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.byProduct.map((product) => (
+                  <tr key={product.productId} className="border-b border-line last:border-0">
+                    <td className="py-3 pr-4">
+                      <p className="font-medium text-ink">{product.productName}</p>
+                      <p className="text-xs capitalize text-muted">{product.kind}</p>
+                    </td>
+                    <td className="py-3 pr-4 capitalize text-muted">{product.shift}</td>
+                    <td className="py-3 pr-4 text-right tabular-nums text-ink">{Number(product.orderCount).toLocaleString("en-IN")}</td>
+                    <td className="py-3 pr-4 text-right tabular-nums text-ink">{Number(product.deliveredUnits).toLocaleString("en-IN")}</td>
+                    <td className="py-3 text-right tabular-nums text-ink">{formatINR(Number(product.deliveredValuePaise))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
