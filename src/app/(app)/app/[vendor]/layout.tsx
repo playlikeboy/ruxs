@@ -14,13 +14,12 @@ export default async function VendorLayout({
   const access = await requireVendorAccess(slug);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Top Header */}
-      <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md border-b border-line px-4 py-3 flex items-center justify-between">
-        <div className="flex flex-col">
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-surface/90 px-4 py-3 backdrop-blur-md">
+        <div className="flex min-w-0 flex-col">
           <Link
-            href={`/app/${slug}/today`}
-            className="text-base font-semibold text-ink leading-tight hover:text-accent transition-colors"
+            href={"/app/" + slug + "/today"}
+            className="truncate text-base font-semibold leading-tight text-ink transition-colors hover:text-accent"
           >
             {access.vendor.name}
           </Link>
@@ -30,44 +29,10 @@ export default async function VendorLayout({
             <span className="capitalize">{access.role}</span>
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          {access.role === "owner" && (
-            <div className="flex items-center gap-0.5 sm:gap-1 text-xs">
-              <Link
-                href={`/app/${slug}/products`}
-                className="px-1.5 sm:px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
-              >
-                Products
-              </Link>
-              <Link
-                href={`/app/${slug}/inventory`}
-                className="px-1.5 sm:px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
-              >
-                Inventory
-              </Link>
-              <Link
-                href={`/app/${slug}/analytics`}
-                className="px-1.5 sm:px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
-              >
-                Analytics
-              </Link>
-              <Link
-                href={`/app/${slug}/settings`}
-                className="px-1.5 sm:px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
-              >
-                Settings
-              </Link>
-            </div>
-          )}
-          <UserNav />
-        </div>
+        <UserNav />
       </header>
 
-      {/* Main Content Area */}
       <div className="flex-1 pb-16">{children}</div>
-
-      {/* Bottom Nav */}
       <VendorBottomNav slug={slug} />
     </div>
   );
