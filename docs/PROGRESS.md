@@ -104,18 +104,18 @@ Pure functions in `src/core/`, each with a `*.test.ts` next to it. **Write the t
 ---
 
 ## Phase 5 — App screens
-- [ ] `(app)` layout + `/onboarding` + `/app` vendor picker/redirect
-- [ ] `/app/[vendor]` layout + bottom nav
-- [ ] Today screen: `CutoffTimer`, `BigCount`, replies progress, changes list
-- [ ] Run screen: stops left, grouped society → tower → descending floor, `useOptimistic` Delivered, Failed, `QtyStepper`
-- [ ] Customers screen: list, `/new`, `/[id]` khata timeline, adjustment sheet, copy/share/reset link
-- [ ] Products screen: list + form
-- [ ] Bills screen: this/last month, status pills, Mark paid, share link
-- [ ] Settings screen: UPI ID, invite staff/driver, plan display
-- [ ] Customer link `/c/[token]` + `/c/[token]/bills/[month]`
-- [ ] `/admin`: pending vendors, suspend, lookup
-- [ ] `loading.tsx` skeletons + `error.tsx` per segment; `EmptyState`, Sonner toasts
-- **Verify:** walk full loop by hand in `bun run dev`
+- [x] `(app)` layout + `/onboarding` + `/app` vendor picker/redirect
+- [x] `/app/[vendor]` layout + bottom nav
+- [x] Today screen: `CutoffTimer`, `BigCount`, replies progress, changes list
+- [x] Run screen: stops left, grouped society → tower → descending floor, `useOptimistic` Delivered, Failed, `QtyStepper`
+- [x] Customers screen: list, `/new`, `/[id]` khata timeline, adjustment sheet, copy/share/reset link
+- [x] Products screen: list + form
+- [x] Bills screen: this/last month, status pills, Mark paid, share link
+- [x] Settings screen: UPI ID, invite staff/driver, plan display
+- [x] Customer link `/c/[token]` + `/c/[token]/bills/[month]`
+- [x] `/admin`: pending vendors, suspend, lookup
+- [x] `loading.tsx` skeletons + `error.tsx` per segment; `EmptyState`, Sonner toasts
+- **Verify:** walk full loop by hand in `bun run dev` (typecheck, lint, build, all screens verified)
 
 ---
 

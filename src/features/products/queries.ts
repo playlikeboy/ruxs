@@ -15,3 +15,5 @@ export async function getProductsForVendor(slug: string) {
 
   return rows;
 }
+
+export const getVendorProducts = getProductsForVendor;
