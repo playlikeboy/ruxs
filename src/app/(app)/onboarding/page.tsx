@@ -2,11 +2,16 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendorMembers } from "@/db/schema";
-import { requireUser } from "@/lib/auth/session";
+import { hexclave } from "@/lib/auth/hexclave";
+import { AuthRedirect } from "@/components/auth/auth-redirect";
 import { OnboardingForm } from "./onboarding-form";
 
 export default async function OnboardingPage() {
-  const user = await requireUser();
+  const user = await hexclave.getUser();
+  if (!user) {
+    return <AuthRedirect />;
+  }
+
   const db = getDb();
 
   // If already a member of a vendor, redirect to /app

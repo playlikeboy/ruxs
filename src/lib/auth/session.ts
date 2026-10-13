@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import crypto from "crypto";
 import { eq, and } from "drizzle-orm";
 import { hexclave } from "./hexclave";
@@ -11,7 +11,10 @@ export type Role = "owner" | "staff" | "driver";
 const ALL_ROLES: Role[] = ["owner", "staff", "driver"];
 
 export const requireUser = cache(async () => {
-  const user = await hexclave.getUser({ or: "redirect" });
+  const user = await hexclave.getUser();
+  if (!user) {
+    redirect("/sign-in");
+  }
   return user;
 });
 

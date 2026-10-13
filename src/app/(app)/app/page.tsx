@@ -3,10 +3,15 @@ import Link from "next/link";
 import { eq, and, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendors, vendorMembers, vendorInvites } from "@/db/schema";
-import { requireUser } from "@/lib/auth/session";
+import { hexclave } from "@/lib/auth/hexclave";
+import { AuthRedirect } from "@/components/auth/auth-redirect";
 
 export default async function AppEntryPage() {
-  const user = await requireUser();
+  const user = await hexclave.getUser();
+  if (!user) {
+    return <AuthRedirect />;
+  }
+
   const db = getDb();
 
   // 1. Accept any pending invites for verified primary email
