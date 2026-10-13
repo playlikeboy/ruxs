@@ -76,10 +76,10 @@ export default function HomePage() {
               Start using RUXS <span aria-hidden="true" className="ml-2">→</span>
             </Link>
             <Link
-              href="/for/tiffin-services"
+              href="/about"
               className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-5 py-3 text-sm font-semibold text-ink transition hover:bg-white"
             >
-              See how it works
+              About RUXS
             </Link>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-xs font-medium text-muted">
