@@ -69,11 +69,11 @@ export async function createVendorForAdmin(input: unknown) {
     revalidatePath("/app");
 
     const inviteText =
-      "Your RUXS merchant portal is ready.\\n\\n" +
-      "Business: " + created.name + "\\n" +
-      "Login ID: " + ownerEmail + "\\n\\n" +
-      "Sign in or sign up at https://ruxs.in/app using this exact email address. Complete email verification. RUXS will link your account to the business automatically when you first open the portal.\\n\\n" +
-      "Merchant dashboard: https://ruxs.in/app/" + created.slug + "/today\\n\\n" +
+      "Your RUXS merchant portal is ready.\n\n" +
+      "Business: " + created.name + "\n" +
+      "Login ID: " + ownerEmail + "\n\n" +
+      "Sign in or sign up at https://ruxs.in/app using this exact email address. Complete email verification. RUXS will link your account to the business automatically when you first open the portal.\n\n" +
+      "Merchant dashboard: https://ruxs.in/app/" + created.slug + "/today\n\n" +
       "For security, create and manage your own password through the hosted sign-in flow. Do not send passwords in chat.";
 
     return {
