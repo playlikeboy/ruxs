@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db";
-import { assetMovements } from "@/db/schema";
+import { assetMovements, customers, orders } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { recordAssetMovementSchema } from "./schemas";
 
@@ -16,6 +17,34 @@ export async function recordAssetMovement(input: unknown) {
   const access = await requireVendorAccess(slug, ["owner", "staff", "driver"]);
   const db = getDb();
 
+  const [customer] = await db
+    .select({ id: customers.id })
+    .from(customers)
+    .where(and(eq(customers.id, customerId), eq(customers.vendorId, access.vendorId)))
+    .limit(1);
+
+  if (!customer) {
+    return { ok: false, error: "Customer not found in this business" };
+  }
+
+  if (orderId) {
+    const [order] = await db
+      .select({ id: orders.id })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.id, orderId),
+          eq(orders.vendorId, access.vendorId),
+          eq(orders.customerId, customerId)
+        )
+      )
+      .limit(1);
+
+    if (!order) {
+      return { ok: false, error: "Order not found for this customer and business" };
+    }
+  }
+
   try {
     await db.insert(assetMovements).values({
       vendorId: access.vendorId,
@@ -25,12 +54,11 @@ export async function recordAssetMovement(input: unknown) {
       delta,
     });
 
-    revalidatePath(`/app/${slug}/customers/${customerId}`);
-    revalidatePath(`/app/${slug}/run`);
-    revalidatePath(`/app/${slug}/inventory`);
+    revalidatePath("/app/" + slug + "/customers/" + customerId);
+    revalidatePath("/app/" + slug + "/run");
+    revalidatePath("/app/" + slug + "/inventory");
     return { ok: true };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to record asset movement";
-    return { ok: false, error: msg };
+  } catch {
+    return { ok: false, error: "Failed to record asset movement. Please try again." };
   }
 }

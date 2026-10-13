@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db";
-import { subscriptions } from "@/db/schema";
+import { customers, products, subscriptions } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { saveSubscriptionSchema } from "./schemas";
 
@@ -17,9 +17,30 @@ export async function saveSubscription(input: unknown) {
   const access = await requireVendorAccess(slug, ["owner", "staff"]);
   const db = getDb();
 
+  // Client-provided IDs must both belong to the authenticated vendor.
+  const [customer] = await db
+    .select({ id: customers.id })
+    .from(customers)
+    .where(and(eq(customers.id, customerId), eq(customers.vendorId, access.vendorId)))
+    .limit(1);
+
+  if (!customer) {
+    return { ok: false, error: "Customer not found in this business" };
+  }
+
+  const [product] = await db
+    .select({ id: products.id })
+    .from(products)
+    .where(and(eq(products.id, productId), eq(products.vendorId, access.vendorId)))
+    .limit(1);
+
+  if (!product) {
+    return { ok: false, error: "Product not found in this business" };
+  }
+
   try {
     if (id) {
-      await db
+      const [updated] = await db
         .update(subscriptions)
         .set({
           productId,
@@ -34,7 +55,12 @@ export async function saveSubscription(input: unknown) {
             eq(subscriptions.vendorId, access.vendorId),
             eq(subscriptions.customerId, customerId)
           )
-        );
+        )
+        .returning({ id: subscriptions.id });
+
+      if (!updated) {
+        return { ok: false, error: "Subscription not found in this business" };
+      }
     } else {
       await db.insert(subscriptions).values({
         vendorId: access.vendorId,
@@ -47,10 +73,10 @@ export async function saveSubscription(input: unknown) {
       });
     }
 
-    revalidatePath(`/app/${slug}/customers/${customerId}`);
+    revalidatePath("/app/" + slug + "/customers/" + customerId);
+    revalidatePath("/app/" + slug + "/products");
     return { ok: true };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Database error";
-    return { ok: false, error: msg };
+  } catch {
+    return { ok: false, error: "Could not save the subscription. Check the details and try again." };
   }
 }

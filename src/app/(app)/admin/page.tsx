@@ -64,7 +64,7 @@ export default async function AdminPage() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold text-ink">{vendor.name}</h3>
-                    <span className={vendor.status === "active" ? "rounded-full bg-mint px-2 py-0.5 text-xs font-semibold text-good" : vendor.status === "pending" ? "rounded-full bg-butter px-2 py-0.5 text-xs font-semibold text-warn" : "rounded-full bg-blush px-2 py-0.5 text-xs font-semibold text-bad"}>{vendor.status}</span>
+                    <span className={vendor.status === "active" ? "rounded-full bg-good/10 px-2 py-0.5 text-xs font-semibold text-good" : vendor.status === "pending" ? "rounded-full bg-warn/10 px-2 py-0.5 text-xs font-semibold text-warn" : "rounded-full bg-bad/10 px-2 py-0.5 text-xs font-semibold text-bad"}>{vendor.status}</span>
                   </div>
                   <p className="mt-1 text-sm text-muted">{vendor.area}, {vendor.city} · {vendor.phone}</p>
                   <p className="mt-1 break-all text-xs text-muted">UPI: {vendor.upiVpa}</p>

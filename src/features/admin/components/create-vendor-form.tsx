@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { FormEvent } from "react";
 import { toast } from "sonner";
 import { createVendorForAdmin } from "@/features/admin/actions";
 
@@ -36,7 +37,7 @@ export function CreateVendorForm() {
     setCreated(null);
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     startTransition(async () => {
       const result = await createVendorForAdmin(form);
@@ -78,7 +79,7 @@ export function CreateVendorForm() {
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">Merchant onboarding</p>
         <h2 className="mt-1 text-lg font-semibold tracking-tight text-ink">Create a vendor and owner login</h2>
         <p className="mt-1 max-w-2xl text-sm leading-6 text-muted">
-          Create the business portal and invite its owner by email. The owner uses that email to sign in or sign up, verifies it, and sets their own password with the hosted authentication flow.
+          Create the business portal and prepare its owner instructions. The owner signs in or signs up with this email, verifies it, and manages their own password through the hosted authentication flow.
         </p>
       </div>
 
@@ -98,7 +99,7 @@ export function CreateVendorForm() {
         </label>
         <label className="text-sm font-medium text-ink">
           Business mobile
-          <input className={inputClass} type="tel" required pattern="\\+91[6-9][0-9]{9}" value={form.phone} onChange={(event) => update("phone", event.target.value)} placeholder="+919876543210" />
+          <input className={inputClass} type="tel" required pattern="\+91[6-9][0-9]{9}" value={form.phone} onChange={(event) => update("phone", event.target.value)} placeholder="+919876543210" />
         </label>
         <label className="text-sm font-medium text-ink">
           Business UPI ID
@@ -124,7 +125,7 @@ export function CreateVendorForm() {
       </form>
 
       {created && (
-        <div className="space-y-3 rounded-[12px] border border-good/30 bg-mint p-4">
+        <div className="space-y-3 rounded-[12px] border border-good/40 bg-surface p-4">
           <div>
             <p className="text-sm font-semibold text-ink">Vendor created successfully</p>
             <p className="mt-1 text-sm text-muted">Login ID: <span className="font-semibold text-ink">{created.ownerEmail}</span></p>
