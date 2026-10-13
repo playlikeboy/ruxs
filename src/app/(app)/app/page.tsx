@@ -51,6 +51,34 @@ export default async function AppEntryPage() {
     .where(eq(vendorMembers.userId, user.id));
 
   if (userVendors.length === 0) {
+    if (userEmail && !user.primaryEmailVerified) {
+      const [pendingInvite] = await db
+        .select()
+        .from(vendorInvites)
+        .where(and(eq(vendorInvites.email, userEmail), isNull(vendorInvites.acceptedAt)))
+        .limit(1);
+
+      if (pendingInvite) {
+        return (
+          <div className="space-y-4 rounded-[14px] border border-line bg-surface p-6 text-center">
+            <h2 className="text-xl font-semibold text-ink">Verify your email</h2>
+            <p className="text-sm text-muted">
+              Your merchant portal has been provisioned for <strong>{userEmail}</strong>.
+              Please verify your email address to link and access your business dashboard.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/handler/email-verification"
+                className="inline-flex min-h-11 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                Verify Email →
+              </Link>
+            </div>
+          </div>
+        );
+      }
+    }
+
     redirect("/onboarding");
   }
 
