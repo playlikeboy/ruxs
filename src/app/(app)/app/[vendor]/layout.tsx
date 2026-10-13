@@ -33,16 +33,28 @@ export default async function VendorLayout({
 
         <div className="flex items-center gap-2">
           {access.role === "owner" && (
-            <div className="flex items-center gap-1 text-xs">
+            <div className="flex items-center gap-0.5 sm:gap-1 text-xs">
               <Link
                 href={`/app/${slug}/products`}
-                className="px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
+                className="px-1.5 sm:px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
               >
                 Products
               </Link>
               <Link
+                href={`/app/${slug}/inventory`}
+                className="px-1.5 sm:px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
+              >
+                Inventory
+              </Link>
+              <Link
+                href={`/app/${slug}/analytics`}
+                className="px-1.5 sm:px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
+              >
+                Analytics
+              </Link>
+              <Link
                 href={`/app/${slug}/settings`}
-                className="px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
+                className="px-1.5 sm:px-2 py-1 text-muted hover:text-ink rounded-[6px] hover:bg-[#FAFAF7]"
               >
                 Settings
               </Link>

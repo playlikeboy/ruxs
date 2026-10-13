@@ -27,6 +27,7 @@ export async function recordAssetMovement(input: unknown) {
 
     revalidatePath(`/app/${slug}/customers/${customerId}`);
     revalidatePath(`/app/${slug}/run`);
+    revalidatePath(`/app/${slug}/inventory`);
     return { ok: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to record asset movement";
