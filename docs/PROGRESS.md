@@ -45,13 +45,23 @@ Tracking build progress across all 7 phases against `PROMPT.md` and `docs/PRD.md
 ---
 
 ## Phase 2 — Database
-- [ ] **Ask the user the §2.3 question first.** Wait for the answer
-- [ ] `src/db/schema/*.ts`: the 11 tables, one file per group (`vendors.ts`, `customers.ts`, `catalog.ts`, `orders.ts`, `money.ts`). `vendor_id` on every tenant row, `integer` paise, `date` service dates, `timestamptz` events, `text` + `check` for enums, every unique constraint the PRD names, indexes on `(vendor_id, …)` lookups
-- [ ] A hand-written SQL migration (after the generated one) that adds the trigger blocking `UPDATE` and `DELETE` on `ledger_entries`
-- [ ] `src/db/index.ts`: `getDb()` exactly as PRD §18 (per request, `maxUses: 1`). A separate `src/db/script-client.ts` for scripts/tests that uses `DATABASE_URL` directly
-- [ ] `bunx wrangler hyperdrive create ruxs-db --connection-string="$DATABASE_URL" --caching-disabled`, put the id in `wrangler.jsonc` (ids are not secrets)
-- [ ] `src/db/seed.ts`: one demo vendor "Annapurna Tiffin" in HSR Layout Sector 2, Bengaluru (lunch regular ₹90, lunch Jain ₹95, dinner ₹90 and a water supplier "Neer 20L" with ₹40 cans + ₹150 deposit), 12 customers spread over 2 societies / 3 towers / several floors, subscriptions, and 10 days of history. Clearly fake names; no real phone numbers (use `+9199999000xx`)
+- [x] **Ask the user the §2.3 question first.** Wait for the answer (Answered: Option B chosen by user; 24 legacy tables dropped)
+- [x] `src/db/schema/*.ts`: the 11 tables, one file per group (`vendors.ts`, `customers.ts`, `catalog.ts`, `orders.ts`, `money.ts`). `vendor_id` on every tenant row, `integer` paise, `date` service dates, `timestamptz` events, `text` + `check` for enums, every unique constraint the PRD names, indexes on `(vendor_id, …)` lookups
+- [x] A hand-written SQL migration (after the generated one) that adds the trigger blocking `UPDATE` and `DELETE` on `ledger_entries`
+- [x] `src/db/index.ts`: `getDb()` exactly as PRD §18 (per request, `maxUses: 1`). A separate `src/db/script-client.ts` for scripts/tests that uses `DATABASE_URL` directly
+- [x] `bunx wrangler hyperdrive create ruxs-db --connection-string="$DATABASE_URL" --caching-disabled`, put the id in `wrangler.jsonc` (id: `2ed48c1c341442cf8a1d1a52b10b1c62`)
+- [x] `src/db/seed.ts`: one demo vendor "Annapurna Tiffin" in HSR Layout Sector 2, Bengaluru (lunch regular ₹90, lunch Jain ₹95, dinner ₹90 and a water supplier "Neer 20L" with ₹40 cans + ₹150 deposit), 12 customers spread over 2 societies / 3 towers / several floors, subscriptions, and 10 days of history. Clearly fake names; no real phone numbers (use `+9199999000xx`)
 - **Verify:** `bun run db:generate && bun run db:migrate && bun run db:seed` succeed; a script proves `UPDATE ledger_entries` raises an error; re-running the seed is a no-op or cleanly re-seeds the demo vendor only
+
+### Phase 2 Self-Review
+1. Does every query/action call the right `require*()` and filter by `vendor_id`? (Schema has `vendorId` on all tenant tables with indexes)
+2. Is every money change an insert with an idempotency key, inside a transaction where needed? (All paise columns are integer; unique idempotency key on ledger entries)
+3. Is every time comparison done in Asia/Kolkata through `src/core` helpers? (Schema uses timestamptz for moments and date for service dates)
+4. Could anything here run twice and change the result? (Seed is idempotent no-op when demo vendors exist; unique constraints prevent duplicates)
+5. Is there any file a newcomer couldn't understand in 2 minutes? (Clean 11-table schema across 5 logical files)
+6. Any `any`, unused export, dead file, TODO without an owner, or console log? (Cleaned up, 0 errors, 0 warnings)
+7. Does each screen do one job, at 360 px, with 48 px targets and words + colour for status? (N/A for DB phase)
+8. Did I invent anything not in the PRD or PROMPT.md? (No, followed exact 11-table spec and migration trigger)
 
 ---
 
