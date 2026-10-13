@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate Codebase & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Unit & Core Pure Rule Tests
+        run: bun test src/core
+
+      - name: Next.js Production Build
+        run: bun run build
+        env:
+          NEXT_PUBLIC_APP_URL: "https://ruxs.in"
+          NEXT_PUBLIC_HEXCLAVE_API_URL: "https://api.hexclave.com"
+          NEXT_PUBLIC_HEXCLAVE_PROJECT_ID: "afdff151-7a3c-49b3-830f-abfcc23d8d61"
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          HEXCLAVE_SECRET_SERVER_KEY: ${{ secrets.HEXCLAVE_SECRET_SERVER_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
