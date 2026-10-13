@@ -1,10 +1,20 @@
 "use client";
 
-import { useUser, useHexclaveApp } from "@hexclave/next";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useHexclaveApp } from "@hexclave/next";
 
 export function AuthRedirect() {
+  const router = useRouter();
   const app = useHexclaveApp();
-  useUser({ or: "redirect" });
+
+  useEffect(() => {
+    try {
+      app.redirectToSignIn();
+    } catch {
+      router.push("/sign-in");
+    }
+  }, [app, router]);
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
@@ -15,7 +25,13 @@ export function AuthRedirect() {
       </p>
       <button
         type="button"
-        onClick={() => app.redirectToSignIn()}
+        onClick={() => {
+          try {
+            app.redirectToSignIn();
+          } catch {
+            router.push("/sign-in");
+          }
+        }}
         className="text-xs text-accent underline hover:opacity-80 transition-opacity"
       >
         Click here if not redirected automatically

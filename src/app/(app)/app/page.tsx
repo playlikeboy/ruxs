@@ -4,12 +4,10 @@ import { eq, and, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendors, vendorMembers, vendorInvites } from "@/db/schema";
 import { hexclave } from "@/lib/auth/hexclave";
-import { AuthRedirect } from "@/components/auth/auth-redirect";
-
 export default async function AppEntryPage() {
   const user = await hexclave.getUser();
   if (!user) {
-    return <AuthRedirect />;
+    redirect("/sign-in");
   }
 
   const db = getDb();

@@ -3,13 +3,12 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendorMembers } from "@/db/schema";
 import { hexclave } from "@/lib/auth/hexclave";
-import { AuthRedirect } from "@/components/auth/auth-redirect";
 import { OnboardingForm } from "./onboarding-form";
 
 export default async function OnboardingPage() {
   const user = await hexclave.getUser();
   if (!user) {
-    return <AuthRedirect />;
+    redirect("/sign-in");
   }
 
   const db = getDb();
