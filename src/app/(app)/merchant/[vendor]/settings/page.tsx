@@ -43,7 +43,7 @@ export default async function SettingsPage({
           </div>
           <div>
             <dt className="text-xs text-muted">Merchant portal</dt>
-            <dd className="mt-1 break-all font-mono text-ink">ruxs.in/app/{access.vendor.slug}</dd>
+            <dd className="mt-1 break-all font-mono text-ink">ruxs.in/merchant/{access.vendor.slug}</dd>
           </div>
           <div>
             <dt className="text-xs text-muted">Area / city</dt>
@@ -109,7 +109,7 @@ export default async function SettingsPage({
         <p className="text-sm leading-6 text-muted">
           Set prices independently for this business&apos;s meals, water cans, deposits and products. Another vendor can sell a similar item at a different price. Existing orders keep their recorded price when you update your catalogue.
         </p>
-        <Link href={"/app/" + slug + "/products"} className="inline-flex min-h-10 items-center justify-center rounded-[10px] bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+        <Link href={"/merchant/" + slug + "/products"} className="inline-flex min-h-10 items-center justify-center rounded-[10px] bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
           Manage products & prices →
         </Link>
       </section>

@@ -64,7 +64,7 @@ const categories = [
     title: "Everyday essentials",
     subtitle: "Local services for your daily routine",
     detail: "Discover neighbourhood options as they launch",
-    href: "/in/bengaluru",
+    href: "/app",
     tint: "bg-[#E8F5EB]",
     illustration: <KhataCheckIllustration className="h-24 w-24 sm:h-28 sm:w-28" />,
     tag: "LOCAL",
@@ -181,7 +181,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">What do you need today?</h2>
             <p className="max-w-2xl text-sm leading-6 text-muted sm:text-base">Start with the essentials most homes order again and again.</p>
           </div>
-          <Link href="/in/bengaluru" className="text-sm font-semibold text-accent hover:underline">Explore local services <span aria-hidden="true">→</span></Link>
+          <Link href="/app" className="text-sm font-semibold text-accent hover:underline">Explore local services <span aria-hidden="true">→</span></Link>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {categories.map((category) => (
@@ -236,7 +236,7 @@ export default function HomePage() {
           <h2 className="max-w-xl text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Good service should feel personal. Ordering it should feel easy.</h2>
           <p className="max-w-xl text-sm leading-7 text-muted sm:text-base">RUXS brings local customers and independent merchants closer together for the everyday products people rely on. Availability will grow neighbourhood by neighbourhood.</p>
           <div className="flex flex-wrap gap-3 pt-1">
-            <Link href="/in/bengaluru" className="inline-flex min-h-11 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Explore Bengaluru <span className="ml-2" aria-hidden="true">→</span></Link>
+            <Link href="/app" className="inline-flex min-h-11 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Explore nearby services <span className="ml-2" aria-hidden="true">→</span></Link>
             <Link href="/about" className="inline-flex min-h-11 items-center justify-center rounded-[10px] border border-line bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-bg">Our story</Link>
           </div>
         </div>
@@ -248,7 +248,7 @@ export default function HomePage() {
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-ink">Are you a local merchant?</h3>
               <p className="text-sm leading-6 text-muted">Manage your subscriptions, daily delivery runs, customer balances and billing from a dedicated workspace built for your business.</p>
-              <Link href="/app" className="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-accent hover:underline">Open merchant portal <span aria-hidden="true">→</span></Link>
+              <Link href="/merchant" className="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-accent hover:underline">Open merchant portal <span aria-hidden="true">→</span></Link>
             </div>
           </div>
         </div>
@@ -276,8 +276,8 @@ export default function HomePage() {
         <h2 className="mx-auto mt-5 max-w-2xl text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Make the everyday a little easier.</h2>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted sm:text-base">Find your local essentials, discover a routine you love, and spend less time coordinating the things that keep a home running.</p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/in/bengaluru" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Explore local services <span aria-hidden="true" className="ml-2">→</span></Link>
-          <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-white px-7 py-3 text-sm font-semibold text-ink transition hover:bg-bg">Merchant portal</Link>
+          <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Explore local services <span aria-hidden="true" className="ml-2">→</span></Link>
+          <Link href="/merchant" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-white px-7 py-3 text-sm font-semibold text-ink transition hover:bg-bg">Merchant portal</Link>
         </div>
       </section>
     </div>

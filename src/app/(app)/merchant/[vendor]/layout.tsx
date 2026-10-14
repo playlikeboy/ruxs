@@ -18,7 +18,7 @@ export default async function VendorLayout({
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-surface/90 px-4 py-3 backdrop-blur-md">
         <div className="flex min-w-0 flex-col">
           <Link
-            href={"/app/" + slug + "/today"}
+            href={"/merchant/" + slug + "/today"}
             className="truncate text-base font-semibold leading-tight text-ink transition-colors hover:text-accent"
           >
             {access.vendor.name}

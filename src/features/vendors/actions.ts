@@ -55,7 +55,7 @@ export async function createVendor(input: unknown) {
       role: "owner",
     });
 
-    revalidatePath("/app");
+    revalidatePath("/merchant");
     return { ok: true, slug: newVendor.slug };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Database error";
@@ -85,7 +85,7 @@ export async function inviteStaff(input: unknown) {
       })
       .onConflictDoNothing();
 
-    revalidatePath(`/app/${slug}/settings`);
+    revalidatePath(`/merchant/${slug}/settings`);
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Database error";

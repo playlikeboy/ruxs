@@ -131,7 +131,7 @@ export function VendorCredentialsModal({
                     </div>
                     <div>
                       <span className="text-xs text-muted">Portal URL:</span>
-                      <p className="font-mono text-xs text-ink">https://ruxs.in/app/{vendorSlug}/today</p>
+                      <p className="font-mono text-xs text-ink">https://ruxs.in/merchant/{vendorSlug}/today</p>
                     </div>
                   </div>
                 </div>

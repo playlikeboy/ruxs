@@ -225,7 +225,7 @@ export async function setDayChange(input: unknown) {
         }
       }
 
-      revalidatePath(`/app/${slug}/today`);
+      revalidatePath(`/merchant/${slug}/today`);
       return { ok: true, isLate: tapIsLate };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Database error";
@@ -356,7 +356,7 @@ export async function pauseDates(input: unknown) {
     }
 
     if (token) revalidatePath(`/c/${token}`);
-    if (slug) revalidatePath(`/app/${slug}/today`);
+    if (slug) revalidatePath(`/merchant/${slug}/today`);
     return { ok: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Database error";

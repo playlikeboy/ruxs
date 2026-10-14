@@ -24,7 +24,7 @@ export default async function CustomerDetailPage({
       {/* Back Link */}
       <div>
         <Link
-          href={`/app/${slug}/customers`}
+          href={`/merchant/${slug}/customers`}
           className="text-xs text-muted hover:text-ink font-medium"
         >
           ← Back to Customers

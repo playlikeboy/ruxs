@@ -1,24 +1,25 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("RUXS Public & Marketing Flow", () => {
-  test("loads landing page with honest copy, headline, and CTA", async ({ page }) => {
+test.describe("RUXS Public & Consumer Flow", () => {
+  test("loads landing page with customer-first copy, headline, and CTA", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/Run your whole day on one private link/i);
+    await expect(page).toHaveTitle(/Everyday Essentials/i);
 
     // Verify main headline
     const heading = page.locator("h1");
-    await expect(heading).toContainText("Run your whole day on one private link");
+    await expect(heading).toContainText("Your daily needs");
 
-    // Verify Free tier callout
-    await expect(page.locator("text=Free forever up to 20 households")).toBeVisible();
+    // Verify key value propositions
+    await expect(page.locator("text=Local businesses")).toBeVisible();
+    await expect(page.locator("text=Merchant-set prices")).toBeVisible();
 
     // Verify FAQ items
-    await expect(page.locator("text=Do my customers need to download an app?")).toBeVisible();
+    await expect(page.locator("text=What can I order through RUXS?")).toBeVisible();
   });
 
   test("navigates to pricing and displays all 3 tiers", async ({ page }) => {
     await page.goto("/pricing");
-    await expect(page).toHaveTitle(/Pricing Plans/i);
+    await expect(page).toHaveTitle(/Pricing/i);
 
     // Verify tiers
     await expect(page.locator("text=Free Tier")).toBeVisible();
@@ -29,21 +30,27 @@ test.describe("RUXS Public & Marketing Flow", () => {
 
   test("loads dedicated tiffin service page", async ({ page }) => {
     await page.goto("/for/tiffin-services");
-    await expect(page).toHaveTitle(/Tiffin Service Software/i);
-    await expect(page.locator("h1")).toContainText("Cook the exact count");
+    await expect(page).toHaveTitle(/Tiffin & Meal Subscriptions/i);
+    await expect(page.locator("h1")).toContainText("Good meals");
   });
 
   test("loads dedicated water supplier page", async ({ page }) => {
     await page.goto("/for/water-suppliers");
-    await expect(page).toHaveTitle(/20L Water Delivery Software/i);
-    await expect(page.locator("h1")).toContainText("Never lose another 20L empty can");
+    await expect(page).toHaveTitle(/Water-Can Delivery/i);
+    await expect(page.locator("h1")).toContainText("Water at home");
   });
 
-  test("loads Bengaluru hyperlocal page", async ({ page }) => {
+  test("loads consumer hub page with hyperlocal location discovery", async ({ page }) => {
+    await page.goto("/app");
+    await expect(page).toHaveTitle(/Consumer Portal/i);
+    await expect(page.locator("text=Connect Your Active Household")).toBeVisible();
+    await expect(page.locator("text=Stores & Suppliers Near You")).toBeVisible();
+    await expect(page.locator("text=Detect My Location")).toBeVisible();
+  });
+
+  test("redirects old in/bengaluru route to /app", async ({ page }) => {
     await page.goto("/in/bengaluru");
-    await expect(page).toHaveTitle(/Bengaluru/i);
-    await expect(page.locator("text=HSR Layout & BTM")).toBeVisible();
-    await expect(page.locator("text=Koramangala & Indiranagar")).toBeVisible();
+    await expect(page).toHaveURL(/\/app/);
   });
 
   test("loads Privacy Policy with DPDP Act notice", async ({ page }) => {

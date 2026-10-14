@@ -49,6 +49,16 @@ const nextConfig: NextConfig = {
         destination: "https://ruxs.in/:path*",
         permanent: true,
       },
+      {
+        source: "/app/:vendor(annapurna-tiffin|neer-20l|[a-z0-9-]+)/:subpath*",
+        destination: "/merchant/:vendor/:subpath*",
+        permanent: false,
+      },
+      {
+        source: "/in/:path*",
+        destination: "/app",
+        permanent: false,
+      },
     ];
   },
 };

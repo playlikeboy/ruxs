@@ -64,7 +64,7 @@ export default async function BillsPage({
                     <div className="text-xs text-muted mt-0.5">
                       {invoice.number} • Period:{" "}
                       <Link
-                        href={`/app/${slug}/bills/${invoice.period}`}
+                        href={`/merchant/${slug}/bills/${invoice.period}`}
                         className="hover:underline text-accent font-medium"
                       >
                         {invoice.period}

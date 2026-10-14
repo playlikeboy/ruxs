@@ -17,7 +17,7 @@ export default async function VendorMonthlyBillsPage({
     <div className="p-4 sm:p-6 space-y-4">
       <div>
         <Link
-          href={`/app/${slug}/bills`}
+          href={`/merchant/${slug}/bills`}
           className="text-xs text-muted hover:text-ink font-medium"
         >
           ← All Bills
@@ -116,7 +116,7 @@ export default async function VendorMonthlyBillsPage({
 
                 <div className="flex items-center justify-between pt-2 border-t border-line/60">
                   <Link
-                    href={`/app/${slug}/customers/${customer.id}`}
+                    href={`/merchant/${slug}/customers/${customer.id}`}
                     className="text-xs text-accent hover:underline font-medium"
                   >
                     Customer Khata →

@@ -24,6 +24,132 @@ function formatDate(d: Date): string {
 export async function seed() {
   console.log("🌱 Starting seed...");
 
+  // Pan-India Metro Vendors for Geofenced Discovery
+  const metroVendors = [
+    {
+      slug: "dabbawala-powai",
+      name: "Dabbawala Fresh Tiffin",
+      phone: "+919999900031",
+      upiVpa: "dabbawala@upi",
+      city: "Mumbai",
+      area: "Powai",
+      plan: "starter",
+      status: "active",
+      products: [
+        { kind: "tiffin", name: "Homestyle Lunch Thali", shift: "lunch", pricePaise: 11000, cutoffAt: "10:00" },
+        { kind: "tiffin", name: "Dinner Meal Box", shift: "dinner", pricePaise: 11000, cutoffAt: "17:00" },
+      ],
+    },
+    {
+      slug: "sahyadri-water",
+      name: "Sahyadri Pure 20L",
+      phone: "+919999900032",
+      upiVpa: "sahyadri@upi",
+      city: "Mumbai",
+      area: "Powai",
+      plan: "free",
+      status: "active",
+      products: [
+        { kind: "water", name: "20L Natural Mineral Water", shift: "morning", pricePaise: 5000, depositPaise: 15000, cutoffAt: "07:00" },
+      ],
+    },
+    {
+      slug: "dilli-rasoi",
+      name: "Dilli Rasoi Tiffins",
+      phone: "+919999900041",
+      upiVpa: "dillirasoi@upi",
+      city: "Delhi NCR",
+      area: "DLF Cyber City, Gurugram",
+      plan: "starter",
+      status: "active",
+      products: [
+        { kind: "tiffin", name: "North Indian Executive Lunch", shift: "lunch", pricePaise: 10000, cutoffAt: "10:30" },
+        { kind: "tiffin", name: "Mini Diet Meal", shift: "lunch", pricePaise: 8500, cutoffAt: "10:30" },
+      ],
+    },
+    {
+      slug: "yamuna-pure",
+      name: "Yamuna Pure 20L",
+      phone: "+919999900042",
+      upiVpa: "yamuna@upi",
+      city: "Delhi NCR",
+      area: "Sector 62, Noida",
+      plan: "free",
+      status: "active",
+      products: [
+        { kind: "water", name: "20L 5-Stage Purified Can", shift: "morning", pricePaise: 4500, depositPaise: 15000, cutoffAt: "07:00" },
+      ],
+    },
+    {
+      slug: "deccan-meals",
+      name: "Deccan Meals & Tiffins",
+      phone: "+919999900051",
+      upiVpa: "deccanmeals@upi",
+      city: "Hyderabad",
+      area: "Hitec City / Madhapur",
+      plan: "starter",
+      status: "active",
+      products: [
+        { kind: "tiffin", name: "South Indian Lunch Plan", shift: "lunch", pricePaise: 9500, cutoffAt: "10:00" },
+        { kind: "tiffin", name: "Andhra Bhojanam Dinner", shift: "dinner", pricePaise: 10500, cutoffAt: "17:30" },
+      ],
+    },
+    {
+      slug: "puneri-bhojan",
+      name: "Puneri Bhojan Kitchen",
+      phone: "+919999900061",
+      upiVpa: "puneribhojan@upi",
+      city: "Pune",
+      area: "Hinjewadi Phase 1",
+      plan: "starter",
+      status: "active",
+      products: [
+        { kind: "tiffin", name: "Gharghuti Maharashtrian Lunch", shift: "lunch", pricePaise: 9000, cutoffAt: "10:00" },
+        { kind: "tiffin", name: "Special Poli Bhaji Dinner", shift: "dinner", pricePaise: 9500, cutoffAt: "17:00" },
+      ],
+    },
+  ];
+
+  for (const mv of metroVendors) {
+    const [existingMv] = await scriptDb
+      .select()
+      .from(vendors)
+      .where(eq(vendors.slug, mv.slug));
+
+    if (!existingMv) {
+      const [insertedVendor] = await scriptDb
+        .insert(vendors)
+        .values({
+          slug: mv.slug,
+          name: mv.name,
+          phone: mv.phone,
+          upiVpa: mv.upiVpa,
+          city: mv.city,
+          area: mv.area,
+          plan: mv.plan,
+          status: mv.status,
+        })
+        .returning();
+
+      if (insertedVendor) {
+        for (const prod of mv.products) {
+          await scriptDb.insert(products).values({
+            vendorId: insertedVendor.id,
+            kind: prod.kind,
+            name: prod.name,
+            shift: prod.shift,
+            pricePaise: prod.pricePaise,
+            depositPaise: "depositPaise" in prod ? (prod as { depositPaise: number }).depositPaise : 0,
+            assetName: prod.kind === "water" ? "can" : "dabba",
+            cutoffAt: prod.cutoffAt,
+            lateRule: "half",
+          });
+        }
+        console.log(`✓ Seeded metro partner: ${mv.name} (${mv.city})`);
+      }
+    }
+  }
+
   // Check if Annapurna Tiffin already exists
   const existing = await scriptDb
     .select()
@@ -31,7 +157,7 @@ export async function seed() {
     .where(eq(vendors.slug, "annapurna-tiffin"));
 
   if (existing.length > 0) {
-    console.log("Demo vendor 'annapurna-tiffin' already exists. Seed is a clean no-op.");
+    console.log("Demo vendor 'annapurna-tiffin' already exists. Core seed is a clean no-op.");
     return;
   }
 

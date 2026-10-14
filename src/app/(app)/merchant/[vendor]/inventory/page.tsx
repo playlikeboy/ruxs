@@ -22,7 +22,7 @@ export default async function InventoryPage({
           <div className="rounded-[12px] border border-line bg-surface p-5 sm:col-span-2 xl:col-span-3">
             <h2 className="font-semibold text-ink">No tracked assets configured</h2>
             <p className="mt-1 text-sm leading-6 text-muted">Add an asset name to a product in Products. Delivery runs will then record out/in movements.</p>
-            <Link href={"/app/" + slug + "/products"} className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline">Open products →</Link>
+            <Link href={"/merchant/" + slug + "/products"} className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline">Open products →</Link>
           </div>
         ) : assets.map((asset) => (
           <article key={asset.asset} className="rounded-[12px] border border-line bg-surface p-5">
