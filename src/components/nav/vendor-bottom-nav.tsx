@@ -9,7 +9,7 @@ export function VendorBottomNav({ slug }: { slug: string }) {
   const navItems = [
     {
       label: "Today",
-      href: "/app/" + slug + "/today",
+      href: "/merchant/" + slug + "/today",
       icon: (
         <svg className="h-5 w-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -21,7 +21,7 @@ export function VendorBottomNav({ slug }: { slug: string }) {
     },
     {
       label: "Run",
-      href: "/app/" + slug + "/run",
+      href: "/merchant/" + slug + "/run",
       icon: (
         <svg className="h-5 w-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <polygon points="3 11 22 2 13 21 11 13 3 11" />
@@ -30,7 +30,7 @@ export function VendorBottomNav({ slug }: { slug: string }) {
     },
     {
       label: "Customers",
-      href: "/app/" + slug + "/customers",
+      href: "/merchant/" + slug + "/customers",
       icon: (
         <svg className="h-5 w-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -42,7 +42,7 @@ export function VendorBottomNav({ slug }: { slug: string }) {
     },
     {
       label: "More",
-      href: "/app/" + slug + "/more",
+      href: "/merchant/" + slug + "/more",
       icon: (
         <svg className="h-5 w-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="3" y="3" width="7" height="7" rx="1.5" />

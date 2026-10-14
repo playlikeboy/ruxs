@@ -55,7 +55,7 @@ export async function saveProduct(input: unknown) {
       });
     }
 
-    revalidatePath(`/app/${slug}/products`);
+    revalidatePath(`/merchant/${slug}/products`);
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Database error";

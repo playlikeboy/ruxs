@@ -147,7 +147,7 @@ export async function importCustomers(input: unknown) {
     }
   }
 
-  revalidatePath(`/app/${slug}/customers`);
+  revalidatePath(`/merchant/${slug}/customers`);
   const successCount = results.filter((r) => !r.error).length;
   return { ok: true, results, successCount };
 }
@@ -177,7 +177,7 @@ export async function resetCustomerLink(input: unknown) {
       return { ok: false, error: "Customer not found" };
     }
 
-    revalidatePath(`/app/${slug}/customers/${customerId}`);
+    revalidatePath(`/merchant/${slug}/customers/${customerId}`);
     return { ok: true, rawLink: `${appUrl}/c/${rawToken}` };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Update failed";

@@ -10,7 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/pricing", changeFrequency: "monthly" as const, priority: 0.6 },
     { path: "/for/tiffin-services", changeFrequency: "weekly" as const, priority: 0.9 },
     { path: "/for/water-suppliers", changeFrequency: "weekly" as const, priority: 0.9 },
-    { path: "/in/bengaluru", changeFrequency: "monthly" as const, priority: 0.8 },
+    { path: "/app", changeFrequency: "weekly" as const, priority: 0.9 },
     { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.3 },
     { path: "/terms", changeFrequency: "yearly" as const, priority: 0.3 },
   ];

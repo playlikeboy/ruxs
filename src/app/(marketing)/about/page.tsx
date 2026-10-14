@@ -92,10 +92,10 @@ export default function AboutPage() {
             RUXS helps you discover recurring essentials such as tiffin subscriptions and 20L water-can delivery from local businesses. Behind the scenes, those businesses get a dedicated workspace to keep their daily service running smoothly.
           </p>
           <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-            <Link href="/in/bengaluru" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
-              Explore local services <span aria-hidden="true" className="ml-2">→</span>
+            <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
+              Find services near me <span aria-hidden="true" className="ml-2">→</span>
             </Link>
-            <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white">
+            <Link href="/merchant" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white">
               Merchant portal
             </Link>
           </div>
@@ -191,8 +191,8 @@ export default function AboutPage() {
         <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-ink sm:text-5xl">Your next great local routine starts here.</h2>
         <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted sm:text-base">Explore local services for your home—or open the merchant portal if you run a neighbourhood business.</p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/in/bengaluru" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Explore local services <span aria-hidden="true" className="ml-2">→</span></Link>
-          <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-7 py-3 text-sm font-semibold text-ink transition hover:bg-white">Open merchant portal</Link>
+          <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Find services near me <span aria-hidden="true" className="ml-2">→</span></Link>
+          <Link href="/merchant" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-7 py-3 text-sm font-semibold text-ink transition hover:bg-white">Open merchant portal</Link>
         </div>
       </section>
     </div>

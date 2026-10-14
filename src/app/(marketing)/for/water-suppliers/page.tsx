@@ -36,7 +36,7 @@ export default function ForWaterSuppliersPage() {
             Find local suppliers for 20-litre water cans and choose a delivery routine that fits your household. Prices, deposits, availability and service areas are set by each supplier.
           </p>
           <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-            <Link href="/in/bengaluru?category=water" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
+            <Link href="/app?category=water" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
               Explore water delivery <span aria-hidden="true" className="ml-2">→</span>
             </Link>
             <Link href="/" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white">
@@ -92,7 +92,7 @@ export default function ForWaterSuppliersPage() {
             <h2 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">Supply water to local homes?</h2>
             <p className="max-w-2xl text-sm leading-6 text-muted">Manage your own products and pricing, customer subscriptions, delivery runs, empty-can returns and billing in the merchant workspace.</p>
           </div>
-          <Link href="/app" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Open merchant portal <span aria-hidden="true" className="ml-2">→</span></Link>
+          <Link href="/merchant" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Open merchant portal <span aria-hidden="true" className="ml-2">→</span></Link>
         </div>
       </section>
     </div>

@@ -24,7 +24,7 @@ export default async function CustomersPage({
         </div>
 
         <Link
-          href={`/app/${slug}/customers/new`}
+          href={`/merchant/${slug}/customers/new`}
           className="px-3 py-2 bg-accent text-white text-xs font-semibold rounded-[10px] hover:opacity-90 active:scale-95 transition-all shadow-xs"
         >
           + Add / Import
@@ -37,7 +37,7 @@ export default async function CustomersPage({
           description="Add your first household or paste a list from WhatsApp or paper khata."
           action={
             <Link
-              href={`/app/${slug}/customers/new`}
+              href={`/merchant/${slug}/customers/new`}
               className="inline-block px-4 py-2 bg-accent text-white text-sm font-medium rounded-[10px]"
             >
               Add / Import Customers

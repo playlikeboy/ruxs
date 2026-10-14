@@ -32,7 +32,7 @@ export default async function RunPage({
           description="Either all households skipped or today's orders have not locked at cutoff time yet."
           action={
             <Link
-              href={`/app/${slug}/today`}
+              href={`/merchant/${slug}/today`}
               className="inline-block px-4 py-2 bg-accent text-white text-sm font-medium rounded-[10px]"
             >
               View Kitchen Counts

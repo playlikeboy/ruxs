@@ -44,7 +44,7 @@ export default async function TodayPage({
         </div>
 
         <Link
-          href={`/app/${slug}/run`}
+          href={`/merchant/${slug}/run`}
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-accent text-white text-xs font-medium rounded-[10px] hover:opacity-90 active:scale-95 transition-all shadow-xs"
         >
           <span>Open Run Sheet</span>
@@ -63,7 +63,7 @@ export default async function TodayPage({
       {/* Quick Access to Inventory & Analytics */}
       <div className="grid grid-cols-2 gap-2 text-xs">
         <Link
-          href={`/app/${slug}/inventory`}
+          href={`/merchant/${slug}/inventory`}
           className="p-2.5 sm:p-3 bg-surface border border-line rounded-[10px] hover:border-accent transition-colors flex items-center justify-between"
         >
           <div>
@@ -73,7 +73,7 @@ export default async function TodayPage({
           <span className="text-muted text-xs">→</span>
         </Link>
         <Link
-          href={`/app/${slug}/analytics`}
+          href={`/merchant/${slug}/analytics`}
           className="p-2.5 sm:p-3 bg-surface border border-line rounded-[10px] hover:border-accent transition-colors flex items-center justify-between"
         >
           <div>
@@ -92,7 +92,7 @@ export default async function TodayPage({
             description="Add your first tiffin meal or water can product to start taking orders."
             action={
               <Link
-                href={`/app/${slug}/products`}
+                href={`/merchant/${slug}/products`}
                 className="inline-block px-4 py-2 bg-accent text-white text-sm font-medium rounded-[10px]"
               >
                 Add Product

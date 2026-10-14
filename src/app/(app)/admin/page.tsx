@@ -45,7 +45,7 @@ export default async function AdminPage() {
                 <div>
                   <h3 className="font-semibold text-ink">{vendor.name}</h3>
                   <p className="mt-1 text-sm text-muted">{vendor.area}, {vendor.city} · {vendor.phone}</p>
-                  <p className="mt-1 text-xs text-muted">UPI: {vendor.upiVpa} · URL: /app/{vendor.slug}</p>
+                  <p className="mt-1 text-xs text-muted">UPI: {vendor.upiVpa} · URL: /merchant/{vendor.slug}</p>
                 </div>
                 <VendorStatusButton vendorId={vendor.id} currentStatus={vendor.status} />
               </div>
@@ -70,7 +70,7 @@ export default async function AdminPage() {
                   <p className="mt-1 text-sm text-muted">{vendor.area}, {vendor.city} · {vendor.phone}</p>
                   <p className="mt-1 break-all text-xs text-muted">UPI: {vendor.upiVpa}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-4">
-                    <Link href={"/app/" + vendor.slug + "/today"} className="text-sm font-semibold text-accent hover:underline">Open merchant portal →</Link>
+                    <Link href={"/merchant/" + vendor.slug + "/today"} className="text-sm font-semibold text-accent hover:underline">Open merchant portal →</Link>
                     <VendorCredentialsModal
                       vendorId={vendor.id}
                       vendorName={vendor.name}

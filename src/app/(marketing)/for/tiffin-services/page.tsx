@@ -36,7 +36,7 @@ export default function ForTiffinServicesPage() {
             Explore local tiffin kitchens and meal plans for lunch, dinner or the full month. Every kitchen has its own menu, price and delivery routine—so you can choose what works for your home.
           </p>
           <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-            <Link href="/in/bengaluru?category=tiffin" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
+            <Link href="/app?category=tiffin" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
               Explore meal services <span aria-hidden="true" className="ml-2">→</span>
             </Link>
             <Link href="/" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white">
@@ -92,7 +92,7 @@ export default function ForTiffinServicesPage() {
             <h2 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">Run a tiffin kitchen?</h2>
             <p className="max-w-2xl text-sm leading-6 text-muted">There is a separate merchant workspace for subscriptions, cutoff counts, delivery runs, billing and household accounts.</p>
           </div>
-          <Link href="/app" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Open merchant portal <span aria-hidden="true" className="ml-2">→</span></Link>
+          <Link href="/merchant" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Open merchant portal <span aria-hidden="true" className="ml-2">→</span></Link>
         </div>
       </section>
     </div>

@@ -118,7 +118,7 @@ export function CreateVendorForm() {
         <label className="text-sm font-medium text-ink">
           Portal URL slug
           <input className={inputClass} required minLength={2} pattern="[a-z0-9-]+" value={form.slug} onChange={(event) => update("slug", event.target.value)} placeholder="annapurna-tiffin" />
-          <span className="mt-1 block text-xs font-normal text-muted">ruxs.in/app/{form.slug || "your-business"}/today</span>
+          <span className="mt-1 block text-xs font-normal text-muted">ruxs.in/merchant/{form.slug || "your-business"}/today</span>
         </label>
 
         <label className="text-sm font-medium text-ink">

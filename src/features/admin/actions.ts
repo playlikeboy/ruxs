@@ -127,9 +127,9 @@ export async function createVendorForAdmin(input: unknown) {
     });
 
     revalidatePath("/admin");
-    revalidatePath("/app");
+    revalidatePath("/merchant");
 
-    const portalUrl = `https://ruxs.in/app/${created.slug}/today`;
+    const portalUrl = `https://ruxs.in/merchant/${created.slug}/today`;
     const loginUrl = "https://ruxs.in/sign-in";
 
     const inviteText =
@@ -243,9 +243,9 @@ export async function setVendorCredentialsForAdmin(input: unknown) {
     });
 
   revalidatePath("/admin");
-  revalidatePath("/app");
+  revalidatePath("/merchant");
 
-  const portalUrl = `https://ruxs.in/app/${vendor.slug}/today`;
+  const portalUrl = `https://ruxs.in/merchant/${vendor.slug}/today`;
   const loginUrl = "https://ruxs.in/sign-in";
 
   const inviteText =

@@ -17,17 +17,17 @@ export default function MarketingLayout({
           <nav aria-label="Main navigation" className="hidden items-center gap-6 text-sm font-medium text-muted md:flex">
             <Link href="/for/tiffin-services" className="transition-colors hover:text-ink">Tiffin & Meals</Link>
             <Link href="/for/water-suppliers" className="transition-colors hover:text-ink">Water Cans</Link>
-            <Link href="/in/bengaluru" className="transition-colors hover:text-ink">Explore Local</Link>
+            <Link href="/app" className="transition-colors hover:text-ink">Consumer Portal</Link>
             <Link href="/pricing" className="transition-colors hover:text-ink">Pricing</Link>
             <Link href="/about" className="transition-colors hover:text-ink">About</Link>
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
-            <Link href="/app" className="hidden rounded-[10px] px-3 py-2 text-xs font-semibold text-muted transition hover:bg-white hover:text-ink sm:inline-flex sm:text-sm">
-              Merchant sign in
+            <Link href="/sign-in" className="rounded-[10px] px-3.5 py-2 text-xs font-semibold text-ink transition hover:bg-surface sm:text-sm">
+              Sign In
             </Link>
-            <Link href="/in/bengaluru" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-accent px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 active:scale-95 sm:text-sm">
-              Find services <span aria-hidden="true">→</span>
+            <Link href="/app" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-accent px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 active:scale-95 sm:text-sm">
+              Open App <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>
@@ -44,14 +44,14 @@ export default function MarketingLayout({
                 <span className="font-bold text-ink">RUXS</span>
               </Link>
               <p className="max-w-sm text-sm leading-6 text-muted">
-                Everyday essentials, from your neighbourhood. Discover tiffin subscriptions, water-can delivery and local services.
+                Everyday essentials across India, from your neighbourhood. Discover tiffin subscriptions, water-can delivery and local services.
               </p>
             </div>
 
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-ink">For customers</h2>
               <nav aria-label="Customer links" className="flex flex-col items-start gap-2.5 text-sm text-muted">
-                <Link href="/in/bengaluru" className="hover:text-ink">Explore local services</Link>
+                <Link href="/app" className="hover:text-ink">Consumer Portal & Hub</Link>
                 <Link href="/pricing" className="hover:text-ink">How pricing works</Link>
                 <Link href="/for/tiffin-services" className="hover:text-ink">Tiffin & meal plans</Link>
                 <Link href="/for/water-suppliers" className="hover:text-ink">Water-can delivery</Link>
@@ -61,7 +61,10 @@ export default function MarketingLayout({
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-ink">For merchants</h2>
               <nav aria-label="Merchant links" className="flex flex-col items-start gap-2.5 text-sm text-muted">
-                <Link href="/app" className="hover:text-ink">Merchant portal / sign in</Link>
+                <Link href="/merchant" className="font-semibold text-ink hover:text-accent">
+                  Merchant Workspace Portal →
+                </Link>
+                <Link href="/onboarding" className="hover:text-ink">Register as a Supplier</Link>
                 <Link href="/for/tiffin-services" className="hover:text-ink">For tiffin kitchens</Link>
                 <Link href="/for/water-suppliers" className="hover:text-ink">For water suppliers</Link>
               </nav>
