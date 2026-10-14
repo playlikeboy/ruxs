@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   buildMetadata,
-  softwareApplicationJsonLd,
   organizationJsonLd,
   faqJsonLd,
 } from "@/lib/seo";
@@ -13,178 +12,248 @@ import {
 } from "@/components/marketing/illustrations";
 
 export const metadata = buildMetadata({
-  title: "RUXS — Daily Operating System for Tiffin Kitchens and Water Suppliers",
+  title: "RUXS — Order Tiffins, Water Cans & Everyday Essentials",
   description:
-    "Run your tiffin or 20L water business with one private household link, clear daily counts, delivery runs and itemised accounts. Every business sets its own product prices.",
+    "Find neighbourhood tiffin services and 20L water-can delivery, compare each merchant's own prices, and build a routine that works for your home. Merchant portal available too.",
   path: "",
 });
 
 const faqs = [
   {
-    question: "Do my customers need to download an app?",
+    question: "What can I order through RUXS?",
     answer:
-      "No. Each household gets its own private link. They can bookmark it or save it to their home screen, then tap Deliver, Skip or Extra without installing anything.",
+      "RUXS is built for recurring local essentials such as tiffin and meal plans, 20-litre water cans, and other neighbourhood household services as they become available in your area.",
   },
   {
-    question: "Can every vendor set their own prices?",
+    question: "Do all merchants charge the same price?",
     answer:
-      "Yes. Each business creates its own products and sets its own meal, water-can, deposit and subscription prices. RUXS does not impose one universal price for the same item across vendors.",
+      "No. Every merchant manages their own catalogue, prices, delivery terms, and subscription plans. Check the details offered by each local business before ordering.",
   },
   {
-    question: "Does RUXS take a commission on payments?",
+    question: "Can I subscribe instead of ordering every day?",
     answer:
-      "No. Customers pay directly to the vendor's own UPI ID. RUXS does not take a percentage of those payments.",
+      "RUXS is designed around recurring services. Subscription options and delivery schedules depend on the merchant and the service available in your area.",
   },
   {
-    question: "How do water suppliers track cans and deposits?",
+    question: "Are you a merchant?",
     answer:
-      "The delivery run sheet records cans delivered and returned at each home. Household balances and any configured deposits stay visible in the account.",
+      "RUXS also provides a separate merchant workspace for tiffin kitchens and water suppliers to manage recurring customers, daily deliveries, billing, and returnable containers.",
+  },
+];
+
+const categories = [
+  {
+    title: "Tiffin & daily meals",
+    subtitle: "Find a dependable everyday meal",
+    detail: "Lunch plans · Dinner plans · Monthly tiffins",
+    href: "/for/tiffin-services",
+    tint: "bg-[#FFF0E8]",
+    illustration: <TiffinDabbaIllustration className="h-24 w-24 sm:h-28 sm:w-28" />,
+    tag: "MEALS",
+  },
+  {
+    title: "20L water cans",
+    subtitle: "Keep clean water coming home",
+    detail: "Water-can delivery · Repeat orders · Can returns",
+    href: "/for/water-suppliers",
+    tint: "bg-[#E7F2FC]",
+    illustration: <WaterCanIllustration className="h-24 w-24 sm:h-28 sm:w-28" />,
+    tag: "WATER",
+  },
+  {
+    title: "Everyday essentials",
+    subtitle: "Local services for your daily routine",
+    detail: "Discover neighbourhood options as they launch",
+    href: "/in/bengaluru",
+    tint: "bg-[#E8F5EB]",
+    illustration: <KhataCheckIllustration className="h-24 w-24 sm:h-28 sm:w-28" />,
+    tag: "LOCAL",
   },
 ];
 
 export default function HomePage() {
   return (
-    <div className="space-y-20 pt-8 sm:space-y-28 sm:pt-16">
+    <div className="space-y-20 pb-10 sm:space-y-28">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([
             organizationJsonLd(),
-            softwareApplicationJsonLd(),
             faqJsonLd(faqs),
           ]),
         }}
       />
 
-      <section className="mx-auto grid max-w-5xl items-center gap-10 px-4 sm:px-6 md:grid-cols-[1.05fr_0.95fr] md:gap-12">
-        <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-peach px-3 py-1.5 text-xs font-semibold text-ink">
-            <span className="h-2 w-2 rounded-full bg-accent" />
-            Less admin. More good mornings.
-          </div>
-          <h1 className="max-w-2xl text-4xl font-semibold leading-[1.08] tracking-tight text-ink sm:text-6xl">
-            Run your whole day on <span className="text-accent">one private link.</span>
-          </h1>
-          <p className="max-w-xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
-            A calmer daily operating system for neighbourhood tiffin kitchens and 20L water suppliers. Keep orders, delivery routes and household accounts in sync — without the spreadsheet scramble.
-          </p>
-          <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-            <Link
-              href="/app"
-              className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.98]"
-            >
-              Start using RUXS <span aria-hidden="true" className="ml-2">→</span>
-            </Link>
-            <Link
-              href="/about"
-              className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-5 py-3 text-sm font-semibold text-ink transition hover:bg-white"
-            >
-              About RUXS
-            </Link>
-          </div>
-          <div className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-xs font-medium text-muted">
-            <span><span className="mr-1 text-good">✓</span>No customer app</span>
-            <span><span className="mr-1 text-good">✓</span>Vendor-set prices</span>
-            <span><span className="mr-1 text-good">✓</span>Direct UPI payments</span>
-          </div>
-          <p className="pt-1 text-xs text-muted">
-            Built for the neighbourhood.{" "}
-            <Link href="/about" className="font-semibold text-accent underline-offset-4 hover:underline">Get to know RUXS →</Link>
-          </p>
-        </div>
-
-        <div className="relative mx-auto w-full max-w-md">
-          <div aria-hidden="true" className="absolute inset-4 rotate-3 rounded-[28px] bg-peach" />
-          <div className="relative rounded-[20px] border border-line bg-surface p-5 shadow-sm sm:p-6">
-            <div className="flex items-center justify-between border-b border-line pb-4">
-              <div>
-                <p className="text-xs font-semibold text-muted">KITCHEN OVERVIEW</p>
-                <p className="mt-1 text-lg font-semibold tracking-tight text-ink">Good morning, Annapurna</p>
-              </div>
-              <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-peach font-extrabold text-accent">R</span>
+      <section className="relative overflow-hidden border-b border-line bg-[#FFF8F2]">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#FFE3D2]/70 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-1/4 h-64 w-64 rounded-full bg-[#E1F3E7]/70 blur-3xl" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-20 md:grid-cols-[1.05fr_0.95fr] md:gap-14 lg:py-24">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#F2D4C4] bg-white/80 px-3 py-1.5 text-xs font-semibold text-ink">
+              <span className="h-2 w-2 rounded-full bg-good" />
+              Everyday essentials, from your neighbourhood
             </div>
-            <div className="mt-5 rounded-[14px] bg-bg p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs text-muted">Today&apos;s kitchen count</p>
-                  <p className="mt-1 text-5xl font-semibold tracking-tight text-ink tabular-nums">42</p>
-                  <p className="mt-1 text-xs text-muted">meals confirmed</p>
-                </div>
-                <TiffinDabbaIllustration className="h-20 w-20 sm:h-24 sm:w-24" />
-              </div>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-line">
-                <div className="h-full w-[78%] rounded-full bg-good" />
-              </div>
-              <p className="mt-2 text-xs text-muted">31 regular · 11 Jain</p>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div className="rounded-[12px] border border-line p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted">Delivery run</span>
-                  <ScooterIllustration className="h-8 w-12" />
-                </div>
-                <p className="mt-1 text-sm font-semibold text-ink">18 stops left</p>
-                <p className="mt-2 text-xs font-medium text-good">✓ Route ready</p>
-              </div>
-              <div className="rounded-[12px] border border-line p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted">Household account</span>
-                  <KhataCheckIllustration className="h-8 w-8" />
-                </div>
-                <p className="mt-1 text-sm font-semibold text-ink">Itemised records</p>
-                <p className="mt-2 text-xs font-medium text-accent">Direct UPI bill</p>
-              </div>
-            </div>
-          </div>
-          <div aria-hidden="true" className="absolute -bottom-5 -left-5 hidden rounded-[12px] border border-line bg-surface p-3 sm:block">
-            <WaterCanIllustration className="h-12 w-12" />
-          </div>
-        </div>
-      </section>
-
-      <section id="how-it-works" className="mx-auto max-w-5xl px-4 sm:px-6">
-        <div className="mb-8 max-w-2xl space-y-3">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">A simple daily rhythm</p>
-          <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">From morning messages to a day that just flows.</h2>
-          <p className="text-sm leading-6 text-muted sm:text-base">A few thoughtful tools, connected around the way local delivery actually works.</p>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <article className="space-y-3 rounded-[14px] border border-line bg-surface p-5">
-            <div className="flex items-center justify-between"><span className="text-xs font-bold text-accent">01 · HOUSEHOLD LINK</span><TiffinDabbaIllustration className="h-12 w-12" /></div>
-            <h3 className="text-base font-semibold text-ink">One tap, no back-and-forth</h3>
-            <p className="text-sm leading-6 text-muted">Households tell you Deliver, Skip or Extra from their own link. No app download or new account needed.</p>
-          </article>
-          <article className="space-y-3 rounded-[14px] border border-line bg-surface p-5">
-            <div className="flex items-center justify-between"><span className="text-xs font-bold text-accent">02 · CUTOFF COUNT</span><WaterCanIllustration className="h-12 w-12" /></div>
-            <h3 className="text-base font-semibold text-ink">Know what to prepare</h3>
-            <p className="text-sm leading-6 text-muted">Your cutoff locks a clear count for the day, helping the kitchen plan portions and reduce avoidable waste.</p>
-          </article>
-          <article className="space-y-3 rounded-[14px] border border-line bg-surface p-5">
-            <div className="flex items-center justify-between"><span className="text-xs font-bold text-accent">03 · DELIVERY & KHATA</span><ScooterIllustration className="h-12 w-16" /></div>
-            <h3 className="text-base font-semibold text-ink">Deliver. Record. Reconcile.</h3>
-            <p className="text-sm leading-6 text-muted">A top-floor-first run sheet, visible household balances and itemised bill links help everyone stay on the same page.</p>
-          </article>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-5xl px-4 sm:px-6">
-        <div className="grid gap-8 rounded-[18px] border border-line bg-surface p-6 sm:p-9 md:grid-cols-[1fr_0.8fr] md:items-center">
-          <div className="space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">Your business, your prices</p>
-            <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">One product name. Different businesses. Different prices.</h2>
-            <p className="text-sm leading-7 text-muted sm:text-base">
-              Every merchant manages their own catalogue, prices, deposits and recurring subscriptions. A regular tiffin at one kitchen can cost differently from a similar meal at another — RUXS keeps each merchant&apos;s pricing separate.
+            <h1 className="max-w-2xl text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-6xl lg:text-7xl">
+              Your daily needs.
+              <br />
+              <span className="text-accent">Delivered simply.</span>
+            </h1>
+            <p className="max-w-xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
+              Find tiffin subscriptions, daily meals and 20L water-can delivery from local businesses. Choose the service that fits your home and let the routine take care of itself.
             </p>
-            <div className="flex flex-wrap gap-3 pt-1">
-              <Link href="/for/tiffin-services" className="text-sm font-semibold text-accent hover:underline">For tiffin kitchens →</Link>
-              <Link href="/for/water-suppliers" className="text-sm font-semibold text-accent hover:underline">For water suppliers →</Link>
+
+            <form action="/in/bengaluru" method="get" className="flex max-w-xl flex-col gap-2 rounded-[16px] border border-line bg-white p-2 shadow-sm sm:flex-row">
+              <label className="flex min-h-12 flex-1 items-center gap-3 px-3">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-muted" stroke="currentColor" strokeWidth="1.8">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 10.2c0 5.1-8 11-8 11s-8-5.9-8-11a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+                <span className="sr-only">Your city or area</span>
+                <input name="area" placeholder="Enter your city or neighbourhood" className="w-full border-0 bg-transparent text-sm text-ink outline-none placeholder:text-muted focus:ring-0" />
+              </label>
+              <button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[11px] bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.98]">
+                Explore near me <span aria-hidden="true">→</span>
+              </button>
+            </form>
+
+            <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1 text-xs font-medium text-muted">
+              <span><span className="mr-1 text-good">✓</span>Local businesses</span>
+              <span><span className="mr-1 text-good">✓</span>Merchant-set prices</span>
+              <span><span className="mr-1 text-good">✓</span>Built for subscriptions</span>
             </div>
           </div>
-          <div className="flex items-center justify-center gap-5 rounded-[14px] bg-[#FFF3C9] p-7">
-            <TiffinDabbaIllustration className="h-24 w-24 sm:h-28 sm:w-28" />
-            <div className="max-w-[180px] space-y-2">
-              <p className="text-lg font-semibold leading-snug text-ink">Local service, local pricing.</p>
-              <p className="text-sm leading-6 text-muted">No universal menu prices imposed across vendors.</p>
+
+          <div className="relative mx-auto w-full max-w-lg">
+            <div aria-hidden="true" className="absolute inset-5 rotate-3 rounded-[30px] bg-[#F6D9C8]" />
+            <div className="relative rounded-[24px] border border-line bg-white p-4 shadow-[0_24px_70px_-35px_rgba(62,38,24,0.35)] sm:p-6">
+              <div className="flex items-center justify-between border-b border-line pb-4">
+                <div>
+                  <p className="text-xs font-semibold text-muted">YOUR EVERYDAY LIST</p>
+                  <p className="mt-1 text-lg font-semibold tracking-tight text-ink">Good morning ☀️</p>
+                </div>
+                <span className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-peach text-lg font-extrabold text-accent">R</span>
+              </div>
+              <div className="mt-4 rounded-[16px] bg-[#FAFAF7] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Your daily essentials</p>
+                    <p className="text-lg font-semibold text-ink">One less thing to remember.</p>
+                    <p className="text-sm leading-5 text-muted">Simple routines, from people nearby.</p>
+                  </div>
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[16px] bg-[#E3F2E8]">
+                    <WaterCanIllustration className="h-16 w-16" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="rounded-[14px] border border-line p-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[#FFF0E8]">
+                    <TiffinDabbaIllustration className="h-10 w-10" />
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-ink">Tiffin plans</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">Meals that fit your day</p>
+                </div>
+                <div className="rounded-[14px] border border-line p-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[#E7F2FC]">
+                    <WaterCanIllustration className="h-10 w-10" />
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-ink">Water cans</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">Replenish without fuss</p>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-3 rounded-[13px] border border-dashed border-line p-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-mint">
+                  <KhataCheckIllustration className="h-9 w-9" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink">Your routine, your way</p>
+                  <p className="text-xs text-muted">Plans and prices vary by local merchant.</p>
+                </div>
+                <span className="text-accent" aria-hidden="true">↗</span>
+              </div>
+            </div>
+            <div className="absolute -bottom-5 -left-4 hidden rounded-[12px] border border-line bg-white p-3 shadow-sm sm:block">
+              <ScooterIllustration className="h-10 w-14" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+          <div className="space-y-2">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">Browse services</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">What do you need today?</h2>
+            <p className="max-w-2xl text-sm leading-6 text-muted sm:text-base">Start with the essentials most homes order again and again.</p>
+          </div>
+          <Link href="/in/bengaluru" className="text-sm font-semibold text-accent hover:underline">Explore local services <span aria-hidden="true">→</span></Link>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {categories.map((category) => (
+            <Link key={category.title} href={category.href} className="group overflow-hidden rounded-[18px] border border-line bg-white transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+              <div className={`flex min-h-44 items-center justify-between px-6 py-4 ${category.tint}`}>
+                <div className="max-w-[190px] space-y-2">
+                  <span className="inline-flex rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-ink">{category.tag}</span>
+                  <h3 className="text-xl font-semibold tracking-tight text-ink">{category.title}</h3>
+                </div>
+                <div className="transition duration-200 group-hover:scale-105">{category.illustration}</div>
+              </div>
+              <div className="space-y-2 p-5">
+                <p className="text-sm font-semibold text-ink">{category.subtitle}</p>
+                <p className="text-xs leading-5 text-muted">{category.detail}</p>
+                <span className="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-accent">Explore category <span aria-hidden="true" className="transition group-hover:translate-x-1">→</span></span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-y border-line bg-white">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 sm:py-16 md:grid-cols-[0.8fr_1.2fr] md:items-center">
+          <div className="space-y-3">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">How RUXS works</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">A smoother way to manage everyday deliveries.</h2>
+            <p className="text-sm leading-7 text-muted sm:text-base">Choose a local service, review that merchant's terms and schedule, then use their ordering or subscription flow. Your price belongs to the merchant you choose—not a one-size-fits-all price list.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <article className="rounded-[15px] border border-line bg-bg p-4">
+              <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-peach text-sm font-bold text-accent">1</span>
+              <h3 className="mt-4 text-sm font-semibold text-ink">Find your service</h3>
+              <p className="mt-2 text-xs leading-5 text-muted">Explore tiffins and water-can delivery options for your neighbourhood.</p>
+            </article>
+            <article className="rounded-[15px] border border-line bg-bg p-4">
+              <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-sky text-sm font-bold text-ink">2</span>
+              <h3 className="mt-4 text-sm font-semibold text-ink">Pick a routine</h3>
+              <p className="mt-2 text-xs leading-5 text-muted">Review each merchant's own plans, rates and delivery schedule.</p>
+            </article>
+            <article className="rounded-[15px] border border-line bg-bg p-4">
+              <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-mint text-sm font-bold text-ink">3</span>
+              <h3 className="mt-4 text-sm font-semibold text-ink">Stay in control</h3>
+              <p className="mt-2 text-xs leading-5 text-muted">Where supported, manage skips, extras and upcoming delivery days from your customer link.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 md:grid-cols-[1fr_0.9fr] md:items-center">
+        <div className="space-y-4">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">Built for real neighbourhoods</p>
+          <h2 className="max-w-xl text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Good service should feel personal. Ordering it should feel easy.</h2>
+          <p className="max-w-xl text-sm leading-7 text-muted sm:text-base">RUXS brings local customers and independent merchants closer together for the everyday products people rely on. Availability will grow neighbourhood by neighbourhood.</p>
+          <div className="flex flex-wrap gap-3 pt-1">
+            <Link href="/in/bengaluru" className="inline-flex min-h-11 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Explore Bengaluru <span className="ml-2" aria-hidden="true">→</span></Link>
+            <Link href="/about" className="inline-flex min-h-11 items-center justify-center rounded-[10px] border border-line bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-bg">Our story</Link>
+          </div>
+        </div>
+        <div className="rounded-[20px] bg-[#FFF3C9] p-6 sm:p-8">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[15px] bg-white">
+              <KhataCheckIllustration className="h-12 w-12" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-ink">Are you a local merchant?</h3>
+              <p className="text-sm leading-6 text-muted">Manage your subscriptions, daily delivery runs, customer balances and billing from a dedicated workspace built for your business.</p>
+              <Link href="/app" className="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-accent hover:underline">Open merchant portal <span aria-hidden="true">→</span></Link>
             </div>
           </div>
         </div>
@@ -193,9 +262,9 @@ export default function HomePage() {
       <section className="mx-auto max-w-3xl px-4 sm:px-6">
         <div className="mb-7 space-y-2 text-center">
           <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">A few common questions</h2>
-          <p className="text-sm text-muted">Clear answers before you get started.</p>
+          <p className="text-sm text-muted">What to know before you get started.</p>
         </div>
-        <div className="divide-y divide-line overflow-hidden rounded-[12px] border border-line bg-surface">
+        <div className="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-white">
           {faqs.map((faq) => (
             <div key={faq.question} className="space-y-2 p-5">
               <h3 className="text-sm font-semibold text-ink">{faq.question}</h3>
@@ -205,13 +274,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl px-4 pb-12 text-center sm:px-6">
-        <KhataCheckIllustration className="mx-auto h-16 w-16" />
-        <h2 className="mx-auto mt-5 max-w-2xl text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Make tomorrow&apos;s work a little easier.</h2>
-        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted sm:text-base">Bring your regular customers, set up your routine, and let RUXS take care of the little details that add up.</p>
+      <section className="mx-auto max-w-4xl px-4 text-center sm:px-6">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[18px] bg-peach">
+          <TiffinDabbaIllustration className="h-14 w-14" />
+        </div>
+        <h2 className="mx-auto mt-5 max-w-2xl text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Make the everyday a little easier.</h2>
+        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted sm:text-base">Find your local essentials, discover a routine you love, and spend less time coordinating the things that keep a home running.</p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Start using RUXS <span aria-hidden="true" className="ml-2">→</span></Link>
-          <Link href="/about" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-7 py-3 text-sm font-semibold text-ink transition hover:bg-white">About RUXS</Link>
+          <Link href="/in/bengaluru" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Explore local services <span aria-hidden="true" className="ml-2">→</span></Link>
+          <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-white px-7 py-3 text-sm font-semibold text-ink transition hover:bg-bg">Merchant portal</Link>
         </div>
       </section>
     </div>
