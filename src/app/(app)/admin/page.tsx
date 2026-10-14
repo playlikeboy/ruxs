@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAdminVendors } from "@/features/admin/queries";
 import { VendorStatusButton } from "@/features/admin/components/vendor-status-button";
 import { CreateVendorForm } from "@/features/admin/components/create-vendor-form";
+import { VendorCredentialsModal } from "@/features/admin/components/vendor-credentials-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function AdminPage() {
@@ -68,7 +69,14 @@ export default async function AdminPage() {
                   </div>
                   <p className="mt-1 text-sm text-muted">{vendor.area}, {vendor.city} · {vendor.phone}</p>
                   <p className="mt-1 break-all text-xs text-muted">UPI: {vendor.upiVpa}</p>
-                  <Link href={"/app/" + vendor.slug + "/today"} className="mt-2 inline-block text-sm font-semibold text-accent hover:underline">Open merchant portal →</Link>
+                  <div className="mt-2 flex flex-wrap items-center gap-4">
+                    <Link href={"/app/" + vendor.slug + "/today"} className="text-sm font-semibold text-accent hover:underline">Open merchant portal →</Link>
+                    <VendorCredentialsModal
+                      vendorId={vendor.id}
+                      vendorName={vendor.name}
+                      vendorSlug={vendor.slug}
+                    />
+                  </div>
                 </div>
                 <VendorStatusButton vendorId={vendor.id} currentStatus={vendor.status} />
               </div>

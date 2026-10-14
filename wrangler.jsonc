@@ -24,8 +24,8 @@
   "vars": {
     "NEXT_PUBLIC_APP_URL": "https://ruxs.in",
     "NEXT_PUBLIC_HEXCLAVE_PROJECT_ID": "afdff151-7a3c-49b3-830f-abfcc23d8d61",
-    "NEXT_PUBLIC_HEXCLAVE_API_URL": "https://api.hexclave.com",
-    "ADMIN_USER_IDS": ""
+    "ADMIN_USER_IDS": "ce66ea1a-58fc-44e9-8231-8542f36e449a,a9c9916b-1320-486a-a52b-4c18791444d1",
+    "ADMIN_EMAILS": "sh20raj@gmail.com,shaswatraj3@gmail.com"
   },
   "hyperdrive": [
     {

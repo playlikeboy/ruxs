@@ -19,6 +19,22 @@ export const requireUser = cache(async () => {
   return user;
 });
 
+export function isUserAdmin(user: { id: string; primaryEmail?: string | null }): boolean {
+  const env = getServerEnv();
+  const adminIds = (env.ADMIN_USER_IDS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const adminEmails = (env.ADMIN_EMAILS || "sh20raj@gmail.com,shaswatraj3@gmail.com")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+
+  const userEmail = user.primaryEmail?.toLowerCase() || "";
+  return adminIds.includes(user.id) || adminEmails.includes(userEmail);
+}
+
 export const requireVendorAccess = cache(
   async (slug: string, allowedRoles: Role[] = ALL_ROLES) => {
     const user = await requireUser();
@@ -40,37 +56,48 @@ export const requireVendorAccess = cache(
       .where(eq(vendors.slug, slug))
       .limit(1);
 
-    if (!row) {
-      notFound();
+    if (row) {
+      const { vendor, member } = row;
+      if (vendor.status === "suspended") {
+        notFound();
+      }
+
+      if (!allowedRoles.includes(member.role as Role)) {
+        notFound();
+      }
+
+      return {
+        user,
+        vendor,
+        vendorId: vendor.id,
+        role: member.role as Role,
+      };
     }
 
-    const { vendor, member } = row;
-    if (vendor.status === "suspended") {
-      notFound();
+    if (isUserAdmin(user)) {
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.slug, slug))
+        .limit(1);
+
+      if (vendor && vendor.status !== "suspended") {
+        return {
+          user,
+          vendor,
+          vendorId: vendor.id,
+          role: "owner" as Role,
+        };
+      }
     }
 
-    if (!allowedRoles.includes(member.role as Role)) {
-      notFound();
-    }
-
-    return {
-      user,
-      vendor,
-      vendorId: vendor.id,
-      role: member.role as Role,
-    };
+    notFound();
   }
 );
 
 export const requireAdmin = cache(async () => {
   const user = await requireUser();
-  const rawAdminIds = getServerEnv().ADMIN_USER_IDS || "";
-  const adminIds = rawAdminIds
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  if (!adminIds.includes(user.id)) {
+  if (!isUserAdmin(user)) {
     notFound();
   }
 
