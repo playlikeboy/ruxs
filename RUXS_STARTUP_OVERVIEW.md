@@ -1,6 +1,6 @@
 # RUXS — Startup Overview
 
-> Compiled on 2026-10-09 from the `ruxs` repository (product docs, business docs, architecture docs, ADRs, checklists, audits, DB schema, config and git history) before the codebase was removed.
+> Compiled on 2026-10-09; product direction refreshed on 2026-10-14. Treat current source code and `docs/PRD.md`/`PROMPT.md` as the implementation source of truth where this historical overview differs.
 
 | | |
 | --- | --- |
@@ -8,7 +8,7 @@
 | **Domain** | [ruxs.in](https://ruxs.in) (also `www.ruxs.in`). Customer app at `ruxs.in/app` |
 | **GitHub** | https://github.com/SH20RAJ/ruxs |
 | **Founder / builder** | Shaswat Raj (GitHub: SH20RAJ) — 380 commits, 2026-09-11 → 2026-10-09 |
-| **Category** | Vertical SaaS + operating layer for recurring hyper-local household services in India |
+| **Category** | Customer-first discovery and recurring local-services platform, supported by merchant operations software |
 | **Tagline (proposed)** | *"Your everyday life, on autopilot."* Alternatives: "The operating system for your household." / "Zero-friction daily essentials for modern homes." |
 | **README one-liner** | "RUXS is a quiet operating layer for recurring local household services." |
 | **Core belief** | "People should only need to touch the system when something changes." |
@@ -23,10 +23,10 @@ Across urban and semi-urban India, households rely on a set of recurring local s
 
 Almost all of it still runs on WhatsApp chats, phone calls, paper khata notebooks, calendar ticks behind the door, cash collection, awkward UPI reminders, and returnable cans and dabbas that nobody tracks.
 
-**RUXS is not quick commerce and not a marketplace.** It doesn't run dark stores or cloud kitchens, hire gig riders, or mark up vendor prices. The local vendor stays the local vendor. RUXS is the software underneath that relationship. It handles subscriptions, daily confirmations, cutoffs, kitchen counts, delivery run sheets, a digital khata (ledger), returnable-asset tracking, monthly billing, UPI collection, household sharing and dispute resolution.
+**RUXS is not quick commerce.** It does not run dark stores or cloud kitchens, employ a delivery fleet, hold customer funds, or impose a universal price list. The public experience is customer-first: households should be able to discover local tiffin and water-can services and, as the marketplace capabilities ship, order or subscribe. Independent merchants keep their own catalogue, pricing, schedule, customer relationship and fulfilment rules. The merchant portal provides the software underneath that relationship: subscriptions, cutoffs, kitchen counts, delivery run sheets, customer ledgers, returnable-asset tracking and monthly billing. A full searchable catalogue and public checkout were not verified as complete at the 2026-10-14 audit.
 
 ### The five vision tenets
-1. **An operating system, not a store.** RUXS coordinates, keeps the books, sequences deliveries and bills. It does not sell the goods.
+1. **Marketplace plus operating layer, not quick commerce.** Households discover and choose local services; RUXS also gives each independent merchant tools to coordinate subscriptions, deliveries and accounts.
 2. **Everyday autopilot.** The customer sets a default once. Daily changes take one tap on WhatsApp, and if they do nothing, the default runs.
 3. **Keep hyper-local economics intact.** Neighbourhood vendors have trust, density and very low delivery cost. RUXS gives them enterprise-grade tooling.
 4. **Financial and asset transparency.** Every daily state change goes into an immutable double-entry ledger and an asset ledger, so the month-end bill explains itself.

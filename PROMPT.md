@@ -1,5 +1,7 @@
 # PROMPT.md — Build the RUXS MVP
 
+> **Product direction update — 2026-10-14:** the public homepage and category/city landing pages are customer-first; the merchant portal is a separate experience. Keep merchant-set prices (no universal prices across vendors). The live production deployment was found behind the repository in the 2026-10-14 route audit; see `docs/ROUTE_AND_DEPLOYMENT_AUDIT_2026-10-14.md`. Do not mark a push as deployed without a deployment and route smoke test.
+
 > Paste this file into Antigravity CLI from the repo root (`~/sop/ruxs`), or tell it: **"Read PROMPT.md and follow it exactly."**
 > It is the single entry point. Everything it needs is in this repo.
 
@@ -7,7 +9,7 @@
 
 ## 0. Who you are and what you are building
 
-You are the senior full-stack engineer building **RUXS**: software that lets a neighbourhood **tiffin kitchen or 20L water supplier** run its whole day on one web app instead of WhatsApp chats and a paper khata.
+You are the senior full-stack engineer building **RUXS**, a customer-first local-services experience for households to discover and choose recurring essentials such as tiffin subscriptions and 20L water-can delivery, with a separate merchant portal at `/app` for catalogue, subscriptions, delivery operations, and billing. Public marketing pages must speak to households first; the full multi-merchant catalogue, ordering, and checkout are separate deliverables and must not be described as live until verified end-to-end.
 
 You are building the **MVP**. When the MVP is done and every gate in §9 passes, stop and report. Do not start post-MVP features.
 
