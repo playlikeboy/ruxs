@@ -3,12 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { vendors, vendorInvites } from "@/db/schema";
+import { vendors, vendorInvites, vendorMembers } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
+import { hexclave } from "@/lib/auth/hexclave";
 import {
   createVendorForAdminSchema,
   vendorStatusActionSchema,
+  setVendorCredentialsSchema,
 } from "./schemas";
+
+function generateSecurePassword(): string {
+  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%&*";
+  let pwd = "Ruxs!";
+  for (let i = 0; i < 8; i++) {
+    pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return pwd;
+}
 
 export async function createVendorForAdmin(input: unknown) {
   const parsed = createVendorForAdminSchema.safeParse(input);
@@ -20,6 +31,45 @@ export async function createVendorForAdmin(input: unknown) {
   const db = getDb();
   const data = parsed.data;
   const ownerEmail = data.ownerEmail.toLowerCase().trim();
+  const rawPassword = data.password?.trim() || generateSecurePassword();
+
+  let hexUserId: string;
+  try {
+    const hexUser = await hexclave.createUser({
+      primaryEmail: ownerEmail,
+      password: rawPassword,
+      primaryEmailVerified: true,
+      displayName: data.name,
+    });
+    hexUserId = hexUser.id;
+  } catch (err: unknown) {
+    try {
+      const existingUsers = await hexclave.listUsers();
+      const found = existingUsers.find(
+        (u) => u.primaryEmail?.toLowerCase() === ownerEmail
+      );
+      if (found) {
+        hexUserId = found.id;
+        if (found.setPassword) {
+          try {
+            await found.setPassword({ password: rawPassword });
+          } catch {}
+        }
+      } else {
+        return {
+          ok: false as const,
+          error:
+            "Authentication service error: " +
+            (err instanceof Error ? err.message : String(err)),
+        };
+      }
+    } catch {
+      return {
+        ok: false as const,
+        error: "Failed to provision user credentials with authentication provider.",
+      };
+    }
+  }
 
   try {
     const created = await db.transaction(async (tx) => {
@@ -55,11 +105,22 @@ export async function createVendorForAdmin(input: unknown) {
         throw new Error("VENDOR_CREATION_FAILED");
       }
 
+      await tx
+        .insert(vendorMembers)
+        .values({
+          vendorId: vendor.id,
+          userId: hexUserId,
+          role: "owner",
+        })
+        .onConflictDoNothing();
+
       await tx.insert(vendorInvites).values({
         vendorId: vendor.id,
         email: ownerEmail,
         role: "owner",
         createdBy: admin.user.id,
+        acceptedAt: new Date(),
+        acceptedUserId: hexUserId,
       });
 
       return vendor;
@@ -68,18 +129,26 @@ export async function createVendorForAdmin(input: unknown) {
     revalidatePath("/admin");
     revalidatePath("/app");
 
+    const portalUrl = `https://ruxs.in/app/${created.slug}/today`;
+    const loginUrl = "https://ruxs.in/sign-in";
+
     const inviteText =
-      "Your RUXS merchant portal is ready.\n\n" +
+      "🔐 RUXS Merchant Portal Login Credentials\n\n" +
       "Business: " + created.name + "\n" +
-      "Login ID: " + ownerEmail + "\n\n" +
-      "Sign in or sign up at https://ruxs.in/app using this exact email address. Complete email verification. RUXS will link your account to the business automatically when you first open the portal.\n\n" +
-      "Merchant dashboard: https://ruxs.in/app/" + created.slug + "/today\n\n" +
-      "For security, create and manage your own password through the hosted sign-in flow. Do not send passwords in chat.";
+      "Login Portal: " + loginUrl + "\n" +
+      "Login ID / Email: " + ownerEmail + "\n" +
+      "Password: " + rawPassword + "\n\n" +
+      "Merchant Dashboard: " + portalUrl + "\n\n" +
+      "You can log in now to manage daily orders, run sheets, customer deliveries, inventory (cans/dabbas), monthly bills, and business analytics.";
 
     return {
       ok: true as const,
       slug: created.slug,
+      name: created.name,
       ownerEmail,
+      password: rawPassword,
+      portalUrl,
+      loginUrl,
       inviteText,
     };
   } catch (err: unknown) {
@@ -91,6 +160,113 @@ export async function createVendorForAdmin(input: unknown) {
       error: "Could not create the vendor. Check the details and try again.",
     };
   }
+}
+
+export async function setVendorCredentialsForAdmin(input: unknown) {
+  const parsed = setVendorCredentialsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const admin = await requireAdmin();
+  const db = getDb();
+  const data = parsed.data;
+  const ownerEmail = data.ownerEmail.toLowerCase().trim();
+  const rawPassword = data.password?.trim() || generateSecurePassword();
+
+  const [vendor] = await db
+    .select()
+    .from(vendors)
+    .where(eq(vendors.id, data.vendorId))
+    .limit(1);
+
+  if (!vendor) {
+    return { ok: false as const, error: "Vendor not found" };
+  }
+
+  let hexUserId: string;
+  try {
+    const hexUser = await hexclave.createUser({
+      primaryEmail: ownerEmail,
+      password: rawPassword,
+      primaryEmailVerified: true,
+      displayName: vendor.name,
+    });
+    hexUserId = hexUser.id;
+  } catch (err: unknown) {
+    try {
+      const existingUsers = await hexclave.listUsers();
+      const found = existingUsers.find(
+        (u) => u.primaryEmail?.toLowerCase() === ownerEmail
+      );
+      if (found) {
+        hexUserId = found.id;
+        if (found.setPassword) {
+          try {
+            await found.setPassword({ password: rawPassword });
+          } catch {}
+        }
+      } else {
+        return {
+          ok: false as const,
+          error:
+            "Authentication service error: " +
+            (err instanceof Error ? err.message : String(err)),
+        };
+      }
+    } catch {
+      return {
+        ok: false as const,
+        error: "Failed to set user account with authentication provider.",
+      };
+    }
+  }
+
+  await db
+    .insert(vendorMembers)
+    .values({
+      vendorId: vendor.id,
+      userId: hexUserId,
+      role: "owner",
+    })
+    .onConflictDoNothing();
+
+  await db
+    .insert(vendorInvites)
+    .values({
+      vendorId: vendor.id,
+      email: ownerEmail,
+      role: "owner",
+      createdBy: admin.user.id,
+      acceptedAt: new Date(),
+      acceptedUserId: hexUserId,
+    });
+
+  revalidatePath("/admin");
+  revalidatePath("/app");
+
+  const portalUrl = `https://ruxs.in/app/${vendor.slug}/today`;
+  const loginUrl = "https://ruxs.in/sign-in";
+
+  const inviteText =
+    "🔐 RUXS Merchant Portal Login Credentials\n\n" +
+    "Business: " + vendor.name + "\n" +
+    "Login Portal: " + loginUrl + "\n" +
+    "Login ID / Email: " + ownerEmail + "\n" +
+    "Password: " + rawPassword + "\n\n" +
+    "Merchant Dashboard: " + portalUrl + "\n\n" +
+    "You can log in now to manage daily orders, run sheets, customer deliveries, inventory (cans/dabbas), monthly bills, and business analytics.";
+
+  return {
+    ok: true as const,
+    slug: vendor.slug,
+    name: vendor.name,
+    ownerEmail,
+    password: rawPassword,
+    portalUrl,
+    loginUrl,
+    inviteText,
+  };
 }
 
 export async function approveVendor(input: unknown) {

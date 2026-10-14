@@ -11,6 +11,7 @@ const serverSchema = z.object({
   HEXCLAVE_SECRET_SERVER_KEY: z.string().min(1).optional(),
   CRON_SECRET: z.string().min(1).optional(),
   ADMIN_USER_IDS: z.string().default(""),
+  ADMIN_EMAILS: z.string().default("sh20raj@gmail.com,shaswatraj3@gmail.com"),
   CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: z.string().optional(),
 });
 
