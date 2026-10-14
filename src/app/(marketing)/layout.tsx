@@ -18,6 +18,7 @@ export default function MarketingLayout({
             <Link href="/for/tiffin-services" className="transition-colors hover:text-ink">Tiffin & Meals</Link>
             <Link href="/for/water-suppliers" className="transition-colors hover:text-ink">Water Cans</Link>
             <Link href="/in/bengaluru" className="transition-colors hover:text-ink">Explore Local</Link>
+            <Link href="/pricing" className="transition-colors hover:text-ink">Pricing</Link>
             <Link href="/about" className="transition-colors hover:text-ink">About</Link>
           </nav>
 
@@ -51,6 +52,7 @@ export default function MarketingLayout({
               <h2 className="text-sm font-semibold text-ink">For customers</h2>
               <nav aria-label="Customer links" className="flex flex-col items-start gap-2.5 text-sm text-muted">
                 <Link href="/in/bengaluru" className="hover:text-ink">Explore local services</Link>
+                <Link href="/pricing" className="hover:text-ink">How pricing works</Link>
                 <Link href="/for/tiffin-services" className="hover:text-ink">Tiffin & meal plans</Link>
                 <Link href="/for/water-suppliers" className="hover:text-ink">Water-can delivery</Link>
               </nav>

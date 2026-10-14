@@ -16,17 +16,17 @@ export function buildMetadata({
   noIndex = false,
 }: MetadataOptions): Metadata {
   const url = `${BASE_URL}${path}`;
-  const fullTitle = path === "" ? `${title} — The One-Link Daily Operating System` : `${title} | RUXS`;
+  const socialTitle = path === "" ? title : `${title} | RUXS`;
 
   return {
-    title: fullTitle,
+    title,
     description,
     metadataBase: new URL(BASE_URL),
     alternates: {
       canonical: url,
     },
     openGraph: {
-      title: fullTitle,
+      title: socialTitle,
       description,
       url,
       siteName: "RUXS",
@@ -37,13 +37,13 @@ export function buildMetadata({
           url: `${BASE_URL}/opengraph-image`,
           width: 1200,
           height: 630,
-          alt: "RUXS — Daily Operating System for Tiffin Kitchens and Water Suppliers",
+          alt: "RUXS — Everyday essentials from your neighbourhood",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: fullTitle,
+      title: socialTitle,
       description,
       images: [`${BASE_URL}/opengraph-image`],
     },

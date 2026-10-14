@@ -24,7 +24,7 @@ The RUXS MVP gives a tiffin or water vendor one web app that replaces their What
 | Bills are trusted | Invoices disputed | < 1% |
 | Cash arrives fast | Invoices paid within 48 hours | > 70% |
 
-**Not in the MVP:** a discovery marketplace, a native app, a delivery fleet, RUXS holding customer money, flatmate splitting, and any service other than tiffin and water.
+**Implementation boundary (direction updated 2026-10-14):** The public website is customer-first and introduces discovery for tiffin and 20L water-can services, but a full searchable multi-merchant catalogue, cart, checkout, and household accounts are not yet verified as implemented end-to-end. These remain an explicit marketplace delivery phase, not a marketing claim. Do not mark that phase complete until live listings, per-merchant pricing, service-area checks, subscription enrollment, order state, a real payment/direct-UPI handoff, cancellation/skip handling, and end-to-end tests work. RUXS must not hold customer funds in the initial release. A native app, delivery fleet, flatmate splitting, and services beyond tiffin/water remain out of initial scope.
 
 ## 2. Users and the daily loop
 

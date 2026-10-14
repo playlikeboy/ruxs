@@ -21,16 +21,22 @@ export default function AppError({
       <div>
         <h2 className="text-base font-semibold text-ink">Something went wrong</h2>
         <p className="text-xs text-muted mt-1">
-          {error.message || "An unexpected error occurred while loading this view."}
+          We couldn’t load this view. Retry, or return to the merchant portal.
         </p>
       </div>
-      <button
-        type="button"
-        onClick={() => reset()}
-        className="py-2 px-4 bg-accent text-white text-xs font-semibold rounded-[8px] hover:opacity-90 active:scale-95 transition-all shadow-xs"
-      >
-        Try Again
-      </button>
+      {error.digest ? <p className="text-[11px] text-muted">Reference: {error.digest}</p> : null}
+      <div className="flex items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={() => reset()}
+          className="py-2 px-4 bg-accent text-white text-xs font-semibold rounded-[8px] hover:opacity-90 active:scale-95 transition-all shadow-xs"
+        >
+          Try Again
+        </button>
+        <a href="/app" className="py-2 px-4 border border-line text-ink text-xs font-semibold rounded-[8px]">
+          Merchant portal
+        </a>
+      </div>
     </div>
   );
 }

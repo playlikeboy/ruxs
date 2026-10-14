@@ -2,6 +2,8 @@
 
 Start with `PROMPT.md` (build order, checklists, and decisions that override the PRD). The full spec is `docs/PRD.md`; long-term context is in `RUXS_STARTUP_OVERVIEW.md`.
 
+**Product direction (updated 2026-10-14):** RUXS has two experiences. The public site is customer-first and introduces discovery for household essentials such as tiffin subscriptions and 20L water-can delivery. The separate merchant workspace remains at `/app`. Do not revert marketing pages to vendor-only copy, but do not claim searchable live listings, checkout, or customer accounts are operational unless implemented and tested end-to-end.
+
 **MVP overrides:** WhatsApp is paused — households use the private link `/c/[token]` to Deliver/Skip/Extra; no webhook, no `messages`/`webhook_events` tables, no `WHATSAPP_*` env. The schema is 11 tables (adds `vendor_invites`). See `PROMPT.md` §2.
 Hexclave handles auth — fetch its skill (https://skill.hexclave.com) before touching auth code.
 

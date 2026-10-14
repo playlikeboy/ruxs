@@ -12,7 +12,7 @@ import {
 } from "@/components/marketing/illustrations";
 
 export const metadata = buildMetadata({
-  title: "RUXS — Order Tiffins, Water Cans & Everyday Essentials",
+  title: "Order Tiffins, Water Cans & Everyday Essentials",
   description:
     "Find neighbourhood tiffin services and 20L water-can delivery, compare each merchant's own prices, and build a routine that works for your home. Merchant portal available too.",
   path: "",
@@ -102,19 +102,14 @@ export default function HomePage() {
               Find tiffin subscriptions, daily meals and 20L water-can delivery from local businesses. Choose the service that fits your home and let the routine take care of itself.
             </p>
 
-            <form action="/in/bengaluru" method="get" className="flex max-w-xl flex-col gap-2 rounded-[16px] border border-line bg-white p-2 shadow-sm sm:flex-row">
-              <label className="flex min-h-12 flex-1 items-center gap-3 px-3">
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-muted" stroke="currentColor" strokeWidth="1.8">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 10.2c0 5.1-8 11-8 11s-8-5.9-8-11a8 8 0 1 1 16 0Z" />
-                  <circle cx="12" cy="10" r="2.5" />
-                </svg>
-                <span className="sr-only">Your city or area</span>
-                <input name="area" placeholder="Enter your city or neighbourhood" className="w-full border-0 bg-transparent text-sm text-ink outline-none placeholder:text-muted focus:ring-0" />
-              </label>
-              <button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[11px] bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.98]">
-                Explore near me <span aria-hidden="true">→</span>
-              </button>
-            </form>
+            <div className="flex max-w-xl flex-col gap-3 sm:flex-row">
+              <Link href="/for/tiffin-services" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[11px] bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.98]">
+                Explore meal plans <span aria-hidden="true">→</span>
+              </Link>
+              <Link href="/for/water-suppliers" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[11px] border border-line bg-white px-5 py-3 text-sm font-semibold text-ink transition hover:bg-bg active:scale-[0.98]">
+                Find water delivery
+              </Link>
+            </div>
 
             <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1 text-xs font-medium text-muted">
               <span><span className="mr-1 text-good">✓</span>Local businesses</span>
