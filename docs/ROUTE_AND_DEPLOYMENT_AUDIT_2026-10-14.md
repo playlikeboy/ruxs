@@ -19,7 +19,7 @@ Checked on 2026-10-14 using a public web crawl. These are anonymous HTTP checks 
 | `/for/water-suppliers` | 200 | Served the earlier water supplier software page. |
 | `/privacy` | 200 | Reachable. |
 | `/terms` | 200 | Reachable. |
-| `/pricing` | 404 | Route was missing while robots allowed it and earlier docs listed it as a public SEO page. A pricing explainer is now implemented. |
+| `/pricing` | 404 | Route was missing while robots allowed it and earlier docs listed it as a public SEO page. A pricing explainer is now implemented in source. |
 | `/app` | Redirected to sign-in | Expected for an anonymous visitor; authenticated workspace workflows were not tested. |
 | `/sign-in` | 200 | Reachable; explicit route link to sign-up was added outside the auth widget. |
 | `/sign-up` | 200 | Reachable; explicit route link to sign-in was added outside the auth widget. |
@@ -38,14 +38,15 @@ Checked on 2026-10-14 using a public web crawl. These are anonymous HTTP checks 
 
 ## CI and deployment status
 
-- The active CI workflow is a validation workflow (typecheck, lint, core tests, Next.js build); it has no Cloudflare deploy step.
-- No GitHub Actions runs were found for `main` since 2026-09-24 during this audit.
+- The active GitHub Actions workflow validates code (typecheck, lint, core tests and Next.js build); it has no Cloudflare deploy step.
+- No GitHub Actions runs were found for `main` since 2026-09-24 during the audit.
+- A manual CI dispatch after adding `workflow_dispatch` returned HTTP 422: GitHub Actions is disabled for the connected user. Therefore, typecheck/lint/tests/build could not be run in GitHub Actions.
 - The Cloudflare integration check failed before returning account/deployment information because the connected credential was rejected as an invalid `X-Auth-Key` header. Deployment state could not be inspected through that connection.
-- Therefore, the stale production copy remains a deployment blocker: after CI passes, the current source still needs a configured Cloudflare deployment and another live-route smoke test. No claim is made here that production has been redeployed.
+- Production is still a deployment blocker: current source needs a working Cloudflare deployment path and a public route smoke test after deployment. This audit does not claim the new source has been redeployed.
 
 ## Remaining verification
 
-- Run the manually dispatchable CI workflow and fix any type, lint, test, or build failures it reports.
+- Re-enable GitHub Actions or run `bun run typecheck`, `bun run lint`, `bun test src/core`, and `bun run build` in a configured development environment.
 - Confirm Cloudflare credentials and deploy the built Worker.
 - Re-run all public route checks against production after deployment.
 - Test a valid customer token, an expired token, sign-in/sign-up, merchant onboarding, product creation, subscription setup, skip/extra/pause actions, billing and UPI handoff against a development database.
