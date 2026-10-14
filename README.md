@@ -1,28 +1,37 @@
 # RUXS
 
 <p align="center">
-  <strong>Your everyday life, on autopilot.</strong>
+  <strong>Everyday essentials, from your neighbourhood.</strong>
   <br />
-  A quiet operating layer for recurring local household services.
+  Discover recurring local services for your home, with a separate workspace for the people who deliver them.
   <br /><br />
-  <a href="https://ruxs.in">Website</a> ·
-  <a href="https://ruxs.in/about">About</a> ·
+  <a href="https://ruxs.in">Customer website</a> ·
+  <a href="https://ruxs.in/in/bengaluru">Explore local services</a> ·
+  <a href="https://ruxs.in/app">Merchant portal</a> ·
   <a href="https://github.com/SH20RAJ/ruxs/issues">Report an issue</a>
 </p>
 
 ---
 
-RUXS helps neighbourhood service businesses manage recurring household deliveries without juggling paper registers, scattered messages, and manual month-end calculations. It gives local vendors a simple workspace for subscriptions, daily delivery operations, customer balances, returnable containers, and billing—while households use a private link to manage day-to-day changes.
+RUXS is being shaped as a customer-first marketplace for recurring neighbourhood essentials such as tiffin subscriptions, daily meals, and 20-litre water-can delivery. Households should be able to discover services, understand each merchant's offer, and build a routine that works for them.
 
-**RUXS is software for local vendors, not a quick-commerce marketplace.** Vendors keep their customer relationships, service routines, and pricing; RUXS provides the operating tools behind them.
+Independent merchants have a separate portal for managing products, subscriptions, daily operations, delivery runs, customer accounts, returnable containers and billing. Each business sets its own prices and service terms.
 
-> **Project status:** Working prototype / MVP in active development. Production hardening is ongoing. WhatsApp integration is currently paused; customer actions use private links.
+> **Project status:** Working prototype / MVP in active development. The public marketing experience is customer-first; catalogue discovery, checkout and customer order management are being developed incrementally. Do not assume a full public marketplace checkout is enabled for every merchant or location.
 
-## What it does
+## Product experiences
 
-### For local vendors
+### For households
+- Discover categories such as tiffin and meal subscriptions, 20L water-can delivery, and neighbourhood essentials.
+- Explore local service information and follow each merchant's own ordering or subscription flow where it is enabled.
+- See that prices, delivery areas, schedules, deposits and subscription terms are determined by each merchant.
+- Use a merchant-provided private customer link to review their service account and available billing information.
+- Make supported delivery changes, such as skipping or adjusting a scheduled service, before the relevant cutoff.
+- Pause eligible service dates within configured date limits.
+
+### For merchants
 - **Recurring subscriptions:** Manage customers, products, quantities, service days, and service periods.
-- **Daily operations:** Build the day’s orders automatically at configured cutoffs and view delivery run sheets.
+- **Daily operations:** Build the day's orders at configured cutoffs and view delivery run sheets.
 - **Deliveries and exceptions:** Mark deliveries as completed or failed and record returnable items.
 - **Customer ledger:** Maintain a transaction-based account history for deliveries, payments, deposits, and adjustments.
 - **Monthly bills:** Generate itemised invoices from ledger activity and record partial or full payments.
@@ -30,50 +39,51 @@ RUXS helps neighbourhood service businesses manage recurring household deliverie
 - **Team access:** Separate owner, staff, and driver permissions, with platform-level vendor administration.
 - **Operational overview:** View analytics and manage products, subscriptions, customer balances, and inventory.
 
-### For households
-- Open a private customer link—no native app installation is required.
-- Review the service account and available billing information.
-- Make permitted delivery changes, such as skipping or adjusting a scheduled service, before the relevant cutoff.
-- Pause eligible service dates within the configured date limits.
+## Important product principles
 
-### Core design principles
-- **Money stays precise:** amounts are stored as integer paise, not floating-point currency values.
-- **Ledger-first accounting:** account balances are derived from ledger entries; ledger records are intended to be append-only.
-- **Idempotent automation:** cutoff processing uses database conflict handling to avoid duplicate orders.
-- **Tenant-scoped access:** vendor data operations should derive the vendor identity from authenticated membership, not trust a client-supplied vendor ID.
-- **Mobile-first operations:** practical screens for business owners and delivery teams.
-- **No marketplace markup:** vendors set their own products and prices.
+- **Customer-first discovery:** The public homepage should help households find everyday services before promoting merchant administration.
+- **Separate merchant experience:** The merchant workspace remains available at `/app`; it should not dominate the public marketing experience.
+- **Merchant-set prices:** Similar products from different businesses may have different prices. There is no universal shared price list.
+- **Honest availability:** Do not imply that a live vendor, delivery slot, price, checkout, payment or subscription is available unless the data and feature actually support it.
+- **Money stays precise:** Amounts are stored as integer paise, not floating-point currency values.
+- **Ledger-first accounting:** Account balances are derived from ledger entries; ledger records are intended to be append-only.
+- **Idempotent automation:** Cutoff processing uses database conflict handling to avoid duplicate orders.
+- **Tenant-scoped access:** Vendor data operations derive the vendor identity from authenticated membership, not a client-supplied vendor ID.
+- **Mobile-first workflows:** Design for both household browsing and merchant/driver operations on phones.
 
-## Product scope
+## Product scope and service lifecycle
 
-RUXS is being shaped around recurring local services such as tiffin subscriptions and 20-litre water-can deliveries. The architecture keeps the daily workflow consistent:
+RUXS is focused first on recurring local services such as tiffin subscriptions and 20-litre water-can deliveries.
 
 ```text
-Recurring subscription
+Customer discovers a local service
         ↓
-Customer makes a day change (optional)
+Reviews that merchant's offer, terms and price
         ↓
-Service cutoff
+Uses the supported order / subscription path
         ↓
-Daily order / kitchen count
+Merchant cutoff and daily order generation
         ↓
 Delivery and returnable-item tracking
         ↓
-Ledger entries
+Ledger entries and itemised billing
         ↓
-Monthly itemised invoice
+Customer self-service for supported changes
 ```
 
-**Not currently enabled:** WhatsApp polls, outbound WhatsApp messages, or WhatsApp webhook automation. The current MVP uses private customer links instead.
+**Not currently enabled:** WhatsApp polls, outbound WhatsApp messages, or WhatsApp webhook automation. The current MVP uses private customer links instead. The public marketplace's full discovery, cart, checkout and customer account experience must be considered incomplete until each workflow is implemented and tested end-to-end.
 
-## Live product
+## Live product routes
 
-- **Website:** https://ruxs.in
-- **Merchant workspace:** https://ruxs.in/app
+- **Customer-facing website:** https://ruxs.in
+- **Local discovery landing page:** https://ruxs.in/in/bengaluru
+- **Tiffin and meal category:** https://ruxs.in/for/tiffin-services
+- **Water-can delivery category:** https://ruxs.in/for/water-suppliers
+- **Merchant portal:** https://ruxs.in/app
 - **About RUXS:** https://ruxs.in/about
 - **GitHub repository:** https://github.com/SH20RAJ/ruxs
 
-The deployed website is the intended entry point. Features and availability may change while the MVP is under active development.
+The deployed product is an evolving MVP. Feature availability depends on implementation, merchant configuration, and service-area coverage.
 
 ## Technology
 
@@ -88,7 +98,7 @@ The deployed website is the intended entry point. Features and availability may 
 | Runtime / deployment | Cloudflare Workers with OpenNext |
 | Database connectivity | Cloudflare Hyperdrive |
 | Tests | Bun test runner; integration tests can use a configured database |
-| CI | GitHub Actions for type checking, linting, core tests, and production build |
+| CI | Check workflows in `.github/workflows` for the current configured pipeline |
 
 Versions are managed in `package.json` and `bun.lock`.
 
@@ -198,7 +208,7 @@ bun run db:migrate
 bun run db:seed
 ```
 
-**Database warning:** inspect the target database before running migrations. The project build notes mention an older prototype schema in the existing Neon database. Prefer a fresh development branch/database; never drop or alter existing production tables without an explicit backup and approval.
+**Database warning:** inspect the target database before running migrations. Prefer a fresh development branch/database; never drop or alter existing production tables without an explicit backup and approval.
 
 ## Development commands
 
@@ -219,7 +229,7 @@ bun run db:seed
 | `bun run db:migrate` | Apply migrations |
 | `bun run db:seed` | Seed demo data |
 
-CI currently runs dependency installation, type checking, linting, core tests, and a production build. Database integration tests require a reachable development database and are not a substitute for production smoke testing.
+Inspect the test output for skipped database-backed tests. Integration tests with a disconnected or unconfigured PostgreSQL instance do not constitute production smoke testing.
 
 ## Security and data integrity
 
@@ -231,23 +241,7 @@ CI currently runs dependency installation, type checking, linting, core tests, a
 - Restrict administrative actions using the configured `ADMIN_USER_IDS` allowlist.
 - Review authorization and transaction boundaries before deploying changes that affect billing, money, customer privacy, or inventory.
 
-Security posture is still being hardened; see the audit notes in the repository's issue tracker and verify all recommendations before operating on live customer data.
-
-## Testing
-
-Core business rules have colocated `*.test.ts` files and are runnable without a live database:
-
-```bash
-bun test src/core
-```
-
-To run the broader test suite:
-
-```bash
-bun test src tests
-```
-
-Integration tests may skip database-backed scenarios if their configured PostgreSQL instance is not reachable. For meaningful verification, use a disposable development database and inspect the test output for skipped tests.
+Security posture is still being hardened; verify the relevant controls before operating on live customer data.
 
 ## Contributing
 
@@ -260,12 +254,17 @@ Contributions, bug reports, and focused improvements are welcome.
 5. Do not mutate existing ledger entries.
 6. Run the relevant checks before opening a pull request.
 
-Please include the affected workflow, steps to reproduce, expected behaviour, and actual behaviour when filing a bug.
+When reporting an issue, include the affected workflow, steps to reproduce, expected behaviour, and actual behaviour.
 
-## Roadmap direction
+## Product direction
 
-RUXS is focused first on dependable recurring-service operations: scheduling, cutoff correctness, delivery workflows, traceable balances, customer self-service, and billing. Integrations such as WhatsApp remain future work and should not be treated as active product functionality until implemented and verified.
+The immediate direction is a coherent dual-sided experience:
+
+1. **Households first:** the public site starts with finding and understanding services to order or subscribe to.
+2. **Independent merchant operations:** merchants retain a dedicated portal for catalogues, pricing, delivery operations, customer records and accounts.
+3. **Reliable local fulfilment:** recurring schedules, cutoff correctness, delivery workflows, traceable balances and customer self-service.
+4. **Expand carefully:** add additional local categories and service areas when availability and end-to-end flows are real and testable.
 
 ## License
 
-No repository license file was identified during this README update. Unless a license is added, reuse and redistribution are not explicitly granted; please contact the repository owner before using the code outside the terms allowed by applicable law.
+No repository license file was identified during this update. Unless a license is added, reuse and redistribution are not explicitly granted; please contact the repository owner before using the code outside the terms allowed by applicable law.
