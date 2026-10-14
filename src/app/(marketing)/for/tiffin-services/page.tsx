@@ -68,7 +68,7 @@ export default function ForTiffinServicesPage() {
           <article className="rounded-[16px] border border-line bg-surface p-5">
             <span className="text-2xl" aria-hidden="true">🗓️</span>
             <h3 className="mt-4 text-base font-semibold text-ink">Monthly subscriptions</h3>
-            <p className="mt-2 text-sm leading-6 text-muted">Review a kitchen's recurring plan, service days, and conditions before you commit.</p>
+            <p className="mt-2 text-sm leading-6 text-muted">Review a kitchen&apos;s recurring plan, service days, and conditions before you commit.</p>
           </article>
         </div>
       </section>
@@ -77,11 +77,11 @@ export default function ForTiffinServicesPage() {
         <div className="space-y-3">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">How it works</p>
           <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Choose the kitchen, then make it your routine.</h2>
-          <p className="text-sm leading-7 text-muted">Explore local options, check the price and delivery schedule offered by the kitchen, and follow that merchant's ordering or subscription steps. Where customer links are enabled, you can request eligible skips or extras without another app.</p>
+          <p className="text-sm leading-7 text-muted">Explore local options, check the price and delivery schedule offered by the kitchen, and follow that merchant&apos;s ordering or subscription steps. Where customer links are enabled, you can request eligible skips or extras without another app.</p>
         </div>
         <ol className="space-y-4">
           <li className="flex gap-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-peach text-sm font-bold text-accent">1</span><div><p className="text-sm font-semibold text-ink">Discover local kitchens</p><p className="mt-1 text-sm text-muted">Start with your area and find available providers.</p></div></li>
-          <li className="flex gap-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-peach text-sm font-bold text-accent">2</span><div><p className="text-sm font-semibold text-ink">Compare each kitchen's offer</p><p className="mt-1 text-sm text-muted">Prices, menus, delivery areas and plans differ by merchant.</p></div></li>
+          <li className="flex gap-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-peach text-sm font-bold text-accent">2</span><div><p className="text-sm font-semibold text-ink">Compare each kitchen&apos;s offer</p><p className="mt-1 text-sm text-muted">Prices, menus, delivery areas and plans differ by merchant.</p></div></li>
           <li className="flex gap-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-peach text-sm font-bold text-accent">3</span><div><p className="text-sm font-semibold text-ink">Settle into a schedule</p><p className="mt-1 text-sm text-muted">Use the ordering and self-service options that your provider supports.</p></div></li>
         </ol>
       </section>

@@ -213,7 +213,7 @@ export default function HomePage() {
           <div className="space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">How RUXS works</p>
             <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">A smoother way to manage everyday deliveries.</h2>
-            <p className="text-sm leading-7 text-muted sm:text-base">Choose a local service, review that merchant's terms and schedule, then use their ordering or subscription flow. Your price belongs to the merchant you choose—not a one-size-fits-all price list.</p>
+            <p className="text-sm leading-7 text-muted sm:text-base">Choose a local service, review that merchant&apos;s terms and schedule, then use their ordering or subscription flow. Your price belongs to the merchant you choose—not a one-size-fits-all price list.</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <article className="rounded-[15px] border border-line bg-bg p-4">
@@ -224,7 +224,7 @@ export default function HomePage() {
             <article className="rounded-[15px] border border-line bg-bg p-4">
               <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-sky text-sm font-bold text-ink">2</span>
               <h3 className="mt-4 text-sm font-semibold text-ink">Pick a routine</h3>
-              <p className="mt-2 text-xs leading-5 text-muted">Review each merchant's own plans, rates and delivery schedule.</p>
+              <p className="mt-2 text-xs leading-5 text-muted">Review each merchant&apos;s own plans, rates and delivery schedule.</p>
             </article>
             <article className="rounded-[15px] border border-line bg-bg p-4">
               <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-mint text-sm font-bold text-ink">3</span>

@@ -20,8 +20,20 @@ export const publicEnv = publicSchema.parse({
   NEXT_PUBLIC_HEXCLAVE_PROJECT_ID: process.env.NEXT_PUBLIC_HEXCLAVE_PROJECT_ID,
 });
 
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
 export function getServerEnv() {
-  const parsed = serverSchema.safeParse(process.env);
+  let sourceEnv: Record<string, unknown> = { ...process.env };
+  try {
+    const { env } = getCloudflareContext();
+    if (env) {
+      sourceEnv = { ...sourceEnv, ...env };
+    }
+  } catch {
+    // getCloudflareContext is only available inside request scope on OpenNext
+  }
+
+  const parsed = serverSchema.safeParse(sourceEnv);
   if (!parsed.success) {
     console.error("Invalid server environment variables:", parsed.error.format());
     throw new Error("Invalid server environment variables");
