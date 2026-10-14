@@ -3,8 +3,16 @@
 import { default as handler } from "./.open-next/worker.js";
 
 export default {
-  fetch: handler.fetch,
+  async fetch(request: Request, env: CloudflareEnv, ctx: ExecutionContext) {
+    if (typeof process !== "undefined" && process.env) {
+      Object.assign(process.env, env);
+    }
+    return handler.fetch(request, env, ctx);
+  },
   async scheduled(_event: ScheduledEvent, env: CloudflareEnv, ctx: ExecutionContext) {
+    if (typeof process !== "undefined" && process.env) {
+      Object.assign(process.env, env);
+    }
     const req = new Request("https://ruxs.in/api/cron/tick", {
       method: "POST",
       headers: { authorization: `Bearer ${env.CRON_SECRET}` },
