@@ -53,7 +53,7 @@ export default function PricingPage() {
       <section className="rounded-[18px] border border-line bg-white p-6 sm:p-8">
         <h2 className="text-xl font-semibold text-ink">Before choosing a service</h2>
         <p className="mt-3 text-sm leading-7 text-muted">
-          Check the selected merchant's current price, service area, delivery schedule, container deposit and cancellation rules. Availability and actual offers are merchant-specific. Public marketplace listings and checkout are still being expanded, so this page is a pricing explainer—not a list of live offers or a promise that every service can be ordered online today.
+          Check the selected merchant&apos;s current price, service area, delivery schedule, container deposit and cancellation rules. Availability and actual offers are merchant-specific. Public marketplace listings and checkout are still being expanded, so this page is a pricing explainer—not a list of live offers or a promise that every service can be ordered online today.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Link href="/for/tiffin-services" className="inline-flex min-h-11 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">

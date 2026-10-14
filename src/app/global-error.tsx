@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function GlobalError({
   error,
@@ -28,9 +29,9 @@ export default function GlobalError({
         {error.digest ? (
           <p className="mb-5 text-xs text-[#6B6862]">Reference: {error.digest}</p>
         ) : null}
-        <a href="/" className="mb-3 inline-flex rounded-[10px] border border-[#E7E5DF] px-4 py-2.5 text-xs font-semibold">
+        <Link href="/" className="mb-3 inline-flex rounded-[10px] border border-[#E7E5DF] px-4 py-2.5 text-xs font-semibold">
           Return to homepage
-        </a>
+        </Link>
         <button
           type="button"
           onClick={() => reset()}

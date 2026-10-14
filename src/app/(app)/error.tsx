@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function AppError({
   error,
@@ -33,9 +34,9 @@ export default function AppError({
         >
           Try Again
         </button>
-        <a href="/app" className="py-2 px-4 border border-line text-ink text-xs font-semibold rounded-[8px]">
+        <Link href="/app" className="py-2 px-4 border border-line text-ink text-xs font-semibold rounded-[8px]">
           Merchant portal
-        </a>
+        </Link>
       </div>
     </div>
   );
