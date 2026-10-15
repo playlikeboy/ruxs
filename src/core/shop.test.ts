@@ -48,6 +48,12 @@ describe("order status transitions", () => {
     expect(nextVendorStep("delivered")).toBeNull();
   });
 
+  it("keeps unpaid online orders out of the kitchen flow", () => {
+    expect(canTransition("awaiting_payment", "accepted", "vendor")).toBe(false);
+    expect(canTransition("awaiting_payment", "cancelled", "consumer")).toBe(true);
+    expect(canTransition("awaiting_payment", "placed", "admin")).toBe(true);
+  });
+
   it("never reopens a closed order, even for admins", () => {
     expect(canTransition("delivered", "placed", "admin")).toBe(false);
     expect(canTransition("cancelled", "accepted", "admin")).toBe(false);
@@ -64,5 +70,6 @@ describe("order numbers and ledger lines", () => {
     const cod = deliveredLedgerLines(23500, "cod");
     expect(cod.reduce((a, l) => a + l.amountPaise, 0)).toBe(0);
     expect(deliveredLedgerLines(23500, "monthly_bill")).toEqual([{ type: "delivery", amountPaise: 23500 }]);
+    expect(deliveredLedgerLines(23500, "online").reduce((a, l) => a + l.amountPaise, 0)).toBe(0);
   });
 });

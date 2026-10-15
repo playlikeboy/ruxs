@@ -82,7 +82,7 @@ export default async function MerchantEntryPage() {
       }
     }
 
-    if (isUserAdmin(user)) {
+    if (await isUserAdmin(user)) {
       redirect("/admin");
     }
 

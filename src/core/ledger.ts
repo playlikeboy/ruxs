@@ -39,3 +39,7 @@ export function shopChargeKey(shopOrderId: string): string {
 export function shopPaymentKey(shopOrderId: string): string {
   return `shop:${shopOrderId}:cod`;
 }
+
+export function razorpayPaymentKey(razorpayPaymentId: string): string {
+  return `rzp:${razorpayPaymentId}`;
+}

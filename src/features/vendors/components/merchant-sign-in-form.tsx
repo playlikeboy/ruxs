@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHexclaveApp } from "@hexclave/next";
 import { Eye, EyeOff } from "lucide-react";
+import { merchantLoginEmail } from "@/core/merchant-login";
 
 const input =
   "h-12 w-full rounded-[12px] border border-white/15 bg-white/5 px-4 text-[15px] text-white placeholder:text-white/40 focus:border-white/60 focus:outline-none";
@@ -22,7 +23,7 @@ export function MerchantSignInForm({ next }: { next: string }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await app.signInWithCredential({ email: email.trim(), password, noRedirect: true });
+      const result = await app.signInWithCredential({ email: merchantLoginEmail(email), password, noRedirect: true });
       if (result.status === "error") {
         setError(
           result.error.errorCode === "EMAIL_PASSWORD_MISMATCH"
@@ -47,8 +48,8 @@ export function MerchantSignInForm({ next }: { next: string }) {
   return (
     <form onSubmit={onSubmit} className="space-y-3">
       <label className="block">
-        <span className="mb-1.5 block text-xs font-medium text-white/70">Login ID (email)</span>
-        <input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="kitchen@example.com" className={input} />
+        <span className="mb-1.5 block text-xs font-medium text-white/70">Login ID</span>
+        <input type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your-store-id or email" className={input} />
       </label>
       <label className="block">
         <span className="mb-1.5 block text-xs font-medium text-white/70">Password</span>

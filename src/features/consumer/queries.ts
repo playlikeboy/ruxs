@@ -18,7 +18,9 @@ import { findNearestLocality, haversineDistanceKm, resolveCoordinates } from "@/
 import { readApproxPoint, readGpsCookie } from "@/lib/location";
 import { balance } from "@/core/ledger";
 import { addDaysIST, todayIST } from "@/core/time";
-import type { ServiceKind } from "@/config/service-kinds";
+import type { CoverStyle, ServiceKind } from "@/config/service-kinds";
+import { getCategoryMap, getLocalities } from "@/features/platform/queries";
+import type { LocalityCentroid } from "@/core/geo";
 
 export const getMyProfile = cache(async () => {
   const user = await requireUser();
@@ -49,15 +51,17 @@ export const getMyLocation = cache(async (): Promise<MyLocation> => {
   if (profile?.latitude != null && profile.longitude != null) {
     return { latitude: profile.latitude, longitude: profile.longitude, source: "address", label: `${profile.society}, ${profile.area}` };
   }
+  const localities = await getLocalities();
   const gps = await readGpsCookie();
   if (gps) {
-    const { locality } = findNearestLocality(gps.latitude, gps.longitude);
-    return { ...gps, source: "gps", label: profile ? `${profile.society}, ${profile.area}` : `Near ${locality.name}, ${locality.city}` };
+    const near = findNearestLocality(gps.latitude, gps.longitude, localities);
+    const place = near && near.distanceKm <= 25 ? `Near ${near.locality.name}, ${near.locality.city}` : "Your current location";
+    return { ...gps, source: "gps", label: profile ? `${profile.society}, ${profile.area}` : place };
   }
   const approx = readApproxPoint();
   if (approx) {
-    const { locality, distanceKm } = findNearestLocality(approx.latitude, approx.longitude);
-    const place = distanceKm <= 25 ? `${locality.name}, ${locality.city}` : (approx.city ?? "your area");
+    const near = findNearestLocality(approx.latitude, approx.longitude, localities);
+    const place = near && near.distanceKm <= 25 ? `${near.locality.name}, ${near.locality.city}` : (approx.city ?? "your area");
     return { latitude: approx.latitude, longitude: approx.longitude, source: "approx", label: place };
   }
   return { latitude: null, longitude: null, source: "none", label: profile ? `${profile.society}, ${profile.area}` : null };
@@ -72,6 +76,8 @@ export interface StoreCard {
   description: string | null;
   coverUrl: string | null;
   kinds: ServiceKind[];
+  kindLabels: string[];
+  cover: CoverStyle;
   minPricePaise: number;
   deliveryFeePaise: number;
   acceptingOrders: boolean;
@@ -99,11 +105,15 @@ const publicVendorFields = {
   acceptingOrders: vendors.acceptingOrders,
 };
 
-function vendorPoint(v: { latitude: number | null; longitude: number | null; city: string; area: string }) {
+/** The vendor's pin, else its area's locality centre, else null (distance unknown). */
+function vendorPoint(
+  v: { latitude: number | null; longitude: number | null; city: string; area: string },
+  localities: LocalityCentroid[]
+) {
   if (v.latitude != null && v.longitude != null) {
     return { latitude: v.latitude, longitude: v.longitude };
   }
-  return resolveCoordinates(v.city, v.area);
+  return resolveCoordinates(v.city, v.area, localities);
 }
 
 export async function listStores(opts: {
@@ -125,6 +135,7 @@ export async function listStores(opts: {
       )
     );
 
+  const [localities, category] = await Promise.all([getLocalities(), getCategoryMap()]);
   const q = opts.q?.trim().toLowerCase() ?? "";
   const byVendor = new Map<string, { vendor: (typeof rows)[number]["vendor"]; items: (typeof rows)[number]["product"][] }>();
   for (const row of rows) {
@@ -154,10 +165,15 @@ export async function listStores(opts: {
     let distanceKm: number | null = null;
     let inRange = true;
     if (hasPoint) {
-      const p = vendorPoint(vendor);
-      distanceKm = haversineDistanceKm(opts.latitude!, opts.longitude!, p.latitude, p.longitude);
-      inRange = distanceKm <= vendor.serviceRadiusKm;
+      const p = vendorPoint(vendor, localities);
+      if (p) {
+        distanceKm = haversineDistanceKm(opts.latitude!, opts.longitude!, p.latitude, p.longitude);
+        inRange = distanceKm <= vendor.serviceRadiusKm;
+      } else {
+        inRange = false; // no pin and no known area: never claim it delivers here
+      }
     }
+    const primary = category(kinds[0] ?? "other");
 
     cards.push({
       id: vendor.id,
@@ -168,6 +184,8 @@ export async function listStores(opts: {
       description: vendor.description,
       coverUrl: vendor.coverUrl,
       kinds,
+      kindLabels: kinds.map((k) => category(k).shortLabel),
+      cover: { emoji: primary.emoji, coverFrom: primary.coverFrom, coverTo: primary.coverTo },
       minPricePaise: Math.min(...items.map((p) => p.pricePaise)),
       deliveryFeePaise: vendor.deliveryFeePaise,
       acceptingOrders: vendor.acceptingOrders,
@@ -203,9 +221,13 @@ export async function getStore(slug: string, point?: { latitude: number | null; 
   let distanceKm: number | null = null;
   let inRange = true;
   if (point?.latitude != null && point.longitude != null) {
-    const p = vendorPoint(vendor);
-    distanceKm = haversineDistanceKm(point.latitude, point.longitude, p.latitude, p.longitude);
-    inRange = distanceKm <= vendor.serviceRadiusKm;
+    const p = vendorPoint(vendor, await getLocalities());
+    if (p) {
+      distanceKm = haversineDistanceKm(point.latitude, point.longitude, p.latitude, p.longitude);
+      inRange = distanceKm <= vendor.serviceRadiusKm;
+    } else {
+      inRange = false;
+    }
   }
 
   return {

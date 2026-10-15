@@ -6,6 +6,7 @@
 export const MAX_LINE_QTY = 20;
 
 export type ShopOrderStatus =
+  | "awaiting_payment"
   | "placed"
   | "accepted"
   | "out_for_delivery"
@@ -62,6 +63,8 @@ export function canTransition(
 ): boolean {
   if (from === to) return false;
   if (from === "delivered" || from === "cancelled" || from === "rejected") return false;
+  // An unpaid online order only moves when payment lands (placed) or is abandoned (cancelled).
+  if (from === "awaiting_payment") return to === "cancelled" || (actor === "admin" && to === "placed");
   if (actor === "consumer") return from === "placed" && to === "cancelled";
   if (actor === "vendor") return VENDOR_FLOW[from]?.includes(to) ?? false;
   // Admin can resolve any open order to any status.
@@ -81,6 +84,7 @@ export function isOpenStatus(status: ShopOrderStatus): boolean {
 }
 
 export const STATUS_LABEL: Record<ShopOrderStatus, string> = {
+  awaiting_payment: "Payment pending",
   placed: "Order placed",
   accepted: "Being prepared",
   out_for_delivery: "Out for delivery",
@@ -98,11 +102,12 @@ export function formatOrderNumber(serviceDate: string, suffix: string): string {
 /** Ledger lines for a delivered order: a charge, plus a matching payment when paid on delivery. */
 export function deliveredLedgerLines(
   totalPaise: number,
-  paymentMode: "cod" | "monthly_bill"
+  paymentMode: "cod" | "monthly_bill" | "online"
 ): { type: "delivery" | "payment"; amountPaise: number }[] {
   const lines: { type: "delivery" | "payment"; amountPaise: number }[] = [
     { type: "delivery", amountPaise: totalPaise },
   ];
-  if (paymentMode === "cod") lines.push({ type: "payment", amountPaise: -totalPaise });
+  // Cash on delivery and prepaid online orders are settled; monthly-bill orders stay owed.
+  if (paymentMode !== "monthly_bill") lines.push({ type: "payment", amountPaise: -totalPaise });
   return lines;
 }

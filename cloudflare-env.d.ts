@@ -31,7 +31,9 @@ interface __BaseEnv_CloudflareEnv {
   NEXT_PUBLIC_APP_URL: "https://ruxs.in";
   HEXCLAVE_SECRET_SERVER_KEY: string;
   CRON_SECRET: string;
-  ADMIN_USER_IDS: string;
+  RAZORPAY_KEY_ID: string;
+  RAZORPAY_KEY_SECRET: string;
+  RAZORPAY_WEBHOOK_SECRET: string;
 }
 
 declare namespace Cloudflare {

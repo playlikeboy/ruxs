@@ -2,7 +2,19 @@ import "server-only";
 
 import { and, count, desc, eq, gte, inArray, isNull, or, sql, sum } from "drizzle-orm";
 import { getDb } from "@/db";
-import { consumers, customers, ledgerEntries, shopOrders, subscriptions, vendors } from "@/db/schema";
+import {
+  categories,
+  consumers,
+  customers,
+  ledgerEntries,
+  localities,
+  platformAdmins,
+  products,
+  shopOrders,
+  subscriptions,
+  vendorMembers,
+  vendors,
+} from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { addDaysIST, todayIST } from "@/core/time";
 
@@ -87,4 +99,49 @@ export async function getAdminHouseholds() {
   const orders = new Map(orderCounts.map((r) => [r.userId, r.n]));
   const stores = new Map(storeCounts.map((r) => [r.userId, r.n]));
   return people.map((p) => ({ ...p, orders: orders.get(p.userId) ?? 0, stores: stores.get(p.userId) ?? 0 }));
+}
+
+export async function getAdminVendorList(q?: string) {
+  await requireAdmin();
+  const db = getDb();
+  const [rows, productCounts, customerCounts] = await Promise.all([
+    db.select().from(vendors).orderBy(desc(vendors.createdAt)),
+    db.select({ vendorId: products.vendorId, n: count() }).from(products).where(isNull(products.archivedAt)).groupBy(products.vendorId),
+    db.select({ vendorId: customers.vendorId, n: count() }).from(customers).groupBy(customers.vendorId),
+  ]);
+  const p = new Map(productCounts.map((r) => [r.vendorId, r.n]));
+  const c = new Map(customerCounts.map((r) => [r.vendorId, r.n]));
+  const needle = q?.trim().toLowerCase();
+  return rows
+    .filter((v) => !needle || [v.name, v.slug, v.city, v.area, v.phone].some((s) => s.toLowerCase().includes(needle)))
+    .map((v) => ({ vendor: v, products: p.get(v.id) ?? 0, customers: c.get(v.id) ?? 0 }));
+}
+
+export async function getAdminVendor(vendorId: string) {
+  await requireAdmin();
+  const db = getDb();
+  const [vendor] = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+  if (!vendor) return null;
+  const [members, [productCount], [customerCount], [orderCount]] = await Promise.all([
+    db.select().from(vendorMembers).where(eq(vendorMembers.vendorId, vendorId)),
+    db.select({ n: count() }).from(products).where(and(eq(products.vendorId, vendorId), isNull(products.archivedAt))),
+    db.select({ n: count() }).from(customers).where(eq(customers.vendorId, vendorId)),
+    db.select({ n: count() }).from(shopOrders).where(eq(shopOrders.vendorId, vendorId)),
+  ]);
+  return {
+    vendor,
+    members,
+    stats: { products: productCount?.n ?? 0, customers: customerCount?.n ?? 0, orders: orderCount?.n ?? 0 },
+  };
+}
+
+export async function getAdminSettings() {
+  await requireAdmin();
+  const db = getDb();
+  const [cats, locs, admins] = await Promise.all([
+    db.select().from(categories).orderBy(categories.sort, categories.label),
+    db.select().from(localities).orderBy(localities.city, localities.name),
+    db.select().from(platformAdmins).orderBy(platformAdmins.createdAt),
+  ]);
+  return { categories: cats, localities: locs, admins };
 }

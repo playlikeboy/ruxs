@@ -50,7 +50,8 @@ export const shopOrders = pgTable(
       .references(() => customers.id, { onDelete: "cascade" }),
     userId: text("user_id").notNull(),
     status: text("status").notNull().default("placed"),
-    paymentMode: text("payment_mode").notNull(), // cod, monthly_bill
+    paymentMode: text("payment_mode").notNull(), // cod, monthly_bill, online
+    paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid, paid, refund_due, refunded
     subtotalPaise: integer("subtotal_paise").notNull(),
     deliveryFeePaise: integer("delivery_fee_paise").notNull().default(0),
     totalPaise: integer("total_paise").notNull(),
@@ -69,9 +70,13 @@ export const shopOrders = pgTable(
     index("shop_orders_user_idx").on(t.userId),
     check(
       "shop_orders_status_check",
-      sql`${t.status} in ('placed', 'accepted', 'out_for_delivery', 'delivered', 'cancelled', 'rejected')`
+      sql`${t.status} in ('awaiting_payment', 'placed', 'accepted', 'out_for_delivery', 'delivered', 'cancelled', 'rejected')`
     ),
-    check("shop_orders_payment_check", sql`${t.paymentMode} in ('cod', 'monthly_bill')`),
+    check("shop_orders_payment_check", sql`${t.paymentMode} in ('cod', 'monthly_bill', 'online')`),
+    check(
+      "shop_orders_payment_status_check",
+      sql`${t.paymentStatus} in ('unpaid', 'paid', 'refund_due', 'refunded')`
+    ),
     check(
       "shop_orders_slot_check",
       sql`${t.slot} in ('asap', 'morning', 'lunch', 'evening', 'dinner')`

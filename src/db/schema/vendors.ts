@@ -34,6 +34,9 @@ export const vendors = pgTable(
     deliveryFeePaise: integer("delivery_fee_paise").notNull().default(0),
     minOrderPaise: integer("min_order_paise").notNull().default(0),
     acceptingOrders: boolean("accepting_orders").notNull().default(true),
+    loginId: text("login_id").unique(), // merchant login id, e.g. "annapurna-tiffin"
+    loginUserId: text("login_user_id").unique(), // Hexclave user behind that login
+    commissionBps: integer("commission_bps").notNull().default(0), // RUXS fee on online payments, 100 = 1%
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

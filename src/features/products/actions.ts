@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { eq, and, isNull, or, gte } from "drizzle-orm";
 import { getDb } from "@/db";
-import { products, subscriptions } from "@/db/schema";
+import { categories, products, subscriptions } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { rupeesToPaise } from "@/core/money";
 import { todayIST } from "@/core/time";
@@ -23,6 +23,13 @@ export async function saveProduct(input: unknown) {
   const { slug, id, ...data } = parsed.data;
   const access = await requireVendorAccess(slug, ["owner"]);
   const db = getDb();
+
+  const [category] = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(and(eq(categories.id, data.kind), eq(categories.isActive, true)))
+    .limit(1);
+  if (!category) return { ok: false, error: "Pick a valid category" };
 
   const values = {
     name: data.name,

@@ -24,6 +24,11 @@ export default async function AdminOverviewPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Platform overview</h1>
         <p className="mt-1 text-sm text-muted">Everything across RUXS, live from the database.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link href="/admin/vendors/new" className="rounded-[10px] bg-accent px-3.5 py-2 text-sm font-bold text-white">+ New vendor</Link>
+          <Link href="/admin/payouts" className="rounded-[10px] border border-line bg-surface px-3.5 py-2 text-sm font-semibold">Payouts</Link>
+          <Link href="/admin/settings" className="rounded-[10px] border border-line bg-surface px-3.5 py-2 text-sm font-semibold">Categories &amp; settings</Link>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">

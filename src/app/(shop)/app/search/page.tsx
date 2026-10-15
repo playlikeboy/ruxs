@@ -1,5 +1,6 @@
 import { getMyLocation, listStores } from "@/features/consumer/queries";
 import { CategoryBar } from "@/features/consumer/components/category-bar";
+import { getCategories } from "@/features/platform/queries";
 import { SearchBar } from "@/features/consumer/components/search-bar";
 import { StoreCard } from "@/features/consumer/components/store-card";
 
@@ -8,7 +9,7 @@ export const metadata = { title: "Search" };
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
   const query = q.trim().slice(0, 60);
-  const location = await getMyLocation();
+  const [location, categories] = await Promise.all([getMyLocation(), getCategories()]);
   const stores = query
     ? await listStores({ q: query, latitude: location.latitude, longitude: location.longitude })
     : [];
@@ -17,7 +18,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     <div className="pb-24">
       <div className="sticky top-0 z-20 space-y-3 bg-white px-4 pt-[calc(0.75rem+env(safe-area-inset-top))]">
         <SearchBar defaultValue={query} />
-        <CategoryBar />
+        <CategoryBar categories={categories} />
       </div>
       <div className="px-4 pt-5">
         {query ? (

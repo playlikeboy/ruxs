@@ -21,7 +21,7 @@ export const products = pgTable(
     vendorId: text("vendor_id")
       .notNull()
       .references(() => vendors.id, { onDelete: "cascade" }),
-    kind: text("kind").notNull(), // tiffin, water, milk, other
+    kind: text("kind").notNull(), // categories.id
     name: text("name").notNull(),
     shift: text("shift").notNull(), // lunch, dinner, morning, evening
     pricePaise: integer("price_paise").notNull(),
@@ -44,7 +44,6 @@ export const products = pgTable(
   },
   (t) => [
     index("products_vendor_idx").on(t.vendorId),
-    check("products_kind_check", sql`${t.kind} in ('tiffin', 'water', 'milk', 'other')`),
     check(
       "products_shift_check",
       sql`${t.shift} in ('lunch', 'dinner', 'morning', 'evening')`

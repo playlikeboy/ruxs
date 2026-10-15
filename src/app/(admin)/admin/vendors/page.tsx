@@ -1,94 +1,65 @@
 import Link from "next/link";
-import { getAdminVendors } from "@/features/admin/queries";
-import { VendorStatusButton } from "@/features/admin/components/vendor-status-button";
-import { CreateVendorForm } from "@/features/admin/components/create-vendor-form";
-import { VendorCredentialsModal } from "@/features/admin/components/vendor-credentials-modal";
-import { EmptyState } from "@/components/ui/empty-state";
-import { EditVendorSheet } from "@/features/admin/components/edit-vendor-sheet";
+import { Plus, Search } from "lucide-react";
+import { getAdminVendorList } from "@/features/admin/queries";
 
 export const metadata = { title: "Vendors" };
 
-export default async function AdminVendorsPage() {
-  const vendorList = await getAdminVendors();
+const STATUS_TONE: Record<string, string> = {
+  active: "bg-good/10 text-good",
+  pending: "bg-warn/10 text-warn",
+  suspended: "bg-bad/10 text-bad",
+};
 
-  const pending = vendorList.filter((vendor) => vendor.status === "pending");
-  const active = vendorList.filter((vendor) => vendor.status === "active");
-  const suspended = vendorList.filter((vendor) => vendor.status === "suspended");
+export default async function AdminVendorsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q = "" } = await searchParams;
+  const rows = await getAdminVendorList(q);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink">Vendors</h1>
-        <p className="mt-1 text-sm text-muted">Provision merchant portals, invite business owners, review registrations and manage access.</p>
+    <div className="space-y-5 p-4 sm:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Vendor stores</h1>
+          <p className="mt-1 text-sm text-muted">{rows.length} stores. Open one to edit details, manage its login, or jump into its panel.</p>
+        </div>
+        <Link href="/admin/vendors/new" className="flex h-11 items-center gap-2 rounded-[10px] bg-accent px-4 text-sm font-bold text-white">
+          <Plus className="h-4 w-4" /> New vendor
+        </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-[12px] border border-line bg-surface p-4">
-          <span className="block text-xs text-muted">Pending</span>
-          <span className="mt-1 block font-mono text-2xl font-bold tabular-nums text-warn">{pending.length}</span>
-        </div>
-        <div className="rounded-[12px] border border-line bg-surface p-4">
-          <span className="block text-xs text-muted">Active</span>
-          <span className="mt-1 block font-mono text-2xl font-bold tabular-nums text-good">{active.length}</span>
-        </div>
-        <div className="rounded-[12px] border border-line bg-surface p-4">
-          <span className="block text-xs text-muted">Suspended</span>
-          <span className="mt-1 block font-mono text-2xl font-bold tabular-nums text-bad">{suspended.length}</span>
-        </div>
+      <form className="relative max-w-md" role="search">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+        <input name="q" defaultValue={q} placeholder="Search name, city, phone…" aria-label="Search vendors" className="h-11 w-full rounded-[10px] border border-line bg-surface pl-9 pr-3 text-sm" />
+      </form>
+
+      <div className="overflow-x-auto rounded-[12px] border border-line bg-surface">
+        <table className="w-full min-w-[760px] text-left text-sm">
+          <thead className="border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
+            <tr>
+              <th className="px-4 py-3 font-semibold">Store</th>
+              <th className="px-4 py-3 font-semibold">Area</th>
+              <th className="px-4 py-3 font-semibold">Login ID</th>
+              <th className="px-4 py-3 text-right font-semibold">Items</th>
+              <th className="px-4 py-3 text-right font-semibold">Customers</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {rows.map(({ vendor, products, customers }) => (
+              <tr key={vendor.id} className="hover:bg-bg">
+                <td className="px-4 py-3">
+                  <Link href={`/admin/vendors/${vendor.id}`} className="font-semibold text-ink hover:underline">{vendor.name}</Link>
+                  <p className="font-mono text-xs text-muted">{vendor.phone}</p>
+                </td>
+                <td className="px-4 py-3 text-muted">{vendor.area}, {vendor.city}</td>
+                <td className="px-4 py-3 font-mono text-xs">{vendor.loginId ?? <span className="text-warn">not set</span>}</td>
+                <td className="px-4 py-3 text-right font-mono tabular-nums">{products}</td>
+                <td className="px-4 py-3 text-right font-mono tabular-nums">{customers}</td>
+                <td className="px-4 py-3"><span className={"rounded-full px-2 py-0.5 text-xs font-semibold capitalize " + (STATUS_TONE[vendor.status] ?? "")}>{vendor.status}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-
-      <CreateVendorForm />
-
-      {pending.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-base font-semibold text-ink">Pending merchant approvals ({pending.length})</h2>
-          <div className="space-y-2">
-            {pending.map((vendor) => (
-              <div key={vendor.id} className="flex flex-col gap-3 rounded-[12px] border border-warn/30 bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h3 className="font-semibold text-ink">{vendor.name}</h3>
-                  <p className="mt-1 text-sm text-muted">{vendor.area}, {vendor.city} · {vendor.phone}</p>
-                  <p className="mt-1 text-xs text-muted">UPI: {vendor.upiVpa} · URL: /merchant-panel/{vendor.slug}</p>
-                </div>
-                <VendorStatusButton vendorId={vendor.id} currentStatus={vendor.status} />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-ink">All vendors ({vendorList.length})</h2>
-        {vendorList.length === 0 ? (
-          <EmptyState title="No vendors yet" description="Create a vendor above or review registrations after owners onboard." />
-        ) : (
-          <div className="space-y-2">
-            {vendorList.map((vendor) => (
-              <div key={vendor.id} className="flex flex-col gap-3 rounded-[12px] border border-line bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold text-ink">{vendor.name}</h3>
-                    <span className={vendor.status === "active" ? "rounded-full bg-good/10 px-2 py-0.5 text-xs font-semibold text-good" : vendor.status === "pending" ? "rounded-full bg-warn/10 px-2 py-0.5 text-xs font-semibold text-warn" : "rounded-full bg-bad/10 px-2 py-0.5 text-xs font-semibold text-bad"}>{vendor.status}</span>
-                  </div>
-                  <p className="mt-1 text-sm text-muted">{vendor.area}, {vendor.city} · {vendor.phone}</p>
-                  <p className="mt-1 break-all text-xs text-muted">UPI: {vendor.upiVpa}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-4">
-                    <Link href={"/merchant-panel/" + vendor.slug + "/today"} className="text-sm font-semibold text-accent hover:underline">Open merchant panel →</Link>
-                    <Link href={"/app/store/" + vendor.slug} className="text-sm font-semibold text-muted hover:underline">Store page</Link>
-                    <EditVendorSheet vendor={vendor} />
-                    <VendorCredentialsModal
-                      vendorId={vendor.id}
-                      vendorName={vendor.name}
-                      vendorSlug={vendor.slug}
-                    />
-                  </div>
-                </div>
-                <VendorStatusButton vendorId={vendor.id} currentStatus={vendor.status} />
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }

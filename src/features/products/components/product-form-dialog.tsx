@@ -5,7 +5,13 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { SERVICE_KINDS, type ServiceKind } from "@/config/service-kinds";
+import type { ServiceKind } from "@/config/service-kinds";
+
+export interface CategoryOption {
+  id: string;
+  emoji: string;
+  shortLabel: string;
+}
 import { saveProduct } from "@/features/products/actions";
 
 export interface EditableProduct {
@@ -30,15 +36,13 @@ export interface EditableProduct {
 type Shift = "lunch" | "dinner" | "morning" | "evening";
 type LateRule = "free" | "half" | "full" | "locked";
 
-const DEFAULTS: Record<
-  ServiceKind,
-  { shift: Shift; asset: string; cutoff: string }
-> = {
+/** Sensible form defaults for well-known categories; anything else starts as a morning item. */
+const KNOWN_DEFAULTS: Record<string, { shift: Shift; asset: string; cutoff: string }> = {
   tiffin: { shift: "lunch", asset: "dabba", cutoff: "10:00" },
   water: { shift: "morning", asset: "can", cutoff: "08:00" },
   milk: { shift: "morning", asset: "", cutoff: "21:00" },
-  other: { shift: "morning", asset: "", cutoff: "09:00" },
 };
+const defaultsFor = (kind: ServiceKind) => KNOWN_DEFAULTS[kind] ?? { shift: "morning" as Shift, asset: "", cutoff: "09:00" };
 
 const input =
   "w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
@@ -77,11 +81,13 @@ function Toggle({
 
 export function ProductFormDialog({
   slug,
+  categories,
   product,
   triggerLabel = "+ Add item",
   triggerClassName,
 }: {
   slug: string;
+  categories: CategoryOption[];
   product?: EditableProduct;
   triggerLabel?: string;
   triggerClassName?: string;
@@ -90,7 +96,7 @@ export function ProductFormDialog({
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const initialKind = (product?.kind as ServiceKind) ?? "tiffin";
+  const initialKind = product?.kind ?? categories[0]?.id ?? "tiffin";
   const [kind, setKind] = useState<ServiceKind>(initialKind);
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
@@ -100,7 +106,7 @@ export function ProductFormDialog({
     product?.isVeg ?? (initialKind === "tiffin" ? true : null)
   );
   const [shift, setShift] = useState<Shift>(
-    (product?.shift as Shift) ?? DEFAULTS[initialKind].shift
+    (product?.shift as Shift) ?? defaultsFor(initialKind).shift
   );
   const [price, setPrice] = useState(
     product ? String(product.pricePaise / 100) : ""
@@ -109,10 +115,10 @@ export function ProductFormDialog({
     product ? String(product.depositPaise / 100) : "0"
   );
   const [assetName, setAssetName] = useState(
-    product?.assetName ?? DEFAULTS[initialKind].asset
+    product?.assetName ?? defaultsFor(initialKind).asset
   );
   const [cutoffAt, setCutoffAt] = useState(
-    product?.cutoffAt ?? DEFAULTS[initialKind].cutoff
+    product?.cutoffAt ?? defaultsFor(initialKind).cutoff
   );
   const [lateRule, setLateRule] = useState<LateRule>(
     (product?.lateRule as LateRule) ?? "full"
@@ -128,9 +134,9 @@ export function ProductFormDialog({
   function pickKind(k: ServiceKind) {
     setKind(k);
     if (!product) {
-      setShift(DEFAULTS[k].shift);
-      setAssetName(DEFAULTS[k].asset);
-      setCutoffAt(DEFAULTS[k].cutoff);
+      setShift(defaultsFor(k).shift);
+      setAssetName(defaultsFor(k).asset);
+      setCutoffAt(defaultsFor(k).cutoff);
       setIsVeg(k === "tiffin" ? true : null);
     }
   }
@@ -219,7 +225,7 @@ export function ProductFormDialog({
 
               <form onSubmit={submit} className="mt-4 space-y-4">
                 <div className="grid grid-cols-4 gap-2">
-                  {SERVICE_KINDS.map((k) => (
+                  {categories.map((k) => (
                     <button
                       key={k.id}
                       type="button"
@@ -235,7 +241,7 @@ export function ProductFormDialog({
                       <span className="text-xl" aria-hidden="true">
                         {k.emoji}
                       </span>
-                      {k.short}
+                      {k.shortLabel}
                     </button>
                   ))}
                 </div>

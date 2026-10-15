@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, inArray, notInArray, gte } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, or, gte } from "drizzle-orm";
 import { getDb } from "@/db";
 import { customers, shopOrderItems, shopOrders, vendors } from "@/db/schema";
 import { requireAdmin, requireVendorAccess } from "@/lib/auth/session";
@@ -33,7 +33,12 @@ export async function getVendorShopOrders(slug: string, view: "open" | "done") {
         eq(shopOrders.vendorId, access.vendorId),
         view === "open"
           ? inArray(shopOrders.status, OPEN)
-          : and(notInArray(shopOrders.status, OPEN), gte(shopOrders.deliverOn, since))
+          : and(
+              inArray(shopOrders.status, ["delivered", "cancelled", "rejected"]),
+              gte(shopOrders.deliverOn, since),
+              // Online orders abandoned before payment never reached the store.
+              or(ne(shopOrders.paymentMode, "online"), ne(shopOrders.paymentStatus, "unpaid"))
+            )
       )
     )
     .orderBy(view === "open" ? shopOrders.createdAt : desc(shopOrders.updatedAt))

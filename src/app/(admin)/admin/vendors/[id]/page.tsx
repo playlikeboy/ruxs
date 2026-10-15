@@ -1,0 +1,103 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ExternalLink } from "lucide-react";
+import { formatINR } from "@/core/money";
+import { getAdminVendor } from "@/features/admin/queries";
+import { computeVendorBalance } from "@/features/payouts/queries";
+import { VendorForm } from "@/features/admin/components/vendor-form";
+import { CredentialsPanel } from "@/features/admin/components/credentials-panel";
+import { VendorStatusControls } from "@/features/admin/components/vendor-status-controls";
+
+export const metadata = { title: "Vendor" };
+
+function str(n: number | null) {
+  return n == null ? "" : String(n);
+}
+
+export default async function AdminVendorPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const data = await getAdminVendor(id);
+  if (!data) notFound();
+  const { vendor, members, stats } = data;
+  const balance = await computeVendorBalance(vendor.id, vendor.commissionBps);
+
+  return (
+    <div className="space-y-6 p-4 sm:p-6">
+      <Link href="/admin/vendors" className="text-sm font-semibold text-muted hover:text-ink">← Vendors</Link>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{vendor.name}</h1>
+          <p className="mt-1 text-sm text-muted">{vendor.area}, {vendor.city} · <span className="capitalize">{vendor.status}</span></p>
+          <div className="mt-2 flex flex-wrap gap-4 text-sm font-semibold">
+            <Link href={`/merchant-panel/${vendor.slug}/today`} className="flex items-center gap-1 text-accent hover:underline">Open merchant panel <ExternalLink className="h-3.5 w-3.5" /></Link>
+            <Link href={`/app/store/${vendor.slug}`} className="flex items-center gap-1 text-muted hover:underline">Store page <ExternalLink className="h-3.5 w-3.5" /></Link>
+          </div>
+        </div>
+        <VendorStatusControls vendorId={vendor.id} status={vendor.status} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { l: "Menu items", v: String(stats.products) },
+          { l: "Customers", v: String(stats.customers) },
+          { l: "App orders", v: String(stats.orders) },
+          { l: "Available payout", v: formatINR(balance.availablePaise) },
+        ].map((s) => (
+          <div key={s.l} className="rounded-[12px] border border-line bg-surface p-4">
+            <p className="text-xs text-muted">{s.l}</p>
+            <p className="mt-1 font-mono text-xl font-bold tabular-nums">{s.v}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <section className="rounded-[14px] border border-line bg-surface p-5">
+          <h2 className="mb-4 text-base font-semibold">Store details</h2>
+          <VendorForm
+            initial={{
+              vendorId: vendor.id,
+              slug: vendor.slug,
+              name: vendor.name,
+              phone: vendor.phone,
+              upiVpa: vendor.upiVpa,
+              city: vendor.city,
+              area: vendor.area,
+              description: vendor.description ?? "",
+              latitude: str(vendor.latitude),
+              longitude: str(vendor.longitude),
+              serviceRadiusKm: String(vendor.serviceRadiusKm),
+              deliveryFeeRupees: String(vendor.deliveryFeePaise / 100),
+              minOrderRupees: String(vendor.minOrderPaise / 100),
+              commissionPercent: String(vendor.commissionBps / 100),
+              plan: vendor.plan as "free" | "starter" | "pro",
+              acceptingOrders: vendor.acceptingOrders,
+            }}
+          />
+        </section>
+
+        <div className="space-y-6">
+          <section className="rounded-[14px] border border-line bg-surface p-5">
+            <h2 className="mb-3 text-base font-semibold">Merchant login</h2>
+            <CredentialsPanel vendorId={vendor.id} loginId={vendor.loginId} />
+          </section>
+          <section className="rounded-[14px] border border-line bg-surface p-5">
+            <h2 className="mb-3 text-base font-semibold">Team ({members.length})</h2>
+            {members.length === 0 ? (
+              <p className="text-sm text-muted">No one can sign in yet.</p>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                {members.map((m) => (
+                  <li key={m.userId} className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-xs text-muted">{m.userId === vendor.loginUserId ? `${vendor.loginId} (login)` : m.userId.slice(0, 13) + "…"}</span>
+                    <span className="rounded-full bg-bg px-2 py-0.5 text-xs capitalize">{m.role}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-3 text-xs text-muted">Owners invite staff and drivers from their panel&apos;s Store settings.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
