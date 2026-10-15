@@ -9,6 +9,7 @@ import { getMyOrder } from "@/features/consumer/queries";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { StatusPill } from "@/features/consumer/components/status-pill";
 import { CancelOrderButton } from "@/features/consumer/components/cancel-order-button";
+import { PayOrderButton } from "@/features/payments/components/pay-buttons";
 
 export const metadata = { title: "Order" };
 
@@ -78,7 +79,17 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             <div className="flex justify-between text-[15px] font-semibold text-ink"><dt>Total</dt><dd className="tabular-nums">{formatINR(order.totalPaise)}</dd></div>
           </dl>
           <p className="mt-3 text-xs text-neutral-500">
-            {order.paymentMode === "cod" ? "Pay on delivery by cash or UPI." : "Added to your monthly bill from " + vendorName + "."}
+            {order.paymentMode === "online"
+              ? order.paymentStatus === "paid"
+                ? "Paid online."
+                : order.paymentStatus === "refund_due"
+                  ? "Paid online. Your refund is being processed."
+                  : order.paymentStatus === "refunded"
+                    ? "Paid online and refunded."
+                    : "Waiting for online payment."
+              : order.paymentMode === "cod"
+                ? "Pay on delivery by cash or UPI."
+                : "Added to your monthly bill from " + vendorName + "."}
           </p>
         </section>
 
@@ -88,7 +99,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           {order.notes && <p className="mt-2 text-sm text-neutral-500">Note: {order.notes}</p>}
         </section>
 
-        {status === "placed" && <CancelOrderButton orderId={order.id} />}
+        {status === "awaiting_payment" && <PayOrderButton orderId={order.id} totalPaise={order.totalPaise} />}
+        {(status === "placed" || status === "awaiting_payment") && <CancelOrderButton orderId={order.id} />}
         {!isOpenStatus(status) && (
           <Link href={`/app/store/${vendorSlug}`} className="flex h-12 items-center justify-center rounded-xl bg-ink text-sm font-semibold text-white">Order again</Link>
         )}

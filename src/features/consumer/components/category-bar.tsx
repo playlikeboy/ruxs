@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { SERVICE_KINDS } from "@/config/service-kinds";
+import type { Category } from "@/features/platform/queries";
 
 /** Airbnb-style category strip: emoji over label, underline on the active one. */
-export function CategoryBar({ active }: { active?: string }) {
+export function CategoryBar({ categories, active }: { categories: Category[]; active?: string }) {
   return (
     <nav aria-label="Categories" className="-mx-4 flex gap-7 overflow-x-auto border-b border-black/5 px-5 [scrollbar-width:none]">
-      {SERVICE_KINDS.map((k) => {
+      {categories.map((k) => {
         const isActive = active === k.id;
         return (
           <Link
@@ -18,7 +18,7 @@ export function CategoryBar({ active }: { active?: string }) {
             }
           >
             <span className="text-2xl leading-none" aria-hidden="true">{k.emoji}</span>
-            {k.short}
+            {k.shortLabel}
           </Link>
         );
       })}

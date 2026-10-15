@@ -1,20 +1,19 @@
-import { getServiceKind } from "@/config/service-kinds";
+import type { CoverStyle } from "@/config/service-kinds";
 
-/** Store or item artwork: the merchant's photo, or a soft gradient with the service emoji. */
+/** Store or item artwork: the merchant's photo, or the category's gradient with its emoji. */
 export function StoreCover({
-  kind,
+  cover,
   imageUrl,
   alt,
   className = "",
   emojiClass = "text-6xl",
 }: {
-  kind: string;
+  cover: CoverStyle;
   imageUrl?: string | null;
   alt: string;
   className?: string;
   emojiClass?: string;
 }) {
-  const config = getServiceKind(kind);
   if (imageUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -25,10 +24,11 @@ export function StoreCover({
     <div
       role="img"
       aria-label={alt}
-      className={"flex items-center justify-center bg-gradient-to-br " + config.cover + " " + className}
+      className={"flex items-center justify-center " + className}
+      style={{ backgroundImage: `linear-gradient(135deg, ${cover.coverFrom}, ${cover.coverTo})` }}
     >
       <span className={"drop-shadow-sm " + emojiClass} aria-hidden="true">
-        {config.emoji}
+        {cover.emoji}
       </span>
     </div>
   );

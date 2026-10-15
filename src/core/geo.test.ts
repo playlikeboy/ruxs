@@ -6,6 +6,12 @@ import {
   isWithinGeofence,
 } from "./geo";
 
+const LOCALITIES = [
+  { id: "blr-hsr", name: "HSR Layout", city: "Bengaluru", state: "Karnataka", latitude: 12.9121, longitude: 77.6446 },
+  { id: "blr-bel", name: "Bellandur", city: "Bengaluru", state: "Karnataka", latitude: 12.9304, longitude: 77.6784 },
+  { id: "mum-pow", name: "Powai", city: "Mumbai", state: "Maharashtra", latitude: 19.1176, longitude: 72.906 },
+];
+
 describe("geo spatial rules", () => {
   it("calculates accurate distance between HSR Layout and Koramangala (~3.5 km)", () => {
     // HSR Layout: 12.9121, 77.6446
@@ -24,19 +30,24 @@ describe("geo spatial rules", () => {
   });
 
   it("resolves coordinates by area name", () => {
-    const coords = resolveCoordinates("Bengaluru", "HSR Layout Sector 2");
+    const coords = resolveCoordinates("Bengaluru", "HSR Layout Sector 2", LOCALITIES)!;
     expect(coords.latitude).toBeCloseTo(12.9121, 2);
     expect(coords.longitude).toBeCloseTo(77.6446, 2);
   });
 
   it("resolves coordinates by city name fallback", () => {
-    const coords = resolveCoordinates("Mumbai", "Unknown Society");
+    const coords = resolveCoordinates("Mumbai", "Unknown Society", LOCALITIES)!;
     expect(coords.latitude).toBeCloseTo(19.1176, 0);
+  });
+
+  it("returns null when no locality matches or exists", () => {
+    expect(resolveCoordinates("Atlantis", "Nowhere", LOCALITIES)).toBeNull();
+    expect(findNearestLocality(12.9, 77.6, [])).toBeNull();
   });
 
   it("identifies nearest locality from GPS coordinates", () => {
     // Near Bellandur lake (12.9310, 77.6790)
-    const { locality, distanceKm } = findNearestLocality(12.931, 77.679);
+    const { locality, distanceKm } = findNearestLocality(12.931, 77.679, LOCALITIES)!;
     expect(locality.name).toBe("Bellandur");
     expect(distanceKm).toBeLessThan(1.0);
   });

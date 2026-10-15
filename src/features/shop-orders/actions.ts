@@ -4,10 +4,10 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { ledgerEntries, shopOrders, vendors } from "@/db/schema";
-import { requireAdmin, requireVendorAccess } from "@/lib/auth/session";
+import { requireVendorAccess } from "@/lib/auth/session";
 import { canTransition, deliveredLedgerLines, type ShopActor, type ShopOrderStatus } from "@/core/shop";
 import { shopChargeKey, shopPaymentKey } from "@/core/ledger";
-import { adminOrderStatusSchema, vendorOrderStatusSchema } from "./schemas";
+import { vendorOrderStatusSchema } from "./schemas";
 
 async function moveOrder(opts: {
   orderId: string;
@@ -41,7 +41,11 @@ async function moveOrder(opts: {
         ...(opts.to === "accepted" ? { acceptedAt: now } : {}),
         ...(opts.to === "delivered" ? { deliveredAt: now } : {}),
         ...(opts.to === "cancelled" || opts.to === "rejected"
-          ? { cancelReason: opts.reason || (opts.to === "rejected" ? "The store couldn't take this order" : "Cancelled by the store") }
+          ? {
+              cancelReason: opts.reason || (opts.to === "rejected" ? "The store couldn't take this order" : "Cancelled by the store"),
+              // Money taken online goes back to the household; admin issues the refund.
+              ...(order.paymentStatus === "paid" ? { paymentStatus: "refund_due" } : {}),
+            }
           : {}),
       })
       .where(and(eq(shopOrders.id, order.id), eq(shopOrders.status, from)))
@@ -57,7 +61,12 @@ async function moveOrder(opts: {
             customerId: order.customerId,
             type: line.type,
             amountPaise: line.amountPaise,
-            notes: line.type === "delivery" ? `Order ${order.number}` : `Paid on delivery · ${order.number}`,
+            notes:
+              line.type === "delivery"
+                ? `Order ${order.number}`
+                : order.paymentMode === "online"
+                  ? `Paid online · ${order.number}`
+                  : `Paid on delivery · ${order.number}`,
             idempotencyKey: line.type === "delivery" ? shopChargeKey(order.id) : shopPaymentKey(order.id),
             createdBy: opts.actorId,
           })
@@ -92,20 +101,6 @@ export async function updateShopOrderStatus(input: unknown) {
     to: parsed.data.to,
     actor: "vendor",
     actorId: access.user.id,
-    reason: parsed.data.reason,
-  });
-}
-
-export async function adminUpdateShopOrderStatus(input: unknown) {
-  const parsed = adminOrderStatusSchema.safeParse(input);
-  if (!parsed.success) return { ok: false as const, error: "Invalid request" };
-  const { user } = await requireAdmin();
-  return moveOrder({
-    orderId: parsed.data.orderId,
-    vendorId: null,
-    to: parsed.data.to,
-    actor: "admin",
-    actorId: user.id,
     reason: parsed.data.reason,
   });
 }

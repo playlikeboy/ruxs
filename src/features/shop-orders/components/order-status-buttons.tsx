@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { nextVendorStep, STATUS_LABEL, type ShopOrderStatus } from "@/core/shop";
-import { adminUpdateShopOrderStatus, updateShopOrderStatus } from "@/features/shop-orders/actions";
+import { updateShopOrderStatus } from "@/features/shop-orders/actions";
 
 const NEXT_LABEL: Partial<Record<ShopOrderStatus, string>> = {
   accepted: "Accept order",
@@ -16,12 +16,10 @@ export function OrderStatusButtons({
   orderId,
   status,
   slug,
-  admin,
 }: {
   orderId: string;
   status: ShopOrderStatus;
-  slug?: string;
-  admin?: boolean;
+  slug: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -35,9 +33,7 @@ export function OrderStatusButtons({
       reason = answer || undefined;
     }
     startTransition(async () => {
-      const res = admin
-        ? await adminUpdateShopOrderStatus({ orderId, to, reason })
-        : await updateShopOrderStatus({ slug, orderId, to, reason });
+      const res = await updateShopOrderStatus({ slug, orderId, to, reason });
       if (!res.ok) toast.error(res.error);
       else {
         toast.success(STATUS_LABEL[to]);

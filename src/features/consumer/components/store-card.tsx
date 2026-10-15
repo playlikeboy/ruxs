@@ -2,16 +2,14 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { formatINR } from "@/core/money";
 import type { StoreCard as StoreCardData } from "@/features/consumer/queries";
-import { getServiceKind } from "@/config/service-kinds";
 import { StoreCover } from "./store-cover";
 
 export function StoreCard({ store }: { store: StoreCardData }) {
-  const primary = store.kinds[0] ?? "other";
   return (
     <Link href={`/app/store/${store.slug}`} className="group block" aria-label={store.name}>
       <div className="relative overflow-hidden rounded-2xl">
         <StoreCover
-          kind={primary}
+          cover={store.cover}
           imageUrl={store.coverUrl}
           alt=""
           className="aspect-[16/10] w-full transition-transform duration-300 group-hover:scale-[1.02]"
@@ -44,7 +42,7 @@ export function StoreCard({ store }: { store: StoreCardData }) {
             {store.distanceKm != null && <span>· {store.distanceKm < 1 ? "<1" : store.distanceKm} km</span>}
           </p>
           <p className="mt-0.5 truncate text-sm text-neutral-500">
-            {store.kinds.map((k) => getServiceKind(k).short).join(" · ")}
+            {store.kindLabels.join(" · ")}
             {store.matchedItems.length > 0 && <span className="text-ink"> · {store.matchedItems.slice(0, 2).join(", ")}</span>}
           </p>
         </div>

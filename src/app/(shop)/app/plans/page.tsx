@@ -3,8 +3,9 @@ import { CalendarCheck } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { isLate } from "@/core/cutoff";
 import { addDaysIST, istDateTime, weekdayIST } from "@/core/time";
-import { buildUpiUrl } from "@/core/upi";
 import { getMyPlans } from "@/features/consumer/queries";
+import { getCategoryMap } from "@/features/platform/queries";
+import { PayDuesButton } from "@/features/payments/components/pay-buttons";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { StoreCover } from "@/features/consumer/components/store-cover";
 import { EndPlanButton, PlanDays, type PlanDay } from "@/features/consumer/components/plan-days";
@@ -14,13 +15,13 @@ export const metadata = { title: "Plans" };
 const dayNumFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric" });
 
 export default async function PlansPage() {
-  const { today, plans } = await getMyPlans();
+  const [{ today, plans }, category] = await Promise.all([getMyPlans(), getCategoryMap()]);
   const now = new Date();
   const dates = Array.from({ length: 7 }, (_, i) => addDaysIST(today, i));
 
   // One "pay balance" button per store, not per plan.
-  const balances = new Map<string, { name: string; upiVpa: string; balancePaise: number }>();
-  for (const p of plans) balances.set(p.vendorId, { name: p.vendorName, upiVpa: p.upiVpa, balancePaise: p.balancePaise });
+  const balances = new Map<string, { vendorId: string; name: string; balancePaise: number }>();
+  for (const p of plans) balances.set(p.vendorId, { vendorId: p.vendorId, name: p.vendorName, balancePaise: p.balancePaise });
 
   return (
     <div className="min-h-dvh bg-neutral-50">
@@ -54,7 +55,7 @@ export default async function PlansPage() {
             return (
               <section key={p.sub.id} className="rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-3">
-                  <StoreCover kind={p.product.kind} imageUrl={p.product.imageUrl} alt="" className="h-14 w-14 shrink-0 rounded-xl" emojiClass="text-3xl" />
+                  <StoreCover cover={category(p.product.kind)} imageUrl={p.product.imageUrl} alt="" className="h-14 w-14 shrink-0 rounded-xl" emojiClass="text-3xl" />
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate font-semibold text-ink">{p.product.name}</h2>
                     <p className="truncate text-sm text-neutral-500">
@@ -84,12 +85,7 @@ export default async function PlansPage() {
                   <p className="text-xs opacity-80">Due to {b.name}</p>
                   <p className="text-xl font-bold tabular-nums">{formatINR(b.balancePaise)}</p>
                 </div>
-                <a
-                  href={buildUpiUrl({ vpa: b.upiVpa, payeeName: b.name, amountPaise: b.balancePaise, billNumber: "RUXS" })}
-                  className="h-11 rounded-xl bg-white px-4 text-sm font-bold leading-[44px] text-ink"
-                >
-                  Pay with UPI
-                </a>
+                <PayDuesButton vendorId={b.vendorId} label="Pay online" />
               </section>
             ))}
         </div>

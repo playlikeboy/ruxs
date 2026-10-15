@@ -2,11 +2,10 @@ import "server-only";
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import crypto from "crypto";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import { hexclave } from "./hexclave";
 import { getDb } from "@/db";
-import { vendors, vendorMembers, customers } from "@/db/schema";
-import { getServerEnv } from "@/lib/env";
+import { vendors, vendorMembers, customers, platformAdmins } from "@/db/schema";
 
 export type Role = "owner" | "staff" | "driver";
 const ALL_ROLES: Role[] = ["owner", "staff", "driver"];
@@ -19,21 +18,22 @@ export const requireUser = cache(async () => {
   return user;
 });
 
-export function isUserAdmin(user: { id: string; primaryEmail?: string | null }): boolean {
-  const env = getServerEnv();
-  const adminIds = (env.ADMIN_USER_IDS || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  const adminEmails = (env.ADMIN_EMAILS || "sh20raj@gmail.com,shaswatraj3@gmail.com")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-
-  const userEmail = user.primaryEmail?.toLowerCase() || "";
-  return adminIds.includes(user.id) || adminEmails.includes(userEmail);
-}
+/**
+ * Admins live in the platform_admins table, matched by Hexclave user id or by a
+ * verified primary email. Cached per request.
+ */
+export const isUserAdmin = cache(
+  async (user: { id: string; primaryEmail?: string | null; primaryEmailVerified?: boolean }): Promise<boolean> => {
+    const db = getDb();
+    const email = user.primaryEmailVerified ? user.primaryEmail?.toLowerCase() : undefined;
+    const [row] = await db
+      .select({ id: platformAdmins.id })
+      .from(platformAdmins)
+      .where(email ? or(eq(platformAdmins.userId, user.id), eq(platformAdmins.email, email)) : eq(platformAdmins.userId, user.id))
+      .limit(1);
+    return !!row;
+  }
+);
 
 /** Staff-facing pages send signed-out people to the merchant sign-in, not the household one. */
 export const requireStaffUser = cache(async (next: string) => {
@@ -83,7 +83,7 @@ export const requireVendorAccess = cache(
       };
     }
 
-    if (isUserAdmin(user)) {
+    if (await isUserAdmin(user)) {
       const [vendor] = await db
         .select()
         .from(vendors)
@@ -106,7 +106,7 @@ export const requireVendorAccess = cache(
 
 export const requireAdmin = cache(async () => {
   const user = await requireStaffUser("/admin");
-  if (!isUserAdmin(user)) {
+  if (!(await isUserAdmin(user))) {
     notFound();
   }
 

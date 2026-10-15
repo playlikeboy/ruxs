@@ -36,7 +36,7 @@ export const placeOrderSchema = z.object({
     .max(40),
   deliverOn: z.enum(["today", "tomorrow"]),
   slot: z.enum(["asap", "morning", "lunch", "evening", "dinner"]),
-  paymentMode: z.enum(["cod", "monthly_bill"]),
+  paymentMode: z.enum(["online", "cod", "monthly_bill"]),
   notes: z.string().trim().max(300).optional(),
 });
 

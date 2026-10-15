@@ -1,6 +1,7 @@
 import { STATUS_LABEL, type ShopOrderStatus } from "@/core/shop";
 
 const TONE: Record<ShopOrderStatus, string> = {
+  awaiting_payment: "bg-neutral-100 text-neutral-600",
   placed: "bg-butter text-warn",
   accepted: "bg-sky text-[#1F5C99]",
   out_for_delivery: "bg-peach text-accent",

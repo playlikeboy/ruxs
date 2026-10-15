@@ -18,6 +18,7 @@ import {
 } from "@/db/schema";
 import { hashToken, requireUser } from "@/lib/auth/session";
 import { findNearestLocality } from "@/core/geo";
+import { getLocalities } from "@/features/platform/queries";
 import { cartTotals, canTransition, formatOrderNumber, type ShopOrderStatus } from "@/core/shop";
 import { depositKey } from "@/core/ledger";
 import { addDaysIST, todayIST } from "@/core/time";
@@ -148,7 +149,7 @@ export async function saveLocation(input: unknown) {
   const user = await requireUser();
   const db = getDb();
   const { latitude, longitude } = parsed.data;
-  const { locality } = findNearestLocality(latitude, longitude);
+  const near = findNearestLocality(latitude, longitude, await getLocalities());
   const existing = await loadProfile(user.id);
 
   if (existing) {
@@ -171,8 +172,8 @@ export async function saveLocation(input: unknown) {
   return {
     ok: true as const,
     needsAddress: !existing,
-    area: locality.name,
-    city: locality.city,
+    area: near && near.distanceKm <= 25 ? near.locality.name : "",
+    city: near && near.distanceKm <= 25 ? near.locality.city : "",
   };
 }
 
@@ -256,7 +257,8 @@ export async function placeOrder(input: unknown) {
           vendorId: vendor.id,
           customerId,
           userId: user.id,
-          status: "placed",
+          // Online orders reach the store only after Razorpay confirms payment.
+          status: data.paymentMode === "online" ? "awaiting_payment" : "placed",
           paymentMode: data.paymentMode,
           subtotalPaise: totals.subtotalPaise,
           deliveryFeePaise: totals.deliveryFeePaise,
@@ -312,8 +314,13 @@ export async function cancelMyOrder(input: unknown) {
   // Guard on status so a concurrent accept wins over a late cancel.
   const [updated] = await db
     .update(shopOrders)
-    .set({ status: "cancelled", cancelReason: "Cancelled by customer", updatedAt: new Date() })
-    .where(and(eq(shopOrders.id, order.id), eq(shopOrders.status, "placed")))
+    .set({
+      status: "cancelled",
+      cancelReason: "Cancelled by customer",
+      ...(order.paymentStatus === "paid" ? { paymentStatus: "refund_due" } : {}),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(shopOrders.id, order.id), eq(shopOrders.status, order.status)))
     .returning({ id: shopOrders.id });
   if (!updated) return fail("The store has already started on this order");
 

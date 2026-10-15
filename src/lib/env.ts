@@ -10,8 +10,9 @@ const serverSchema = z.object({
   DATABASE_URL: z.string().min(1).optional(),
   HEXCLAVE_SECRET_SERVER_KEY: z.string().min(1).optional(),
   CRON_SECRET: z.string().min(1).optional(),
-  ADMIN_USER_IDS: z.string().default(""),
-  ADMIN_EMAILS: z.string().default("sh20raj@gmail.com,shaswatraj3@gmail.com"),
+  RAZORPAY_KEY_ID: z.string().min(1).optional(),
+  RAZORPAY_KEY_SECRET: z.string().min(1).optional(),
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
   CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: z.string().optional(),
 });
 

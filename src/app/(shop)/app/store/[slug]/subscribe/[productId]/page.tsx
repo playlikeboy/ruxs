@@ -5,12 +5,13 @@ import { getMyProfile, getSubscribableProduct } from "@/features/consumer/querie
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { StoreCover } from "@/features/consumer/components/store-cover";
 import { SubscribeForm } from "@/features/consumer/components/subscribe-form";
+import { getCategoryMap } from "@/features/platform/queries";
 
 export const metadata = { title: "Subscribe" };
 
 export default async function SubscribePage({ params }: { params: Promise<{ slug: string; productId: string }> }) {
   const { slug, productId } = await params;
-  const [{ profile }, row] = await Promise.all([getMyProfile(), getSubscribableProduct(productId)]);
+  const [{ profile }, row, category] = await Promise.all([getMyProfile(), getSubscribableProduct(productId), getCategoryMap()]);
   if (!row || row.vendor.slug !== slug) notFound();
   const { product, vendor } = row;
 
@@ -19,7 +20,7 @@ export default async function SubscribePage({ params }: { params: Promise<{ slug
       <PageHeader title="Start a plan" subtitle={vendor.name} back={`/app/store/${slug}`} />
       <div className="px-4 pt-4">
         <div className="flex items-center gap-4">
-          <StoreCover kind={product.kind} imageUrl={product.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-2xl" emojiClass="text-4xl" />
+          <StoreCover cover={category(product.kind)} imageUrl={product.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-2xl" emojiClass="text-4xl" />
           <div>
             <h2 className="text-lg font-semibold text-ink">{product.name}</h2>
             <p className="text-sm text-neutral-500">

@@ -8,9 +8,3 @@ export const vendorOrderStatusSchema = z.object({
   to: status,
   reason: z.string().trim().max(200).optional(),
 });
-
-export const adminOrderStatusSchema = z.object({
-  orderId: z.string().min(1),
-  to: status,
-  reason: z.string().trim().max(200).optional(),
-});

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getMyLocation, getMyProfile, listStores } from "@/features/consumer/queries";
-import { SERVICE_KINDS } from "@/config/service-kinds";
+import { getCategories } from "@/features/platform/queries";
 import { LocationChip } from "@/features/consumer/components/location-chip";
 import { SearchBar } from "@/features/consumer/components/search-bar";
 import { StoreCard } from "@/features/consumer/components/store-card";
@@ -10,7 +10,7 @@ export const metadata = { title: "Explore" };
 
 export default async function ExplorePage() {
   const { user, profile } = await getMyProfile();
-  const location = await getMyLocation();
+  const [location, categories] = await Promise.all([getMyLocation(), getCategories()]);
   const stores = await listStores({ latitude: location.latitude, longitude: location.longitude });
   const nearby = stores.filter((s) => s.inRange);
   const farther = stores.filter((s) => !s.inRange);
@@ -31,11 +31,12 @@ export default async function ExplorePage() {
         </h1>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
-          {SERVICE_KINDS.map((k) => (
+          {categories.map((k) => (
             <Link
               key={k.id}
               href={`/app/category/${k.id}`}
-              className={"relative flex h-[104px] flex-col justify-between overflow-hidden rounded-2xl p-3.5 transition active:scale-[0.98] " + k.tint}
+              className="relative flex h-[104px] flex-col justify-between overflow-hidden rounded-2xl p-3.5 transition active:scale-[0.98]"
+              style={{ backgroundColor: k.tint }}
             >
               <span className="text-[15px] font-semibold leading-tight text-ink">{k.label}</span>
               <span className="max-w-[70%] text-[11px] leading-4 text-neutral-600">{k.blurb}</span>

@@ -1,5 +1,5 @@
 import { formatINR } from "@/core/money";
-import { getServiceKind } from "@/config/service-kinds";
+import { getCategories, getCategoryMap } from "@/features/platform/queries";
 import { getMenuForVendor } from "@/features/products/queries";
 import { ProductFormDialog } from "@/features/products/components/product-form-dialog";
 import { ArchiveButton, AvailabilitySwitch } from "@/features/products/components/menu-item-actions";
@@ -9,12 +9,13 @@ export const metadata = { title: "Menu" };
 
 export default async function MenuPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
-  const { rows, role } = await getMenuForVendor(slug);
+  const [{ rows, role }, categoryList, category] = await Promise.all([getMenuForVendor(slug), getCategories(), getCategoryMap()]);
+  const categories = categoryList.map((c) => ({ id: c.id, emoji: c.emoji, shortLabel: c.shortLabel }));
   const isOwner = role === "owner";
 
   const groups = new Map<string, typeof rows>();
   for (const p of rows) {
-    const key = getServiceKind(p.kind).label;
+    const key = category(p.kind).label;
     groups.set(key, [...(groups.get(key) ?? []), p]);
   }
 
@@ -25,14 +26,14 @@ export default async function MenuPage({ params }: { params: Promise<{ vendor: s
           <h1 className="text-2xl font-bold tracking-tight text-ink">Menu</h1>
           <p className="mt-0.5 text-sm text-muted">{rows.length} items · what households see on your store</p>
         </div>
-        {isOwner && <ProductFormDialog slug={slug} />}
+        {isOwner && <ProductFormDialog slug={slug} categories={categories} />}
       </div>
 
       {rows.length === 0 ? (
         <EmptyState
           title="Your menu is empty"
           description="Add your first meal, water can or dairy item. You can offer it for one-time orders, subscriptions, or both."
-          action={isOwner ? <ProductFormDialog slug={slug} triggerLabel="Add first item" /> : undefined}
+          action={isOwner ? <ProductFormDialog slug={slug} categories={categories} triggerLabel="Add first item" /> : undefined}
         />
       ) : (
         Array.from(groups.entries()).map(([title, items]) => (
@@ -63,7 +64,7 @@ export default async function MenuPage({ params }: { params: Promise<{ vendor: s
                     {isOwner && (
                       <div className="flex items-center gap-4">
                         <ArchiveButton slug={slug} id={p.id} name={p.name} />
-                        <ProductFormDialog slug={slug} product={p} triggerLabel="Edit" triggerClassName="text-xs font-semibold text-accent" />
+                        <ProductFormDialog slug={slug} categories={categories} product={p} triggerLabel="Edit" triggerClassName="text-xs font-semibold text-accent" />
                       </div>
                     )}
                   </div>

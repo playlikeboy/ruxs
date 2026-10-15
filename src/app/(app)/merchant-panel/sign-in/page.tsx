@@ -19,7 +19,7 @@ export default async function MerchantSignInPage({ searchParams }: { searchParam
   if (user) {
     const db = getDb();
     const [membership] = await db.select({ v: vendorMembers.vendorId }).from(vendorMembers).where(eq(vendorMembers.userId, user.id)).limit(1);
-    if (membership || isUserAdmin(user)) redirect(next);
+    if (membership || (await isUserAdmin(user))) redirect(next);
     signedInHousehold = true;
   }
 

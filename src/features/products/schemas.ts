@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { SERVICE_KIND_IDS } from "@/config/service-kinds";
 
 const time = z.string().regex(/^([0-1]\d|2[0-3]):[0-5]\d$/, "Time must be HH:MM");
 const optionalUrl = z
@@ -12,7 +11,7 @@ const optionalUrl = z
 export const saveProductSchema = z.object({
   id: z.string().optional(),
   slug: z.string(),
-  kind: z.enum(SERVICE_KIND_IDS),
+  kind: z.string().regex(/^[a-z0-9-]+$/, "Pick a category"),
   name: z.string().trim().min(2, "Item name must be at least 2 characters").max(80),
   description: z.string().trim().max(300).optional(),
   section: z.string().trim().max(40).optional(),

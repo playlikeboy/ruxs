@@ -4,22 +4,25 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { MapPin, Minus, Plus, ShoppingBag, Wallet, ReceiptIndianRupee } from "lucide-react";
+import { CreditCard, MapPin, Minus, Plus, ShoppingBag, Wallet, ReceiptIndianRupee } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { SLOT_LABEL } from "@/config/service-kinds";
 import { placeOrder } from "@/features/consumer/actions";
+import { startOrderPayment } from "@/features/payments/actions";
+import { useRazorpay } from "@/features/payments/components/use-razorpay";
 import { cartActions, cartSubtotal, useCart } from "./cart-store";
 import { VegMark } from "./veg-mark";
 
 const SLOTS = ["asap", "morning", "lunch", "evening", "dinner"] as const;
 
-export function Checkout({ address, name }: { address: string | null; name: string | null }) {
+export function Checkout({ address, name, onlineEnabled }: { address: string | null; name: string | null; onlineEnabled: boolean }) {
   const router = useRouter();
   const cart = useCart();
   const [clientKey] = useState(() => crypto.randomUUID());
   const [deliverOn, setDeliverOn] = useState<"today" | "tomorrow">("today");
   const [slot, setSlot] = useState<(typeof SLOTS)[number]>("asap");
-  const [paymentMode, setPaymentMode] = useState<"cod" | "monthly_bill">("cod");
+  const [paymentMode, setPaymentMode] = useState<"online" | "cod" | "monthly_bill">(onlineEnabled ? "online" : "cod");
+  const { pay, busy: paying } = useRazorpay();
   const [notes, setNotes] = useState("");
   const [pending, startTransition] = useTransition();
 
@@ -59,7 +62,20 @@ export function Checkout({ address, name }: { address: string | null; name: stri
         return;
       }
       cartActions.clear();
-      toast.success("Order placed");
+      if (paymentMode !== "online") {
+        toast.success("Order placed");
+        router.push(`/app/orders/${res.orderId}`);
+        return;
+      }
+      const start = await startOrderPayment({ orderId: res.orderId });
+      if (start.ok) {
+        const outcome = await pay(start.checkout);
+        if (outcome.status === "paid") toast.success("Paid · order placed");
+        else if (outcome.status === "failed") toast.error(outcome.error);
+        else toast("Payment not finished. You can pay from the order page.");
+      } else {
+        toast.error(start.error);
+      }
       router.push(`/app/orders/${res.orderId}`);
     });
   }
@@ -152,6 +168,9 @@ export function Checkout({ address, name }: { address: string | null; name: stri
         <h2 className="text-[15px] font-semibold text-ink">Payment</h2>
         <div className="mt-3 space-y-2">
           {[
+            ...(onlineEnabled
+              ? [{ id: "online" as const, title: "Pay online", text: "UPI, cards, netbanking · secured by Razorpay", Icon: CreditCard }]
+              : []),
             { id: "cod" as const, title: "Pay on delivery", text: "Cash or UPI to the delivery person", Icon: Wallet },
             { id: "monthly_bill" as const, title: "Add to monthly bill", text: "Settle with your plan bill on the 1st", Icon: ReceiptIndianRupee },
           ].map(({ id, title, text, Icon }) => (
@@ -186,7 +205,7 @@ export function Checkout({ address, name }: { address: string | null; name: stri
         {address ? (
           <button
             type="button"
-            disabled={pending || belowMin}
+            disabled={pending || paying || belowMin}
             onClick={submit}
             className="flex h-14 w-full items-center justify-between rounded-2xl bg-accent px-5 text-white shadow-[0_10px_30px_rgba(189,75,42,0.3)] transition active:scale-[0.98] disabled:opacity-60"
           >
@@ -194,7 +213,7 @@ export function Checkout({ address, name }: { address: string | null; name: stri
               <span className="block text-[15px] font-bold tabular-nums">{formatINR(total)}</span>
               <span className="block text-[11px] opacity-90">TOTAL</span>
             </span>
-            <span className="text-[15px] font-bold">{pending ? "Placing…" : "Place order →"}</span>
+            <span className="text-[15px] font-bold">{pending || paying ? "Working…" : paymentMode === "online" ? "Pay & place order →" : "Place order →"}</span>
           </button>
         ) : (
           <Link href="/app/account?next=/app/cart" className="flex h-14 w-full items-center justify-center rounded-2xl bg-ink text-[15px] font-bold text-white">

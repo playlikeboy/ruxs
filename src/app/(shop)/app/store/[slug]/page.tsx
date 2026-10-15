@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Clock, MapPin, Repeat, Truck } from "lucide-react";
 import { formatINR } from "@/core/money";
-import { getServiceKind } from "@/config/service-kinds";
+import { getCategoryMap } from "@/features/platform/queries";
 import { getMyLocation, getStore } from "@/features/consumer/queries";
 import { AddToCart } from "@/features/consumer/components/add-to-cart";
 import { StoreCover } from "@/features/consumer/components/store-cover";
@@ -13,7 +13,7 @@ const SHIFT_LABEL: Record<string, string> = { lunch: "Lunch", dinner: "Dinner", 
 
 export default async function StorePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const location = await getMyLocation();
+  const [location, category] = await Promise.all([getMyLocation(), getCategoryMap()]);
   const store = await getStore(slug, { latitude: location.latitude, longitude: location.longitude });
   if (!store) notFound();
 
@@ -24,7 +24,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
   const menu = items.filter((i) => i.allowOneTime);
   const sections = new Map<string, typeof menu>();
   for (const item of menu) {
-    const key = item.section || getServiceKind(item.kind).label;
+    const key = item.section || category(item.kind).label;
     sections.set(key, [...(sections.get(key) ?? []), item]);
   }
   const canOrder = vendor.acceptingOrders && store.inRange;
@@ -38,7 +38,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
   return (
     <div className="pb-40">
       <div className="relative">
-        <StoreCover kind={primary} imageUrl={vendor.coverUrl} alt={vendor.name} className="aspect-[4/3] w-full" emojiClass="text-[96px]" />
+        <StoreCover cover={category(primary)} imageUrl={vendor.coverUrl} alt={vendor.name} className="aspect-[4/3] w-full" emojiClass="text-[96px]" />
         <Link
           href="/app"
           aria-label="Back to explore"
@@ -50,7 +50,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
 
       <div className="relative -mt-6 rounded-t-3xl bg-white px-5 pt-6">
         <h1 className="text-[26px] font-bold leading-tight tracking-tight text-ink">{vendor.name}</h1>
-        <p className="mt-1 text-[15px] text-neutral-600">{kinds.map((k) => getServiceKind(k).label).join(" · ")}</p>
+        <p className="mt-1 text-[15px] text-neutral-600">{kinds.map((k) => category(k).label).join(" · ")}</p>
         <p className="mt-1 flex items-center gap-1 text-sm text-neutral-500">
           <MapPin className="h-4 w-4" aria-hidden="true" />
           {vendor.area}, {vendor.city}
@@ -137,7 +137,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                       )}
                     </div>
                     <div className="relative flex w-28 shrink-0 flex-col items-center">
-                      <StoreCover kind={item.kind} imageUrl={item.imageUrl} alt="" className="h-28 w-28 rounded-2xl" emojiClass="text-5xl" />
+                      <StoreCover cover={category(item.kind)} imageUrl={item.imageUrl} alt="" className="h-28 w-28 rounded-2xl" emojiClass="text-5xl" />
                       <div className="-mt-5">
                         <AddToCart
                           store={storeInfo}
