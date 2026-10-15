@@ -1,6 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ruxs",
+  // Pinned so a stale wrangler account cache can never deploy to another account.
+  "account_id": "091539408595ba99a0ef106d42391d5b",
   "main": "custom-worker.ts",
   "compatibility_date": "2024-09-23",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
