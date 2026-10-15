@@ -5,7 +5,8 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendors, vendorMembers, vendorInvites } from "@/db/schema";
 import { requireUser, requireVendorAccess } from "@/lib/auth/session";
-import { createVendorSchema, inviteStaffSchema } from "./schemas";
+import { createVendorSchema, inviteStaffSchema, storefrontSchema } from "./schemas";
+import { rupeesToPaise } from "@/core/money";
 
 export async function createVendor(input: unknown) {
   const user = await requireUser();
@@ -55,7 +56,7 @@ export async function createVendor(input: unknown) {
       role: "owner",
     });
 
-    revalidatePath("/merchant");
+    revalidatePath("/merchant-panel");
     return { ok: true, slug: newVendor.slug };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Database error";
@@ -85,10 +86,39 @@ export async function inviteStaff(input: unknown) {
       })
       .onConflictDoNothing();
 
-    revalidatePath(`/merchant/${slug}/settings`);
+    revalidatePath(`/merchant-panel/${slug}/settings`);
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Database error";
     return { ok: false, error: message };
   }
+}
+
+export async function saveStorefront(input: unknown) {
+  const parsed = storefrontSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+  const { slug, ...data } = parsed.data;
+  const access = await requireVendorAccess(slug, ["owner"]);
+  const db = getDb();
+
+  await db
+    .update(vendors)
+    .set({
+      description: data.description || null,
+      coverUrl: data.coverUrl || null,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      serviceRadiusKm: data.serviceRadiusKm,
+      deliveryFeePaise: rupeesToPaise(data.deliveryFeeRupees),
+      minOrderPaise: rupeesToPaise(data.minOrderRupees),
+      acceptingOrders: data.acceptingOrders,
+      updatedAt: new Date(),
+    })
+    .where(eq(vendors.id, access.vendorId));
+
+  revalidatePath(`/merchant-panel/${slug}`, "layout");
+  revalidatePath("/app", "layout");
+  return { ok: true };
 }

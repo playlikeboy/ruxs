@@ -31,3 +31,11 @@ export function adjustmentKey(uuid: string): string {
 export function balance(entries: { amountPaise: number }[]): number {
   return entries.reduce((acc, curr) => acc + curr.amountPaise, 0);
 }
+
+export function shopChargeKey(shopOrderId: string): string {
+  return `shop:${shopOrderId}:charge`;
+}
+
+export function shopPaymentKey(shopOrderId: string): string {
+  return `shop:${shopOrderId}:cod`;
+}

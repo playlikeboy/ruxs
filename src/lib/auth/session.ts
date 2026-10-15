@@ -35,9 +35,18 @@ export function isUserAdmin(user: { id: string; primaryEmail?: string | null }):
   return adminIds.includes(user.id) || adminEmails.includes(userEmail);
 }
 
+/** Staff-facing pages send signed-out people to the merchant sign-in, not the household one. */
+export const requireStaffUser = cache(async (next: string) => {
+  const user = await hexclave.getUser();
+  if (!user) {
+    redirect("/merchant-panel/sign-in?next=" + encodeURIComponent(next));
+  }
+  return user;
+});
+
 export const requireVendorAccess = cache(
   async (slug: string, allowedRoles: Role[] = ALL_ROLES) => {
-    const user = await requireUser();
+    const user = await requireStaffUser("/merchant-panel/" + slug + "/today");
     const db = getDb();
 
     const [row] = await db
@@ -96,7 +105,7 @@ export const requireVendorAccess = cache(
 );
 
 export const requireAdmin = cache(async () => {
-  const user = await requireUser();
+  const user = await requireStaffUser("/admin");
   if (!isUserAdmin(user)) {
     notFound();
   }

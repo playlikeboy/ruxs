@@ -54,9 +54,9 @@ export async function recordAssetMovement(input: unknown) {
       delta,
     });
 
-    revalidatePath("/merchant/" + slug + "/customers/" + customerId);
-    revalidatePath("/merchant/" + slug + "/run");
-    revalidatePath("/merchant/" + slug + "/inventory");
+    revalidatePath("/merchant-panel/" + slug + "/customers/" + customerId);
+    revalidatePath("/merchant-panel/" + slug + "/run");
+    revalidatePath("/merchant-panel/" + slug + "/inventory");
     return { ok: true };
   } catch {
     return { ok: false, error: "Failed to record asset movement. Please try again." };

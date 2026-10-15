@@ -29,3 +29,24 @@ describe("time rules (Asia/Kolkata)", () => {
     expect(weekdayIST("2026-10-18")).toBe("sun");
   });
 });
+
+import { addDaysIST } from "./time";
+
+describe("addDaysIST", () => {
+  it("rolls over months and years", () => {
+    expect(addDaysIST("2026-10-31", 1)).toBe("2026-11-01");
+    expect(addDaysIST("2026-12-31", 1)).toBe("2027-01-01");
+    expect(addDaysIST("2026-03-01", -1)).toBe("2026-02-28");
+  });
+});
+
+import { dayLabelIST } from "./time";
+
+describe("dayLabelIST", () => {
+  it("names nearby days and formats the rest", () => {
+    expect(dayLabelIST("2026-10-15", "2026-10-15")).toBe("Today");
+    expect(dayLabelIST("2026-10-16", "2026-10-15")).toBe("Tomorrow");
+    expect(dayLabelIST("2026-10-14", "2026-10-15")).toBe("Yesterday");
+    expect(dayLabelIST("2026-10-20", "2026-10-15")).toContain("20");
+  });
+});

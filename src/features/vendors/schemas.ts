@@ -19,3 +19,20 @@ export const inviteStaffSchema = z.object({
   email: z.string().email("Valid email required"),
   role: z.enum(["staff", "driver"]),
 });
+
+export const storefrontSchema = z.object({
+  slug: z.string(),
+  description: z.string().trim().max(400).optional(),
+  coverUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => v === "" || /^https:\/\//.test(v), "Cover photo link must start with https://")
+    .optional(),
+  latitude: z.number().min(-90).max(90).nullable(),
+  longitude: z.number().min(-180).max(180).nullable(),
+  serviceRadiusKm: z.number().int().min(1).max(50),
+  deliveryFeeRupees: z.number().min(0).max(1000),
+  minOrderRupees: z.number().min(0).max(10000),
+  acceptingOrders: z.boolean(),
+});

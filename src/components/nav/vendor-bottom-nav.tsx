@@ -2,73 +2,44 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CalendarDays, ClipboardList, LayoutGrid, Repeat, UtensilsCrossed } from "lucide-react";
 
-export function VendorBottomNav({ slug }: { slug: string }) {
+export function VendorBottomNav({ slug, newOrders = 0 }: { slug: string; newOrders?: number }) {
   const pathname = usePathname();
+  const base = "/merchant-panel/" + slug;
 
   const navItems = [
-    {
-      label: "Today",
-      href: "/merchant/" + slug + "/today",
-      icon: (
-        <svg className="h-5 w-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
-      ),
-    },
-    {
-      label: "Run",
-      href: "/merchant/" + slug + "/run",
-      icon: (
-        <svg className="h-5 w-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polygon points="3 11 22 2 13 21 11 13 3 11" />
-        </svg>
-      ),
-    },
-    {
-      label: "Customers",
-      href: "/merchant/" + slug + "/customers",
-      icon: (
-        <svg className="h-5 w-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      ),
-    },
-    {
-      label: "More",
-      href: "/merchant/" + slug + "/more",
-      icon: (
-        <svg className="h-5 w-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <rect x="3" y="3" width="7" height="7" rx="1.5" />
-          <rect x="14" y="3" width="7" height="7" rx="1.5" />
-          <rect x="3" y="14" width="7" height="7" rx="1.5" />
-          <rect x="14" y="14" width="7" height="7" rx="1.5" />
-        </svg>
-      ),
-    },
+    { label: "Today", href: base + "/today", icon: CalendarDays },
+    { label: "Orders", href: base + "/orders", icon: ClipboardList, badge: newOrders },
+    { label: "Plans", href: base + "/subscriptions", icon: Repeat },
+    { label: "Menu", href: base + "/products", icon: UtensilsCrossed },
+    { label: "More", href: base + "/more", icon: LayoutGrid },
   ];
 
   return (
-    <nav aria-label="Bottom navigation" className="fixed bottom-0 left-0 right-0 z-40 mx-auto flex h-16 max-w-md items-center justify-around border-t border-line bg-surface/95 px-2 backdrop-blur-md">
-      {navItems.map((item) => {
-        const isActive = pathname.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={"flex h-12 w-16 flex-col items-center justify-center rounded-[10px] transition-colors " + (isActive ? "font-medium text-accent" : "text-muted hover:text-ink")}
-          >
-            {item.icon}
-            <span className="mt-1 text-[11px] tracking-tight">{item.label}</span>
-          </Link>
-        );
-      })}
+    <nav aria-label="Merchant navigation" className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
+      <ul className="grid h-16 grid-cols-5">
+        {navItems.map((item) => {
+          const isActive = pathname.startsWith(item.href);
+          const Icon = item.icon;
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={"relative flex h-full flex-col items-center justify-center gap-1 text-[11px] transition-colors " + (isActive ? "font-semibold text-accent" : "text-muted hover:text-ink")}
+              >
+                <Icon className="h-5 w-5" strokeWidth={isActive ? 2.3 : 1.8} aria-hidden="true" />
+                {item.label}
+                {item.badge ? (
+                  <span className="absolute right-[calc(50%-20px)] top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white tabular-nums">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </nav>
   );
 }

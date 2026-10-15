@@ -9,6 +9,7 @@ import { isLate, lateCharge } from "@/core/cutoff";
 import { lateFeeKey } from "@/core/ledger";
 import { todayIST } from "@/core/time";
 import { setDayChangeSchema, pauseDatesSchema } from "./schemas";
+import { applyHouseholdDayChange } from "./household";
 
 export async function setDayChange(input: unknown) {
   const parsed = setDayChangeSchema.safeParse(input);
@@ -29,107 +30,17 @@ export async function setDayChange(input: unknown) {
   if (token) {
     // Household authorized by private link token
     const auth = await requireCustomerByToken(token);
-    vendorId = auth.vendorId;
-    source = "link";
-
-    // Verify subscription belongs to customer
-    const [sub] = await db
-      .select({ sub: subscriptions, product: products })
-      .from(subscriptions)
-      .innerJoin(products, eq(subscriptions.productId, products.id))
-      .where(
-        and(
-          eq(subscriptions.id, subscriptionId),
-          eq(subscriptions.customerId, auth.customer.id)
-        )
-      )
-      .limit(1);
-
-    if (!sub) {
-      return { ok: false, error: "Subscription not found" };
-    }
-
-    const now = new Date();
-    const tapIsLate = isLate(now, serviceDate, sub.product.cutoffAt);
-
-    if (tapIsLate) {
-      if (sub.product.lateRule === "locked" || kind !== "skip") {
-        return {
-          ok: false,
-          error: `Cutoff passed at ${sub.product.cutoffAt} IST. Kitchen count is locked.`,
-        };
-      }
-    }
-
     try {
-      await db
-        .insert(dayChanges)
-        .values({
-          vendorId,
-          subscriptionId,
-          serviceDate,
-          kind,
-          qty,
-          source,
-          receivedAt: now,
-          isLate: tapIsLate,
-        })
-        .onConflictDoUpdate({
-          target: [dayChanges.subscriptionId, dayChanges.serviceDate],
-          set: {
-            kind,
-            qty,
-            source,
-            receivedAt: now,
-            isLate: tapIsLate,
-          },
-        });
-
-      if (tapIsLate && kind === "skip") {
-        // Late skip: find confirmed order, update status to late_skip, record late fee
-        const [existingOrder] = await db
-          .select()
-          .from(orders)
-          .where(
-            and(
-              eq(orders.subscriptionId, subscriptionId),
-              eq(orders.serviceDate, serviceDate)
-            )
-          )
-          .limit(1);
-
-        if (existingOrder && existingOrder.status === "confirmed") {
-          await db
-            .update(orders)
-            .set({ status: "late_skip" })
-            .where(eq(orders.id, existingOrder.id));
-
-          const chargeResult = lateCharge(
-            sub.product.lateRule as "free" | "half" | "full" | "locked",
-            existingOrder.qty,
-            existingOrder.unitPricePaise
-          );
-
-          if (!chargeResult.refused && chargeResult.chargePaise > 0) {
-            await db
-              .insert(ledgerEntries)
-              .values({
-                vendorId,
-                customerId: auth.customer.id,
-                orderId: existingOrder.id,
-                type: "late_fee",
-                amountPaise: chargeResult.chargePaise,
-                notes: `Late skip fee for ${sub.product.name} on ${serviceDate}`,
-                idempotencyKey: lateFeeKey(existingOrder.id),
-                createdBy: auth.customer.id,
-              })
-              .onConflictDoNothing();
-          }
-        }
-      }
-
-      revalidatePath(`/c/${token}`);
-      return { ok: true, isLate: tapIsLate };
+      const result = await applyHouseholdDayChange({
+        vendorId: auth.vendorId,
+        customerId: auth.customer.id,
+        subscriptionId,
+        serviceDate,
+        kind,
+        qty,
+      });
+      if (result.ok) revalidatePath(`/c/${token}`);
+      return result;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Database error";
       return { ok: false, error: msg };
@@ -225,7 +136,7 @@ export async function setDayChange(input: unknown) {
         }
       }
 
-      revalidatePath(`/merchant/${slug}/today`);
+      revalidatePath(`/merchant-panel/${slug}/today`);
       return { ok: true, isLate: tapIsLate };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Database error";
@@ -356,7 +267,7 @@ export async function pauseDates(input: unknown) {
     }
 
     if (token) revalidatePath(`/c/${token}`);
-    if (slug) revalidatePath(`/merchant/${slug}/today`);
+    if (slug) revalidatePath(`/merchant-panel/${slug}/today`);
     return { ok: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Database error";

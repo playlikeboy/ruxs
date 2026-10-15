@@ -2,9 +2,9 @@
 
 Start with `PROMPT.md` (build order, checklists, and decisions that override the PRD). The full spec is `docs/PRD.md`; long-term context is in `RUXS_STARTUP_OVERVIEW.md`.
 
-**Product direction (updated 2026-10-14):** RUXS has two experiences. The public site is customer-first and introduces discovery for household essentials such as tiffin subscriptions and 20L water-can delivery. The separate merchant workspace remains at `/app`. Do not revert marketing pages to vendor-only copy, but do not claim searchable live listings, checkout, or customer accounts are operational unless implemented and tested end-to-end.
+**Product direction (updated 2026-10-15):** RUXS has four surfaces. (1) The static public site. (2) The household app at `/app` (Hexclave sign-in at `/sign-in`): browse nearby stores by category (tiffin, water, milk, other), one-store cart and checkout (pay on delivery or add to monthly bill), subscriptions with per-day skip, orders and plans. (3) The merchant panel at `/merchant-panel` (its own sign-in at `/merchant-panel/sign-in`): orders, plans, menu CRUD, run sheet, bills, storefront settings. (4) The admin panel at `/admin`. Households never see vendor phone numbers. Products are archived, never deleted (orders reference them).
 
-**MVP overrides:** WhatsApp is paused — households use the private link `/c/[token]` to Deliver/Skip/Extra; no webhook, no `messages`/`webhook_events` tables, no `WHATSAPP_*` env. The schema is 11 tables (adds `vendor_invites`). See `PROMPT.md` §2.
+**MVP overrides:** WhatsApp is paused — households use the private link `/c/[token]` to Deliver/Skip/Extra; no webhook, no `messages`/`webhook_events` tables, no `WHATSAPP_*` env. The schema is 11 tables (adds `vendor_invites`) plus the marketplace tables `consumers`, `shop_orders`, `shop_order_items` (migration 0003). See `PROMPT.md` §2.
 Hexclave handles auth — fetch its skill (https://skill.hexclave.com) before touching auth code.
 
 ## Hard lines
@@ -31,3 +31,13 @@ Lateness by tap time vs. IST cutoff; store only day changes before cutoff; write
 
 ## Git
 Work on `main`, commit as SH20RAJ, no AI co-author lines.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

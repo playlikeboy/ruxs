@@ -135,7 +135,7 @@ export async function generateMonthlyBillsAction(input: unknown) {
 
   try {
     const result = await generateBillsForVendor(access.vendorId, period);
-    revalidatePath(`/merchant/${slug}/bills`);
+    revalidatePath(`/merchant-panel/${slug}/bills`);
     return { ok: true, data: result };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to generate monthly bills";
@@ -177,7 +177,7 @@ export async function markBillSent(input: unknown) {
       })
       .where(eq(invoices.id, inv.id));
 
-    revalidatePath(`/merchant/${slug}/bills`);
+    revalidatePath(`/merchant-panel/${slug}/bills`);
     return { ok: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to mark bill as sent";

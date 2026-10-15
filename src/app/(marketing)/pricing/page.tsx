@@ -67,7 +67,7 @@ export default function PricingPage() {
       <section className="border-t border-line pt-6">
         <h2 className="text-lg font-semibold text-ink">Are you a merchant?</h2>
         <p className="mt-2 text-sm leading-6 text-muted">Manage your own product prices, recurring subscriptions, deliveries and customer accounts from the separate RUXS merchant workspace.</p>
-        <Link href="/merchant" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline">
+        <Link href="/merchant-panel" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline">
           Open merchant portal <span aria-hidden="true">→</span>
         </Link>
       </section>

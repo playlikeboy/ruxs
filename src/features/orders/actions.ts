@@ -110,8 +110,8 @@ export async function markDelivered(input: unknown) {
       return { ok: true };
     });
 
-    revalidatePath(`/merchant/${slug}/run`);
-    revalidatePath(`/merchant/${slug}/today`);
+    revalidatePath(`/merchant-panel/${slug}/run`);
+    revalidatePath(`/merchant-panel/${slug}/today`);
     return result;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Delivery record failed";
@@ -148,7 +148,7 @@ export async function markFailed(input: unknown) {
       return { ok: false, error: "Order not found" };
     }
 
-    revalidatePath(`/merchant/${slug}/run`);
+    revalidatePath(`/merchant-panel/${slug}/run`);
     return { ok: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed update failed";

@@ -10,7 +10,9 @@ import {
   createVendorForAdminSchema,
   vendorStatusActionSchema,
   setVendorCredentialsSchema,
+  adminUpdateVendorSchema,
 } from "./schemas";
+import { rupeesToPaise } from "@/core/money";
 
 function generateSecurePassword(): string {
   const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%&*";
@@ -126,11 +128,11 @@ export async function createVendorForAdmin(input: unknown) {
       return vendor;
     });
 
-    revalidatePath("/admin");
-    revalidatePath("/merchant");
+    revalidatePath("/admin", "layout");
+    revalidatePath("/merchant-panel");
 
-    const portalUrl = `https://ruxs.in/merchant/${created.slug}/today`;
-    const loginUrl = "https://ruxs.in/sign-in";
+    const portalUrl = `https://ruxs.in/merchant-panel/${created.slug}/today`;
+    const loginUrl = "https://ruxs.in/merchant-panel/sign-in";
 
     const inviteText =
       "🔐 RUXS Merchant Portal Login Credentials\n\n" +
@@ -242,11 +244,11 @@ export async function setVendorCredentialsForAdmin(input: unknown) {
       acceptedUserId: hexUserId,
     });
 
-  revalidatePath("/admin");
-  revalidatePath("/merchant");
+  revalidatePath("/admin", "layout");
+  revalidatePath("/merchant-panel");
 
-  const portalUrl = `https://ruxs.in/merchant/${vendor.slug}/today`;
-  const loginUrl = "https://ruxs.in/sign-in";
+  const portalUrl = `https://ruxs.in/merchant-panel/${vendor.slug}/today`;
+  const loginUrl = "https://ruxs.in/merchant-panel/sign-in";
 
   const inviteText =
     "🔐 RUXS Merchant Portal Login Credentials\n\n" +
@@ -289,7 +291,7 @@ export async function approveVendor(input: unknown) {
       return { ok: false as const, error: "Vendor not found" };
     }
 
-    revalidatePath("/admin");
+    revalidatePath("/admin", "layout");
     return { ok: true as const };
   } catch {
     return { ok: false as const, error: "Failed to approve vendor" };
@@ -316,9 +318,29 @@ export async function suspendVendor(input: unknown) {
       return { ok: false as const, error: "Vendor not found" };
     }
 
-    revalidatePath("/admin");
+    revalidatePath("/admin", "layout");
     return { ok: true as const };
   } catch {
     return { ok: false as const, error: "Failed to suspend vendor" };
   }
+}
+
+export async function adminUpdateVendor(input: unknown) {
+  const parsed = adminUpdateVendorSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+  await requireAdmin();
+  const { vendorId, deliveryFeeRupees, ...data } = parsed.data;
+  const db = getDb();
+  const [updated] = await db
+    .update(vendors)
+    .set({ ...data, deliveryFeePaise: rupeesToPaise(deliveryFeeRupees), updatedAt: new Date() })
+    .where(eq(vendors.id, vendorId))
+    .returning({ slug: vendors.slug });
+  if (!updated) return { ok: false as const, error: "Vendor not found" };
+
+  revalidatePath("/admin", "layout");
+  revalidatePath(`/app/store/${updated.slug}`);
+  return { ok: true as const };
 }

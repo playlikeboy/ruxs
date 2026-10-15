@@ -73,8 +73,8 @@ export async function saveSubscription(input: unknown) {
       });
     }
 
-    revalidatePath("/merchant/" + slug + "/customers/" + customerId);
-    revalidatePath("/merchant/" + slug + "/products");
+    revalidatePath("/merchant-panel/" + slug + "/customers/" + customerId);
+    revalidatePath("/merchant-panel/" + slug + "/products");
     return { ok: true };
   } catch {
     return { ok: false, error: "Could not save the subscription. Check the details and try again." };
