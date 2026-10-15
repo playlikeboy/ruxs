@@ -20,7 +20,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "bun run src/db/seed.ts",
-    "postinstall": "node scripts/patch-opennext.cjs",
+    "postinstall": "node scripts/patch-opennext.cjs && node scripts/build-hexclave-css.mjs",
     "db:seed:storefronts": "bun run src/db/seed-storefronts.ts"
   },
   "dependencies": {
