@@ -14,7 +14,8 @@ import {
   vendors,
 } from "@/db/schema";
 import { requireUser } from "@/lib/auth/session";
-import { haversineDistanceKm, resolveCoordinates } from "@/core/geo";
+import { findNearestLocality, haversineDistanceKm, resolveCoordinates } from "@/core/geo";
+import { readApproxPoint, readGpsCookie } from "@/lib/location";
 import { balance } from "@/core/ledger";
 import { addDaysIST, todayIST } from "@/core/time";
 import type { ServiceKind } from "@/config/service-kinds";
@@ -28,6 +29,38 @@ export const getMyProfile = cache(async () => {
     .where(eq(consumers.userId, user.id))
     .limit(1);
   return { user, profile: profile ?? null };
+});
+
+export type LocationSource = "address" | "gps" | "approx" | "none";
+
+export interface MyLocation {
+  latitude: number | null;
+  longitude: number | null;
+  source: LocationSource;
+  label: string | null;
+}
+
+/**
+ * Where to look for stores, best source first: the saved address pin, then the
+ * last GPS fix, then Cloudflare's IP guess.
+ */
+export const getMyLocation = cache(async (): Promise<MyLocation> => {
+  const { profile } = await getMyProfile();
+  if (profile?.latitude != null && profile.longitude != null) {
+    return { latitude: profile.latitude, longitude: profile.longitude, source: "address", label: `${profile.society}, ${profile.area}` };
+  }
+  const gps = await readGpsCookie();
+  if (gps) {
+    const { locality } = findNearestLocality(gps.latitude, gps.longitude);
+    return { ...gps, source: "gps", label: profile ? `${profile.society}, ${profile.area}` : `Near ${locality.name}, ${locality.city}` };
+  }
+  const approx = readApproxPoint();
+  if (approx) {
+    const { locality, distanceKm } = findNearestLocality(approx.latitude, approx.longitude);
+    const place = distanceKm <= 25 ? `${locality.name}, ${locality.city}` : (approx.city ?? "your area");
+    return { latitude: approx.latitude, longitude: approx.longitude, source: "approx", label: place };
+  }
+  return { latitude: null, longitude: null, source: "none", label: profile ? `${profile.society}, ${profile.area}` : null };
 });
 
 export interface StoreCard {

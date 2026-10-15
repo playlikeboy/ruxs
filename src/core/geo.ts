@@ -60,6 +60,16 @@ export const INDIAN_LOCALITIES: LocalityCentroid[] = [
   { id: "pun-kot", name: "Kothrud", city: "Pune", state: "Maharashtra", latitude: 18.5074, longitude: 73.8077 },
   { id: "pun-cen", name: "Shivajinagar / Central", city: "Pune", state: "Maharashtra", latitude: 18.5314, longitude: 73.8446 },
 
+  // Ranchi
+  { id: "rnc-lal", name: "Lalpur", city: "Ranchi", state: "Jharkhand", latitude: 23.3747, longitude: 85.3349 },
+  { id: "rnc-har", name: "Harmu", city: "Ranchi", state: "Jharkhand", latitude: 23.3534, longitude: 85.2990 },
+  { id: "rnc-kan", name: "Kanke Road", city: "Ranchi", state: "Jharkhand", latitude: 23.4060, longitude: 85.3210 },
+  { id: "rnc-dor", name: "Doranda", city: "Ranchi", state: "Jharkhand", latitude: 23.3247, longitude: 85.3256 },
+  { id: "rnc-bar", name: "Bariatu", city: "Ranchi", state: "Jharkhand", latitude: 23.3880, longitude: 85.3500 },
+  { id: "rnc-mor", name: "Morabadi", city: "Ranchi", state: "Jharkhand", latitude: 23.3940, longitude: 85.3360 },
+  { id: "rnc-ash", name: "Ashok Nagar", city: "Ranchi", state: "Jharkhand", latitude: 23.3480, longitude: 85.3080 },
+  { id: "rnc-cen", name: "Main Road / Central Ranchi", city: "Ranchi", state: "Jharkhand", latitude: 23.3602, longitude: 85.3250 },
+
   // Kolkata
   { id: "kol-sal", name: "Salt Lake Sector V", city: "Kolkata", state: "West Bengal", latitude: 22.5867, longitude: 88.4172 },
   { id: "kol-new", name: "New Town", city: "Kolkata", state: "West Bengal", latitude: 22.5898, longitude: 88.4744 },

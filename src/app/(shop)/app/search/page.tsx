@@ -1,4 +1,4 @@
-import { getMyProfile, listStores } from "@/features/consumer/queries";
+import { getMyLocation, listStores } from "@/features/consumer/queries";
 import { CategoryBar } from "@/features/consumer/components/category-bar";
 import { SearchBar } from "@/features/consumer/components/search-bar";
 import { StoreCard } from "@/features/consumer/components/store-card";
@@ -8,9 +8,9 @@ export const metadata = { title: "Search" };
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
   const query = q.trim().slice(0, 60);
-  const { profile } = await getMyProfile();
+  const location = await getMyLocation();
   const stores = query
-    ? await listStores({ q: query, latitude: profile?.latitude, longitude: profile?.longitude })
+    ? await listStores({ q: query, latitude: location.latitude, longitude: location.longitude })
     : [];
 
   return (

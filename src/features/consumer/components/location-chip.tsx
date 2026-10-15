@@ -1,19 +1,28 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LocateFixed, MapPin } from "lucide-react";
 import { saveLocation } from "@/features/consumer/actions";
 
-export function LocationChip({ label, hasPoint }: { label: string | null; hasPoint: boolean }) {
+const ASKED_KEY = "ruxs-gps-asked";
+
+export function LocationChip({
+  label,
+  source,
+}: {
+  label: string | null;
+  source: "address" | "gps" | "approx" | "none";
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const autoTried = useRef(false);
 
-  function locate() {
+  function locate(auto: boolean, attempt = 0) {
     if (!("geolocation" in navigator)) {
-      toast.error("Location isn't available on this device");
+      if (!auto) toast.error("Location isn't available on this device");
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -21,10 +30,10 @@ export function LocationChip({ label, hasPoint }: { label: string | null; hasPoi
         startTransition(async () => {
           const res = await saveLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
           if (!res.ok) {
-            toast.error(res.error);
+            if (!auto) toast.error(res.error);
             return;
           }
-          if (res.needsAddress) {
+          if (res.needsAddress && !auto) {
             const qs = new URLSearchParams({
               area: res.area,
               city: res.city,
@@ -32,34 +41,58 @@ export function LocationChip({ label, hasPoint }: { label: string | null; hasPoi
               lng: String(pos.coords.longitude),
             });
             router.push("/app/account?" + qs.toString());
-          } else {
-            toast.success("Showing stores near you");
-            router.refresh();
+            return;
           }
+          if (!auto) toast.success("Showing stores near you");
+          router.refresh();
         });
       },
-      () => toast.error("Allow location access to find stores near you"),
+      (err) => {
+        // A cold GPS often reports "unavailable" or times out on the first try.
+        if (err.code !== err.PERMISSION_DENIED && attempt < 2) {
+          setTimeout(() => locate(auto, attempt + 1), 1500 * (attempt + 1));
+          return;
+        }
+        if (!auto) toast.error("Allow location access to find stores near you");
+      },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
     );
   }
 
+  // First visit with no GPS fix: ask once, automatically. Later visits keep the saved point.
+  useEffect(() => {
+    if (autoTried.current || source === "address" || source === "gps") return;
+    autoTried.current = true;
+    let asked = false;
+    try {
+      asked = window.localStorage.getItem(ASKED_KEY) === "1";
+      window.localStorage.setItem(ASKED_KEY, "1");
+    } catch {
+      // Storage blocked: still ask, just not remembered.
+    }
+    if (!asked) locate(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source]);
+
   return (
     <div className="flex items-center justify-between gap-3">
       <Link href="/app/account" className="min-w-0">
-        <span className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Deliver to</span>
+        <span className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+          {source === "approx" ? "Approx. location" : "Deliver to"}
+        </span>
         <span className="flex items-center gap-1 truncate text-[15px] font-semibold text-ink">
           <MapPin className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
-          <span className="truncate">{label ?? "Set your address"}</span>
+          <span className="truncate">{label ?? "Set your location"}</span>
         </span>
       </Link>
       <button
         type="button"
-        onClick={locate}
+        onClick={() => locate(false)}
         disabled={pending}
         className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 text-[13px] font-semibold text-ink shadow-sm transition active:scale-95 disabled:opacity-60"
       >
         <LocateFixed className={"h-4 w-4 " + (pending ? "animate-spin" : "")} aria-hidden="true" />
-        {hasPoint ? "Update" : "Locate me"}
+        {source === "gps" || source === "address" ? "Update" : "Use exact location"}
       </button>
     </div>
   );
