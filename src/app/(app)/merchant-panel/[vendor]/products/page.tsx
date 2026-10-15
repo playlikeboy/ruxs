@@ -39,9 +39,9 @@ export default async function MenuPage({ params }: { params: Promise<{ vendor: s
         Array.from(groups.entries()).map(([title, items]) => (
           <section key={title} className="space-y-2">
             <h2 className="text-xs font-bold uppercase tracking-wider text-muted">{title}</h2>
-            <ul className="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-surface">
+            <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {items.map((p) => (
-                <li key={p.id} className={"space-y-2.5 p-4 " + (p.isAvailable ? "" : "bg-bg")}>
+                <li key={p.id} className={"flex flex-col justify-between space-y-2.5 rounded-[14px] border border-line p-4 " + (p.isAvailable ? "bg-surface" : "bg-bg opacity-80")}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="flex items-center gap-1.5 font-semibold text-ink">

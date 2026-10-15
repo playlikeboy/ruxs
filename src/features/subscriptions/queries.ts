@@ -1,5 +1,5 @@
 import "server-only";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count, gte, isNull, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { subscriptions, products, customers } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
@@ -46,4 +46,16 @@ export async function getVendorSubscriptions(slug: string) {
     .innerJoin(customers, eq(subscriptions.customerId, customers.id))
     .where(eq(subscriptions.vendorId, access.vendorId))
     .orderBy(desc(subscriptions.createdAt));
+}
+
+/** Active plans per product (not ended), for the Today dashboard. */
+export async function countActivePlansByProduct(slug: string, today: string) {
+  const access = await requireVendorAccess(slug);
+  const db = getDb();
+  const rows = await db
+    .select({ productId: subscriptions.productId, n: count() })
+    .from(subscriptions)
+    .where(and(eq(subscriptions.vendorId, access.vendorId), or(isNull(subscriptions.endsOn), gte(subscriptions.endsOn, today))))
+    .groupBy(subscriptions.productId);
+  return new Map(rows.map((r) => [r.productId, r.n]));
 }

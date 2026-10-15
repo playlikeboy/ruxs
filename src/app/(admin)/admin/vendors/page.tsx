@@ -31,7 +31,26 @@ export default async function AdminVendorsPage({ searchParams }: { searchParams:
         <input name="q" defaultValue={q} placeholder="Search name, city, phone…" aria-label="Search vendors" className="h-11 w-full rounded-[10px] border border-line bg-surface pl-9 pr-3 text-sm" />
       </form>
 
-      <div className="overflow-x-auto rounded-[12px] border border-line bg-surface">
+      <ul className="space-y-2 md:hidden">
+        {rows.map(({ vendor, products, customers }) => (
+          <li key={vendor.id}>
+            <Link href={`/admin/vendors/${vendor.id}`} className="block rounded-[14px] border border-line bg-surface p-4 active:bg-bg">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{vendor.name}</p>
+                  <p className="truncate text-xs text-muted">{vendor.area}, {vendor.city}</p>
+                </div>
+                <span className={"shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold capitalize " + (STATUS_TONE[vendor.status] ?? "")}>{vendor.status}</span>
+              </div>
+              <p className="mt-2 text-xs text-muted">
+                {products} {products === 1 ? "item" : "items"} · {customers} {customers === 1 ? "customer" : "customers"} · login <span className="font-mono">{vendor.loginId ?? "not set"}</span>
+              </p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <div className="hidden overflow-x-auto rounded-[12px] border border-line bg-surface md:block">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
             <tr>

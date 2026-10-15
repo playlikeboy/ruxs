@@ -44,7 +44,7 @@ export default async function MerchantOrdersPage({
           icon="bill"
         />
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid items-start gap-3 lg:grid-cols-2">
           {orders.map(({ order, items, customerName, customerPhone }) => (
             <li key={order.id} className={"space-y-3 rounded-[14px] border bg-surface p-4 " + (order.status === "placed" ? "border-accent/40 shadow-[0_0_0_3px_rgba(189,75,42,0.08)]" : "border-line")}>
               <div className="flex items-start justify-between gap-3">

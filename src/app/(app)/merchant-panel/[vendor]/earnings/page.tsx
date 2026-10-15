@@ -25,7 +25,7 @@ export default async function EarningsPage({ params }: { params: Promise<{ vendo
         <p className="mt-0.5 text-sm text-muted">Online payments RUXS collected for you. Withdraw once a month.</p>
       </div>
 
-      <section className="rounded-[16px] bg-ink p-5 text-white">
+      <section className="rounded-[16px] bg-ink p-5 text-white lg:max-w-xl">
         <p className="text-xs uppercase tracking-wider opacity-70">Available to withdraw</p>
         <p className="mt-1 font-mono text-4xl font-bold tabular-nums">{formatINR(balance.availablePaise)}</p>
         <dl className="mt-4 grid grid-cols-3 gap-2 text-xs">
@@ -49,6 +49,7 @@ export default async function EarningsPage({ params }: { params: Promise<{ vendo
         </div>
       </section>
 
+      <div className="grid gap-5 lg:grid-cols-2">
       <section className="space-y-2">
         <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Withdrawals</h2>
         {payouts.length === 0 ? (
@@ -93,6 +94,7 @@ export default async function EarningsPage({ params }: { params: Promise<{ vendo
           </ul>
         )}
       </section>
+      </div>
     </div>
   );
 }

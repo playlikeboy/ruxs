@@ -13,48 +13,32 @@ interface BigCountProps {
   skippedCount?: number;
 }
 
-export function BigCount({
-  product,
-  confirmedQty,
-  deliveredCount = 0,
-  skippedCount = 0,
-}: BigCountProps) {
+/** One kitchen count: how many to cook or load for a product today, with delivery progress. */
+export function BigCount({ product, confirmedQty, deliveredCount = 0, skippedCount = 0 }: BigCountProps) {
+  const pct = confirmedQty > 0 ? Math.min(100, Math.round((deliveredCount / confirmedQty) * 100)) : 0;
   return (
-    <div className="bg-surface border border-line rounded-[12px] p-5 space-y-3 shadow-xs">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-ink leading-tight">
-            {product.name}
-          </h2>
-          <span className="text-xs text-muted capitalize">
-            {product.shift} shift
-          </span>
+    <div className="flex flex-col rounded-[16px] border border-line bg-surface p-5 shadow-xs">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate text-base font-semibold leading-tight text-ink">{product.name}</h3>
+          <p className="mt-0.5 text-xs capitalize text-muted">{product.shift}</p>
         </div>
         <CutoffTimer cutoffAt={product.cutoffAt} shift={product.shift} />
       </div>
 
-      <div className="pt-2 pb-1">
-        <div className="text-xs font-medium text-muted uppercase tracking-wider mb-0.5">
-          Kitchen Count
+      <div className="mt-4 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">To prepare</p>
+          <p className="font-mono text-5xl font-bold leading-none tracking-tight text-ink tabular-nums">{confirmedQty}</p>
         </div>
-        <div className="text-5xl font-bold font-mono tracking-tight text-ink tabular-nums">
-          {confirmedQty}
-        </div>
+        <dl className="text-right text-xs">
+          <div className="flex justify-end gap-2"><dt className="text-muted">Delivered</dt><dd className="w-6 font-semibold text-good tabular-nums">{deliveredCount}</dd></div>
+          <div className="flex justify-end gap-2"><dt className="text-muted">Skipped</dt><dd className="w-6 font-semibold text-muted tabular-nums">{skippedCount}</dd></div>
+        </dl>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-line text-xs">
-        <div className="flex items-center justify-between p-2 bg-[#FAFAF7] rounded-[8px]">
-          <span className="text-muted">Delivered</span>
-          <span className="font-semibold text-good tabular-nums">
-            {deliveredCount}
-          </span>
-        </div>
-        <div className="flex items-center justify-between p-2 bg-[#FAFAF7] rounded-[8px]">
-          <span className="text-muted">Skipped</span>
-          <span className="font-semibold text-muted tabular-nums">
-            {skippedCount}
-          </span>
-        </div>
+      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-bg" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Delivered">
+        <div className="h-full rounded-full bg-good transition-all" style={{ width: pct + "%" }} />
       </div>
     </div>
   );

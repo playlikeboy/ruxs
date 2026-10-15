@@ -83,7 +83,23 @@ export default async function AdminPayoutsPage() {
 
       <section className="space-y-3">
         <h2 className="text-base font-semibold">Vendor balances</h2>
-        <div className="overflow-x-auto rounded-[12px] border border-line bg-surface">
+        <ul className="space-y-2 md:hidden">
+          {balances.map(({ vendor, balance }) => (
+            <li key={vendor.id} className="rounded-[14px] border border-line bg-surface p-4 text-sm">
+              <div className="flex items-start justify-between gap-3">
+                <Link href={`/admin/vendors/${vendor.id}`} className="font-semibold">{vendor.name}</Link>
+                <span className="font-mono font-bold tabular-nums">{formatINR(balance.availablePaise)}</span>
+              </div>
+              <p className="mt-1 text-xs text-muted">
+                Earned {formatINR(balance.settledPaise)} · fee {formatINR(balance.feePaise)} · pending {formatINR(balance.pendingPaise)} · withdrawn {formatINR(balance.withdrawnPaise)}
+              </p>
+              {balance.availablePaise >= 100 && balance.requestedPaise === 0 && (
+                <div className="mt-3"><RecordPayoutButton vendorId={vendor.id} amountLabel={formatINR(balance.availablePaise)} /></div>
+              )}
+            </li>
+          ))}
+        </ul>
+        <div className="hidden overflow-x-auto rounded-[12px] border border-line bg-surface md:block">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
               <tr>

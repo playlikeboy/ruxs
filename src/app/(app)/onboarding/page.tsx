@@ -25,7 +25,7 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="mx-auto max-w-md space-y-6 p-4 pb-20 sm:p-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
           Set up your business

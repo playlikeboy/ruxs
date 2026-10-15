@@ -15,7 +15,20 @@ export default async function AdminHouseholdsPage() {
       {people.length === 0 ? (
         <p className="rounded-[12px] border border-line bg-surface p-8 text-center text-sm text-muted">No households yet.</p>
       ) : (
-        <div className="overflow-x-auto rounded-[12px] border border-line bg-surface">
+        <>
+        <ul className="space-y-2 md:hidden">
+          {people.map((p) => (
+            <li key={p.userId} className="rounded-[14px] border border-line bg-surface p-4 text-sm">
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-semibold">{p.name}</p>
+                <span className="text-xs text-muted">{dateFmt.format(p.createdAt)}</span>
+              </div>
+              <p className="text-xs text-muted">{p.flat}, {p.society} · {p.area}, {p.city}</p>
+              <p className="mt-1 text-xs"><span className="font-mono">{p.phone}</span> · {p.stores} stores · {p.orders} orders</p>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden overflow-x-auto rounded-[12px] border border-line bg-surface md:block">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
               <tr>
@@ -41,6 +54,7 @@ export default async function AdminHouseholdsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );
