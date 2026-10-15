@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getMyProfile, listStores } from "@/features/consumer/queries";
+import { getMyLocation, getMyProfile, listStores } from "@/features/consumer/queries";
 import { SERVICE_KINDS } from "@/config/service-kinds";
 import { LocationChip } from "@/features/consumer/components/location-chip";
 import { SearchBar } from "@/features/consumer/components/search-bar";
@@ -10,7 +10,8 @@ export const metadata = { title: "Explore" };
 
 export default async function ExplorePage() {
   const { user, profile } = await getMyProfile();
-  const stores = await listStores({ latitude: profile?.latitude, longitude: profile?.longitude });
+  const location = await getMyLocation();
+  const stores = await listStores({ latitude: location.latitude, longitude: location.longitude });
   const nearby = stores.filter((s) => s.inRange);
   const farther = stores.filter((s) => !s.inRange);
   const firstName = (profile?.name ?? user.displayName ?? "").split(" ")[0];
@@ -18,10 +19,7 @@ export default async function ExplorePage() {
   return (
     <div className="pb-24">
       <div className="space-y-4 px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))]">
-        <LocationChip
-          label={profile ? `${profile.society}, ${profile.area}` : null}
-          hasPoint={profile?.latitude != null}
-        />
+        <LocationChip label={location.label} source={location.source} />
         <SearchBar />
       </div>
 
@@ -59,7 +57,7 @@ export default async function ExplorePage() {
         <section className="mt-8">
           <div className="flex items-end justify-between">
             <h2 className="text-xl font-bold tracking-tight text-ink">
-              {profile?.latitude != null ? "Delivering to you" : "Popular on RUXS"}
+              {location.source === "none" ? "Popular on RUXS" : location.source === "approx" ? "Stores near you" : "Delivering to you"}
             </h2>
             <span className="text-sm text-neutral-500 tabular-nums">{nearby.length} stores</span>
           </div>

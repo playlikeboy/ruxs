@@ -2,6 +2,8 @@
 
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { LOCATION_COOKIE } from "@/lib/location";
 import { and, eq, inArray, isNull, or, gte } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
@@ -155,6 +157,15 @@ export async function saveLocation(input: unknown) {
       .set({ latitude, longitude, updatedAt: new Date() })
       .where(eq(consumers.userId, user.id));
   }
+
+  // Remember the fix for households that have not saved an address yet.
+  (await cookies()).set(LOCATION_COOKIE, `${latitude.toFixed(5)},${longitude.toFixed(5)}`, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/app",
+    maxAge: 60 * 60 * 24 * 30,
+  });
 
   revalidatePath("/app", "layout");
   return {

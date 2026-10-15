@@ -1,6 +1,6 @@
 /**
  * Fills the demo stores with storefront details and one-time menu items, and
- * adds a demo dairy. Safe to re-run: updates by slug, inserts items by name.
+ * adds a demo dairy plus a set of demo stores around Ranchi. Safe to re-run: updates by slug, inserts items by name.
  * Run after `db:seed`: `bun run src/db/seed-storefronts.ts`.
  */
 import { and, eq } from "drizzle-orm";
@@ -129,6 +129,166 @@ async function upsertItems(vendorId: string, items: Item[]) {
   }
 }
 
+
+type DemoVendor = {
+  slug: string;
+  name: string;
+  phone: string;
+  upiVpa: string;
+  city: string;
+  area: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  serviceRadiusKm: number;
+  deliveryFeePaise: number;
+  items: Item[];
+};
+
+const RANCHI: DemoVendor[] = [
+  {
+    slug: "maa-annapurna-rasoi-ranchi",
+    name: "Maa Annapurna Rasoi",
+    phone: "+919999900101",
+    upiVpa: "maaannapurna.demo@upi",
+    city: "Ranchi",
+    area: "Lalpur",
+    description: "Ghar ka Jharkhandi-Bihari khana from Lalpur. Dal-bhaat, sabzi, chokha and fresh rotis every day. Demo store.",
+    latitude: 23.3751,
+    longitude: 85.3361,
+    serviceRadiusKm: 8,
+    deliveryFeePaise: 0,
+    items: [
+      { kind: "tiffin", name: "Veg Lunch Thali", section: "Thalis", pricePaise: 8000, description: "Dal, bhaat, two sabzi, 4 roti, salad.", isVeg: true, cutoffAt: "10:00" },
+      { kind: "tiffin", name: "Veg Dinner Thali", section: "Thalis", pricePaise: 8000, description: "Dal, sabzi, 5 roti, achar.", isVeg: true, shift: "dinner", cutoffAt: "17:00" },
+      { kind: "tiffin", name: "Litti Chokha (4 pc)", section: "Specials", pricePaise: 6000, description: "Sattu litti, baingan-aloo chokha, ghee.", isVeg: true, allowSubscription: false },
+      { kind: "tiffin", name: "Dhuska with Ghugni", section: "Specials", pricePaise: 5000, description: "Jharkhand-style rice-dal dhuska, 4 pc.", isVeg: true, shift: "morning", cutoffAt: "07:30", allowSubscription: false },
+    ],
+  },
+  {
+    slug: "harmu-ghar-ka-khana",
+    name: "Harmu Ghar Ka Khana",
+    phone: "+919999900102",
+    upiVpa: "harmukhana.demo@upi",
+    city: "Ranchi",
+    area: "Harmu",
+    description: "Monthly tiffin for students and working people near Harmu and Ashok Nagar. Light, less-oil meals. Demo store.",
+    latitude: 23.3529,
+    longitude: 85.2984,
+    serviceRadiusKm: 7,
+    deliveryFeePaise: 1000,
+    items: [
+      { kind: "tiffin", name: "Student Lunch Box", section: "Tiffins", pricePaise: 7000, description: "Dal, sabzi, 4 roti, rice.", isVeg: true, cutoffAt: "10:30" },
+      { kind: "tiffin", name: "Diet Dinner Box", section: "Tiffins", pricePaise: 9000, description: "Multigrain roti, moong dal, salad, sabzi.", isVeg: true, shift: "dinner", cutoffAt: "17:30" },
+      { kind: "tiffin", name: "Paneer Butter Masala + 4 Roti", section: "A la carte", pricePaise: 14000, description: "Rich gravy, soft rotis.", isVeg: true, allowSubscription: false },
+    ],
+  },
+  {
+    slug: "doranda-tiffin-point",
+    name: "Doranda Tiffin Point",
+    phone: "+919999900103",
+    upiVpa: "dorandatiffin.demo@upi",
+    city: "Ranchi",
+    area: "Doranda",
+    description: "Veg and non-veg tiffins around Doranda, Hinoo and the station side. Sunday special fish curry. Demo store.",
+    latitude: 23.3252,
+    longitude: 85.3249,
+    serviceRadiusKm: 8,
+    deliveryFeePaise: 1500,
+    items: [
+      { kind: "tiffin", name: "Veg Thali", section: "Thalis", pricePaise: 8500, description: "Dal, rice, sabzi, 4 roti.", isVeg: true, cutoffAt: "10:00" },
+      { kind: "tiffin", name: "Chicken Curry Thali", section: "Thalis", pricePaise: 13000, description: "Home-style chicken, rice, 3 roti.", isVeg: false, cutoffAt: "10:00" },
+      { kind: "tiffin", name: "Fish Curry Rice", section: "Specials", pricePaise: 15000, description: "Rohu in mustard gravy, steamed rice.", isVeg: false, allowSubscription: false },
+      { kind: "tiffin", name: "Egg Curry + Rice", section: "Specials", pricePaise: 9000, description: "Two eggs, onion-tomato gravy.", isVeg: false, allowSubscription: false },
+    ],
+  },
+  {
+    slug: "subarnarekha-aqua-20l",
+    name: "Subarnarekha Aqua 20L",
+    phone: "+919999900104",
+    upiVpa: "subarnarekha.demo@upi",
+    city: "Ranchi",
+    area: "Kanke Road",
+    description: "RO + UV purified 20L jars for Kanke Road, Morabadi and Lalpur. Empties picked up on the same trip. Demo store.",
+    latitude: 23.4052,
+    longitude: 85.3221,
+    serviceRadiusKm: 10,
+    deliveryFeePaise: 0,
+    items: [
+      { kind: "water", name: "20L RO Water Jar", section: "Jars", pricePaise: 3500, description: "Sealed jar, delivered by 9 am.", isVeg: null, shift: "morning", cutoffAt: "08:00" },
+      { kind: "water", name: "20L Chilled Jar", section: "Jars", pricePaise: 4500, description: "Cooled jar for summer afternoons.", isVeg: null, shift: "evening", cutoffAt: "14:00", allowSubscription: false },
+    ],
+  },
+  {
+    slug: "neel-jal-water-ranchi",
+    name: "Neel Jal Water Supply",
+    phone: "+919999900105",
+    upiVpa: "neeljal.demo@upi",
+    city: "Ranchi",
+    area: "Ashok Nagar",
+    description: "20L cans and 1L bottle cases for homes and offices from Ashok Nagar to Doranda. Demo store.",
+    latitude: 23.3476,
+    longitude: 85.3089,
+    serviceRadiusKm: 9,
+    deliveryFeePaise: 0,
+    items: [
+      { kind: "water", name: "20L Mineral Water Can", section: "Cans", pricePaise: 4000, description: "BIS-certified, returnable can.", isVeg: null, shift: "morning", cutoffAt: "08:00" },
+      { kind: "water", name: "1L Bottles (12 pack)", section: "Bottles", pricePaise: 16000, description: "Sealed case.", isVeg: null, allowSubscription: false },
+    ],
+  },
+  {
+    slug: "gwala-fresh-dairy-ranchi",
+    name: "Gwala Fresh Dairy",
+    phone: "+919999900106",
+    upiVpa: "gwaladairy.demo@upi",
+    city: "Ranchi",
+    area: "Bariatu",
+    description: "Cow and buffalo milk at your door before 7 am, plus dahi, paneer and ghee. Demo store.",
+    latitude: 23.3884,
+    longitude: 85.3489,
+    serviceRadiusKm: 7,
+    deliveryFeePaise: 0,
+    items: [
+      { kind: "milk", name: "Cow Milk 1L", section: "Milk", pricePaise: 6000, description: "Fresh, delivered before 7 am.", isVeg: true, shift: "morning", cutoffAt: "21:00" },
+      { kind: "milk", name: "Buffalo Milk 1L", section: "Milk", pricePaise: 7000, description: "Creamy, great for chai.", isVeg: true, shift: "morning", cutoffAt: "21:00" },
+      { kind: "milk", name: "Fresh Dahi 500g", section: "Dahi & paneer", pricePaise: 5000, description: "Set overnight.", isVeg: true, shift: "morning", cutoffAt: "21:00" },
+      { kind: "milk", name: "Desi Ghee 500ml", section: "Ghee", pricePaise: 38000, description: "Slow-cooked from cow milk.", isVeg: true, shift: "morning", cutoffAt: "21:00", allowSubscription: false },
+    ],
+  },
+  {
+    slug: "morabadi-daily-needs",
+    name: "Morabadi Daily Needs",
+    phone: "+919999900107",
+    upiVpa: "morabadineeds.demo@upi",
+    city: "Ranchi",
+    area: "Morabadi",
+    description: "Bread, eggs, atta and household basics delivered every morning around Morabadi and Bariatu. Demo store.",
+    latitude: 23.3946,
+    longitude: 85.3372,
+    serviceRadiusKm: 6,
+    deliveryFeePaise: 1000,
+    items: [
+      { kind: "other", name: "Brown Bread 400g", section: "Bakery", pricePaise: 5000, description: "Baked the same morning.", isVeg: true, shift: "morning", cutoffAt: "21:00" },
+      { kind: "other", name: "Eggs (12)", section: "Eggs", pricePaise: 9000, description: "Farm eggs, one dozen.", isVeg: false, shift: "morning", cutoffAt: "21:00" },
+      { kind: "other", name: "Chakki Atta 5kg", section: "Staples", pricePaise: 26000, description: "Stone-ground wheat flour.", isVeg: null, allowSubscription: false },
+      { kind: "other", name: "Newspaper (Hindi)", section: "Daily", pricePaise: 600, description: "Morning paper at your door.", isVeg: null, shift: "morning", cutoffAt: "21:00" },
+    ],
+  },
+];
+
+async function ensureVendor(v: DemoVendor) {
+  const { items, ...fields } = v;
+  let [row] = await scriptDb.select({ id: vendors.id }).from(vendors).where(eq(vendors.slug, v.slug)).limit(1);
+  if (!row) {
+    [row] = await scriptDb
+      .insert(vendors)
+      .values({ ...fields, plan: "free", status: "active" })
+      .returning({ id: vendors.id });
+  }
+  await upsertItems(row!.id, items);
+  console.log("✓", v.slug);
+}
+
 async function main() {
   for (const store of STORES) {
     const [vendor] = await scriptDb
@@ -161,6 +321,8 @@ async function main() {
   }
   await upsertItems(dairy!.id, DAIRY_ITEMS);
   console.log("✓", DAIRY.slug);
+
+  for (const v of RANCHI) await ensureVendor(v);
 }
 
 main()

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getMyProfile, listStores } from "@/features/consumer/queries";
+import { getMyLocation, listStores } from "@/features/consumer/queries";
 import { SERVICE_KINDS, type ServiceKind } from "@/config/service-kinds";
 import { CategoryBar } from "@/features/consumer/components/category-bar";
 import { SearchBar } from "@/features/consumer/components/search-bar";
@@ -11,11 +11,11 @@ export default async function CategoryPage({ params }: { params: Promise<{ kind:
   const config = SERVICE_KINDS.find((k) => k.id === kind);
   if (!config) notFound();
 
-  const { profile } = await getMyProfile();
+  const location = await getMyLocation();
   const stores = await listStores({
     kind: kind as ServiceKind,
-    latitude: profile?.latitude,
-    longitude: profile?.longitude,
+    latitude: location.latitude,
+    longitude: location.longitude,
   });
 
   return (

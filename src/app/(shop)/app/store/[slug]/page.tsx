@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, Clock, MapPin, Repeat, Truck } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { getServiceKind } from "@/config/service-kinds";
-import { getMyProfile, getStore } from "@/features/consumer/queries";
+import { getMyLocation, getStore } from "@/features/consumer/queries";
 import { AddToCart } from "@/features/consumer/components/add-to-cart";
 import { StoreCover } from "@/features/consumer/components/store-cover";
 import { VegMark } from "@/features/consumer/components/veg-mark";
@@ -13,8 +13,8 @@ const SHIFT_LABEL: Record<string, string> = { lunch: "Lunch", dinner: "Dinner", 
 
 export default async function StorePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { profile } = await getMyProfile();
-  const store = await getStore(slug, { latitude: profile?.latitude ?? null, longitude: profile?.longitude ?? null });
+  const location = await getMyLocation();
+  const store = await getStore(slug, { latitude: location.latitude, longitude: location.longitude });
   if (!store) notFound();
 
   const { vendor, items } = store;

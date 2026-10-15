@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, Store } from "lucide-react";
-import { getMyProfile } from "@/features/consumer/queries";
+import { getMyLocation, getMyProfile } from "@/features/consumer/queries";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { ProfileForm } from "@/features/consumer/components/profile-form";
 import { SignOutButton } from "@/features/consumer/components/sign-out-button";
@@ -19,6 +19,8 @@ export default async function AccountPage({
 }) {
   const sp = await searchParams;
   const { user, profile } = await getMyProfile();
+  const location = await getMyLocation();
+  const gps = location.source === "gps" ? location : null;
   const next = sp.next?.startsWith("/app") ? sp.next : undefined;
 
   const defaults = {
@@ -31,8 +33,8 @@ export default async function AccountPage({
     landmark: profile?.landmark ?? "",
     area: profile?.area ?? sp.area?.slice(0, 80) ?? "",
     city: profile?.city ?? sp.city?.slice(0, 60) ?? "",
-    latitude: profile?.latitude ?? num(sp.lat),
-    longitude: profile?.longitude ?? num(sp.lng),
+    latitude: profile?.latitude ?? num(sp.lat) ?? gps?.latitude ?? null,
+    longitude: profile?.longitude ?? num(sp.lng) ?? gps?.longitude ?? null,
   };
 
   return (
