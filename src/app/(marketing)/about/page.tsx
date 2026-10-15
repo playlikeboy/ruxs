@@ -95,7 +95,7 @@ export default function AboutPage() {
             <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
               Find services near me <span aria-hidden="true" className="ml-2">→</span>
             </Link>
-            <Link href="/merchant" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white">
+            <Link href="/merchant-panel" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white">
               Merchant portal
             </Link>
           </div>
@@ -192,7 +192,7 @@ export default function AboutPage() {
         <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted sm:text-base">Explore local services for your home—or open the merchant portal if you run a neighbourhood business.</p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Find services near me <span aria-hidden="true" className="ml-2">→</span></Link>
-          <Link href="/merchant" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-7 py-3 text-sm font-semibold text-ink transition hover:bg-white">Open merchant portal</Link>
+          <Link href="/merchant-panel" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-7 py-3 text-sm font-semibold text-ink transition hover:bg-white">Open merchant portal</Link>
         </div>
       </section>
     </div>

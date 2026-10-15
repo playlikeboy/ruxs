@@ -92,7 +92,7 @@ export default function ForWaterSuppliersPage() {
             <h2 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">Supply water to local homes?</h2>
             <p className="max-w-2xl text-sm leading-6 text-muted">Manage your own products and pricing, customer subscriptions, delivery runs, empty-can returns and billing in the merchant workspace.</p>
           </div>
-          <Link href="/merchant" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Open merchant portal <span aria-hidden="true" className="ml-2">→</span></Link>
+          <Link href="/merchant-panel" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Open merchant portal <span aria-hidden="true" className="ml-2">→</span></Link>
         </div>
       </section>
     </div>

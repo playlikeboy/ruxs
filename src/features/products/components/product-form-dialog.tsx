@@ -1,287 +1,465 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { X } from "lucide-react";
+import { SERVICE_KINDS, type ServiceKind } from "@/config/service-kinds";
 import { saveProduct } from "@/features/products/actions";
 
-interface Product {
-  id?: string;
-  kind?: string;
-  name?: string;
-  shift?: string;
-  pricePaise?: number;
-  depositPaise?: number;
-  assetName?: string | null;
-  cutoffAt?: string;
-  lateRule?: string;
+export interface EditableProduct {
+  id: string;
+  kind: string;
+  name: string;
+  description: string | null;
+  section: string | null;
+  imageUrl: string | null;
+  isVeg: boolean | null;
+  shift: string;
+  pricePaise: number;
+  depositPaise: number;
+  assetName: string | null;
+  cutoffAt: string;
+  lateRule: string;
+  isAvailable: boolean;
+  allowSubscription: boolean;
+  allowOneTime: boolean;
+}
+
+type Shift = "lunch" | "dinner" | "morning" | "evening";
+type LateRule = "free" | "half" | "full" | "locked";
+
+const DEFAULTS: Record<
+  ServiceKind,
+  { shift: Shift; asset: string; cutoff: string }
+> = {
+  tiffin: { shift: "lunch", asset: "dabba", cutoff: "10:00" },
+  water: { shift: "morning", asset: "can", cutoff: "08:00" },
+  milk: { shift: "morning", asset: "", cutoff: "21:00" },
+  other: { shift: "morning", asset: "", cutoff: "09:00" },
+};
+
+const input =
+  "w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+const label = "mb-1 block text-xs font-medium text-ink";
+
+function Toggle({
+  checked,
+  onChange,
+  title,
+  hint,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <label className="border-line flex cursor-pointer items-center justify-between gap-3 rounded-[10px] border px-3 py-2.5">
+      <span>
+        <span className="text-ink block text-sm font-medium">{title}</span>
+        <span className="text-muted block text-xs">{hint}</span>
+      </span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="peer sr-only"
+      />
+      <span
+        className="bg-line peer-checked:bg-good relative h-6 w-11 shrink-0 rounded-full transition after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5"
+        aria-hidden="true"
+      />
+    </label>
+  );
 }
 
 export function ProductFormDialog({
   slug,
   product,
-  triggerLabel = "+ Add Product",
+  triggerLabel = "+ Add item",
+  triggerClassName,
 }: {
   slug: string;
-  product?: Product;
+  product?: EditableProduct;
   triggerLabel?: string;
+  triggerClassName?: string;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  const [kind, setKind] = useState<"tiffin" | "water">(
-    (product?.kind as "tiffin" | "water") ?? "tiffin"
-  );
+  const initialKind = (product?.kind as ServiceKind) ?? "tiffin";
+  const [kind, setKind] = useState<ServiceKind>(initialKind);
   const [name, setName] = useState(product?.name ?? "");
-  const [shift, setShift] = useState<"lunch" | "dinner" | "morning" | "evening">(
-    (product?.shift as "lunch" | "dinner" | "morning" | "evening") ?? "lunch"
+  const [description, setDescription] = useState(product?.description ?? "");
+  const [section, setSection] = useState(product?.section ?? "");
+  const [imageUrl, setImageUrl] = useState(product?.imageUrl ?? "");
+  const [isVeg, setIsVeg] = useState<boolean | null>(
+    product?.isVeg ?? (initialKind === "tiffin" ? true : null)
   );
-  const [priceRupees, setPriceRupees] = useState(
-    product?.pricePaise ? (product.pricePaise / 100).toString() : ""
+  const [shift, setShift] = useState<Shift>(
+    (product?.shift as Shift) ?? DEFAULTS[initialKind].shift
   );
-  const [depositRupees, setDepositRupees] = useState(
-    product?.depositPaise ? (product.depositPaise / 100).toString() : "0"
+  const [price, setPrice] = useState(
+    product ? String(product.pricePaise / 100) : ""
   );
-  const [assetName, setAssetName] = useState(product?.assetName ?? "");
-  const [cutoffAt, setCutoffAt] = useState(product?.cutoffAt ?? "10:00");
-  const [lateRule, setLateRule] = useState<"free" | "half" | "full" | "locked">(
-    (product?.lateRule as "free" | "half" | "full" | "locked") ?? "full"
+  const [deposit, setDeposit] = useState(
+    product ? String(product.depositPaise / 100) : "0"
+  );
+  const [assetName, setAssetName] = useState(
+    product?.assetName ?? DEFAULTS[initialKind].asset
+  );
+  const [cutoffAt, setCutoffAt] = useState(
+    product?.cutoffAt ?? DEFAULTS[initialKind].cutoff
+  );
+  const [lateRule, setLateRule] = useState<LateRule>(
+    (product?.lateRule as LateRule) ?? "full"
+  );
+  const [isAvailable, setIsAvailable] = useState(product?.isAvailable ?? true);
+  const [allowSubscription, setAllowSubscription] = useState(
+    product?.allowSubscription ?? true
+  );
+  const [allowOneTime, setAllowOneTime] = useState(
+    product?.allowOneTime ?? true
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function pickKind(k: ServiceKind) {
+    setKind(k);
+    if (!product) {
+      setShift(DEFAULTS[k].shift);
+      setAssetName(DEFAULTS[k].asset);
+      setCutoffAt(DEFAULTS[k].cutoff);
+      setIsVeg(k === "tiffin" ? true : null);
+    }
+  }
+
+  function submit(e: React.FormEvent) {
     e.preventDefault();
-    const priceVal = parseFloat(priceRupees);
-    const depVal = parseFloat(depositRupees || "0");
-
-    if (isNaN(priceVal) || priceVal <= 0) {
-      toast.error("Please enter a valid price");
+    const priceRupees = Number(price);
+    const depositRupees = Number(deposit || "0");
+    if (!Number.isFinite(priceRupees) || priceRupees <= 0) {
+      toast.error("Enter a valid price");
       return;
     }
-
     startTransition(async () => {
       const res = await saveProduct({
         slug,
         id: product?.id,
         kind,
-        name: name.trim(),
+        name,
+        description,
+        section,
+        imageUrl,
+        isVeg,
         shift,
-        priceRupees: priceVal,
-        depositRupees: isNaN(depVal) ? 0 : depVal,
-        assetName: assetName.trim() || undefined,
+        priceRupees,
+        depositRupees: Number.isFinite(depositRupees) ? depositRupees : 0,
+        assetName,
         cutoffAt,
         lateRule,
+        isAvailable,
+        allowSubscription,
+        allowOneTime,
       });
-
       if (!res.ok) {
-        toast.error(res.error ?? "Failed to save product");
-      } else {
-        toast.success(product?.id ? "Product updated" : "Product added");
-        setIsOpen(false);
-        if (!product?.id) {
-          setName("");
-          setPriceRupees("");
-          setDepositRupees("0");
-        }
+        toast.error(res.error ?? "Could not save");
+        return;
       }
+      toast.success(product ? "Item updated" : "Item added to your menu");
+      setOpen(false);
+      router.refresh();
     });
-  };
+  }
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
-        className="px-3 py-2 bg-accent text-white text-xs font-semibold rounded-[10px] hover:opacity-90 active:scale-95 transition-all shadow-xs"
+        onClick={() => setOpen(true)}
+        className={
+          triggerClassName ??
+          "bg-accent shrink-0 rounded-[10px] px-3.5 py-2 text-sm font-semibold whitespace-nowrap text-white shadow-xs transition active:scale-95"
+        }
       >
         {triggerLabel}
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-ink/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-surface rounded-t-[16px] sm:rounded-[12px] border border-line p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-lg animate-in slide-in-from-bottom-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-base font-semibold text-ink">
-                  {product?.id ? "Edit Product" : "Add New Product"}
-                </h3>
-                <p className="text-xs text-muted">
-                  Configure meals, shifts, cutoffs, and late policies.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="text-muted hover:text-ink text-sm p-1"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-3.5">
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setKind("tiffin");
-                    if (!assetName) setAssetName("dabba");
-                  }}
-                  className={`py-2 text-xs font-semibold rounded-[8px] border transition-colors ${
-                    kind === "tiffin"
-                      ? "bg-accent text-white border-accent"
-                      : "bg-[#FAFAF7] text-muted border-line hover:bg-white"
-                  }`}
-                >
-                  🍱 Tiffin Service
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setKind("water");
-                    if (!assetName) setAssetName("can");
-                  }}
-                  className={`py-2 text-xs font-semibold rounded-[8px] border transition-colors ${
-                    kind === "water"
-                      ? "bg-accent text-white border-accent"
-                      : "bg-[#FAFAF7] text-muted border-line hover:bg-white"
-                  }`}
-                >
-                  💧 20L Water Can
-                </button>
-              </div>
-
-              <div>
-                <label htmlFor="pname" className="block text-xs font-medium text-ink mb-1">
-                  Product / Meal Name
-                </label>
-                <input
-                  id="pname"
-                  type="text"
-                  required
-                  placeholder={kind === "tiffin" ? "e.g. Standard Veg Lunch Thali" : "e.g. 20L Bisleri Water Can"}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
+      {open &&
+        createPortal(
+          <div
+            className="bg-ink/40 fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="menu-item-title"
+          >
+            <div className="bg-surface max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-[20px] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-lg sm:rounded-[16px]">
+              <div className="flex items-start justify-between">
                 <div>
-                  <label htmlFor="pshift" className="block text-xs font-medium text-ink mb-1">
-                    Delivery Shift
-                  </label>
-                  <select
-                    id="pshift"
-                    value={shift}
-                    onChange={(e) => setShift(e.target.value as any)}
-                    className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent capitalize"
+                  <h3
+                    id="menu-item-title"
+                    className="text-ink text-lg font-semibold"
                   >
-                    <option value="lunch">Lunch</option>
-                    <option value="dinner">Dinner</option>
-                    <option value="morning">Morning</option>
-                    <option value="evening">Evening</option>
-                  </select>
+                    {product ? "Edit item" : "New menu item"}
+                  </h3>
+                  <p className="text-muted text-xs">
+                    Shown to households on your RUXS store page.
+                  </p>
                 </div>
-
-                <div>
-                  <label htmlFor="pcutoff" className="block text-xs font-medium text-ink mb-1">
-                    Cutoff Time (IST)
-                  </label>
-                  <input
-                    id="pcutoff"
-                    type="time"
-                    required
-                    value={cutoffAt}
-                    onChange={(e) => setCutoffAt(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label htmlFor="pprice" className="block text-xs font-medium text-ink mb-1">
-                    Price per Unit (₹)
-                  </label>
-                  <input
-                    id="pprice"
-                    type="number"
-                    step="0.01"
-                    required
-                    placeholder="90"
-                    value={priceRupees}
-                    onChange={(e) => setPriceRupees(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent tabular-nums"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="pdeposit" className="block text-xs font-medium text-ink mb-1">
-                    Deposit (₹)
-                  </label>
-                  <input
-                    id="pdeposit"
-                    type="number"
-                    step="0.01"
-                    placeholder="0"
-                    value={depositRupees}
-                    onChange={(e) => setDepositRupees(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent tabular-nums"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label htmlFor="passet" className="block text-xs font-medium text-ink mb-1">
-                    Asset Name (Optional)
-                  </label>
-                  <input
-                    id="passet"
-                    type="text"
-                    placeholder="dabba or can"
-                    value={assetName}
-                    onChange={(e) => setAssetName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="plate" className="block text-xs font-medium text-ink mb-1">
-                    Late Skip Policy
-                  </label>
-                  <select
-                    id="plate"
-                    value={lateRule}
-                    onChange={(e) => setLateRule(e.target.value as any)}
-                    className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent capitalize"
-                  >
-                    <option value="full">Full Charge (100%)</option>
-                    <option value="half">Half Charge (50%)</option>
-                    <option value="free">Free (0%)</option>
-                    <option value="locked">Locked (Refuse skip)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="flex-1 py-2.5 px-3 bg-[#FAFAF7] text-muted text-xs font-medium rounded-[10px] border border-line hover:text-ink"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close"
+                  className="text-muted hover:bg-bg hover:text-ink rounded-full p-1.5"
                 >
-                  Cancel
+                  <X className="h-5 w-5" />
                 </button>
+              </div>
+
+              <form onSubmit={submit} className="mt-4 space-y-4">
+                <div className="grid grid-cols-4 gap-2">
+                  {SERVICE_KINDS.map((k) => (
+                    <button
+                      key={k.id}
+                      type="button"
+                      onClick={() => pickKind(k.id)}
+                      aria-pressed={kind === k.id}
+                      className={
+                        "flex flex-col items-center gap-1 rounded-[10px] border py-2 text-[11px] font-semibold transition " +
+                        (kind === k.id
+                          ? "border-accent bg-peach text-accent"
+                          : "border-line text-muted")
+                      }
+                    >
+                      <span className="text-xl" aria-hidden="true">
+                        {k.emoji}
+                      </span>
+                      {k.short}
+                    </button>
+                  ))}
+                </div>
+
+                <div>
+                  <label htmlFor="mi-name" className={label}>
+                    Name
+                  </label>
+                  <input
+                    id="mi-name"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={
+                      kind === "water"
+                        ? "20L Mineral Water Can"
+                        : "Veg Lunch Thali"
+                    }
+                    className={input}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="mi-desc" className={label}>
+                    Description
+                  </label>
+                  <textarea
+                    id="mi-desc"
+                    rows={2}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    maxLength={300}
+                    placeholder="3 rotis, dal, sabzi, rice, salad"
+                    className={input}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="mi-price" className={label}>
+                      Price (₹)
+                    </label>
+                    <input
+                      id="mi-price"
+                      required
+                      inputMode="decimal"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="90"
+                      className={input + " tabular-nums"}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="mi-section" className={label}>
+                      Menu section
+                    </label>
+                    <input
+                      id="mi-section"
+                      value={section}
+                      onChange={(e) => setSection(e.target.value)}
+                      placeholder="Thalis"
+                      className={input}
+                    />
+                  </div>
+                </div>
+
+                {(kind === "tiffin" || kind === "other") && (
+                  <div
+                    className="grid grid-cols-3 gap-2"
+                    role="radiogroup"
+                    aria-label="Food type"
+                  >
+                    {[
+                      { v: true, t: "Veg" },
+                      { v: false, t: "Non-veg" },
+                      { v: null, t: "Not food" },
+                    ].map((o) => (
+                      <button
+                        key={o.t}
+                        type="button"
+                        role="radio"
+                        aria-checked={isVeg === o.v}
+                        onClick={() => setIsVeg(o.v)}
+                        className={
+                          "rounded-[10px] border py-2 text-xs font-semibold " +
+                          (isVeg === o.v
+                            ? "border-ink bg-ink text-white"
+                            : "border-line text-muted")
+                        }
+                      >
+                        {o.t}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="mi-img" className={label}>
+                    Photo link (optional)
+                  </label>
+                  <input
+                    id="mi-img"
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="https://…"
+                    className={input}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Toggle
+                    checked={isAvailable}
+                    onChange={setIsAvailable}
+                    title="Available"
+                    hint="Turn off when sold out for the day"
+                  />
+                  <Toggle
+                    checked={allowOneTime}
+                    onChange={setAllowOneTime}
+                    title="One-time orders"
+                    hint="Households can add it to a cart"
+                  />
+                  <Toggle
+                    checked={allowSubscription}
+                    onChange={setAllowSubscription}
+                    title="Subscriptions"
+                    hint="Households can get it on chosen days"
+                  />
+                </div>
+
+                <fieldset className="bg-bg space-y-3 rounded-[12px] p-3">
+                  <legend className="text-muted px-1 text-xs font-semibold tracking-wide uppercase">
+                    Delivery rules
+                  </legend>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="mi-shift" className={label}>
+                        Shift
+                      </label>
+                      <select
+                        id="mi-shift"
+                        value={shift}
+                        onChange={(e) => setShift(e.target.value as Shift)}
+                        className={input + " capitalize"}
+                      >
+                        <option value="morning">Morning</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="evening">Evening</option>
+                        <option value="dinner">Dinner</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="mi-cutoff" className={label}>
+                        Daily cutoff (IST)
+                      </label>
+                      <input
+                        id="mi-cutoff"
+                        type="time"
+                        required
+                        value={cutoffAt}
+                        onChange={(e) => setCutoffAt(e.target.value)}
+                        className={input + " font-mono"}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="mi-late" className={label}>
+                      Skip after cutoff
+                    </label>
+                    <select
+                      id="mi-late"
+                      value={lateRule}
+                      onChange={(e) => setLateRule(e.target.value as LateRule)}
+                      className={input}
+                    >
+                      <option value="free">Free — no charge</option>
+                      <option value="half">Half charge</option>
+                      <option value="full">Full charge</option>
+                      <option value="locked">Not allowed</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="mi-asset" className={label}>
+                        Returnable
+                      </label>
+                      <input
+                        id="mi-asset"
+                        value={assetName}
+                        onChange={(e) => setAssetName(e.target.value)}
+                        placeholder="can, dabba"
+                        className={input}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="mi-dep" className={label}>
+                        Deposit (₹)
+                      </label>
+                      <input
+                        id="mi-dep"
+                        inputMode="decimal"
+                        value={deposit}
+                        onChange={(e) => setDeposit(e.target.value)}
+                        className={input + " tabular-nums"}
+                      />
+                    </div>
+                  </div>
+                </fieldset>
+
                 <button
                   type="submit"
-                  disabled={isPending}
-                  className="flex-1 py-2.5 px-3 bg-accent text-white text-xs font-semibold rounded-[10px] hover:opacity-90 active:scale-98 transition-all disabled:opacity-50"
+                  disabled={pending}
+                  className="bg-accent w-full rounded-[12px] py-3.5 text-sm font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
                 >
-                  {isPending ? "Saving..." : "Save Product"}
+                  {pending
+                    ? "Saving…"
+                    : product
+                      ? "Save changes"
+                      : "Add to menu"}
                 </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }

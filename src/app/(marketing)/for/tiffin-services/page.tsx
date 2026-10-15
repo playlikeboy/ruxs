@@ -92,7 +92,7 @@ export default function ForTiffinServicesPage() {
             <h2 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">Run a tiffin kitchen?</h2>
             <p className="max-w-2xl text-sm leading-6 text-muted">There is a separate merchant workspace for subscriptions, cutoff counts, delivery runs, billing and household accounts.</p>
           </div>
-          <Link href="/merchant" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Open merchant portal <span aria-hidden="true" className="ml-2">→</span></Link>
+          <Link href="/merchant-panel" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Open merchant portal <span aria-hidden="true" className="ml-2">→</span></Link>
         </div>
       </section>
     </div>

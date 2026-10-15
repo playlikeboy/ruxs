@@ -33,8 +33,8 @@ export async function addAdjustment(input: unknown) {
       createdBy: access.user.id,
     });
 
-    revalidatePath(`/merchant/${slug}/customers/${customerId}`);
-    revalidatePath(`/merchant/${slug}/bills`);
+    revalidatePath(`/merchant-panel/${slug}/customers/${customerId}`);
+    revalidatePath(`/merchant-panel/${slug}/bills`);
     return { ok: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to add adjustment";
@@ -106,7 +106,7 @@ export async function markPaid(input: unknown) {
       return { ok: true };
     });
 
-    revalidatePath(`/merchant/${slug}/bills`);
+    revalidatePath(`/merchant-panel/${slug}/bills`);
     return result;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to record payment";

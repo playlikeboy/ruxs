@@ -118,7 +118,7 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
             Add More Households
           </button>
           <Link
-            href={`/merchant/${slug}/customers`}
+            href={`/merchant-panel/${slug}/customers`}
             className="flex-1 py-2.5 px-3 bg-accent text-white text-xs font-semibold rounded-[10px] text-center hover:opacity-90 shadow-xs"
           >
             Go to Customers List

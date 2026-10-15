@@ -248,7 +248,7 @@ export default function HomePage() {
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-ink">Are you a local merchant?</h3>
               <p className="text-sm leading-6 text-muted">Manage your subscriptions, daily delivery runs, customer balances and billing from a dedicated workspace built for your business.</p>
-              <Link href="/merchant" className="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-accent hover:underline">Open merchant portal <span aria-hidden="true">→</span></Link>
+              <Link href="/merchant-panel" className="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-accent hover:underline">Open merchant portal <span aria-hidden="true">→</span></Link>
             </div>
           </div>
         </div>
@@ -277,7 +277,7 @@ export default function HomePage() {
         <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted sm:text-base">Find your local essentials, discover a routine you love, and spend less time coordinating the things that keep a home running.</p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Explore local services <span aria-hidden="true" className="ml-2">→</span></Link>
-          <Link href="/merchant" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-white px-7 py-3 text-sm font-semibold text-ink transition hover:bg-bg">Merchant portal</Link>
+          <Link href="/merchant-panel" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-white px-7 py-3 text-sm font-semibold text-ink transition hover:bg-bg">Merchant portal</Link>
         </div>
       </section>
     </div>

@@ -44,7 +44,7 @@ export function OnboardingForm() {
         toast.error(res.error ?? "Failed to create business");
       } else {
         toast.success("Business registered successfully!");
-        router.push(`/merchant/${res.slug}/today`);
+        router.push(`/merchant-panel/${res.slug}/today`);
       }
     });
   };
@@ -83,7 +83,7 @@ export function OnboardingForm() {
           Web Link (Slug)
         </label>
         <div className="flex items-center text-sm text-muted bg-[#FAFAF7] border border-line rounded-[10px] px-3 py-2.5">
-          <span>ruxs.in/merchant/</span>
+          <span>ruxs.in/merchant-panel/</span>
           <input
             id="slug"
             type="text"

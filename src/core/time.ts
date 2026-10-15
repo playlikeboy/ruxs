@@ -48,3 +48,24 @@ export function weekdayIST(serviceDate: string): string {
   });
   return formatter.format(d).toLowerCase();
 }
+
+/**
+ * Adds whole days to an IST service date (YYYY-MM-DD) and returns the new date.
+ */
+export function addDaysIST(serviceDate: string, days: number): string {
+  const d = new Date(serviceDate + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * A short human label for a service date relative to today: "Today", "Tomorrow" or "Fri, 17 Oct".
+ */
+export function dayLabelIST(serviceDate: string, today = todayIST()): string {
+  if (serviceDate === today) return "Today";
+  if (serviceDate === addDaysIST(today, 1)) return "Tomorrow";
+  if (serviceDate === addDaysIST(today, -1)) return "Yesterday";
+  return new Intl.DateTimeFormat("en-IN", { timeZone: IST_TIMEZONE, weekday: "short", day: "numeric", month: "short" }).format(
+    istDateTime(serviceDate, "12:00")
+  );
+}

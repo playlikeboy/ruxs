@@ -5,6 +5,7 @@ import {
   integer,
   date,
   timestamp,
+  boolean,
   index,
   check,
 } from "drizzle-orm/pg-core";
@@ -20,7 +21,7 @@ export const products = pgTable(
     vendorId: text("vendor_id")
       .notNull()
       .references(() => vendors.id, { onDelete: "cascade" }),
-    kind: text("kind").notNull(), // tiffin, water
+    kind: text("kind").notNull(), // tiffin, water, milk, other
     name: text("name").notNull(),
     shift: text("shift").notNull(), // lunch, dinner, morning, evening
     pricePaise: integer("price_paise").notNull(),
@@ -29,13 +30,21 @@ export const products = pgTable(
     pollAt: text("poll_at"), // e.g. "08:30"
     cutoffAt: text("cutoff_at").notNull(), // e.g. "10:00"
     lateRule: text("late_rule").notNull().default("full"), // free, half, full, locked
+    description: text("description"),
+    section: text("section"), // menu heading, e.g. "Thalis"
+    imageUrl: text("image_url"),
+    isVeg: boolean("is_veg"),
+    isAvailable: boolean("is_available").notNull().default(true),
+    allowSubscription: boolean("allow_subscription").notNull().default(true),
+    allowOneTime: boolean("allow_one_time").notNull().default(true),
+    archivedAt: timestamp("archived_at", { withTimezone: true }), // soft delete: orders keep their product
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (t) => [
     index("products_vendor_idx").on(t.vendorId),
-    check("products_kind_check", sql`${t.kind} in ('tiffin', 'water')`),
+    check("products_kind_check", sql`${t.kind} in ('tiffin', 'water', 'milk', 'other')`),
     check(
       "products_shift_check",
       sql`${t.shift} in ('lunch', 'dinner', 'morning', 'evening')`

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
+const isDev = process.env.NODE_ENV === "development";
 const hexclaveApi = process.env.NEXT_PUBLIC_HEXCLAVE_API_URL ?? "https://api.hexclave.com";
 
 const securityHeaders = [
@@ -12,7 +13,8 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://js.stripe.com",
+      // Dev bundles evaluate source maps with eval(); production never needs it.
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://static.cloudflareinsights.com https://js.stripe.com`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
@@ -50,9 +52,20 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
-        source: "/app/:vendor(annapurna-tiffin|neer-20l|[a-z0-9-]+)/:subpath*",
-        destination: "/merchant/:vendor/:subpath*",
+        source: "/app",
+        has: [{ type: "query", key: "token", value: "(?<token>[a-f0-9]{16,128})" }],
+        destination: "/c/:token",
         permanent: false,
+      },
+      {
+        source: "/merchant",
+        destination: "/merchant-panel",
+        permanent: true,
+      },
+      {
+        source: "/merchant/:path*",
+        destination: "/merchant-panel/:path*",
+        permanent: true,
       },
       {
         source: "/in/:path*",

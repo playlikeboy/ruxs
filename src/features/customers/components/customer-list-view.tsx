@@ -60,7 +60,7 @@ export function CustomerListView({
         {filtered.map((c) => (
           <Link
             key={c.id}
-            href={`/merchant/${slug}/customers/${c.id}`}
+            href={`/merchant-panel/${slug}/customers/${c.id}`}
             className="block p-3.5 bg-surface border border-line rounded-[12px] hover:border-accent active:scale-[0.99] transition-all shadow-xs"
           >
             <div className="flex items-start justify-between">

@@ -34,7 +34,7 @@ export default function AppError({
         >
           Try Again
         </button>
-        <Link href="/merchant" className="py-2 px-4 border border-line text-ink text-xs font-semibold rounded-[8px]">
+        <Link href="/merchant-panel" className="py-2 px-4 border border-line text-ink text-xs font-semibold rounded-[8px]">
           Merchant portal
         </Link>
       </div>

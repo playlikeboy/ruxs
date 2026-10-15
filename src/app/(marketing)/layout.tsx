@@ -61,7 +61,7 @@ export default function MarketingLayout({
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-ink">For merchants</h2>
               <nav aria-label="Merchant links" className="flex flex-col items-start gap-2.5 text-sm text-muted">
-                <Link href="/merchant" className="font-semibold text-ink hover:text-accent">
+                <Link href="/merchant-panel" className="font-semibold text-ink hover:text-accent">
                   Merchant Workspace Portal →
                 </Link>
                 <Link href="/onboarding" className="hover:text-ink">Register as a Supplier</Link>
