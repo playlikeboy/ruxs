@@ -1,187 +1,183 @@
 import Link from "next/link";
+import { ArrowRight, BellRing, ChartColumn, Navigation, Package, Repeat, UtensilsCrossed, Wallet } from "lucide-react";
+import { formatINR } from "@/core/money";
 import { todayIST } from "@/core/time";
+import { requireVendorAccess } from "@/lib/auth/session";
 import { getVendorProducts } from "@/features/products/queries";
 import { getTodayOrders } from "@/features/orders/queries";
 import { getDayChangesForVendor } from "@/features/day-changes/queries";
+import { countActivePlansByProduct } from "@/features/subscriptions/queries";
+import { countOpenShopOrders } from "@/features/shop-orders/queries";
+import { computeVendorBalance } from "@/features/payouts/queries";
 import { BigCount } from "@/features/orders/components/big-count";
-import { EmptyState } from "@/components/ui/empty-state";
 
-export default async function TodayPage({
-  params,
-}: {
-  params: Promise<{ vendor: string }>;
-}) {
+export const metadata = { title: "Today" };
+
+const CHANGE_LABEL: Record<string, { text: (qty: number) => string; tone: string }> = {
+  skip: { text: () => "Skipped", tone: "bg-bg text-muted" },
+  extra: { text: (q) => `+${q} extra`, tone: "bg-mint text-good" },
+  qty: { text: (q) => `Qty ${q}`, tone: "bg-butter text-warn" },
+};
+
+export default async function TodayPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
   const today = todayIST();
+  const access = await requireVendorAccess(slug);
 
-  const [products, todayData, changes] = await Promise.all([
+  const [products, todayData, changes, planCounts, newOrders, balance] = await Promise.all([
     getVendorProducts(slug),
     getTodayOrders(slug, today),
     getDayChangesForVendor(slug, today),
+    countActivePlansByProduct(slug, today),
+    countOpenShopOrders(access.vendorId),
+    access.role === "driver" ? null : computeVendorBalance(access.vendorId, access.vendor.commissionBps),
   ]);
 
-  const ordersCountMap = new Map(
-    todayData.counts.map((c) => [c.product.id, c])
-  );
+  const countByProduct = new Map(todayData.counts.map((c) => [c.product.id, c]));
+  // Only items that deliver today: active plans or orders already locked for today.
+  const kitchen = products.filter((p) => countByProduct.has(p.id) || ((planCounts.get(p.id) ?? 0) > 0 && !p.archivedAt));
+  const totalToPrepare = kitchen.reduce((s, p) => s + (countByProduct.get(p.id)?.confirmedQty ?? 0), 0);
+  const delivered = todayData.orders.filter((o) => o.order.status === "delivered").length;
+  const activePlans = Array.from(planCounts.values()).reduce((s, n) => s + n, 0);
+  const menuItems = products.filter((p) => !p.archivedAt).length;
+  const base = `/merchant-panel/${slug}`;
+
+  const dateLabel = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" });
+
+  const kpis = [
+    { label: "To prepare today", value: String(totalToPrepare), sub: `${delivered} delivered`, href: `${base}/run`, icon: Navigation },
+    { label: "New app orders", value: String(newOrders), sub: newOrders ? "Waiting for you" : "All caught up", href: `${base}/orders`, icon: BellRing, hot: newOrders > 0 },
+    { label: "Active plans", value: String(activePlans), sub: `${menuItems} menu items`, href: `${base}/subscriptions`, icon: Repeat },
+    ...(balance
+      ? [{ label: "Available to withdraw", value: formatINR(balance.availablePaise), sub: balance.pendingPaise ? `${formatINR(balance.pendingPaise)} pending` : "Online payments", href: `${base}/earnings`, icon: Wallet }]
+      : []),
+  ];
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      {/* Date & Subtitle */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">
-            Today
-          </h1>
-          <p className="text-xs text-muted">
-            {new Date().toLocaleDateString("en-IN", {
-              weekday: "long",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              timeZone: "Asia/Kolkata",
-            })}
-          </p>
+          <p className="text-sm text-muted">{dateLabel}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Today at {access.vendor.name}</h1>
         </div>
-
-        <Link
-          href={`/merchant-panel/${slug}/run`}
-          className="inline-flex items-center gap-1.5 px-3 py-2 bg-accent text-white text-xs font-medium rounded-[10px] hover:opacity-90 active:scale-95 transition-all shadow-xs"
-        >
-          <span>Open Run Sheet</span>
-          <svg
-            className="w-4 h-4 stroke-current fill-none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+        <Link href={`${base}/run`} className="flex h-11 items-center gap-2 rounded-[12px] bg-accent px-4 text-sm font-bold text-white shadow-xs transition active:scale-95">
+          <Navigation className="h-4 w-4" aria-hidden="true" /> Start delivery run
         </Link>
       </div>
 
-      {/* Quick Access to Inventory & Analytics */}
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <Link
-          href={`/merchant-panel/${slug}/inventory`}
-          className="p-2.5 sm:p-3 bg-surface border border-line rounded-[10px] hover:border-accent transition-colors flex items-center justify-between"
-        >
-          <div>
-            <span className="font-semibold text-ink block">📦 Bottle / Dabba Inventory</span>
-            <span className="text-[10px] text-muted">Track customer holdings</span>
-          </div>
-          <span className="text-muted text-xs">→</span>
-        </Link>
-        <Link
-          href={`/merchant-panel/${slug}/analytics`}
-          className="p-2.5 sm:p-3 bg-surface border border-line rounded-[10px] hover:border-accent transition-colors flex items-center justify-between"
-        >
-          <div>
-            <span className="font-semibold text-ink block">📊 Business Analytics</span>
-            <span className="text-[10px] text-muted">Revenue & fulfillment score</span>
-          </div>
-          <span className="text-muted text-xs">→</span>
-        </Link>
-      </div>
-
-      {/* Big Count Cards per Product */}
-      <div className="space-y-4">
-        {products.length === 0 ? (
-          <EmptyState
-            title="No products configured"
-            description="Add your first tiffin meal or water can product to start taking orders."
-            action={
-              <Link
-                href={`/merchant-panel/${slug}/products`}
-                className="inline-block px-4 py-2 bg-accent text-white text-sm font-medium rounded-[10px]"
-              >
-                Add Product
-              </Link>
-            }
-          />
-        ) : (
-          products.map((p) => {
-            const stats = ordersCountMap.get(p.id);
-            const confirmedQty = stats?.confirmedQty ?? 0;
-            const deliveredCount =
-              todayData.orders.filter(
-                (o) => o.product.id === p.id && o.order.status === "delivered"
-              ).length ?? 0;
-            const skippedCount = stats?.skippedCount ?? 0;
-
-            return (
-              <BigCount
-                key={p.id}
-                product={p}
-                confirmedQty={confirmedQty}
-                deliveredCount={deliveredCount}
-                skippedCount={skippedCount}
-              />
-            );
-          })
-        )}
-      </div>
-
-      {/* Changes list since yesterday */}
-      <div className="space-y-3 pt-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-ink">
-            Today&apos;s Changes
-          </h2>
-          <span className="text-xs text-muted font-mono tabular-nums">
-            {changes.length} {changes.length === 1 ? "tap" : "taps"}
+      {newOrders > 0 && (
+        <Link href={`${base}/orders`} className="flex items-center gap-3 rounded-[16px] border border-accent/30 bg-peach p-4 transition hover:border-accent">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+            <BellRing className="h-5 w-5" aria-hidden="true" />
           </span>
-        </div>
+          <span className="flex-1">
+            <span className="block font-semibold text-ink">{newOrders} new {newOrders === 1 ? "order needs" : "orders need"} a reply</span>
+            <span className="block text-sm text-muted">Accept or decline so households know what to expect.</span>
+          </span>
+          <ArrowRight className="h-5 w-5 text-accent" aria-hidden="true" />
+        </Link>
+      )}
 
-        {changes.length === 0 ? (
-          <div className="p-4 bg-surface border border-line rounded-[12px] text-center text-xs text-muted">
-            No skips or extras tapped for today yet. Default subscriptions run.
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {kpis.map((k) => {
+          const Icon = k.icon;
+          return (
+            <Link
+              key={k.label}
+              href={k.href}
+              className={"group rounded-[16px] border bg-surface p-4 transition hover:border-ink/30 hover:shadow-sm " + ("hot" in k && k.hot ? "border-accent/40" : "border-line")}
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-muted">{k.label}</p>
+                <Icon className="h-4 w-4 text-muted group-hover:text-ink" aria-hidden="true" />
+              </div>
+              <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-ink sm:text-3xl">{k.value}</p>
+              <p className="mt-0.5 text-xs text-muted">{k.sub}</p>
+            </Link>
+          );
+        })}
+      </div>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-ink">Kitchen counts</h2>
+          <Link href={`${base}/run`} className="text-sm font-semibold text-accent">Run sheet →</Link>
+        </div>
+        {kitchen.length === 0 ? (
+          <div className="rounded-[16px] border border-dashed border-line bg-surface p-8 text-center">
+            <p className="font-semibold text-ink">Nothing to deliver today</p>
+            <p className="mt-1 text-sm text-muted">Counts appear here for items with active plans. Households subscribe from your store page.</p>
+            <Link href={`${base}/products`} className="mt-4 inline-flex h-10 items-center rounded-[10px] bg-ink px-4 text-sm font-semibold text-white">Manage menu</Link>
           </div>
         ) : (
-          <div className="bg-surface border border-line rounded-[12px] divide-y divide-line overflow-hidden">
-            {changes.map(({ change, customer, product }) => (
-              <div
-                key={change.id}
-                className="p-3.5 flex items-center justify-between text-xs"
-              >
-                <div>
-                  <div className="font-medium text-ink flex items-center gap-1.5">
-                    <span>{customer.name}</span>
-                    <span className="text-[10px] text-muted">
-                      ({customer.flat}, {customer.tower})
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-muted mt-0.5">
-                    {product.name} • via {change.source}
-                    {change.isLate && (
-                      <span className="ml-1 text-[#B42318] font-medium">
-                        (Late tap)
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2 py-0.5 rounded-full font-medium ${
-                      change.kind === "skip"
-                        ? "bg-[#FAFAF7] text-muted border border-line"
-                        : change.kind === "extra"
-                          ? "bg-[#E1F3E7] text-good"
-                          : "bg-[#FFF3C9] text-ink"
-                    }`}
-                  >
-                    {change.kind === "skip"
-                      ? "Skipped"
-                      : change.kind === "extra"
-                        ? `Extra (+${change.qty})`
-                        : `Qty (${change.qty})`}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {kitchen.map((p) => {
+              const stats = countByProduct.get(p.id);
+              return (
+                <BigCount
+                  key={p.id}
+                  product={p}
+                  confirmedQty={stats?.confirmedQty ?? 0}
+                  deliveredCount={todayData.orders.filter((o) => o.product.id === p.id && o.order.status === "delivered").length}
+                  skippedCount={stats?.skippedCount ?? 0}
+                />
+              );
+            })}
           </div>
         )}
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-ink">Today&apos;s changes</h2>
+            <span className="text-xs text-muted tabular-nums">{changes.length} {changes.length === 1 ? "change" : "changes"}</span>
+          </div>
+          {changes.length === 0 ? (
+            <p className="rounded-[16px] border border-line bg-surface p-5 text-sm text-muted">No skips or extras for today. Every plan delivers as usual.</p>
+          ) : (
+            <ul className="divide-y divide-line overflow-hidden rounded-[16px] border border-line bg-surface">
+              {changes.map(({ change, customer, product }) => {
+                const label = CHANGE_LABEL[change.kind] ?? CHANGE_LABEL.qty!;
+                return (
+                  <li key={change.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-ink">
+                        {customer.name} <span className="text-xs font-normal text-muted">· {customer.flat}{customer.tower !== "-" ? `, ${customer.tower}` : ""}</span>
+                      </p>
+                      <p className="truncate text-xs text-muted">
+                        {product.name} · via {change.source}
+                        {change.isLate && <span className="ml-1 font-medium text-bad">· late</span>}
+                      </p>
+                    </div>
+                    <span className={"shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold " + label.tone}>{label.text(change.qty)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold text-ink">Shortcuts</h2>
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+            {[
+              { label: "Menu", href: `${base}/products`, icon: UtensilsCrossed },
+              { label: "Cans & dabbas", href: `${base}/inventory`, icon: Package },
+              { label: "Analytics", href: `${base}/analytics`, icon: ChartColumn },
+              { label: "Earnings", href: `${base}/earnings`, icon: Wallet },
+            ].map((s) => {
+              const Icon = s.icon;
+              return (
+                <Link key={s.label} href={s.href} className="flex h-12 items-center gap-3 rounded-[12px] border border-line bg-surface px-4 text-sm font-medium text-ink transition hover:border-ink/30">
+                  <Icon className="h-4 w-4 text-muted" aria-hidden="true" />
+                  <span className="flex-1">{s.label}</span>
+                  <ArrowRight className="h-4 w-4 text-muted" aria-hidden="true" />
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       </div>
     </div>
   );

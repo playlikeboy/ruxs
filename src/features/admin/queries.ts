@@ -13,6 +13,7 @@ import {
   shopOrders,
   subscriptions,
   vendorMembers,
+  vendorPayouts,
   vendors,
 } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
@@ -144,4 +145,20 @@ export async function getAdminSettings() {
     db.select().from(platformAdmins).orderBy(platformAdmins.createdAt),
   ]);
   return { categories: cats, localities: locs, admins };
+}
+
+/** Counts that need an admin's attention, shown as nav badges. */
+export async function getAdminBadges() {
+  await requireAdmin();
+  const db = getDb();
+  const [[pendingVendors], [openPayouts], [refunds]] = await Promise.all([
+    db.select({ n: count() }).from(vendors).where(eq(vendors.status, "pending")),
+    db.select({ n: count() }).from(vendorPayouts).where(eq(vendorPayouts.status, "requested")),
+    db.select({ n: count() }).from(shopOrders).where(eq(shopOrders.paymentStatus, "refund_due")),
+  ]);
+  return {
+    pendingVendors: pendingVendors?.n ?? 0,
+    openPayouts: openPayouts?.n ?? 0,
+    refunds: refunds?.n ?? 0,
+  };
 }

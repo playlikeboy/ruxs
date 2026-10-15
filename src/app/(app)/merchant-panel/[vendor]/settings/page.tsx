@@ -29,7 +29,7 @@ export default async function SettingsPage({
   const pendingInvites = invites.filter((invite) => !invite.acceptedAt);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="max-w-3xl space-y-6 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">Settings</h1>
         <p className="mt-1 text-sm text-muted">Business details, payment configuration and team access.</p>

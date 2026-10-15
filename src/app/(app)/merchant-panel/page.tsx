@@ -63,7 +63,7 @@ export default async function MerchantEntryPage() {
 
       if (pendingInvite) {
         return (
-          <div className="space-y-4 rounded-[14px] border border-line bg-surface p-6 text-center">
+          <div className="mx-auto mt-10 max-w-md space-y-4 rounded-[14px] border border-line bg-surface p-6 text-center">
             <h2 className="text-xl font-semibold text-ink">Verify your email</h2>
             <p className="text-sm text-muted">
               Your merchant portal has been provisioned for <strong>{userEmail}</strong>.
@@ -100,7 +100,7 @@ export default async function MerchantEntryPage() {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="mx-auto max-w-md space-y-6 p-4 sm:p-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">Select a business</h1>
         <p className="text-sm text-muted">Choose the merchant portal you want to manage.</p>
