@@ -52,6 +52,7 @@ export const categorySchema = z.object({
   coverTo: hex,
   sort: z.number().int().min(0).max(999),
   isActive: z.boolean(),
+  fulfilment: z.enum(["delivery", "booking"]),
 });
 
 export const localitySchema = z.object({

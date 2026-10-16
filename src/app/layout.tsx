@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in"),
   title: {
-    default: "RUXS — Everyday Essentials From Your Neighbourhood",
-    template: "%s | RUXS",
+    default: "RUXs — Everyday Essentials From Your Neighbourhood",
+    template: "%s | RUXs",
   },
   description:
     "Discover neighbourhood tiffin subscriptions, daily meals and 20L water-can delivery, with a separate workspace for local merchants.",

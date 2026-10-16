@@ -19,7 +19,7 @@ function revalidateMoney(slug?: string) {
   if (slug) revalidatePath(`/merchant-panel/${slug}/earnings`);
 }
 
-/** Owner asks RUXS to send the whole available balance. One open request at a time. */
+/** Owner asks RUXs to send the whole available balance. One open request at a time. */
 export async function requestWithdrawal(input: unknown) {
   const parsed = z.object({ slug: z.string().min(1) }).safeParse(input);
   if (!parsed.success) return fail("Invalid request");
@@ -128,7 +128,7 @@ export async function adminRefundShopOrder(input: unknown) {
   if (!row || !row.payment.razorpayPaymentId) return fail("No refund is due for this order");
 
   try {
-    await refundRazorpayPayment(row.payment.razorpayPaymentId, row.payment.amountPaise, `RUXS order ${row.order.number}`);
+    await refundRazorpayPayment(row.payment.razorpayPaymentId, row.payment.amountPaise, `RUXs order ${row.order.number}`);
   } catch (err) {
     return fail(err instanceof Error ? err.message : "Refund failed");
   }

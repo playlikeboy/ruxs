@@ -50,7 +50,7 @@ export default async function ReviewsPage({ params }: { params: Promise<{ vendor
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-ink">{r.author}</p>
-                  <p className="text-xs text-muted">{dateFmt.format(r.updatedAt)}{r.isHidden ? " · hidden by RUXS" : ""}</p>
+                  <p className="text-xs text-muted">{dateFmt.format(r.updatedAt)}{r.isHidden ? " · hidden by RUXs" : ""}</p>
                 </div>
                 <Stars value={r.rating} />
               </div>

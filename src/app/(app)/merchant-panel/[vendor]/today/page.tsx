@@ -10,6 +10,9 @@ import { countActivePlansByProduct } from "@/features/subscriptions/queries";
 import { countOpenShopOrders } from "@/features/shop-orders/queries";
 import { computeVendorBalance } from "@/features/payouts/queries";
 import { BigCount } from "@/features/orders/components/big-count";
+import { getProviderSchedule, isBookingProvider } from "@/features/bookings/queries";
+import { SessionActions } from "@/features/bookings/components/booking-buttons";
+import { MODE_LABEL, formatSlotTime } from "@/core/booking";
 
 export const metadata = { title: "Today" };
 
@@ -24,14 +27,18 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
   const today = todayIST();
   const access = await requireVendorAccess(slug);
 
-  const [products, todayData, changes, planCounts, newOrders, balance] = await Promise.all([
+  const [products, todayData, changes, planCounts, newOrders, balance, provider, schedule] = await Promise.all([
     getVendorProducts(slug),
     getTodayOrders(slug, today),
     getDayChangesForVendor(slug, today),
     countActivePlansByProduct(slug, today),
     countOpenShopOrders(access.vendorId),
     access.role === "driver" ? null : computeVendorBalance(access.vendorId, access.vendor.commissionBps),
+    isBookingProvider(access.vendorId),
+    getProviderSchedule(slug, 1),
   ]);
+  const sessionsToday = schedule.rows.filter((r) => todayIST(r.booking.startsAt) === today);
+  const now = new Date();
 
   const countByProduct = new Map(todayData.counts.map((c) => [c.product.id, c]));
   // Only items that deliver today: active plans or orders already locked for today.
@@ -45,7 +52,9 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
   const dateLabel = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" });
 
   const kpis = [
-    { label: "To prepare today", value: String(totalToPrepare), sub: `${delivered} delivered`, href: `${base}/run`, icon: Navigation },
+    provider
+      ? { label: "Sessions today", value: String(sessionsToday.length), sub: `${sessionsToday.filter((r) => r.booking.status === "done").length} done`, href: `${base}/bookings`, icon: Navigation }
+      : { label: "To prepare today", value: String(totalToPrepare), sub: `${delivered} delivered`, href: `${base}/run`, icon: Navigation },
     { label: "New app orders", value: String(newOrders), sub: newOrders ? "Waiting for you" : "All caught up", href: `${base}/orders`, icon: BellRing, hot: newOrders > 0 },
     { label: "Active plans", value: String(activePlans), sub: `${menuItems} menu items`, href: `${base}/subscriptions`, icon: Repeat },
     ...(balance
@@ -60,8 +69,8 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
           <p className="text-sm text-muted">{dateLabel}</p>
           <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Today at {access.vendor.name}</h1>
         </div>
-        <Link href={`${base}/run`} className="flex h-11 items-center gap-2 rounded-[12px] bg-accent px-4 text-sm font-bold text-white shadow-xs transition active:scale-95">
-          <Navigation className="h-4 w-4" aria-hidden="true" /> Start delivery run
+        <Link href={provider ? `${base}/bookings` : `${base}/run`} className="flex h-11 items-center gap-2 rounded-[12px] bg-accent px-4 text-sm font-bold text-white shadow-xs transition active:scale-95">
+          <Navigation className="h-4 w-4" aria-hidden="true" /> {provider ? "Open bookings" : "Start delivery run"}
         </Link>
       </div>
 
@@ -98,6 +107,32 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
         })}
       </div>
 
+      {provider && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-ink">Today&apos;s sessions</h2>
+            <Link href={`${base}/availability`} className="text-sm font-semibold text-accent">Availability →</Link>
+          </div>
+          {sessionsToday.length === 0 ? (
+            <p className="rounded-[16px] border border-dashed border-line bg-surface p-6 text-center text-sm text-muted">No sessions today. Keep your weekly hours up to date so clients can book.</p>
+          ) : (
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {sessionsToday.map(({ booking, customerName, productName }) => (
+                <li key={booking.id} className="rounded-[16px] border border-line bg-surface p-4">
+                  <p className="font-mono text-lg font-bold tabular-nums text-ink">{formatSlotTime(booking.startsAt)}</p>
+                  <p className="truncate font-semibold text-ink">{customerName}</p>
+                  <p className="truncate text-xs text-muted">{productName ?? "Session"} · {MODE_LABEL[booking.mode] ?? booking.mode} · <span className="capitalize">{booking.status.replace("_", "-")}</span></p>
+                  {booking.status === "confirmed" && access.role !== "driver" && (
+                    <div className="mt-3"><SessionActions slug={slug} bookingId={booking.id} started={booking.startsAt <= now} /></div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {(!provider || kitchen.length > 0) && (
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-ink">Kitchen counts</h2>
@@ -126,6 +161,7 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
           </div>
         )}
       </section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <section className="space-y-3">

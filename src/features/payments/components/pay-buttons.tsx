@@ -35,7 +35,7 @@ export function PayOrderButton({ orderId, totalPaise }: { orderId: string; total
   );
 }
 
-/** Pays everything owed to one store through RUXS. */
+/** Pays everything owed to one store through RUXs. */
 export function PayDuesButton({ vendorId, label }: { vendorId: string; label: string }) {
   const router = useRouter();
   const { pay, busy } = useRazorpay();

@@ -37,7 +37,7 @@ export default async function AdminPayoutsPage() {
           <p className="mt-1 font-mono text-3xl font-bold tabular-nums">{formatINR(pending)}</p>
         </div>
         <div className="rounded-[14px] border border-line bg-surface p-5">
-          <p className="text-xs uppercase tracking-wider text-muted">RUXS fees earned</p>
+          <p className="text-xs uppercase tracking-wider text-muted">RUXs fees earned</p>
           <p className="mt-1 font-mono text-3xl font-bold tabular-nums">{formatINR(fees)}</p>
         </div>
       </div>

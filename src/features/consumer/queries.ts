@@ -103,6 +103,8 @@ const publicVendorFields = {
   latitude: vendors.latitude,
   longitude: vendors.longitude,
   serviceRadiusKm: vendors.serviceRadiusKm,
+  serviceModes: vendors.serviceModes,
+  cancelCutoffHours: vendors.cancelCutoffHours,
   deliveryFeePaise: vendors.deliveryFeePaise,
   minOrderPaise: vendors.minOrderPaise,
   acceptingOrders: vendors.acceptingOrders,
@@ -255,6 +257,7 @@ export async function getStore(slug: string, point?: { latitude: number | null; 
       isAvailable: p.isAvailable,
       allowSubscription: p.allowSubscription,
       allowOneTime: p.allowOneTime,
+      durationMinutes: p.durationMinutes,
     })),
   };
 }

@@ -5,10 +5,10 @@
  */
 import { and, eq } from "drizzle-orm";
 import { scriptDb, scriptPool } from "./script-client";
-import { products, vendors } from "./schema";
+import { availabilityRules, products, vendors } from "./schema";
 
 type Item = {
-  kind: "tiffin" | "water" | "milk" | "other";
+  kind: "tiffin" | "water" | "milk" | "other" | "fitness" | "physio";
   name: string;
   section: string;
   pricePaise: number;
@@ -17,6 +17,7 @@ type Item = {
   shift?: "lunch" | "dinner" | "morning" | "evening";
   cutoffAt?: string;
   allowSubscription?: boolean;
+  durationMinutes?: number;
 };
 
 const STORES: {
@@ -122,7 +123,8 @@ async function upsertItems(vendorId: string, items: Item[]) {
       shift: item.shift ?? "lunch",
       cutoffAt: item.cutoffAt ?? "11:00",
       pricePaise: item.pricePaise,
-      allowSubscription: item.allowSubscription ?? true,
+      allowSubscription: item.durationMinutes ? false : (item.allowSubscription ?? true),
+      durationMinutes: item.durationMinutes ?? null,
       allowOneTime: true,
       lateRule: "full",
     });
@@ -143,6 +145,9 @@ type DemoVendor = {
   serviceRadiusKm: number;
   deliveryFeePaise: number;
   items: Item[];
+  /** Booking providers: modes and weekly free hours. */
+  serviceModes?: string[];
+  hours?: { days: string[]; start: string; end: string }[];
 };
 
 const RANCHI: DemoVendor[] = [
@@ -276,8 +281,102 @@ const RANCHI: DemoVendor[] = [
   },
 ];
 
+
+const WEEK = ["mon", "tue", "wed", "thu", "fri", "sat"];
+
+/** Demo trainers and physiotherapists in Ranchi (booking providers). */
+const RANCHI_PROVIDERS: DemoVendor[] = [
+  {
+    slug: "fitwithankit-ranchi",
+    name: "Ankit Fitness Coaching",
+    phone: "+919999900111",
+    upiVpa: "ankitfit.demo@upi",
+    city: "Ranchi",
+    area: "Lalpur",
+    description: "Certified personal trainer (ACE). Weight loss, strength and home workouts with minimal equipment. Demo provider.",
+    latitude: 23.3739,
+    longitude: 85.3342,
+    serviceRadiusKm: 8,
+    deliveryFeePaise: 0,
+    serviceModes: ["home", "studio", "online"],
+    hours: [
+      { days: WEEK, start: "06:00", end: "10:00" },
+      { days: WEEK, start: "17:00", end: "20:00" },
+    ],
+    items: [
+      { kind: "fitness", name: "Trial session", section: "Personal training", pricePaise: 19900, description: "Fitness check, goal setting and a full workout.", isVeg: null, durationMinutes: 45 },
+      { kind: "fitness", name: "Personal training (60 min)", section: "Personal training", pricePaise: 59900, description: "One-on-one session at home, gym or online.", isVeg: null, durationMinutes: 60 },
+      { kind: "fitness", name: "Yoga & mobility (60 min)", section: "Yoga", pricePaise: 49900, description: "Flexibility, breathing and posture.", isVeg: null, durationMinutes: 60 },
+    ],
+  },
+  {
+    slug: "ironcore-gym-ranchi",
+    name: "IronCore Trainers",
+    phone: "+919999900112",
+    upiVpa: "ironcore.demo@upi",
+    city: "Ranchi",
+    area: "Harmu",
+    description: "Gym-floor trainers at Harmu. Strength, bodybuilding and women-only slots. Demo provider.",
+    latitude: 23.3541,
+    longitude: 85.3002,
+    serviceRadiusKm: 6,
+    deliveryFeePaise: 0,
+    serviceModes: ["studio"],
+    hours: [
+      { days: WEEK, start: "05:30", end: "11:00" },
+      { days: ["mon", "wed", "fri"], start: "16:00", end: "21:00" },
+    ],
+    items: [
+      { kind: "fitness", name: "Strength coaching (60 min)", section: "Gym sessions", pricePaise: 39900, description: "Technique-first lifting with a coach.", isVeg: null, durationMinutes: 60 },
+      { kind: "fitness", name: "Women-only HIIT (45 min)", section: "Gym sessions", pricePaise: 29900, description: "Small-group style, female trainer.", isVeg: null, durationMinutes: 45 },
+    ],
+  },
+  {
+    slug: "dr-meera-physio-ranchi",
+    name: "Dr. Meera's Physio Care",
+    phone: "+919999900113",
+    upiVpa: "meeraphysio.demo@upi",
+    city: "Ranchi",
+    area: "Bariatu",
+    description: "BPT, MPT (Ortho). Back and knee pain, post-surgery rehab and elderly care at home. Demo provider.",
+    latitude: 23.3871,
+    longitude: 85.3478,
+    serviceRadiusKm: 10,
+    deliveryFeePaise: 0,
+    serviceModes: ["home", "studio"],
+    hours: [
+      { days: WEEK, start: "09:00", end: "13:00" },
+      { days: ["mon", "tue", "wed", "thu", "fri"], start: "16:00", end: "19:00" },
+    ],
+    items: [
+      { kind: "physio", name: "Physiotherapy at home (45 min)", section: "Sessions", pricePaise: 79900, description: "Assessment and treatment at your home. Equipment brought along.", isVeg: null, durationMinutes: 45 },
+      { kind: "physio", name: "Clinic session (45 min)", section: "Sessions", pricePaise: 59900, description: "At the Bariatu clinic with IFT/TENS if needed.", isVeg: null, durationMinutes: 45 },
+      { kind: "physio", name: "Post-surgery rehab (60 min)", section: "Rehab", pricePaise: 99900, description: "Knee/hip replacement and fracture rehab plan.", isVeg: null, durationMinutes: 60 },
+    ],
+  },
+  {
+    slug: "kineto-physio-doranda",
+    name: "Kineto Physio & Sports Rehab",
+    phone: "+919999900114",
+    upiVpa: "kineto.demo@upi",
+    city: "Ranchi",
+    area: "Doranda",
+    description: "Sports injuries, posture correction and online exercise plans. Demo provider.",
+    latitude: 23.3259,
+    longitude: 85.3262,
+    serviceRadiusKm: 8,
+    deliveryFeePaise: 0,
+    serviceModes: ["home", "online"],
+    hours: [{ days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], start: "07:00", end: "12:00" }],
+    items: [
+      { kind: "physio", name: "Sports injury session (60 min)", section: "Sessions", pricePaise: 89900, description: "Assessment, taping and a home exercise plan.", isVeg: null, durationMinutes: 60 },
+      { kind: "physio", name: "Online consultation (30 min)", section: "Online", pricePaise: 34900, description: "Video consult with an exercise plan.", isVeg: null, durationMinutes: 30 },
+    ],
+  },
+];
+
 async function ensureVendor(v: DemoVendor) {
-  const { items, ...fields } = v;
+  const { items, hours, ...fields } = v;
   let [row] = await scriptDb.select({ id: vendors.id }).from(vendors).where(eq(vendors.slug, v.slug)).limit(1);
   if (!row) {
     [row] = await scriptDb
@@ -286,6 +385,14 @@ async function ensureVendor(v: DemoVendor) {
       .returning({ id: vendors.id });
   }
   await upsertItems(row!.id, items);
+  if (hours) {
+    const existing = await scriptDb.select({ id: availabilityRules.id }).from(availabilityRules).where(eq(availabilityRules.vendorId, row!.id)).limit(1);
+    if (existing.length === 0) {
+      await scriptDb.insert(availabilityRules).values(
+        hours.flatMap((h) => h.days.map((weekday) => ({ vendorId: row!.id, weekday, startTime: h.start, endTime: h.end })))
+      );
+    }
+  }
   console.log("✓", v.slug);
 }
 
@@ -323,6 +430,7 @@ async function main() {
   console.log("✓", DAIRY.slug);
 
   for (const v of RANCHI) await ensureVendor(v);
+  for (const v of RANCHI_PROVIDERS) await ensureVendor(v);
 }
 
 main()

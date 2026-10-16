@@ -1,6 +1,6 @@
-# DESIGN.md — RUXS Design System & UI Rules
+# DESIGN.md — RUXs Design System & UI Rules
 
-> Read this file before touching any style, layout, or visual component in RUXS.
+> Read this file before touching any style, layout, or visual component in RUXs.
 > Sources: `docs/PRD.md` §12 and `PROMPT.md` §7.
 
 ---
@@ -28,7 +28,7 @@ Think **a calm Indian kitchen notebook made premium**:
 | `--ink` | `#1C1B19` | Primary text and dark line art |
 | `--muted` | `#6B6862` | Secondary text, captions, metadata |
 | `--line` | `#E7E5DF` | Hairline borders and dividers (no heavy shadows) |
-| `--accent` | `#BD4B2A` | RUXS coral: primary buttons, links, primary interactive focal point (~5:1 on white) |
+| `--accent` | `#BD4B2A` | RUXs coral: primary buttons, links, primary interactive focal point (~5:1 on white) |
 | `--good` | `#2F7D4F` | Delivered orders, received payments, confirmed statuses |
 | `--warn` | `#9A5B00` | Due soon, cutoff approaching (<30 min), pending review |
 | `--bad` | `#B42318` | Failed deliveries, late skips, overdue invoices |

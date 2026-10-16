@@ -4,12 +4,15 @@ import { Check } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { isOpenStatus, type ShopOrderStatus } from "@/core/shop";
 import { SLOT_LABEL } from "@/config/service-kinds";
-import { dayLabelIST } from "@/core/time";
+import { dayLabelIST, todayIST } from "@/core/time";
 import { getMyOrder } from "@/features/consumer/queries";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { StatusPill } from "@/features/consumer/components/status-pill";
 import { CancelOrderButton } from "@/features/consumer/components/cancel-order-button";
 import { PayOrderButton } from "@/features/payments/components/pay-buttons";
+import { getBookingForOrder } from "@/features/bookings/queries";
+import { CancelBookingButton } from "@/features/bookings/components/booking-buttons";
+import { MODE_LABEL, canCancelBooking, formatSlotTime } from "@/core/booking";
 
 export const metadata = { title: "Order" };
 
@@ -25,6 +28,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const data = await getMyOrder(id);
   if (!data) notFound();
   const { order, items, vendorName, vendorSlug } = data;
+  const session = await getBookingForOrder(order.id);
   const status = order.status as ShopOrderStatus;
   const stepIndex = STEPS.findIndex((s) => s.status === status);
   const closedBad = status === "cancelled" || status === "rejected";
@@ -38,7 +42,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             <h2 className="text-lg font-semibold text-ink">Order status</h2>
             <StatusPill status={status} />
           </div>
-          {closedBad ? (
+          {session && !closedBad ? null : closedBad ? (
             <p className="mt-3 text-sm text-neutral-600">{order.cancelReason ?? (status === "rejected" ? "The store couldn't take this order." : "This order was cancelled.")}</p>
           ) : (
             <ol className="mt-4 space-y-0">
@@ -62,6 +66,20 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             {dayLabelIST(order.deliverOn)} · {SLOT_LABEL[order.slot] ?? order.slot}
           </p>
         </section>
+
+        {session && (
+          <section className="rounded-2xl bg-ink p-5 text-white">
+            <p className="text-xs uppercase tracking-wider opacity-70">Your session</p>
+            <p className="mt-1 text-xl font-bold">{dayLabelIST(todayIST(session.booking.startsAt))}, {formatSlotTime(session.booking.startsAt)} – {formatSlotTime(session.booking.endsAt)}</p>
+            <p className="mt-0.5 text-sm opacity-80">{MODE_LABEL[session.booking.mode] ?? session.booking.mode} · <span className="capitalize">{session.booking.status === "held" ? "held for payment" : session.booking.status.replace("_", "-")}</span></p>
+            {["held", "confirmed"].includes(session.booking.status) &&
+              (canCancelBooking(session.booking.startsAt, new Date(), session.cancelCutoffHours) ? (
+                <div className="mt-3"><CancelBookingButton bookingId={session.booking.id} className="text-sm !text-white underline" /></div>
+              ) : (
+                <p className="mt-3 text-xs opacity-70">Cancellation closed {session.cancelCutoffHours} h before the session.</p>
+              ))}
+          </section>
+        )}
 
         <section className="rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
           <h2 className="font-semibold text-ink">Items</h2>
@@ -100,7 +118,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         </section>
 
         {status === "awaiting_payment" && <PayOrderButton orderId={order.id} totalPaise={order.totalPaise} />}
-        {(status === "placed" || status === "awaiting_payment") && <CancelOrderButton orderId={order.id} />}
+        {!session && (status === "placed" || status === "awaiting_payment") && <CancelOrderButton orderId={order.id} />}
         {status === "delivered" && (
           <Link href={`/app/store/${vendorSlug}#reviews`} className="flex h-12 items-center justify-center gap-2 rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink">
             ★ Rate {vendorName}

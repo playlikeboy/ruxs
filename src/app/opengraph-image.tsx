@@ -39,7 +39,7 @@ export default function OpenGraphImage() {
             R
           </div>
           <span style={{ fontSize: 36, fontWeight: 700, color: "#1C1B19", letterSpacing: "-0.02em" }}>
-            RUXS
+            RUXs
           </span>
         </div>
 

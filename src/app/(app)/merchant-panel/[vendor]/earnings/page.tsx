@@ -22,7 +22,7 @@ export default async function EarningsPage({ params }: { params: Promise<{ vendo
     <div className="space-y-5 p-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">Earnings</h1>
-        <p className="mt-0.5 text-sm text-muted">Online payments RUXS collected for you. Withdraw once a month.</p>
+        <p className="mt-0.5 text-sm text-muted">Online payments RUXs collected for you. Withdraw once a month.</p>
       </div>
 
       <section className="rounded-[16px] bg-ink p-5 text-white lg:max-w-xl">
@@ -30,7 +30,7 @@ export default async function EarningsPage({ params }: { params: Promise<{ vendo
         <p className="mt-1 font-mono text-4xl font-bold tabular-nums">{formatINR(balance.availablePaise)}</p>
         <dl className="mt-4 grid grid-cols-3 gap-2 text-xs">
           <div><dt className="opacity-70">Earned</dt><dd className="font-mono font-semibold tabular-nums">{formatINR(balance.settledPaise)}</dd></div>
-          <div><dt className="opacity-70">RUXS fee</dt><dd className="font-mono font-semibold tabular-nums">{formatINR(balance.feePaise)}</dd></div>
+          <div><dt className="opacity-70">RUXs fee</dt><dd className="font-mono font-semibold tabular-nums">{formatINR(balance.feePaise)}</dd></div>
           <div><dt className="opacity-70">Withdrawn</dt><dd className="font-mono font-semibold tabular-nums">{formatINR(balance.withdrawnPaise)}</dd></div>
         </dl>
         {balance.pendingPaise > 0 && (
@@ -40,7 +40,7 @@ export default async function EarningsPage({ params }: { params: Promise<{ vendo
           {access.role !== "owner" ? (
             <p className="text-xs opacity-70">Only the owner can request a withdrawal.</p>
           ) : hasOpenRequest ? (
-            <p className="rounded-[10px] bg-white/10 px-3 py-2 text-sm">Withdrawal of {formatINR(balance.requestedPaise)} requested. RUXS transfers it to {access.vendor.upiVpa} and marks it paid.</p>
+            <p className="rounded-[10px] bg-white/10 px-3 py-2 text-sm">Withdrawal of {formatINR(balance.requestedPaise)} requested. RUXs transfers it to {access.vendor.upiVpa} and marks it paid.</p>
           ) : balance.availablePaise >= 100 ? (
             <RequestWithdrawalButton slug={slug} label={`Withdraw ${formatINR(balance.availablePaise)}`} />
           ) : (

@@ -6,6 +6,10 @@ import { addDaysIST, istDateTime, weekdayIST } from "@/core/time";
 import { getMyPlans } from "@/features/consumer/queries";
 import { getCategoryMap } from "@/features/platform/queries";
 import { PayDuesButton } from "@/features/payments/components/pay-buttons";
+import { getMyBookings } from "@/features/bookings/queries";
+import { CancelBookingButton } from "@/features/bookings/components/booking-buttons";
+import { MODE_LABEL, canCancelBooking, formatSlotTime } from "@/core/booking";
+import { dayLabelIST, todayIST } from "@/core/time";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { StoreCover } from "@/features/consumer/components/store-cover";
 import { EndPlanButton, PlanDays, type PlanDay } from "@/features/consumer/components/plan-days";
@@ -15,8 +19,9 @@ export const metadata = { title: "Plans" };
 const dayNumFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric" });
 
 export default async function PlansPage() {
-  const [{ today, plans }, category] = await Promise.all([getMyPlans(), getCategoryMap()]);
   const now = new Date();
+  const [{ today, plans }, category, sessions] = await Promise.all([getMyPlans(), getCategoryMap(), getMyBookings()]);
+  const upcoming = sessions.filter((s) => s.booking.endsAt > now && (s.booking.status === "confirmed" || s.booking.status === "held"));
   const dates = Array.from({ length: 7 }, (_, i) => addDaysIST(today, i));
 
   // One "pay balance" button per store, not per plan.
@@ -26,6 +31,31 @@ export default async function PlansPage() {
   return (
     <div className="min-h-dvh bg-neutral-50">
       <PageHeader title="Your plans" subtitle="Tap a day to skip it or bring it back" />
+      {upcoming.length > 0 && (
+        <section className="space-y-2 px-4 pt-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-500">Upcoming sessions</h2>
+          <ul className="space-y-2">
+            {upcoming.map(({ booking, vendorName, productName, cancelCutoffHours }) => (
+              <li key={booking.id} className="rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-ink">{productName ?? "Session"}</p>
+                    <p className="truncate text-sm text-neutral-500">{vendorName} · {MODE_LABEL[booking.mode] ?? booking.mode}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold text-ink">{dayLabelIST(todayIST(booking.startsAt))}</p>
+                    <p className="text-sm text-neutral-500">{formatSlotTime(booking.startsAt)}</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-xs">
+                  <Link href={`/app/orders/${booking.shopOrderId}`} className="font-semibold text-accent">{booking.status === "held" ? "Pay to confirm →" : "Details →"}</Link>
+                  {canCancelBooking(booking.startsAt, now, cancelCutoffHours) && <CancelBookingButton bookingId={booking.id} />}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {plans.length === 0 ? (
         <div className="flex flex-col items-center px-6 pt-24 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-mint">

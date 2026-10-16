@@ -99,7 +99,7 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
 
               {row.rawLink && (
                 <div className="flex items-center gap-2">
-                  <CopyShareButton url={row.rawLink} title={`RUXS link for ${row.name}`} />
+                  <CopyShareButton url={row.rawLink} title={`RUXs link for ${row.name}`} />
                 </div>
               )}
             </div>

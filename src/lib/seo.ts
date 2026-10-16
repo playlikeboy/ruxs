@@ -16,7 +16,7 @@ export function buildMetadata({
   noIndex = false,
 }: MetadataOptions): Metadata {
   const url = `${BASE_URL}${path}`;
-  const socialTitle = path === "" ? title : `${title} | RUXS`;
+  const socialTitle = path === "" ? title : `${title} | RUXs`;
 
   return {
     title,
@@ -29,7 +29,7 @@ export function buildMetadata({
       title: socialTitle,
       description,
       url,
-      siteName: "RUXS",
+      siteName: "RUXs",
       locale: "en_IN",
       type: "website",
       images: [
@@ -37,7 +37,7 @@ export function buildMetadata({
           url: `${BASE_URL}/opengraph-image`,
           width: 1200,
           height: 630,
-          alt: "RUXS — Everyday essentials from your neighbourhood",
+          alt: "RUXs — Everyday essentials from your neighbourhood",
         },
       ],
     },
@@ -67,7 +67,7 @@ export function organizationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "RUXS",
+    name: "RUXs",
     url: BASE_URL,
     logo: `${BASE_URL}/icon`,
     sameAs: ["https://github.com/SH20RAJ/ruxs"],
@@ -84,7 +84,7 @@ export function softwareApplicationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "RUXS",
+    name: "RUXs",
     operatingSystem: "Web (Mobile Responsive, Android, iOS)",
     applicationCategory: "BusinessApplication",
     description:

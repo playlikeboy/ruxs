@@ -3,7 +3,7 @@
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { LOCATION_COOKIE, readGpsCookie } from "@/lib/location";
+import { LOCATION_COOKIE } from "@/lib/location";
 import { and, eq, inArray, isNull, or, gte } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
@@ -16,14 +16,15 @@ import {
   subscriptions,
   vendors,
 } from "@/db/schema";
-import { hashToken, requireUser } from "@/lib/auth/session";
-import { findNearestLocality, haversineDistanceKm, resolveCoordinates, storeReach } from "@/core/geo";
-import { getLocalities, getPlatformSettings } from "@/features/platform/queries";
+import { requireUser } from "@/lib/auth/session";
+import { findNearestLocality } from "@/core/geo";
+import { getLocalities } from "@/features/platform/queries";
 import { cartTotals, canTransition, formatOrderNumber, type ShopOrderStatus } from "@/core/shop";
 import { depositKey } from "@/core/ledger";
 import { addDaysIST, todayIST, weekdayIST } from "@/core/time";
 import { isLate } from "@/core/cutoff";
 import { applyHouseholdDayChange } from "@/features/day-changes/household";
+import { addressLine, deliveryCheck, ensureCustomer, loadProfile } from "./household";
 import {
   cancelOrderSchema,
   endSubscriptionSchema,
@@ -34,104 +35,9 @@ import {
   subscribeSchema,
 } from "./schemas";
 
-type Db = ReturnType<typeof getDb>;
-type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
-type Profile = typeof consumers.$inferSelect;
 
 function fail(error: string) {
   return { ok: false as const, error };
-}
-
-function addressLine(p: Profile): string {
-  return [p.flat, p.floor && `Floor ${p.floor}`, p.tower && `Tower ${p.tower}`, p.society, p.landmark, p.area, p.city]
-    .filter(Boolean)
-    .join(", ");
-}
-
-async function loadProfile(userId: string): Promise<Profile | null> {
-  const db = getDb();
-  const [profile] = await db.select().from(consumers).where(eq(consumers.userId, userId)).limit(1);
-  return profile ?? null;
-}
-
-/**
- * Finds or creates this household's customer row inside a vendor, so the
- * merchant's run sheet, bills and ledger work exactly as for imported customers.
- */
-async function ensureCustomer(tx: Tx, vendorId: string, profile: Profile): Promise<string> {
-  const [mine] = await tx
-    .select({ id: customers.id })
-    .from(customers)
-    .where(and(eq(customers.vendorId, vendorId), eq(customers.userId, profile.userId)))
-    .limit(1);
-
-  const addressFields = {
-    name: profile.name,
-    society: profile.society,
-    tower: profile.tower || "-",
-    floor: profile.floor || "-",
-    flat: profile.flat,
-    updatedAt: new Date(),
-  };
-
-  if (mine) {
-    await tx.update(customers).set(addressFields).where(eq(customers.id, mine.id));
-    return mine.id;
-  }
-
-  const [byPhone] = await tx
-    .select({ id: customers.id, userId: customers.userId })
-    .from(customers)
-    .where(and(eq(customers.vendorId, vendorId), eq(customers.phone, profile.phone)))
-    .limit(1);
-
-  if (byPhone) {
-    if (byPhone.userId && byPhone.userId !== profile.userId) {
-      throw new Error("PHONE_LINKED_ELSEWHERE");
-    }
-    // The vendor imported this household earlier; link it to the app account.
-    await tx
-      .update(customers)
-      .set({ ...addressFields, userId: profile.userId })
-      .where(eq(customers.id, byPhone.id));
-    return byPhone.id;
-  }
-
-  const [created] = await tx
-    .insert(customers)
-    .values({
-      ...addressFields,
-      vendorId,
-      userId: profile.userId,
-      phone: profile.phone,
-      linkTokenHash: hashToken(crypto.randomBytes(32).toString("hex")),
-    })
-    .returning({ id: customers.id });
-  return created!.id;
-}
-
-/**
- * Geofence check on the server: the delivery address must be inside the
- * platform discovery radius and the store's own delivery radius.
- * Address pin first, then the last GPS fix, then the address's locality centre.
- */
-async function deliveryCheck(
-  vendor: { latitude: number | null; longitude: number | null; city: string; area: string; serviceRadiusKm: number },
-  profile: Profile
-): Promise<string | null> {
-  const [localities, settings, gps] = await Promise.all([getLocalities(), getPlatformSettings(), readGpsCookie()]);
-  const home =
-    profile.latitude != null && profile.longitude != null
-      ? { latitude: profile.latitude, longitude: profile.longitude }
-      : (gps ?? resolveCoordinates(profile.city, profile.area, localities));
-  if (!home) return "Set your location so we can check this store delivers to you";
-  const shop =
-    vendor.latitude != null && vendor.longitude != null
-      ? { latitude: vendor.latitude, longitude: vendor.longitude }
-      : resolveCoordinates(vendor.city, vendor.area, localities);
-  const distance = shop ? haversineDistanceKm(home.latitude, home.longitude, shop.latitude, shop.longitude) : null;
-  const reach = storeReach(distance, vendor.serviceRadiusKm, settings.discoveryRadiusKm);
-  return reach.deliverable ? null : "This store doesn't deliver to your address";
 }
 
 export async function saveProfile(input: unknown) {
@@ -316,7 +222,7 @@ export async function placeOrder(input: unknown) {
     return { ok: true as const, orderId };
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "PHONE_LINKED_ELSEWHERE") {
-      return fail("Your phone number is linked to another RUXS account at this store.");
+      return fail("Your phone number is linked to another RUXs account at this store.");
     }
     return fail("Could not place your order. Please try again.");
   }
@@ -450,7 +356,7 @@ export async function subscribe(input: unknown) {
     return { ok: true as const, subscriptionId };
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "PHONE_LINKED_ELSEWHERE") {
-      return fail("Your phone number is linked to another RUXS account at this store.");
+      return fail("Your phone number is linked to another RUXs account at this store.");
     }
     return fail("Could not start your plan. Please try again.");
   }

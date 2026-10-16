@@ -1,5 +1,5 @@
 /**
- * Money calculations in RUXS are strictly in integer paise.
+ * Money calculations in RUXs are strictly in integer paise.
  * Never store or compute balances with floating point numbers.
  */
 

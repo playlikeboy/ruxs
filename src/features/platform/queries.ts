@@ -35,6 +35,7 @@ export const getCategoryMap = cache(async () => {
       coverTo: "#FFFFFF",
       sort: 999,
       isActive: false,
+      fulfilment: "delivery",
       createdAt: new Date(0),
     };
 });

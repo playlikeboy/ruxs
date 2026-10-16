@@ -4,7 +4,6 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendorMembers } from "@/db/schema";
 import { hexclave } from "@/lib/auth/hexclave";
-import { isUserAdmin } from "@/lib/auth/session";
 import { MerchantSignInForm } from "@/features/vendors/components/merchant-sign-in-form";
 import { NotMerchantCard } from "@/features/vendors/components/not-merchant-card";
 
@@ -12,14 +11,14 @@ export const metadata = { title: "Merchant sign in" };
 
 export default async function MerchantSignInPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next: rawNext } = await searchParams;
-  const next = rawNext && /^\/(merchant-panel|admin)(\/|$)/.test(rawNext) ? rawNext : "/merchant-panel";
+  const next = rawNext && /^\/merchant-panel(\/|$)/.test(rawNext) ? rawNext : "/merchant-panel";
 
   const user = await hexclave.getUser();
   let signedInHousehold = false;
   if (user) {
     const db = getDb();
     const [membership] = await db.select({ v: vendorMembers.vendorId }).from(vendorMembers).where(eq(vendorMembers.userId, user.id)).limit(1);
-    if (membership || (await isUserAdmin(user))) redirect(next);
+    if (membership) redirect(next);
     signedInHousehold = true;
   }
 
@@ -29,7 +28,7 @@ export default async function MerchantSignInPage({ searchParams }: { searchParam
         <div className="flex items-center gap-2.5">
           <span className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-accent text-lg font-black text-white">R</span>
           <span>
-            <span className="block text-sm font-bold tracking-wide text-white">RUXS</span>
+            <span className="block text-sm font-bold tracking-wide text-white">RUXs</span>
             <span className="block text-xs font-medium uppercase tracking-[0.18em] text-white/50">Merchant panel</span>
           </span>
         </div>
@@ -44,7 +43,7 @@ export default async function MerchantSignInPage({ searchParams }: { searchParam
           <div className="mt-8 space-y-3 text-center text-sm text-white/60">
             <p>
               New merchant?{" "}
-              <Link href="/onboarding" className="font-semibold text-white underline-offset-4 hover:underline">Apply to sell on RUXS</Link>
+              <Link href="/onboarding" className="font-semibold text-white underline-offset-4 hover:underline">Apply to sell on RUXs</Link>
             </p>
             <p>
               Ordering for your home?{" "}

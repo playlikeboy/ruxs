@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { ledgerEntries, payments, shopOrders } from "@/db/schema";
+import { bookings, ledgerEntries, payments, shopOrders } from "@/db/schema";
 import { razorpayPaymentKey } from "@/core/ledger";
 
 /**
@@ -42,14 +42,25 @@ export async function settlePayment(input: {
         .where(eq(shopOrders.id, payment.shopOrderId))
         .limit(1);
       const cancelled = order?.status === "cancelled" || order?.status === "rejected";
+      const [session] = await tx.select({ id: bookings.id }).from(bookings).where(eq(bookings.shopOrderId, payment.shopOrderId)).limit(1);
+      const isSession = !!session;
       await tx
         .update(shopOrders)
         .set({
           paymentStatus: cancelled ? "refund_due" : "paid",
-          ...(order?.status === "awaiting_payment" ? { status: "placed" } : {}),
+          // Booked sessions skip the accept step: the slot came from the provider's own hours.
+          ...(order?.status === "awaiting_payment" ? { status: isSession ? "accepted" : "placed", ...(isSession ? { acceptedAt: new Date() } : {}) } : {}),
           updatedAt: new Date(),
         })
         .where(eq(shopOrders.id, payment.shopOrderId));
+
+      // A held session becomes a confirmed booking once paid.
+      if (!cancelled) {
+        await tx
+          .update(bookings)
+          .set({ status: "confirmed", heldUntil: null, updatedAt: new Date() })
+          .where(and(eq(bookings.shopOrderId, payment.shopOrderId), eq(bookings.status, "held")));
+      }
     }
 
     if (payment.purpose === "dues") {
@@ -60,7 +71,7 @@ export async function settlePayment(input: {
           customerId: payment.customerId,
           type: "payment",
           amountPaise: -payment.amountPaise,
-          notes: "Paid online via RUXS",
+          notes: "Paid online via RUXs",
           idempotencyKey: razorpayPaymentKey(input.razorpayPaymentId),
           createdBy: payment.userId,
         })

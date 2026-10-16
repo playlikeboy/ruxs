@@ -20,9 +20,9 @@ export const metadata = buildMetadata({
 
 const faqs = [
   {
-    question: "What can I order through RUXS?",
+    question: "What can I order through RUXs?",
     answer:
-      "RUXS is built for recurring local essentials such as tiffin and meal plans, 20-litre water cans, and other neighbourhood household services as they become available in your area.",
+      "RUXs is built for recurring local essentials such as tiffin and meal plans, 20-litre water cans, and other neighbourhood household services as they become available in your area.",
   },
   {
     question: "Do all merchants charge the same price?",
@@ -32,12 +32,12 @@ const faqs = [
   {
     question: "Can I subscribe instead of ordering every day?",
     answer:
-      "RUXS is designed around recurring services. Subscription options and delivery schedules depend on the merchant and the service available in your area.",
+      "RUXs is designed around recurring services. Subscription options and delivery schedules depend on the merchant and the service available in your area.",
   },
   {
     question: "Are you a merchant?",
     answer:
-      "RUXS also provides a separate merchant workspace for tiffin kitchens and water suppliers to manage recurring customers, daily deliveries, billing, and returnable containers.",
+      "RUXs also provides a separate merchant workspace for tiffin kitchens and water suppliers to manage recurring customers, daily deliveries, billing, and returnable containers.",
   },
 ];
 
@@ -206,7 +206,7 @@ export default function HomePage() {
       <section className="border-y border-line bg-white">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 sm:py-16 md:grid-cols-[0.8fr_1.2fr] md:items-center">
           <div className="space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">How RUXS works</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">How RUXs works</p>
             <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">A smoother way to manage everyday deliveries.</h2>
             <p className="text-sm leading-7 text-muted sm:text-base">Choose a local service, review that merchant&apos;s terms and schedule, then use their ordering or subscription flow. Your price belongs to the merchant you choose—not a one-size-fits-all price list.</p>
           </div>
@@ -234,7 +234,7 @@ export default function HomePage() {
         <div className="space-y-4">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">Built for real neighbourhoods</p>
           <h2 className="max-w-xl text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Good service should feel personal. Ordering it should feel easy.</h2>
-          <p className="max-w-xl text-sm leading-7 text-muted sm:text-base">RUXS brings local customers and independent merchants closer together for the everyday products people rely on. Availability will grow neighbourhood by neighbourhood.</p>
+          <p className="max-w-xl text-sm leading-7 text-muted sm:text-base">RUXs brings local customers and independent merchants closer together for the everyday products people rely on. Availability will grow neighbourhood by neighbourhood.</p>
           <div className="flex flex-wrap gap-3 pt-1">
             <Link href="/app" className="inline-flex min-h-11 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">Explore nearby services <span className="ml-2" aria-hidden="true">→</span></Link>
             <Link href="/about" className="inline-flex min-h-11 items-center justify-center rounded-[10px] border border-line bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-bg">Our story</Link>

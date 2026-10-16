@@ -34,9 +34,10 @@ export interface CategoryRow {
   coverTo: string;
   sort: number;
   isActive: boolean;
+  fulfilment: string;
 }
 
-const BLANK_CATEGORY: CategoryRow = { id: "", label: "", shortLabel: "", emoji: "🛍️", blurb: "", tint: "#F4F4F5", coverFrom: "#F4F4F5", coverTo: "#FFFFFF", sort: 10, isActive: true };
+const BLANK_CATEGORY: CategoryRow = { id: "", label: "", shortLabel: "", emoji: "🛍️", blurb: "", tint: "#F4F4F5", coverFrom: "#F4F4F5", coverTo: "#FFFFFF", sort: 10, isActive: true, fulfilment: "delivery" };
 
 function CategoryEditor({ row, isNew }: { row: CategoryRow; isNew?: boolean }) {
   const [f, setF] = useState(row);
@@ -57,6 +58,12 @@ function CategoryEditor({ row, isNew }: { row: CategoryRow; isNew?: boolean }) {
           ))}
         </div>
       </td>
+      <td className="p-2">
+        <select value={f.fulfilment} onChange={(e) => setF({ ...f, fulfilment: e.target.value })} aria-label="Type" className={input + " w-28"}>
+          <option value="delivery">Delivery</option>
+          <option value="booking">Booking</option>
+        </select>
+      </td>
       <td className="p-2"><input className={input + " w-16"} type="number" value={f.sort} onChange={set("sort")} aria-label="Sort" /></td>
       <td className="p-2 text-center"><input type="checkbox" checked={f.isActive} onChange={set("isActive")} aria-label="Active" className="mt-2 h-4 w-4" /></td>
       <td className="p-2">
@@ -76,9 +83,9 @@ function CategoryEditor({ row, isNew }: { row: CategoryRow; isNew?: boolean }) {
 export function CategoriesEditor({ rows }: { rows: CategoryRow[] }) {
   return (
     <div className="overflow-x-auto rounded-[12px] border border-line bg-surface">
-      <table className="w-full min-w-[960px] text-left text-sm">
+      <table className="w-full min-w-[1080px] text-left text-sm">
         <thead className="border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
-          <tr>{["", "Id", "Label", "Short", "Blurb", "Colours", "Order", "On", ""].map((h, i) => <th key={i} className="p-2 font-semibold">{h}</th>)}</tr>
+          <tr>{["", "Id", "Label", "Short", "Blurb", "Colours", "Type", "Order", "On", ""].map((h, i) => <th key={i} className="p-2 font-semibold">{h}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-line">
           {rows.map((r) => <CategoryEditor key={r.id} row={r} />)}
@@ -180,7 +187,7 @@ export function AdminsEditor({ rows }: { rows: { id: string; email: string | nul
         <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="new-admin@example.com" className="h-10 flex-1 rounded-[10px] border border-line bg-surface px-3 text-sm" />
         <button type="submit" disabled={pending} className="h-10 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60">Add admin</button>
       </form>
-      <p className="text-xs text-muted">Admins sign in at /merchant-panel/sign-in or with Google. Email admins must have a verified email.</p>
+      <p className="text-xs text-muted">Admins sign in at /admin/sign-in (email and password, or Google). Email admins need a verified email.</p>
     </div>
   );
 }

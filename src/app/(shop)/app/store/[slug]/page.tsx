@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Clock, MapPin, Repeat, Truck } from "lucide-react";
+import { CalendarClock, ChevronLeft, Clock, MapPin, Repeat, Truck } from "lucide-react";
+import { MODE_LABEL } from "@/core/booking";
 import { formatINR } from "@/core/money";
 import { getCategoryMap } from "@/features/platform/queries";
 import { getMyLocation, getStore } from "@/features/consumer/queries";
@@ -33,6 +34,8 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
     sections.set(key, [...(sections.get(key) ?? []), item]);
   }
   const canOrder = vendor.acceptingOrders && store.inRange;
+  const isBooking = (kind: string) => category(kind).fulfilment === "booking";
+  const provider = items.length > 0 && items.every((i) => isBooking(i.kind));
   const storeInfo = {
     vendorSlug: vendor.slug,
     vendorName: vendor.name,
@@ -57,6 +60,13 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
         <h1 className="text-[26px] font-bold leading-tight tracking-tight text-ink">{vendor.name}</h1>
         <a href="#reviews" className="mt-1 inline-flex"><RatingBadge rating={store.rating} /></a>
         <p className="mt-1 text-[15px] text-neutral-600">{kinds.map((k) => category(k).label).join(" · ")}</p>
+        {provider && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {vendor.serviceModes.map((m) => (
+              <span key={m} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700">{MODE_LABEL[m] ?? m}</span>
+            ))}
+          </div>
+        )}
         <p className="mt-1 flex items-center gap-1 text-sm text-neutral-500">
           <MapPin className="h-4 w-4" aria-hidden="true" />
           {vendor.area}, {vendor.city}
@@ -68,12 +78,12 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           <div className="px-2">
             <Truck className="mx-auto h-5 w-5 text-neutral-600" aria-hidden="true" />
             <p className="mt-1 text-[13px] font-semibold text-ink">{vendor.deliveryFeePaise === 0 ? "Free" : formatINR(vendor.deliveryFeePaise)}</p>
-            <p className="text-[11px] text-neutral-500">delivery</p>
+            <p className="text-[11px] text-neutral-500">{provider ? "visit fee" : "delivery"}</p>
           </div>
           <div className="px-2">
             <MapPin className="mx-auto h-5 w-5 text-neutral-600" aria-hidden="true" />
             <p className="mt-1 text-[13px] font-semibold text-ink">{vendor.serviceRadiusKm} km</p>
-            <p className="text-[11px] text-neutral-500">delivery radius</p>
+            <p className="text-[11px] text-neutral-500">{provider ? "home visit radius" : "delivery radius"}</p>
           </div>
           <div className="px-2">
             <Clock className="mx-auto h-5 w-5 text-neutral-600" aria-hidden="true" />
@@ -131,7 +141,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
         )}
 
         <section className="mt-8">
-          <h2 className="text-xl font-bold tracking-tight text-ink">Order now</h2>
+          <h2 className="text-xl font-bold tracking-tight text-ink">{provider ? "Sessions" : "Order now"}</h2>
           {menu.length === 0 && <p className="mt-2 text-sm text-neutral-500">This store only takes subscriptions.</p>}
           {Array.from(sections.entries()).map(([title, list]) => (
             <div key={title} className="mt-5">
@@ -143,6 +153,11 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                       <VegMark isVeg={item.isVeg} />
                       <h4 className="mt-1 text-[16px] font-semibold text-ink">{item.name}</h4>
                       <p className="mt-0.5 text-[15px] font-medium text-ink tabular-nums">{formatINR(item.pricePaise)}</p>
+                      {isBooking(item.kind) && (
+                        <p className="mt-0.5 flex items-center gap-1 text-xs text-neutral-500">
+                          <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" /> {item.durationMinutes ?? 60} min · free cancel up to {vendor.cancelCutoffHours} h before
+                        </p>
+                      )}
                       {item.description && <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-neutral-500">{item.description}</p>}
                       {item.depositPaise > 0 && item.assetName && (
                         <p className="mt-1 text-xs text-neutral-500">Returnable {item.assetName} · deposit on subscriptions</p>
@@ -156,11 +171,21 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                     <div className="relative flex w-28 shrink-0 flex-col items-center">
                       <StoreCover cover={category(item.kind)} imageUrl={item.imageUrl} alt="" className="h-28 w-28 rounded-2xl" emojiClass="text-5xl" />
                       <div className="-mt-5">
-                        <AddToCart
-                          store={storeInfo}
-                          item={{ productId: item.id, name: item.name, unitPricePaise: item.pricePaise, isVeg: item.isVeg }}
-                          disabled={!item.isAvailable || !canOrder}
-                        />
+                        {isBooking(item.kind) ? (
+                          item.isAvailable && vendor.acceptingOrders && store.visible ? (
+                            <Link href={`/app/store/${vendor.slug}/book/${item.id}`} className="flex h-9 w-24 items-center justify-center rounded-lg bg-accent text-sm font-bold uppercase tracking-wide text-white shadow-sm">
+                              Book
+                            </Link>
+                          ) : (
+                            <span className="flex h-9 w-24 items-center justify-center rounded-lg border border-black/10 bg-neutral-100 text-xs font-semibold text-neutral-400">Unavailable</span>
+                          )
+                        ) : (
+                          <AddToCart
+                            store={storeInfo}
+                            item={{ productId: item.id, name: item.name, unitPricePaise: item.pricePaise, isVeg: item.isVeg }}
+                            disabled={!item.isAvailable || !canOrder}
+                          />
+                        )}
                       </div>
                     </div>
                   </li>

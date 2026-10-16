@@ -6,7 +6,7 @@ import { Copy, KeyRound } from "lucide-react";
 import { adminGenerateCredentials, type Credentials } from "@/features/admin/actions";
 
 export function CredentialsView({ credentials }: { credentials: Credentials }) {
-  const text = `RUXS merchant login\nLogin page: ${credentials.loginUrl}\nLogin ID: ${credentials.loginId}\nPassword: ${credentials.password}`;
+  const text = `RUXs merchant login\nLogin page: ${credentials.loginUrl}\nLogin ID: ${credentials.loginId}\nPassword: ${credentials.password}`;
   return (
     <div className="space-y-3 rounded-[12px] border border-good/40 bg-mint p-4">
       <p className="text-sm font-semibold text-good">Copy these now. The password is not shown again.</p>
@@ -41,7 +41,7 @@ export function CredentialsPanel({ vendorId, loginId }: { vendorId: string; logi
     <div className="space-y-3">
       <p className="text-sm text-muted">
         {loginId ? (
-          <>Login ID <span className="font-mono font-semibold text-ink">{loginId}</span>. RUXS never stores passwords, so a forgotten one is replaced with a new one.</>
+          <>Login ID <span className="font-mono font-semibold text-ink">{loginId}</span>. RUXs never stores passwords, so a forgotten one is replaced with a new one.</>
         ) : (
           "No login yet. Generate one to let the owner sign in to the merchant panel."
         )}

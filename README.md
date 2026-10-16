@@ -1,4 +1,4 @@
-# RUXS
+# RUXs
 
 <p align="center">
   <strong>Everyday essentials, from your neighbourhood.</strong>
@@ -13,7 +13,7 @@
 
 ---
 
-RUXS is being shaped as a customer-first marketplace for recurring neighbourhood essentials such as tiffin subscriptions, daily meals, and 20-litre water-can delivery. Households should be able to discover services, understand each merchant's offer, and build a routine that works for them.
+RUXs is being shaped as a customer-first marketplace for recurring neighbourhood essentials such as tiffin subscriptions, daily meals, and 20-litre water-can delivery. Households should be able to discover services, understand each merchant's offer, and build a routine that works for them.
 
 Independent merchants have a separate portal for managing products, subscriptions, daily operations, delivery runs, customer accounts, returnable containers and billing. Each business sets its own prices and service terms.
 
@@ -53,7 +53,7 @@ Independent merchants have a separate portal for managing products, subscription
 
 ## Product scope and service lifecycle
 
-RUXS is focused first on recurring local services such as tiffin subscriptions and 20-litre water-can deliveries.
+RUXs is focused first on recurring local services such as tiffin subscriptions and 20-litre water-can deliveries.
 
 ```text
 Customer discovers a local service
@@ -80,7 +80,7 @@ Customer self-service for supported changes
 - **Tiffin and meal category:** https://ruxs.in/for/tiffin-services
 - **Water-can delivery category:** https://ruxs.in/for/water-suppliers
 - **Merchant portal:** https://ruxs.in/app
-- **About RUXS:** https://ruxs.in/about
+- **About RUXs:** https://ruxs.in/about
 - **GitHub repository:** https://github.com/SH20RAJ/ruxs
 
 The deployed product is an evolving MVP. Feature availability depends on implementation, merchant configuration, and service-area coverage.
