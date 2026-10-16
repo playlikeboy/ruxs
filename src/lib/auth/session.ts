@@ -104,8 +104,15 @@ export const requireVendorAccess = cache(
   }
 );
 
+/**
+ * Platform admin only. Signed-out visitors go to the hidden admin sign-in;
+ * signed-in people who are not admins get a plain 404, so /admin reveals nothing.
+ */
 export const requireAdmin = cache(async () => {
-  const user = await requireStaffUser("/admin");
+  const user = await hexclave.getUser();
+  if (!user) {
+    redirect("/admin/sign-in");
+  }
   if (!(await isUserAdmin(user))) {
     notFound();
   }

@@ -1,5 +1,5 @@
 /**
- * Pure rules for one-time cart orders placed from the RUXS app.
+ * Pure rules for one-time cart orders placed from the RUXs app.
  * Money is integer paise. No db, next or react imports.
  */
 

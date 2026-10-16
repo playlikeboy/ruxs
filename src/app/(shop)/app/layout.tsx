@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth/session";
 import { TabBar } from "@/features/consumer/components/tab-bar";
 
 export const metadata: Metadata = {
-  title: { default: "Explore", template: "%s · RUXS" },
+  title: { default: "Explore", template: "%s · RUXs" },
   robots: { index: false, follow: false },
 };
 

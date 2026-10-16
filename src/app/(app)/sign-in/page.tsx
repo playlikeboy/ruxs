@@ -19,7 +19,7 @@ export default async function SignInPage() {
         </div>
         <SignIn fullPage={false} automaticRedirect />
         <p className="mt-6 text-center text-sm text-muted">
-          New to RUXS?{" "}
+          New to RUXs?{" "}
           <Link href="/sign-up" className="font-semibold text-accent underline-offset-4 hover:underline">
             Create an account
           </Link>

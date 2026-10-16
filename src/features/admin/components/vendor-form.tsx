@@ -161,7 +161,7 @@ export function VendorForm({ initial }: { initial: VendorFormValues }) {
         <label className={labelCls}>Delivery radius (km)<input className={input} inputMode="numeric" value={f.serviceRadiusKm} onChange={set("serviceRadiusKm")} /></label>
         <label className={labelCls}>Delivery fee (₹)<input className={input} inputMode="decimal" value={f.deliveryFeeRupees} onChange={set("deliveryFeeRupees")} /></label>
         <label className={labelCls}>Minimum order (₹)<input className={input} inputMode="decimal" value={f.minOrderRupees} onChange={set("minOrderRupees")} /></label>
-        <label className={labelCls}>RUXS fee on online payments (%)<input className={input} inputMode="decimal" value={f.commissionPercent} onChange={set("commissionPercent")} /></label>
+        <label className={labelCls}>RUXs fee on online payments (%)<input className={input} inputMode="decimal" value={f.commissionPercent} onChange={set("commissionPercent")} /></label>
       </fieldset>
 
       {!isNew && (

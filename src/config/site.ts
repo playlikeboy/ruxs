@@ -15,12 +15,12 @@ export interface VendorTypeConfig {
 }
 
 export const siteConfig = {
-  name: "RUXS",
-  legalName: "RUXS Technologies",
+  name: "RUXs",
+  legalName: "RUXs Technologies",
   url: process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in",
   ogImage: "https://ruxs.in/og.png",
   description:
-    "RUXS helps local vendors manage orders, deliveries and household accounts while setting their own product prices.",
+    "RUXs helps local vendors manage orders, deliveries and household accounts while setting their own product prices.",
   cities: [
     {
       slug: "bengaluru",

@@ -36,7 +36,10 @@ export const vendors = pgTable(
     acceptingOrders: boolean("accepting_orders").notNull().default(true),
     loginId: text("login_id").unique(), // merchant login id, e.g. "annapurna-tiffin"
     loginUserId: text("login_user_id").unique(), // Hexclave user behind that login
-    commissionBps: integer("commission_bps").notNull().default(0), // RUXS fee on online payments, 100 = 1%
+    commissionBps: integer("commission_bps").notNull().default(0), // RUXs fee on online payments, 100 = 1%
+    serviceModes: text("service_modes").array().notNull().default(sql`'{home}'::text[]`), // booking providers: home, studio, online
+    bookingNoticeMinutes: integer("booking_notice_minutes").notNull().default(120),
+    cancelCutoffHours: integer("cancel_cutoff_hours").notNull().default(3),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

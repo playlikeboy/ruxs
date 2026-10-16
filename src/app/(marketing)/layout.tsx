@@ -9,9 +9,9 @@ export default function MarketingLayout({
     <div className="flex min-h-screen flex-col bg-bg text-ink antialiased selection:bg-[#FFE8DD]">
       <header className="sticky top-0 z-30 border-b border-line bg-[#FAFAF7]/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="RUXS home">
+          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="RUXs home">
             <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-accent text-lg font-extrabold text-white">R</span>
-            <span className="text-xl font-bold tracking-tight text-ink">RUXS</span>
+            <span className="text-xl font-bold tracking-tight text-ink">RUXs</span>
           </Link>
 
           <nav aria-label="Main navigation" className="hidden items-center gap-6 text-sm font-medium text-muted md:flex">
@@ -41,7 +41,7 @@ export default function MarketingLayout({
             <div className="space-y-3">
               <Link href="/" className="flex items-center gap-2">
                 <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-accent text-xs font-bold text-white">R</span>
-                <span className="font-bold text-ink">RUXS</span>
+                <span className="font-bold text-ink">RUXs</span>
               </Link>
               <p className="max-w-sm text-sm leading-6 text-muted">
                 Everyday essentials across India, from your neighbourhood. Discover tiffin subscriptions, water-can delivery and local services.
@@ -77,7 +77,7 @@ export default function MarketingLayout({
           </div>
 
           <div className="flex flex-col items-start justify-between gap-2 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center">
-            <span>© {new Date().getFullYear()} RUXS. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} RUXs. All rights reserved.</span>
             <span>Each merchant sets their own prices and service terms.</span>
           </div>
         </div>

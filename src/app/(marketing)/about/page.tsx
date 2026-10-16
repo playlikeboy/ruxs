@@ -12,9 +12,9 @@ import {
 } from "@/components/marketing/illustrations";
 
 export const metadata = buildMetadata({
-  title: "About RUXS — Everyday Essentials From Your Neighbourhood",
+  title: "About RUXs — Everyday Essentials From Your Neighbourhood",
   description:
-    "RUXS helps households discover everyday local services such as tiffin subscriptions and 20L water-can delivery, while giving independent merchants their own operations portal.",
+    "RUXs helps households discover everyday local services such as tiffin subscriptions and 20L water-can delivery, while giving independent merchants their own operations portal.",
   path: "/about",
 });
 
@@ -22,17 +22,17 @@ const principles = [
   {
     number: "01",
     title: "Everyday essentials should be easy to find",
-    body: "From a regular lunch dabba to the next water can, household essentials are often delivered by neighbourhood businesses people already trust. RUXS is building a simpler way to discover those services and choose the routine that fits your home.",
+    body: "From a regular lunch dabba to the next water can, household essentials are often delivered by neighbourhood businesses people already trust. RUXs is building a simpler way to discover those services and choose the routine that fits your home.",
   },
   {
     number: "02",
     title: "Local businesses keep their independence",
-    body: "Each merchant manages their own catalogue, prices, delivery schedule and subscription terms. RUXS is not a one-price-fits-all catalogue: the offer and price are set by the business you choose.",
+    body: "Each merchant manages their own catalogue, prices, delivery schedule and subscription terms. RUXs is not a one-price-fits-all catalogue: the offer and price are set by the business you choose.",
   },
   {
     number: "03",
     title: "Customers and merchants both deserve better tools",
-    body: "Customers need a clear way to understand their service and manage day-to-day changes. Merchants need dependable tools for recurring orders, delivery runs, customer balances, returnable containers and billing. RUXS brings those parts together without making the two experiences compete.",
+    body: "Customers need a clear way to understand their service and manage day-to-day changes. Merchants need dependable tools for recurring orders, delivery runs, customer balances, returnable containers and billing. RUXs brings those parts together without making the two experiences compete.",
   },
 ];
 
@@ -73,7 +73,7 @@ export default function AboutPage() {
             organizationJsonLd(),
             breadcrumbsJsonLd([
               { name: "Home", path: "/" },
-              { name: "About RUXS", path: "/about" },
+              { name: "About RUXs", path: "/about" },
             ]),
           ]),
         }}
@@ -89,7 +89,7 @@ export default function AboutPage() {
             Everyday life, <span className="text-accent">made a little easier.</span>
           </h1>
           <p className="max-w-xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
-            RUXS helps you discover recurring essentials such as tiffin subscriptions and 20L water-can delivery from local businesses. Behind the scenes, those businesses get a dedicated workspace to keep their daily service running smoothly.
+            RUXs helps you discover recurring essentials such as tiffin subscriptions and 20L water-can delivery from local businesses. Behind the scenes, those businesses get a dedicated workspace to keep their daily service running smoothly.
           </p>
           <div className="flex flex-col gap-3 pt-1 sm:flex-row">
             <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">

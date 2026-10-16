@@ -55,7 +55,7 @@ export function useRazorpay() {
           order_id: checkout.razorpayOrderId,
           amount: checkout.amountPaise,
           currency: "INR",
-          name: "RUXS",
+          name: "RUXs",
           description: checkout.description,
           prefill: checkout.prefill,
           theme: { color: "#BD4B2A" },

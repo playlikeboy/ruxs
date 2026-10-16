@@ -16,7 +16,7 @@ export const customers = pgTable(
     vendorId: text("vendor_id")
       .notNull()
       .references(() => vendors.id, { onDelete: "cascade" }),
-    userId: text("user_id"), // Hexclave user id when the household signed up in the RUXS app
+    userId: text("user_id"), // Hexclave user id when the household signed up in the RUXs app
     name: text("name").notNull(),
     phone: text("phone").notNull(),
     society: text("society").notNull(),

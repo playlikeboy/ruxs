@@ -2,16 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ClipboardList, LayoutGrid, Repeat, UtensilsCrossed } from "lucide-react";
+import { CalendarClock, CalendarDays, ClipboardList, Clock, LayoutGrid, Repeat, UtensilsCrossed } from "lucide-react";
 
-export function VendorBottomNav({ slug, newOrders = 0 }: { slug: string; newOrders?: number }) {
+export function VendorBottomNav({ slug, newOrders = 0, provider = false }: { slug: string; newOrders?: number; provider?: boolean }) {
   const pathname = usePathname();
   const base = "/merchant-panel/" + slug;
 
   const navItems = [
     { label: "Today", href: base + "/today", icon: CalendarDays },
-    { label: "Orders", href: base + "/orders", icon: ClipboardList, badge: newOrders },
-    { label: "Plans", href: base + "/subscriptions", icon: Repeat },
+    ...(provider
+      ? [
+          { label: "Bookings", href: base + "/bookings", icon: CalendarClock },
+          { label: "Hours", href: base + "/availability", icon: Clock },
+        ]
+      : [
+          { label: "Orders", href: base + "/orders", icon: ClipboardList, badge: newOrders },
+          { label: "Plans", href: base + "/subscriptions", icon: Repeat },
+        ]),
     { label: "Menu", href: base + "/products", icon: UtensilsCrossed },
     { label: "More", href: base + "/more", icon: LayoutGrid },
   ];

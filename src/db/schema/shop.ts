@@ -14,7 +14,7 @@ import { vendors } from "./vendors";
 import { customers } from "./customers";
 import { products } from "./catalog";
 
-/** A household that signed in to the RUXS app. Keyed by Hexclave user id. */
+/** A household that signed in to the RUXs app. Keyed by Hexclave user id. */
 export const consumers = pgTable("consumers", {
   userId: text("user_id").primaryKey(),
   name: text("name").notNull(),

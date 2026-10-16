@@ -1,4 +1,4 @@
-# Adding new services to RUXS (gym trainers and anything else)
+# Adding new services to RUXs (gym trainers and anything else)
 
 > Read [`AGENTS.md`](../AGENTS.md) first. Its hard lines (integer paise, insert-only ledger, `vendorId` only from `requireVendorAccess()`), layer rules and Next.js rules apply to every step below. `PROMPT.md` and `docs/PRD.md` still win over this file where they conflict.
 
@@ -14,12 +14,12 @@ Today the household app shows four categories: 🍱 Tiffin · 💧 Water · 🥛
 | Stores (location, radius, fee, commission, login) | `vendors`, `/admin/vendors` | Yes |
 | Menu items | `products` (`kind` = category id, price, description, photo) | Yes, for anything sold at a fixed price |
 | One-time cart orders | `shop_orders`, `shop_order_items` | Yes: "buy once, deliver or perform once" |
-| Online payment through RUXS | Razorpay, `payments`, `/api/webhooks/razorpay` | Yes |
+| Online payment through RUXs | Razorpay, `payments`, `/api/webhooks/razorpay` | Yes |
 | Vendor balance and monthly withdrawal | `vendor_payouts`, `/admin/payouts` | Yes |
 | Nearby search | GPS / IP / saved address + `service_radius_km` | Yes |
 | Daily plans (subscriptions) | `subscriptions` → `orders` created **every scheduled day** at cutoff, charged per delivery | **Only for things delivered every day** |
 
-The last row is the key constraint. A subscription in RUXS means "deliver N units on these weekdays and charge per delivery". That fits tiffin, water and milk. It does **not** fit a monthly gym membership, a 12-session training pack, or a weekly maid visit billed monthly. Those need a different fulfilment model (section 4).
+The last row is the key constraint. A subscription in RUXs means "deliver N units on these weekdays and charge per delivery". That fits tiffin, water and milk. It does **not** fit a monthly gym membership, a 12-session training pack, or a weekly maid visit billed monthly. Those need a different fulfilment model (section 4).
 
 ---
 

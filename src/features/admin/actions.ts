@@ -76,7 +76,7 @@ export interface Credentials {
 
 /**
  * Creates or resets the owner login for a vendor: login id = store slug,
- * password freshly generated and shown once. Passwords are never stored by RUXS.
+ * password freshly generated and shown once. Passwords are never stored by RUXs.
  */
 async function issueCredentials(vendorId: string): Promise<{ ok: true; credentials: Credentials } | { ok: false; error: string }> {
   const db = getDb();

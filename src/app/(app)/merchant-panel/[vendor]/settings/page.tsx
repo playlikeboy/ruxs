@@ -38,7 +38,7 @@ export default async function SettingsPage({
       <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
         <div>
           <h2 className="text-base font-semibold text-ink">Storefront &amp; delivery</h2>
-          <p className="mt-1 text-sm text-muted">How your store appears in the RUXS app and who can order.</p>
+          <p className="mt-1 text-sm text-muted">How your store appears in the RUXs app and who can order.</p>
         </div>
         <StorefrontForm
           slug={slug}
@@ -79,7 +79,7 @@ export default async function SettingsPage({
 
       <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
         <h2 className="text-base font-semibold text-ink">UPI payment details</h2>
-        <p className="text-sm leading-6 text-muted">Households pay bills directly to your UPI ID. RUXS creates the UPI link and never holds your money.</p>
+        <p className="text-sm leading-6 text-muted">Households pay bills directly to your UPI ID. RUXs creates the UPI link and never holds your money.</p>
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-line bg-bg p-3">
           <div>
             <p className="text-xs text-muted">Direct UPI VPA</p>

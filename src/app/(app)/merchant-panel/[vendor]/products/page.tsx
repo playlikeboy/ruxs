@@ -10,7 +10,7 @@ export const metadata = { title: "Menu" };
 export default async function MenuPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
   const [{ rows, role }, categoryList, category] = await Promise.all([getMenuForVendor(slug), getCategories(), getCategoryMap()]);
-  const categories = categoryList.map((c) => ({ id: c.id, emoji: c.emoji, shortLabel: c.shortLabel }));
+  const categories = categoryList.map((c) => ({ id: c.id, emoji: c.emoji, shortLabel: c.shortLabel, fulfilment: c.fulfilment }));
   const isOwner = role === "owner";
 
   const groups = new Map<string, typeof rows>();
@@ -53,7 +53,11 @@ export default async function MenuPage({ params }: { params: Promise<{ vendor: s
                         {p.section && <span className="rounded-full bg-bg px-2 py-0.5 text-muted">{p.section}</span>}
                         {p.allowOneTime && <span className="rounded-full bg-sky px-2 py-0.5 text-[#1F5C99]">Order</span>}
                         {p.allowSubscription && <span className="rounded-full bg-mint px-2 py-0.5 text-good">Subscribe</span>}
-                        <span className="rounded-full bg-bg px-2 py-0.5 capitalize text-muted">{p.shift} · cutoff {p.cutoffAt}</span>
+                        {category(p.kind).fulfilment === "booking" ? (
+                          <span className="rounded-full bg-peach px-2 py-0.5 text-accent">{p.durationMinutes ?? 60}-min session</span>
+                        ) : (
+                          <span className="rounded-full bg-bg px-2 py-0.5 capitalize text-muted">{p.shift} · cutoff {p.cutoffAt}</span>
+                        )}
                         {p.assetName && <span className="rounded-full bg-bg px-2 py-0.5 text-muted">{p.assetName}{p.depositPaise > 0 ? ` · ${formatINR(p.depositPaise)} dep.` : ""}</span>}
                       </div>
                     </div>

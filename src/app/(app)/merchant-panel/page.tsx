@@ -4,7 +4,6 @@ import { eq, and, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendors, vendorMembers, vendorInvites } from "@/db/schema";
 import { hexclave } from "@/lib/auth/hexclave";
-import { isUserAdmin } from "@/lib/auth/session";
 import { NotMerchantCard } from "@/features/vendors/components/not-merchant-card";
 
 export default async function MerchantEntryPage() {
@@ -80,10 +79,6 @@ export default async function MerchantEntryPage() {
           </div>
         );
       }
-    }
-
-    if (await isUserAdmin(user)) {
-      redirect("/admin");
     }
 
     return (

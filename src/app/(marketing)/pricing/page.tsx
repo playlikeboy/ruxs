@@ -4,7 +4,7 @@ import { buildMetadata, breadcrumbsJsonLd } from "@/lib/seo";
 export const metadata = buildMetadata({
   title: "How Service Pricing Works",
   description:
-    "RUXS does not set one universal price for tiffin subscriptions or water-can delivery. Each local merchant sets their own prices, plans, deposits and service terms.",
+    "RUXs does not set one universal price for tiffin subscriptions or water-can delivery. Each local merchant sets their own prices, plans, deposits and service terms.",
   path: "/pricing",
 });
 
@@ -30,7 +30,7 @@ export default function PricingPage() {
           One platform. <span className="text-accent">Each merchant sets their own price.</span>
         </h1>
         <p className="max-w-2xl text-base leading-7 text-muted sm:text-lg">
-          A tiffin plan from one kitchen can cost differently from a similar plan elsewhere. Water-can prices, deposits, delivery terms and subscription schedules can differ too. RUXS does not impose a universal menu or subscription price across local businesses.
+          A tiffin plan from one kitchen can cost differently from a similar plan elsewhere. Water-can prices, deposits, delivery terms and subscription schedules can differ too. RUXs does not impose a universal menu or subscription price across local businesses.
         </p>
       </section>
       <section className="grid gap-4 sm:grid-cols-3">
@@ -66,7 +66,7 @@ export default function PricingPage() {
       </section>
       <section className="border-t border-line pt-6">
         <h2 className="text-lg font-semibold text-ink">Are you a merchant?</h2>
-        <p className="mt-2 text-sm leading-6 text-muted">Manage your own product prices, recurring subscriptions, deliveries and customer accounts from the separate RUXS merchant workspace.</p>
+        <p className="mt-2 text-sm leading-6 text-muted">Manage your own product prices, recurring subscriptions, deliveries and customer accounts from the separate RUXs merchant workspace.</p>
         <Link href="/merchant-panel" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline">
           Open merchant portal <span aria-hidden="true">→</span>
         </Link>

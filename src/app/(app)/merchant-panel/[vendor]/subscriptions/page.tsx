@@ -39,7 +39,7 @@ export default async function SubscriptionsPage({ params }: { params: Promise<{ 
       </div>
 
       {rows.length === 0 ? (
-        <EmptyState title="No subscriptions yet" description="Households subscribe from your RUXS store page, or add them under Customers." />
+        <EmptyState title="No subscriptions yet" description="Households subscribe from your RUXs store page, or add them under Customers." />
       ) : (
         [
           { title: "Active", list: active },

@@ -12,7 +12,7 @@ export default async function MorePage({
   const links = [
     {
       title: "Earnings & withdrawals",
-      description: "Online payments RUXS collected for you, and monthly withdrawals.",
+      description: "Online payments RUXs collected for you, and monthly withdrawals.",
       href: "/merchant-panel/" + slug + "/earnings",
       visible: access.role !== "driver",
       marker: "₹",

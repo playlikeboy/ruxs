@@ -59,7 +59,7 @@ export function RequestWithdrawalButton({ slug, label }: { slug: string; label: 
       label={label}
       busyLabel="Requesting…"
       className={primary + " w-full"}
-      done="Withdrawal requested. RUXS will transfer it and mark it paid."
+      done="Withdrawal requested. RUXs will transfer it and mark it paid."
       run={async () => (window.confirm("Request a transfer of your full available balance?") ? requestWithdrawal({ slug }) : null)}
     />
   );

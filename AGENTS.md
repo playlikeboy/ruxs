@@ -1,8 +1,8 @@
-# RUXS agent rules
+# RUXs agent rules
 
 Start with `PROMPT.md` (build order, checklists, and decisions that override the PRD). The full spec is `docs/PRD.md`; long-term context is in `RUXS_STARTUP_OVERVIEW.md`.
 
-**Product direction (updated 2026-10-15):** RUXS has four surfaces. (1) The static public site. (2) The household app at `/app` (Hexclave sign-in at `/sign-in`): browse nearby stores by category (tiffin, water, milk, other), one-store cart and checkout (pay on delivery or add to monthly bill), subscriptions with per-day skip, orders and plans. (3) The merchant panel at `/merchant-panel` (its own sign-in at `/merchant-panel/sign-in`): orders, plans, menu CRUD, run sheet, bills, storefront settings. (4) The admin panel at `/admin`. Households never see vendor phone numbers. Products are archived, never deleted (orders reference them).
+**Product direction (updated 2026-10-15):** RUXs has four surfaces. (1) The static public site. (2) The household app at `/app` (Hexclave sign-in at `/sign-in`): browse nearby stores by category (tiffin, water, milk, other), one-store cart and checkout (pay on delivery or add to monthly bill), subscriptions with per-day skip, orders and plans. (3) The merchant panel at `/merchant-panel` (its own sign-in at `/merchant-panel/sign-in`): orders, plans, menu CRUD, run sheet, bills, storefront settings. (4) The admin panel at `/admin`. Households never see vendor phone numbers. Products are archived, never deleted (orders reference them).
 
 **MVP overrides:** WhatsApp is paused — households use the private link `/c/[token]` to Deliver/Skip/Extra; no webhook, no `messages`/`webhook_events` tables, no `WHATSAPP_*` env. The schema is 11 tables (adds `vendor_invites`) plus the marketplace tables `consumers`, `shop_orders`, `shop_order_items` (migration 0003). See `PROMPT.md` §2.
 **Adding a new service or category** (gym trainers, maids, tutors, groceries…): follow `docs/ADDING_SERVICES.md`. Most services are data-only (`/admin/settings`); only a new fulfilment model needs code.

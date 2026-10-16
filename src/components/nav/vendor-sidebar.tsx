@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  CalendarClock,
   CalendarDays,
   ChartColumn,
   ClipboardList,
@@ -37,6 +38,7 @@ export function VendorSidebar({
   role,
   acceptingOrders,
   newOrders,
+  provider,
 }: {
   slug: string;
   storeName: string;
@@ -44,6 +46,8 @@ export function VendorSidebar({
   role: Role;
   acceptingOrders: boolean;
   newOrders: number;
+  /** Sells booking services (trainers, physio): show sessions instead of deliveries. */
+  provider: boolean;
 }) {
   const pathname = usePathname();
   const base = "/merchant-panel/" + slug;
@@ -51,18 +55,25 @@ export function VendorSidebar({
   const groups: { title: string; items: Item[] }[] = [
     {
       title: "Daily",
-      items: [
-        { label: "Today", path: "/today", icon: CalendarDays },
-        { label: "Orders", path: "/orders", icon: ClipboardList, badge: newOrders },
-        { label: "Delivery run", path: "/run", icon: Navigation },
-        { label: "Plans", path: "/subscriptions", icon: Repeat, roles: ["owner", "staff"] },
-      ],
+      items: provider
+        ? [
+            { label: "Today", path: "/today", icon: CalendarDays },
+            { label: "Bookings", path: "/bookings", icon: CalendarClock },
+            { label: "Availability", path: "/availability", icon: Repeat, roles: ["owner", "staff"] },
+            { label: "Orders", path: "/orders", icon: ClipboardList, badge: newOrders },
+          ]
+        : [
+            { label: "Today", path: "/today", icon: CalendarDays },
+            { label: "Orders", path: "/orders", icon: ClipboardList, badge: newOrders },
+            { label: "Delivery run", path: "/run", icon: Navigation },
+            { label: "Plans", path: "/subscriptions", icon: Repeat, roles: ["owner", "staff"] },
+          ],
     },
     {
       title: "Store",
       items: [
         { label: "Menu", path: "/products", icon: UtensilsCrossed },
-        { label: "Inventory", path: "/inventory", icon: Package },
+        ...(provider ? [] : [{ label: "Inventory", path: "/inventory", icon: Package }]),
         { label: "Customers", path: "/customers", icon: Users, roles: ["owner", "staff"] },
         { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
       ],

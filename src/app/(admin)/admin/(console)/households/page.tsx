@@ -10,7 +10,7 @@ export default async function AdminHouseholdsPage() {
     <div className="space-y-4 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Households</h1>
-        <p className="mt-1 text-sm text-muted">{people.length} people have set up the RUXS app.</p>
+        <p className="mt-1 text-sm text-muted">{people.length} people have set up the RUXs app.</p>
       </div>
       {people.length === 0 ? (
         <p className="rounded-[12px] border border-line bg-surface p-8 text-center text-sm text-muted">No households yet.</p>

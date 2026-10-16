@@ -29,7 +29,7 @@ export default async function MerchantOrdersPage({
     <div className="space-y-4 p-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">Orders</h1>
-        <p className="mt-0.5 text-sm text-muted">One-time orders from the RUXS app. Daily plans are on Today.</p>
+        <p className="mt-0.5 text-sm text-muted">One-time orders from the RUXs app. Daily plans are on Today.</p>
       </div>
 
       <div className="grid grid-cols-2 rounded-[12px] bg-bg p-1 text-sm font-semibold">

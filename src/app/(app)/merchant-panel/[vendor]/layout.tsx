@@ -4,6 +4,7 @@ import { VendorBottomNav } from "@/components/nav/vendor-bottom-nav";
 import { VendorSidebar } from "@/components/nav/vendor-sidebar";
 import { UserNav } from "@/components/auth/user-nav";
 import { countOpenShopOrders } from "@/features/shop-orders/queries";
+import { isBookingProvider } from "@/features/bookings/queries";
 
 export default async function VendorLayout({
   children,
@@ -14,7 +15,7 @@ export default async function VendorLayout({
 }) {
   const { vendor: slug } = await params;
   const access = await requireVendorAccess(slug);
-  const newOrders = await countOpenShopOrders(access.vendorId);
+  const [newOrders, provider] = await Promise.all([countOpenShopOrders(access.vendorId), isBookingProvider(access.vendorId)]);
 
   return (
     <div className="min-h-dvh bg-bg">
@@ -25,6 +26,7 @@ export default async function VendorLayout({
         role={access.role}
         acceptingOrders={access.vendor.acceptingOrders}
         newOrders={newOrders}
+        provider={provider}
       />
 
       <div className="lg:pl-64">
@@ -55,7 +57,7 @@ export default async function VendorLayout({
       </div>
 
       <div className="lg:hidden">
-        <VendorBottomNav slug={slug} newOrders={newOrders} />
+        <VendorBottomNav slug={slug} newOrders={newOrders} provider={provider} />
       </div>
     </div>
   );

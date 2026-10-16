@@ -26,6 +26,7 @@ export const categories = pgTable("categories", {
   coverTo: text("cover_to").notNull().default("#FFFFFF"),
   sort: integer("sort").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
+  fulfilment: text("fulfilment").notNull().default("delivery"), // delivery (tiffin, water) or booking (trainers, physio)
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -52,7 +53,7 @@ export const platformAdmins = pgTable("platform_admins", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-/** Online payments collected by RUXS through Razorpay, on behalf of a vendor. */
+/** Online payments collected by RUXs through Razorpay, on behalf of a vendor. */
 export const payments = pgTable(
   "payments",
   {
@@ -85,7 +86,7 @@ export const payments = pgTable(
   ]
 );
 
-/** Money RUXS owes a vendor, withdrawn monthly. Admin marks each request paid after a manual transfer. */
+/** Money RUXs owes a vendor, withdrawn monthly. Admin marks each request paid after a manual transfer. */
 export const vendorPayouts = pgTable(
   "vendor_payouts",
   {

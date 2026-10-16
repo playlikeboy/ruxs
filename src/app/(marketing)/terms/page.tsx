@@ -4,7 +4,7 @@ import { buildMetadata, breadcrumbsJsonLd } from "@/lib/seo";
 export const metadata = buildMetadata({
   title: "Terms of Service",
   description:
-    "Terms of service for RUXS software. Clear commercial terms, zero commission, and software responsibilities.",
+    "Terms of service for RUXs software. Clear commercial terms, zero commission, and software responsibilities.",
   path: "/terms",
 });
 
@@ -36,21 +36,21 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-sm font-bold text-ink">1. Software Role & Disclaimers</h2>
           <p>
-            RUXS provides software tools for neighborhood tiffin kitchens and water suppliers to manage daily schedules, delivery run sheets, and customer khatas. RUXS is not a food caterer, restaurant, or water filtration provider. All meal preparation, water purification, delivery execution, and hygiene standards remain the sole responsibility of the independent vendor.
+            RUXs provides software tools for neighborhood tiffin kitchens and water suppliers to manage daily schedules, delivery run sheets, and customer khatas. RUXs is not a food caterer, restaurant, or water filtration provider. All meal preparation, water purification, delivery execution, and hygiene standards remain the sole responsibility of the independent vendor.
           </p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-sm font-bold text-ink">2. Khata & Ledger Accounting</h2>
           <p>
-            All financial calculations within RUXS are executed using immutable, append-only integer paise. Entries once committed cannot be edited or deleted; corrections are handled exclusively via new reversing adjustment entries. Monthly bills are calculated directly from ledger transactions.
+            All financial calculations within RUXs are executed using immutable, append-only integer paise. Entries once committed cannot be edited or deleted; corrections are handled exclusively via new reversing adjustment entries. Monthly bills are calculated directly from ledger transactions.
           </p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-sm font-bold text-ink">3. Payments & Zero Commission</h2>
           <p>
-            RUXS charges zero payment commission. Transactions occur peer-to-peer via universal UPI deep links directly into the vendor&apos;s verified UPI ID. Any transaction disputes, bank failures, or refunds must be settled directly between the household and the vendor.
+            RUXs charges zero payment commission. Transactions occur peer-to-peer via universal UPI deep links directly into the vendor&apos;s verified UPI ID. Any transaction disputes, bank failures, or refunds must be settled directly between the household and the vendor.
           </p>
         </section>
 
@@ -71,7 +71,7 @@ export default function TermsPage() {
 
       <div className="pt-6 border-t border-line text-xs text-muted">
         <Link href="/" className="text-accent font-semibold hover:underline">
-          ← Return to RUXS Home
+          ← Return to RUXs Home
         </Link>
       </div>
     </div>

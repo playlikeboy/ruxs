@@ -1,10 +1,10 @@
 /**
- * Vendor balance for money RUXS collects online. Integer paise only.
+ * Vendor balance for money RUXs collects online. Integer paise only.
  *
  * - settled: paid and earned (plan dues, or app orders that were delivered)
  * - pending: paid for app orders that are still on their way
  * - excluded: paid for orders that were cancelled (refund due or refunded)
- * The RUXS fee is taken from settled money only. Requested and paid payouts
+ * The RUXs fee is taken from settled money only. Requested and paid payouts
  * both reduce what can still be withdrawn.
  */
 
@@ -33,7 +33,7 @@ function assertPaise(n: number, what: string) {
   if (!Number.isInteger(n) || n < 0) throw new Error(`${what} must be non-negative integer paise`);
 }
 
-/** RUXS fee in paise, rounded down so the vendor is never charged a fraction extra. */
+/** RUXs fee in paise, rounded down so the vendor is never charged a fraction extra. */
 export function commissionPaise(amountPaise: number, commissionBps: number): number {
   assertPaise(amountPaise, "Amount");
   if (!Number.isInteger(commissionBps) || commissionBps < 0 || commissionBps > 5000) {

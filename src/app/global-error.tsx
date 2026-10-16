@@ -24,7 +24,7 @@ export default function GlobalError({
           Something went wrong
         </h1>
         <p className="text-sm text-[#6B6862] max-w-sm mb-3">
-          We couldn’t load this page. Please try again or return to the RUXS homepage.
+          We couldn’t load this page. Please try again or return to the RUXs homepage.
         </p>
         {error.digest ? (
           <p className="mb-5 text-xs text-[#6B6862]">Reference: {error.digest}</p>
