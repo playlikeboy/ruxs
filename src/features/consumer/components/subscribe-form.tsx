@@ -17,6 +17,7 @@ export function SubscribeForm({
   assetName,
   minStart,
   hasAddress,
+  unit,
 }: {
   productId: string;
   pricePaise: number;
@@ -24,6 +25,8 @@ export function SubscribeForm({
   assetName: string | null;
   minStart: string;
   hasAddress: boolean;
+  /** What one unit is called, e.g. "can" for water, "tiffin" for meals. */
+  unit: string;
 }) {
   const router = useRouter();
   const [qty, setQty] = useState(1);
@@ -36,6 +39,8 @@ export function SubscribeForm({
     { label: "Every day", days: [...WEEKDAYS] },
     { label: "Mon–Sat", days: ["mon", "tue", "wed", "thu", "fri", "sat"] },
     { label: "Weekdays", days: ["mon", "tue", "wed", "thu", "fri"] },
+    { label: "Alternate days", days: ["mon", "wed", "fri"] },
+    { label: "Weekends", days: ["sat", "sun"] },
   ];
 
   function toggle(day: string) {
@@ -45,7 +50,7 @@ export function SubscribeForm({
   return (
     <div className="space-y-6">
       <section>
-        <h2 className="text-[15px] font-semibold text-ink">How many each day?</h2>
+        <h2 className="text-[15px] font-semibold text-ink">How many {unit}s each delivery?</h2>
         <div className="mt-3 flex items-center gap-4">
           <button type="button" aria-label="Fewer" onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-11 w-11 items-center justify-center rounded-full border border-black/15 text-ink disabled:opacity-40" disabled={qty <= 1}>
             <Minus className="h-4 w-4" />

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getMyLocation, listStores } from "@/features/consumer/queries";
-import { getCategories } from "@/features/platform/queries";
+import { getCategories, getPlatformSettings } from "@/features/platform/queries";
 import { CategoryBar } from "@/features/consumer/components/category-bar";
 import { SearchBar } from "@/features/consumer/components/search-bar";
 import { StoreCard } from "@/features/consumer/components/store-card";
@@ -8,7 +8,7 @@ import { ViewCartBar } from "@/features/consumer/components/view-cart-bar";
 
 export default async function CategoryPage({ params }: { params: Promise<{ kind: string }> }) {
   const { kind } = await params;
-  const categories = await getCategories();
+  const [categories, settings] = await Promise.all([getCategories(), getPlatformSettings()]);
   const config = categories.find((k) => k.id === kind);
   if (!config) notFound();
 
@@ -28,12 +28,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ kind:
       <div className="px-4 pt-5">
         <h1 className="text-2xl font-bold tracking-tight text-ink">{config.label}</h1>
         <p className="mt-1 text-sm text-neutral-500">
-          {stores.filter((s) => s.inRange).length} stores deliver to you · {config.blurb.toLowerCase()}
+          {stores.length} {stores.length === 1 ? "store" : "stores"} within {settings.discoveryRadiusKm} km · {config.blurb.toLowerCase()}
         </p>
         {stores.length === 0 ? (
           <div className="mt-8 rounded-2xl bg-neutral-50 p-8 text-center">
             <p className="text-4xl" aria-hidden="true">{config.emoji}</p>
-            <p className="mt-3 font-semibold text-ink">No {config.shortLabel.toLowerCase()} stores yet</p>
+            <p className="mt-3 font-semibold text-ink">No {config.shortLabel.toLowerCase()} stores within {settings.discoveryRadiusKm} km yet</p>
             <p className="mt-1 text-sm text-neutral-500">We&apos;re onboarding local vendors in your area.</p>
           </div>
         ) : (

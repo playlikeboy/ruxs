@@ -64,5 +64,7 @@ export const localitySchema = z.object({
   isActive: z.boolean(),
 });
 
+export const discoverySchema = z.object({ discoveryRadiusKm: z.number().int().min(1, "At least 1 km").max(100, "At most 100 km") });
+
 export const adminEmailSchema = z.object({ email: z.string().trim().toLowerCase().email("Enter a valid email") });
 export const adminIdSchema = z.object({ id: z.string().min(1) });

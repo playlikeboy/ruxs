@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { eq, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { categories, localities, platformAdmins, vendorMembers, vendors } from "@/db/schema";
+import { categories, localities, platformAdmins, platformSettings, vendorMembers, vendors } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { hexclave } from "@/lib/auth/hexclave";
 import { rupeesToPaise } from "@/core/money";
@@ -14,6 +14,7 @@ import {
   adminIdSchema,
   categorySchema,
   createVendorSchema,
+  discoverySchema,
   localitySchema,
   updateVendorSchema,
   vendorIdSchema,
@@ -224,5 +225,18 @@ export async function adminRemoveAdmin(input: unknown) {
 
   await db.delete(platformAdmins).where(eq(platformAdmins.id, row.id));
   revalidatePath("/admin/settings");
+  return { ok: true as const };
+}
+
+/** How far from a household stores are shown (the geofence). */
+export async function adminSaveDiscoveryRadius(input: unknown) {
+  const parsed = discoverySchema.safeParse(input);
+  if (!parsed.success) return fail(firstIssue(parsed.error));
+  const { user } = await requireAdmin();
+  const db = getDb();
+  const values = { discoveryRadiusKm: parsed.data.discoveryRadiusKm, updatedBy: user.id, updatedAt: new Date() };
+  await db.insert(platformSettings).values({ id: 1, ...values }).onConflictDoUpdate({ target: platformSettings.id, set: values });
+  revalidatePath("/admin/settings");
+  revalidatePath("/app", "layout");
   return { ok: true as const };
 }

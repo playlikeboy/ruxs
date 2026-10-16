@@ -12,6 +12,7 @@ import {
   Package,
   Repeat,
   Settings,
+  Star,
   Users,
   UtensilsCrossed,
   Wallet,
@@ -63,6 +64,7 @@ export function VendorSidebar({
         { label: "Menu", path: "/products", icon: UtensilsCrossed },
         { label: "Inventory", path: "/inventory", icon: Package },
         { label: "Customers", path: "/customers", icon: Users, roles: ["owner", "staff"] },
+        { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
       ],
     },
     {

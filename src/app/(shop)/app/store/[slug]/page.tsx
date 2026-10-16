@@ -8,6 +8,10 @@ import { AddToCart } from "@/features/consumer/components/add-to-cart";
 import { StoreCover } from "@/features/consumer/components/store-cover";
 import { VegMark } from "@/features/consumer/components/veg-mark";
 import { ViewCartBar } from "@/features/consumer/components/view-cart-bar";
+import { RatingBadge } from "@/features/reviews/components/rating-badge";
+import { ReviewForm } from "@/features/reviews/components/review-form";
+import { ReviewList } from "@/features/reviews/components/review-list";
+import { getMyReviewState, getStoreReviews } from "@/features/reviews/queries";
 
 const SHIFT_LABEL: Record<string, string> = { lunch: "Lunch", dinner: "Dinner", morning: "Morning", evening: "Evening" };
 
@@ -18,6 +22,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
   if (!store) notFound();
 
   const { vendor, items } = store;
+  const [reviews, myReview] = await Promise.all([getStoreReviews(vendor.id), getMyReviewState(vendor.id)]);
   const kinds = Array.from(new Set(items.map((i) => i.kind)));
   const primary = kinds[0] ?? "other";
   const plans = items.filter((i) => i.allowSubscription && i.isAvailable);
@@ -50,6 +55,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
 
       <div className="relative -mt-6 rounded-t-3xl bg-white px-5 pt-6">
         <h1 className="text-[26px] font-bold leading-tight tracking-tight text-ink">{vendor.name}</h1>
+        <a href="#reviews" className="mt-1 inline-flex"><RatingBadge rating={store.rating} /></a>
         <p className="mt-1 text-[15px] text-neutral-600">{kinds.map((k) => category(k).label).join(" · ")}</p>
         <p className="mt-1 flex items-center gap-1 text-sm text-neutral-500">
           <MapPin className="h-4 w-4" aria-hidden="true" />
@@ -78,10 +84,16 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           </div>
         </div>
 
-        {!store.inRange && (
-          <p className="mt-4 rounded-xl bg-butter px-4 py-3 text-sm font-medium text-warn">
-            This store doesn&apos;t deliver to your saved address yet. You can still browse the menu.
+        {!store.visible ? (
+          <p className="mt-4 rounded-xl bg-blush px-4 py-3 text-sm font-medium text-bad">
+            This store is more than {store.discoveryRadiusKm} km from you, so it isn&apos;t available in your area.
           </p>
+        ) : (
+          !store.inRange && (
+            <p className="mt-4 rounded-xl bg-butter px-4 py-3 text-sm font-medium text-warn">
+              You&apos;re outside this store&apos;s {vendor.serviceRadiusKm} km delivery area. You can browse, but not order.
+            </p>
+          )
         )}
 
         {plans.length > 0 && (
@@ -135,6 +147,11 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                       {item.depositPaise > 0 && item.assetName && (
                         <p className="mt-1 text-xs text-neutral-500">Returnable {item.assetName} · deposit on subscriptions</p>
                       )}
+                      {item.allowSubscription && item.isAvailable && store.inRange && (
+                        <Link href={`/app/store/${vendor.slug}/subscribe/${item.id}`} className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-accent">
+                          <Repeat className="h-3.5 w-3.5" aria-hidden="true" /> Repeat on days you choose
+                        </Link>
+                      )}
                     </div>
                     <div className="relative flex w-28 shrink-0 flex-col items-center">
                       <StoreCover cover={category(item.kind)} imageUrl={item.imageUrl} alt="" className="h-28 w-28 rounded-2xl" emojiClass="text-5xl" />
@@ -151,6 +168,21 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
               </ul>
             </div>
           ))}
+        </section>
+
+        <section id="reviews" className="mt-10 scroll-mt-4">
+          <div className="flex items-end justify-between">
+            <h2 className="text-xl font-bold tracking-tight text-ink">Ratings &amp; reviews</h2>
+            <RatingBadge rating={store.rating} />
+          </div>
+          {myReview.eligible && (
+            <div className="mt-4">
+              <ReviewForm vendorSlug={vendor.slug} initialRating={myReview.mine?.rating} initialComment={myReview.mine?.comment} />
+            </div>
+          )}
+          <div className="mt-2">
+            <ReviewList reviews={reviews} storeName={vendor.name} />
+          </div>
         </section>
       </div>
       <ViewCartBar onlyFor={vendor.slug} />

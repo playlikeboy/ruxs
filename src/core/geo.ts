@@ -111,3 +111,17 @@ export function isWithinGeofence(
     distanceKm,
   };
 }
+
+/**
+ * Geofence: a household only sees stores within the platform discovery radius,
+ * and can only order from a store that also covers them with its own radius.
+ */
+export function storeReach(
+  distanceKm: number | null,
+  vendorRadiusKm: number,
+  discoveryRadiusKm: number
+): { visible: boolean; deliverable: boolean } {
+  if (distanceKm == null) return { visible: false, deliverable: false };
+  const visible = distanceKm <= discoveryRadiusKm;
+  return { visible, deliverable: visible && distanceKm <= vendorRadiusKm };
+}

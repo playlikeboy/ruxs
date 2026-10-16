@@ -1,5 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import {
+  storeReach,
   haversineDistanceKm,
   resolveCoordinates,
   findNearestLocality,
@@ -60,5 +61,20 @@ describe("geo spatial rules", () => {
     // 50 km apart (Bengaluru to distant town)
     const far = isWithinGeofence(12.9121, 77.6446, 13.34, 77.10, 10);
     expect(far.isNearby).toBe(false);
+  });
+});
+
+describe("geofence", () => {
+  it("hides stores beyond the discovery radius", () => {
+    expect(storeReach(10.1, 15, 10)).toEqual({ visible: false, deliverable: false });
+    expect(storeReach(10, 15, 10)).toEqual({ visible: true, deliverable: true });
+  });
+
+  it("shows but blocks ordering beyond the store's own radius", () => {
+    expect(storeReach(7, 5, 10)).toEqual({ visible: true, deliverable: false });
+  });
+
+  it("never shows a store when the distance is unknown", () => {
+    expect(storeReach(null, 8, 10)).toEqual({ visible: false, deliverable: false });
   });
 });
