@@ -3,6 +3,7 @@ import { MapPin } from "lucide-react";
 import { formatINR } from "@/core/money";
 import type { StoreCard as StoreCardData } from "@/features/consumer/queries";
 import { StoreCover } from "./store-cover";
+import { RatingBadge } from "@/features/reviews/components/rating-badge";
 
 export function StoreCard({ store }: { store: StoreCardData }) {
   return (
@@ -35,7 +36,10 @@ export function StoreCard({ store }: { store: StoreCardData }) {
       </div>
       <div className="mt-2.5 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-[15px] font-semibold text-ink">{store.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="truncate text-[15px] font-semibold text-ink">{store.name}</h3>
+            <RatingBadge rating={store.rating} className="shrink-0" />
+          </div>
           <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-neutral-500">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             {store.area}

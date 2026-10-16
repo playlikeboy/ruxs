@@ -18,6 +18,13 @@ export default async function MorePage({
       marker: "₹",
     },
     {
+      title: "Ratings & reviews",
+      description: "See what households say and reply publicly.",
+      href: "/merchant-panel/" + slug + "/reviews",
+      visible: access.role !== "driver",
+      marker: "★",
+    },
+    {
       title: "Delivery run",
       description: "Tower-by-tower run sheet for today's drivers.",
       href: "/merchant-panel/" + slug + "/run",

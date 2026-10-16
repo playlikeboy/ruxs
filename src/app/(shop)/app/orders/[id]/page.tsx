@@ -101,6 +101,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
         {status === "awaiting_payment" && <PayOrderButton orderId={order.id} totalPaise={order.totalPaise} />}
         {(status === "placed" || status === "awaiting_payment") && <CancelOrderButton orderId={order.id} />}
+        {status === "delivered" && (
+          <Link href={`/app/store/${vendorSlug}#reviews`} className="flex h-12 items-center justify-center gap-2 rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink">
+            ★ Rate {vendorName}
+          </Link>
+        )}
         {!isOpenStatus(status) && (
           <Link href={`/app/store/${vendorSlug}`} className="flex h-12 items-center justify-center rounded-xl bg-ink text-sm font-semibold text-white">Order again</Link>
         )}

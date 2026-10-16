@@ -43,6 +43,13 @@
       "when": 1792100100000,
       "tag": "0005_vendor_login_user",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792200000000,
+      "tag": "0006_reviews_discovery",
+      "breakpoints": true
     }
   ]
 }

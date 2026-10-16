@@ -19,7 +19,9 @@ import { readApproxPoint, readGpsCookie } from "@/lib/location";
 import { balance } from "@/core/ledger";
 import { addDaysIST, todayIST } from "@/core/time";
 import type { CoverStyle, ServiceKind } from "@/config/service-kinds";
-import { getCategoryMap, getLocalities } from "@/features/platform/queries";
+import { getCategoryMap, getLocalities, getPlatformSettings, getRatingMap } from "@/features/platform/queries";
+import { storeReach } from "@/core/geo";
+import type { RatingSummary } from "@/core/ratings";
 import type { LocalityCentroid } from "@/core/geo";
 
 export const getMyProfile = cache(async () => {
@@ -84,6 +86,7 @@ export interface StoreCard {
   hasSubscriptions: boolean;
   distanceKm: number | null;
   inRange: boolean;
+  rating: RatingSummary;
   itemCount: number;
   matchedItems: string[];
 }
@@ -135,7 +138,12 @@ export async function listStores(opts: {
       )
     );
 
-  const [localities, category] = await Promise.all([getLocalities(), getCategoryMap()]);
+  const [localities, category, settings, rating] = await Promise.all([
+    getLocalities(),
+    getCategoryMap(),
+    getPlatformSettings(),
+    getRatingMap(),
+  ]);
   const q = opts.q?.trim().toLowerCase() ?? "";
   const byVendor = new Map<string, { vendor: (typeof rows)[number]["vendor"]; items: (typeof rows)[number]["product"][] }>();
   for (const row of rows) {
@@ -162,17 +170,13 @@ export async function listStores(opts: {
       continue;
     }
 
-    let distanceKm: number | null = null;
-    let inRange = true;
-    if (hasPoint) {
-      const p = vendorPoint(vendor, localities);
-      if (p) {
-        distanceKm = haversineDistanceKm(opts.latitude!, opts.longitude!, p.latitude, p.longitude);
-        inRange = distanceKm <= vendor.serviceRadiusKm;
-      } else {
-        inRange = false; // no pin and no known area: never claim it delivers here
-      }
-    }
+    // Geofence: without a location, or beyond the discovery radius, the store is not shown at all.
+    if (!hasPoint) continue;
+    const p = vendorPoint(vendor, localities);
+    const distanceKm = p ? haversineDistanceKm(opts.latitude!, opts.longitude!, p.latitude, p.longitude) : null;
+    const reach = storeReach(distanceKm, vendor.serviceRadiusKm, settings.discoveryRadiusKm);
+    if (!reach.visible) continue;
+    const inRange = reach.deliverable;
     const primary = category(kinds[0] ?? "other");
 
     cards.push({
@@ -192,6 +196,7 @@ export async function listStores(opts: {
       hasSubscriptions: items.some((p) => p.allowSubscription),
       distanceKm,
       inRange,
+      rating: rating(vendor.id),
       itemCount: items.length,
       matchedItems,
     });
@@ -218,22 +223,22 @@ export async function getStore(slug: string, point?: { latitude: number | null; 
     .where(and(eq(products.vendorId, vendor.id), isNull(products.archivedAt)))
     .orderBy(asc(products.section), asc(products.pricePaise));
 
+  const [localities, settings, rating] = await Promise.all([getLocalities(), getPlatformSettings(), getRatingMap()]);
   let distanceKm: number | null = null;
-  let inRange = true;
   if (point?.latitude != null && point.longitude != null) {
-    const p = vendorPoint(vendor, await getLocalities());
-    if (p) {
-      distanceKm = haversineDistanceKm(point.latitude, point.longitude, p.latitude, p.longitude);
-      inRange = distanceKm <= vendor.serviceRadiusKm;
-    } else {
-      inRange = false;
-    }
+    const p = vendorPoint(vendor, localities);
+    if (p) distanceKm = haversineDistanceKm(point.latitude, point.longitude, p.latitude, p.longitude);
   }
+  const reach = storeReach(distanceKm, vendor.serviceRadiusKm, settings.discoveryRadiusKm);
+  const inRange = reach.deliverable;
 
   return {
     vendor,
     distanceKm,
     inRange,
+    visible: reach.visible,
+    discoveryRadiusKm: settings.discoveryRadiusKm,
+    rating: rating(vendor.id),
     items: items.map((p) => ({
       id: p.id,
       kind: p.kind as ServiceKind,

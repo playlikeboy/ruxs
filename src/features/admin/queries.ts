@@ -9,6 +9,7 @@ import {
   ledgerEntries,
   localities,
   platformAdmins,
+  platformSettings,
   products,
   shopOrders,
   subscriptions,
@@ -139,12 +140,13 @@ export async function getAdminVendor(vendorId: string) {
 export async function getAdminSettings() {
   await requireAdmin();
   const db = getDb();
-  const [cats, locs, admins] = await Promise.all([
+  const [cats, locs, admins, [settings]] = await Promise.all([
     db.select().from(categories).orderBy(categories.sort, categories.label),
     db.select().from(localities).orderBy(localities.city, localities.name),
     db.select().from(platformAdmins).orderBy(platformAdmins.createdAt),
+    db.select().from(platformSettings).where(eq(platformSettings.id, 1)).limit(1),
   ]);
-  return { categories: cats, localities: locs, admins };
+  return { categories: cats, localities: locs, admins, discoveryRadiusKm: settings?.discoveryRadiusKm ?? 10 };
 }
 
 /** Counts that need an admin's attention, shown as nav badges. */

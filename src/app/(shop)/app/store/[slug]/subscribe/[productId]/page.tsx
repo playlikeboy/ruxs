@@ -37,6 +37,7 @@ export default async function SubscribePage({ params }: { params: Promise<{ slug
             assetName={product.assetName}
             minStart={addDaysIST(todayIST(), 1)}
             hasAddress={!!profile}
+            unit={product.assetName ?? (product.kind === "tiffin" ? "tiffin" : "unit")}
           />
         </div>
       </div>

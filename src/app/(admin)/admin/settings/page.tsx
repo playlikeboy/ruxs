@@ -1,16 +1,21 @@
 import { getAdminSettings } from "@/features/admin/queries";
-import { AdminsEditor, CategoriesEditor, LocalitiesEditor } from "@/features/admin/components/settings-editors";
+import { AdminsEditor, CategoriesEditor, DiscoveryRadiusEditor, LocalitiesEditor } from "@/features/admin/components/settings-editors";
 
 export const metadata = { title: "Settings" };
 
 export default async function AdminSettingsPage() {
-  const { categories, localities, admins } = await getAdminSettings();
+  const { categories, localities, admins, discoveryRadiusKm } = await getAdminSettings();
   return (
     <div className="space-y-8 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Platform settings</h1>
         <p className="mt-1 text-sm text-muted">Everything here lives in Postgres. Changes show in the app right away.</p>
       </div>
+      <section className="max-w-xl space-y-3">
+        <h2 className="text-base font-semibold">Geofence</h2>
+        <p className="text-sm text-muted">Households only see stores within this distance. Orders are also checked against each store&apos;s own delivery radius.</p>
+        <DiscoveryRadiusEditor value={discoveryRadiusKm} />
+      </section>
       <section className="space-y-3">
         <h2 className="text-base font-semibold">Categories</h2>
         <p className="text-sm text-muted">The service types on the household home screen and in the merchant menu form. Turn one off to hide it.</p>

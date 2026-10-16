@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { adminAddAdmin, adminRemoveAdmin, adminSaveCategory, adminSaveLocality } from "@/features/admin/actions";
+import { adminAddAdmin, adminRemoveAdmin, adminSaveCategory, adminSaveDiscoveryRadius, adminSaveLocality } from "@/features/admin/actions";
 
 const input = "w-full rounded-[8px] border border-line bg-surface px-2 py-1.5 text-sm";
 
@@ -182,5 +182,25 @@ export function AdminsEditor({ rows }: { rows: { id: string; email: string | nul
       </form>
       <p className="text-xs text-muted">Admins sign in at /merchant-panel/sign-in or with Google. Email admins must have a verified email.</p>
     </div>
+  );
+}
+
+export function DiscoveryRadiusEditor({ value }: { value: number }) {
+  const [km, setKm] = useState(String(value));
+  const { pending, run } = useSave();
+  return (
+    <form
+      className="flex flex-wrap items-end gap-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        run(() => adminSaveDiscoveryRadius({ discoveryRadiusKm: Math.round(Number(km)) }), "Radius saved");
+      }}
+    >
+      <label className="text-sm font-medium">
+        Show stores within (km)
+        <input inputMode="numeric" value={km} onChange={(e) => setKm(e.target.value)} className="mt-1 block h-10 w-28 rounded-[10px] border border-line bg-surface px-3 text-sm tabular-nums" />
+      </label>
+      <button type="submit" disabled={pending} className="h-10 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60">Save</button>
+    </form>
   );
 }

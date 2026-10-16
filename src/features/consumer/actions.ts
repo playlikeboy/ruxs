@@ -3,7 +3,7 @@
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { LOCATION_COOKIE } from "@/lib/location";
+import { LOCATION_COOKIE, readGpsCookie } from "@/lib/location";
 import { and, eq, inArray, isNull, or, gte } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
@@ -17,11 +17,12 @@ import {
   vendors,
 } from "@/db/schema";
 import { hashToken, requireUser } from "@/lib/auth/session";
-import { findNearestLocality } from "@/core/geo";
-import { getLocalities } from "@/features/platform/queries";
+import { findNearestLocality, haversineDistanceKm, resolveCoordinates, storeReach } from "@/core/geo";
+import { getLocalities, getPlatformSettings } from "@/features/platform/queries";
 import { cartTotals, canTransition, formatOrderNumber, type ShopOrderStatus } from "@/core/shop";
 import { depositKey } from "@/core/ledger";
-import { addDaysIST, todayIST } from "@/core/time";
+import { addDaysIST, todayIST, weekdayIST } from "@/core/time";
+import { isLate } from "@/core/cutoff";
 import { applyHouseholdDayChange } from "@/features/day-changes/household";
 import {
   cancelOrderSchema,
@@ -107,6 +108,30 @@ async function ensureCustomer(tx: Tx, vendorId: string, profile: Profile): Promi
     })
     .returning({ id: customers.id });
   return created!.id;
+}
+
+/**
+ * Geofence check on the server: the delivery address must be inside the
+ * platform discovery radius and the store's own delivery radius.
+ * Address pin first, then the last GPS fix, then the address's locality centre.
+ */
+async function deliveryCheck(
+  vendor: { latitude: number | null; longitude: number | null; city: string; area: string; serviceRadiusKm: number },
+  profile: Profile
+): Promise<string | null> {
+  const [localities, settings, gps] = await Promise.all([getLocalities(), getPlatformSettings(), readGpsCookie()]);
+  const home =
+    profile.latitude != null && profile.longitude != null
+      ? { latitude: profile.latitude, longitude: profile.longitude }
+      : (gps ?? resolveCoordinates(profile.city, profile.area, localities));
+  if (!home) return "Set your location so we can check this store delivers to you";
+  const shop =
+    vendor.latitude != null && vendor.longitude != null
+      ? { latitude: vendor.latitude, longitude: vendor.longitude }
+      : resolveCoordinates(vendor.city, vendor.area, localities);
+  const distance = shop ? haversineDistanceKm(home.latitude, home.longitude, shop.latitude, shop.longitude) : null;
+  const reach = storeReach(distance, vendor.serviceRadiusKm, settings.discoveryRadiusKm);
+  return reach.deliverable ? null : "This store doesn't deliver to your address";
 }
 
 export async function saveProfile(input: unknown) {
@@ -205,6 +230,8 @@ export async function placeOrder(input: unknown) {
     .limit(1);
   if (!vendor) return fail("This store is not available right now");
   if (!vendor.acceptingOrders) return fail(`${vendor.name} is not taking orders right now`);
+  const outOfArea = await deliveryCheck(vendor, profile);
+  if (outOfArea) return fail(outOfArea);
 
   // Prices always come from the database, never from the cart.
   const ids = data.items.map((i) => i.productId);
@@ -359,6 +386,8 @@ export async function subscribe(input: unknown) {
     .limit(1);
   if (!row) return fail("This plan is not available right now");
   const { product, vendor } = row;
+  const outOfArea = await deliveryCheck(vendor, profile);
+  if (outOfArea) return fail(outOfArea);
 
   try {
     const subscriptionId = await db.transaction(async (tx) => {
@@ -477,8 +506,52 @@ export async function setMyDay(input: unknown) {
       qty: kind === "skip" ? 0 : mine.sub.qty,
     });
     if (result.ok) revalidatePath("/app/plans");
+    if (result.ok) revalidatePath("/app");
     return result;
   } catch {
     return fail("Could not update that day. Please try again.");
   }
+}
+
+/**
+ * "I'm off today": skips every one of my plans scheduled for today whose cutoff
+ * has not passed. Stores see each skip at once on their Today page and the
+ * kitchen count drops; skips after cutoff are left alone (they may be charged).
+ */
+export async function skipAllToday() {
+  const user = await requireUser();
+  const db = getDb();
+  const today = todayIST();
+  const weekday = weekdayIST(today);
+  const now = new Date();
+
+  const mine = await db
+    .select({ sub: subscriptions, customerId: customers.id, cutoffAt: products.cutoffAt })
+    .from(subscriptions)
+    .innerJoin(customers, eq(subscriptions.customerId, customers.id))
+    .innerJoin(products, eq(subscriptions.productId, products.id))
+    .where(and(eq(customers.userId, user.id), or(isNull(subscriptions.endsOn), gte(subscriptions.endsOn, today))));
+
+  let skipped = 0;
+  let locked = 0;
+  for (const row of mine) {
+    if (!row.sub.days.includes(weekday) || row.sub.startsOn > today) continue;
+    if (isLate(now, today, row.cutoffAt)) {
+      locked++;
+      continue;
+    }
+    const res = await applyHouseholdDayChange({
+      vendorId: row.sub.vendorId,
+      customerId: row.customerId,
+      subscriptionId: row.sub.id,
+      serviceDate: today,
+      kind: "skip",
+      qty: 0,
+    });
+    if (res.ok) skipped++;
+  }
+
+  revalidatePath("/app");
+  revalidatePath("/app/plans");
+  return { ok: true as const, skipped, locked };
 }

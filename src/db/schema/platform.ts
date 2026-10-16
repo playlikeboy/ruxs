@@ -7,6 +7,7 @@ import {
   timestamp,
   doublePrecision,
   index,
+  uniqueIndex,
   check,
 } from "drizzle-orm/pg-core";
 import { vendors } from "./vendors";
@@ -110,3 +111,40 @@ export const vendorPayouts = pgTable(
     check("vendor_payouts_amount_check", sql`${t.amountPaise} > 0`),
   ]
 );
+
+/** One review per household per store. Only households who ordered or subscribed can write one. */
+export const vendorReviews = pgTable(
+  "vendor_reviews",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    vendorId: text("vendor_id")
+      .notNull()
+      .references(() => vendors.id, { onDelete: "cascade" }),
+    customerId: text("customer_id")
+      .notNull()
+      .references(() => customers.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    rating: integer("rating").notNull(), // 1..5
+    comment: text("comment"),
+    reply: text("reply"), // the store's public reply
+    repliedAt: timestamp("replied_at", { withTimezone: true }),
+    isHidden: boolean("is_hidden").notNull().default(false), // hidden by admin
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("vendor_reviews_vendor_user_idx").on(t.vendorId, t.userId),
+    index("vendor_reviews_vendor_visible_idx").on(t.vendorId, t.isHidden),
+    check("vendor_reviews_rating_check", sql`${t.rating} between 1 and 5`),
+  ]
+);
+
+/** Single-row platform knobs, edited at /admin/settings. */
+export const platformSettings = pgTable("platform_settings", {
+  id: integer("id").primaryKey().default(1),
+  discoveryRadiusKm: integer("discovery_radius_km").notNull().default(10), // households only see stores this close
+  updatedBy: text("updated_by"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});

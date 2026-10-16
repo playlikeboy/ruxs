@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { getMyLocation, getMyProfile, listStores } from "@/features/consumer/queries";
-import { getCategories } from "@/features/platform/queries";
+import { getMyLocation, getMyPlans, getMyProfile, listStores } from "@/features/consumer/queries";
+import { getCategoryMap } from "@/features/platform/queries";
+import { TodayCard, type TodayItem } from "@/features/consumer/components/today-card";
+import { isLate } from "@/core/cutoff";
+import { weekdayIST } from "@/core/time";
+import { getCategories, getPlatformSettings } from "@/features/platform/queries";
 import { LocationChip } from "@/features/consumer/components/location-chip";
 import { SearchBar } from "@/features/consumer/components/search-bar";
 import { StoreCard } from "@/features/consumer/components/store-card";
@@ -10,10 +14,31 @@ export const metadata = { title: "Explore" };
 
 export default async function ExplorePage() {
   const { user, profile } = await getMyProfile();
-  const [location, categories] = await Promise.all([getMyLocation(), getCategories()]);
+  const [location, categories, settings] = await Promise.all([getMyLocation(), getCategories(), getPlatformSettings()]);
+  // listStores already applies the geofence: only stores within the discovery radius come back.
   const stores = await listStores({ latitude: location.latitude, longitude: location.longitude });
-  const nearby = stores.filter((s) => s.inRange);
-  const farther = stores.filter((s) => !s.inRange);
+  const radius = settings.discoveryRadiusKm;
+
+  // Plans that deliver today, for the "receive today?" card.
+  const [{ today, plans }, category] = await Promise.all([getMyPlans(), getCategoryMap()]);
+  const weekday = weekdayIST(today);
+  const now = new Date();
+  const todayItems: TodayItem[] = plans
+    .filter((p) => p.sub.days.includes(weekday) && p.sub.startsOn <= today && (!p.sub.endsOn || p.sub.endsOn >= today))
+    .map((p) => {
+      const change = p.changes.find((c) => c.serviceDate === today);
+      return {
+        subscriptionId: p.sub.id,
+        emoji: category(p.product.kind).emoji,
+        productName: p.product.name,
+        vendorName: p.vendorName,
+        qty: change?.kind === "extra" ? p.sub.qty + change.qty : change?.kind === "qty" ? change.qty : p.sub.qty,
+        unit: p.product.assetName ?? "unit",
+        cutoffAt: p.product.cutoffAt,
+        skipped: change?.kind === "skip",
+        locked: isLate(now, today, p.product.cutoffAt),
+      };
+    });
   const firstName = (profile?.name ?? user.displayName ?? "").split(" ")[0];
 
   return (
@@ -29,6 +54,12 @@ export default async function ExplorePage() {
           <br />
           <span className="text-neutral-500">what does home need today?</span>
         </h1>
+
+        {todayItems.length > 0 && (
+          <div className="mt-5">
+            <TodayCard items={todayItems} today={today} />
+          </div>
+        )}
 
         <div className="mt-5 grid grid-cols-2 gap-3">
           {categories.map((k) => (
@@ -57,37 +88,29 @@ export default async function ExplorePage() {
 
         <section className="mt-8">
           <div className="flex items-end justify-between">
-            <h2 className="text-xl font-bold tracking-tight text-ink">
-              {location.source === "none" ? "Popular on RUXS" : location.source === "approx" ? "Stores near you" : "Delivering to you"}
-            </h2>
-            <span className="text-sm text-neutral-500 tabular-nums">{nearby.length} stores</span>
+            <h2 className="text-xl font-bold tracking-tight text-ink">Within {radius} km of you</h2>
+            {location.source !== "none" && <span className="text-sm text-neutral-500 tabular-nums">{stores.length} stores</span>}
           </div>
-          {nearby.length === 0 ? (
+          {location.source === "none" ? (
+            <div className="mt-4 rounded-2xl bg-neutral-50 p-6 text-center">
+              <p className="text-3xl" aria-hidden="true">📍</p>
+              <p className="mt-2 font-semibold text-ink">Share your location to see stores</p>
+              <p className="mt-1 text-sm text-neutral-500">We only show kitchens and suppliers within {radius} km of you. Tap “Use exact location” above, or add your address.</p>
+            </div>
+          ) : stores.length === 0 ? (
             <div className="mt-4 rounded-2xl bg-neutral-50 p-6 text-center">
               <p className="text-3xl" aria-hidden="true">🏘️</p>
-              <p className="mt-2 font-semibold text-ink">No stores deliver here yet</p>
-              <p className="mt-1 text-sm text-neutral-500">We&apos;re adding kitchens and suppliers every week. Check the ones a little farther away below.</p>
+              <p className="mt-2 font-semibold text-ink">No stores within {radius} km yet</p>
+              <p className="mt-1 text-sm text-neutral-500">We&apos;re adding kitchens and suppliers every week. If this location looks wrong, update it above.</p>
             </div>
           ) : (
             <div className="mt-4 space-y-7">
-              {nearby.map((store) => (
+              {stores.map((store) => (
                 <StoreCard key={store.id} store={store} />
               ))}
             </div>
           )}
         </section>
-
-        {farther.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-bold tracking-tight text-ink">A little farther</h2>
-            <p className="mt-1 text-sm text-neutral-500">These stores don&apos;t reach your address yet.</p>
-            <div className="mt-4 space-y-7 opacity-80">
-              {farther.slice(0, 12).map((store) => (
-                <StoreCard key={store.id} store={store} />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
       <ViewCartBar />
     </div>
