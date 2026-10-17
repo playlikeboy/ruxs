@@ -32,7 +32,9 @@ export default async function AdminVendorPage({ params }: { params: Promise<{ id
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{vendor.name}</h1>
-          <p className="mt-1 text-sm text-muted">{vendor.area}, {vendor.city} · <span className="capitalize">{vendor.status}</span></p>
+          <p className="mt-1 text-sm text-muted">
+            {vendor.businessType === "booking" ? "Booking provider" : "Delivery store"} · {vendor.area}, {vendor.city} · <span className="capitalize">{vendor.status}</span>
+          </p>
           <div className="mt-2 flex flex-wrap gap-4 text-sm font-semibold">
             <Link href={`/merchant-panel/${vendor.slug}/today`} className="flex items-center gap-1 text-accent hover:underline">Open merchant panel <ExternalLink className="h-3.5 w-3.5" /></Link>
             <Link href={`/app/store/${vendor.slug}`} className="flex items-center gap-1 text-muted hover:underline">Store page <ExternalLink className="h-3.5 w-3.5" /></Link>
@@ -43,9 +45,17 @@ export default async function AdminVendorPage({ params }: { params: Promise<{ id
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
-          { l: "Menu items", v: String(stats.products) },
-          { l: "Customers", v: String(stats.customers) },
-          { l: "App orders", v: String(stats.orders) },
+          ...(vendor.businessType === "booking"
+            ? [
+                { l: "Services", v: String(stats.services) },
+                { l: "Clients", v: String(stats.customers) },
+                { l: "Bookings", v: String(stats.bookings) },
+              ]
+            : [
+                { l: "Menu items", v: String(stats.products) },
+                { l: "Customers", v: String(stats.customers) },
+                { l: "App orders", v: String(stats.orders) },
+              ]),
           { l: "Rating", v: rating.average == null ? "New" : `${rating.average.toFixed(1)} ★ (${rating.count})` },
           { l: "Available payout", v: formatINR(balance.availablePaise) },
         ].map((s) => (
@@ -77,6 +87,7 @@ export default async function AdminVendorPage({ params }: { params: Promise<{ id
               commissionPercent: String(vendor.commissionBps / 100),
               plan: vendor.plan as "free" | "starter" | "pro",
               acceptingOrders: vendor.acceptingOrders,
+              businessType: vendor.businessType as "delivery" | "booking",
             }}
           />
         </section>

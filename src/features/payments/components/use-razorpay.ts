@@ -37,7 +37,7 @@ function loadScript(): Promise<boolean> {
   });
 }
 
-export type PayOutcome = { status: "paid"; shopOrderId: string | null } | { status: "dismissed" } | { status: "failed"; error: string };
+export type PayOutcome = { status: "paid" } | { status: "dismissed" } | { status: "failed"; error: string };
 
 /** Opens Razorpay Checkout for server-created options and resolves once it settles. */
 export function useRazorpay() {
@@ -66,7 +66,7 @@ export function useRazorpay() {
               razorpayPaymentId: res.razorpay_payment_id,
               razorpaySignature: res.razorpay_signature,
             });
-            resolve(confirmed.ok ? { status: "paid", shopOrderId: confirmed.shopOrderId } : { status: "failed", error: confirmed.error });
+            resolve(confirmed.ok ? { status: "paid" } : { status: "failed", error: confirmed.error });
           },
         });
         rzp.on("payment.failed", (res) => resolve({ status: "failed", error: res.error?.description ?? "Payment failed" }));

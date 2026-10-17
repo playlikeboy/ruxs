@@ -79,12 +79,16 @@ export default async function EarningsPage({ params }: { params: Promise<{ vendo
           <EmptyState title="No online payments yet" description="When households pay online for orders or monthly bills, the money shows here." icon="bill" />
         ) : (
           <ul className="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-surface">
-            {recent.map(({ payment, customerName, orderNumber, orderStatus }) => (
+            {recent.map(({ payment, customerName, orderNumber, orderStatus, bookingNumber, bookingStatus, serviceName }) => (
               <li key={payment.id} className="flex items-center justify-between gap-3 p-4 text-sm">
                 <div className="min-w-0">
                   <p className="truncate font-medium text-ink">{customerName}</p>
                   <p className="text-xs text-muted">
-                    {payment.purpose === "dues" ? "Bill payment" : `Order ${orderNumber ?? ""} · ${orderStatus ?? ""}`}
+                    {payment.purpose === "dues"
+                      ? "Bill payment"
+                      : payment.purpose === "booking"
+                        ? `${serviceName ?? "Session"} · ${bookingNumber ?? ""} · ${bookingStatus?.replace("_", "-") ?? ""}`
+                        : `Order ${orderNumber ?? ""} · ${orderStatus ?? ""}`}
                     {payment.paidAt ? ` · ${dateFmt.format(payment.paidAt)}` : ""}
                   </p>
                 </div>

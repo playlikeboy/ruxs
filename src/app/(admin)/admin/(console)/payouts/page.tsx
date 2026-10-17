@@ -4,6 +4,7 @@ import { getAdminPayouts } from "@/features/payouts/queries";
 import {
   MarkPayoutPaidButton,
   RecordPayoutButton,
+  RefundBookingButton,
   RefundOrderButton,
   RejectPayoutButton,
 } from "@/features/payouts/components/payout-buttons";
@@ -13,7 +14,7 @@ export const metadata = { title: "Payouts" };
 const dateFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" });
 
 export default async function AdminPayoutsPage() {
-  const { balances, requests, refunds } = await getAdminPayouts();
+  const { balances, requests, refunds, bookingRefunds } = await getAdminPayouts();
   const open = requests.filter((r) => r.payout.status === "requested");
   const done = requests.filter((r) => r.payout.status !== "requested");
   const owed = balances.reduce((s, b) => s + b.balance.availablePaise, 0);
@@ -63,6 +64,23 @@ export default async function AdminPayoutsPage() {
           </ul>
         )}
       </section>
+
+      {bookingRefunds.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-base font-semibold text-bad">Booking refunds due ({bookingRefunds.length})</h2>
+          <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-bad/30 bg-surface">
+            {bookingRefunds.map(({ booking, vendorName, payment }) => (
+              <li key={booking.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                <div>
+                  <p className="font-semibold">{booking.number} · {vendorName}</p>
+                  <p className="text-xs text-muted">{booking.cancelReason ?? "Cancelled"}</p>
+                </div>
+                <RefundBookingButton bookingId={booking.id} amountLabel={formatINR(payment.amountPaise)} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {refunds.length > 0 && (
         <section className="space-y-3">

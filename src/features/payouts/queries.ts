@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
-import { customers, payments, shopOrders, vendorPayouts, vendors } from "@/db/schema";
+import { bookings, customers, payments, services, shopOrders, vendorPayouts, vendors } from "@/db/schema";
 import { requireAdmin, requireVendorAccess } from "@/lib/auth/session";
 import { paymentState, vendorBalance, type BalancePayout } from "@/core/payouts";
 
@@ -10,9 +10,10 @@ export async function computeVendorBalance(vendorId: string, commissionBps: numb
   const db = getDb();
   const [paid, payouts] = await Promise.all([
     db
-      .select({ amountPaise: payments.amountPaise, purpose: payments.purpose, orderStatus: shopOrders.status })
+      .select({ amountPaise: payments.amountPaise, purpose: payments.purpose, orderStatus: shopOrders.status, bookingStatus: bookings.status })
       .from(payments)
       .leftJoin(shopOrders, eq(payments.shopOrderId, shopOrders.id))
+      .leftJoin(bookings, eq(payments.bookingId, bookings.id))
       .where(and(eq(payments.vendorId, vendorId), eq(payments.status, "paid"))),
     db
       .select({ amountPaise: vendorPayouts.amountPaise, status: vendorPayouts.status })
@@ -20,7 +21,10 @@ export async function computeVendorBalance(vendorId: string, commissionBps: numb
       .where(eq(vendorPayouts.vendorId, vendorId)),
   ]);
   return vendorBalance(
-    paid.map((p) => ({ amountPaise: p.amountPaise, state: paymentState(p.purpose as "shop_order" | "dues", p.orderStatus) })),
+    paid.map((p) => ({
+      amountPaise: p.amountPaise,
+      state: paymentState(p.purpose as "shop_order" | "dues" | "booking", p.purpose === "booking" ? p.bookingStatus : p.orderStatus),
+    })),
     payouts as BalancePayout[],
     commissionBps
   );
@@ -37,10 +41,15 @@ export async function getVendorEarnings(slug: string) {
         customerName: customers.name,
         orderNumber: shopOrders.number,
         orderStatus: shopOrders.status,
+        bookingNumber: bookings.number,
+        bookingStatus: bookings.status,
+        serviceName: services.name,
       })
       .from(payments)
       .innerJoin(customers, eq(payments.customerId, customers.id))
       .leftJoin(shopOrders, eq(payments.shopOrderId, shopOrders.id))
+      .leftJoin(bookings, eq(payments.bookingId, bookings.id))
+      .leftJoin(services, eq(bookings.serviceId, services.id))
       .where(and(eq(payments.vendorId, access.vendorId), eq(payments.status, "paid")))
       .orderBy(desc(payments.paidAt))
       .limit(50),
@@ -52,7 +61,7 @@ export async function getVendorEarnings(slug: string) {
 export async function getAdminPayouts() {
   await requireAdmin();
   const db = getDb();
-  const [allVendors, requests, refunds] = await Promise.all([
+  const [allVendors, requests, refunds, bookingRefunds] = await Promise.all([
     db
       .select({ id: vendors.id, name: vendors.name, slug: vendors.slug, upiVpa: vendors.upiVpa, commissionBps: vendors.commissionBps })
       .from(vendors)
@@ -70,9 +79,16 @@ export async function getAdminPayouts() {
       .innerJoin(payments, and(eq(payments.shopOrderId, shopOrders.id), eq(payments.status, "paid")))
       .where(inArray(shopOrders.paymentStatus, ["refund_due"]))
       .orderBy(desc(shopOrders.updatedAt)),
+    db
+      .select({ booking: bookings, vendorName: vendors.name, payment: payments })
+      .from(bookings)
+      .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
+      .innerJoin(payments, and(eq(payments.bookingId, bookings.id), eq(payments.status, "paid")))
+      .where(eq(bookings.paymentStatus, "refund_due"))
+      .orderBy(desc(bookings.updatedAt)),
   ]);
   const balances = await Promise.all(
     allVendors.map(async (v) => ({ vendor: v, balance: await computeVendorBalance(v.id, v.commissionBps) }))
   );
-  return { balances, requests, refunds };
+  return { balances, requests, refunds, bookingRefunds };
 }

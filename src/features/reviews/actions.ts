@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, count, eq, lte } from "drizzle-orm";
+import { and, count, eq, inArray, lte } from "drizzle-orm";
 import { getDb } from "@/db";
-import { customers, shopOrders, subscriptions, vendorReviews, vendors } from "@/db/schema";
+import { bookings, customers, shopOrders, subscriptions, vendorReviews, vendors } from "@/db/schema";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { canReview } from "@/core/ratings";
 import { todayIST } from "@/core/time";
@@ -28,12 +28,13 @@ export async function saveMyReview(input: unknown) {
     .limit(1);
   if (!row) return fail("Order from this store first, then rate it");
 
-  const [[delivered], [started]] = await Promise.all([
+  const [[delivered], [started], [sessions]] = await Promise.all([
     db.select({ n: count() }).from(shopOrders).where(and(eq(shopOrders.customerId, row.customerId), eq(shopOrders.status, "delivered"))),
     db.select({ n: count() }).from(subscriptions).where(and(eq(subscriptions.customerId, row.customerId), lte(subscriptions.startsOn, todayIST()))),
+    db.select({ n: count() }).from(bookings).where(and(eq(bookings.customerId, row.customerId), inArray(bookings.status, ["done", "no_show"]))),
   ]);
-  if (!canReview({ deliveredOrders: delivered?.n ?? 0, startedPlans: started?.n ?? 0 })) {
-    return fail("You can rate this store after your first delivery");
+  if (!canReview({ deliveredOrders: delivered?.n ?? 0, startedPlans: started?.n ?? 0, completedSessions: sessions?.n ?? 0 })) {
+    return fail("You can rate after your first delivery or completed session");
   }
 
   const values = { rating: parsed.data.rating, comment: parsed.data.comment || null, updatedAt: new Date() };

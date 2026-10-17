@@ -52,45 +52,57 @@ export function VendorSidebar({
   const pathname = usePathname();
   const base = "/merchant-panel/" + slug;
 
-  const groups: { title: string; items: Item[] }[] = [
-    {
-      title: "Daily",
-      items: provider
-        ? [
+  // Booking providers (trainers, physio) and delivery stores (tiffin, water) run different businesses.
+  const groups: { title: string; items: Item[] }[] = provider
+    ? [
+        {
+          title: "Sessions",
+          items: [
             { label: "Today", path: "/today", icon: CalendarDays },
             { label: "Bookings", path: "/bookings", icon: CalendarClock },
             { label: "Availability", path: "/availability", icon: Repeat, roles: ["owner", "staff"] },
-            { label: "Orders", path: "/orders", icon: ClipboardList, badge: newOrders },
-          ]
-        : [
+          ],
+        },
+        {
+          title: "Profile",
+          items: [
+            { label: "Services", path: "/services", icon: UtensilsCrossed },
+            { label: "Clients", path: "/customers", icon: Users, roles: ["owner", "staff"] },
+            { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
+          ],
+        },
+        { title: "Money", items: [{ label: "Earnings", path: "/earnings", icon: Wallet, roles: ["owner", "staff"] }] },
+        { title: "Settings", items: [{ label: "Profile & settings", path: "/settings", icon: Settings, roles: ["owner"] }] },
+      ]
+    : [
+        {
+          title: "Daily",
+          items: [
             { label: "Today", path: "/today", icon: CalendarDays },
             { label: "Orders", path: "/orders", icon: ClipboardList, badge: newOrders },
             { label: "Delivery run", path: "/run", icon: Navigation },
             { label: "Plans", path: "/subscriptions", icon: Repeat, roles: ["owner", "staff"] },
           ],
-    },
-    {
-      title: "Store",
-      items: [
-        { label: "Menu", path: "/products", icon: UtensilsCrossed },
-        ...(provider ? [] : [{ label: "Inventory", path: "/inventory", icon: Package }]),
-        { label: "Customers", path: "/customers", icon: Users, roles: ["owner", "staff"] },
-        { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
-      ],
-    },
-    {
-      title: "Money",
-      items: [
-        { label: "Earnings", path: "/earnings", icon: Wallet, roles: ["owner", "staff"] },
-        { label: "Bills", path: "/bills", icon: FileText, roles: ["owner", "staff"] },
-        { label: "Analytics", path: "/analytics", icon: ChartColumn, roles: ["owner", "staff"] },
-      ],
-    },
-    {
-      title: "Settings",
-      items: [{ label: "Store settings", path: "/settings", icon: Settings, roles: ["owner"] }],
-    },
-  ];
+        },
+        {
+          title: "Store",
+          items: [
+            { label: "Menu", path: "/products", icon: UtensilsCrossed },
+            { label: "Inventory", path: "/inventory", icon: Package },
+            { label: "Customers", path: "/customers", icon: Users, roles: ["owner", "staff"] },
+            { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
+          ],
+        },
+        {
+          title: "Money",
+          items: [
+            { label: "Earnings", path: "/earnings", icon: Wallet, roles: ["owner", "staff"] },
+            { label: "Bills", path: "/bills", icon: FileText, roles: ["owner", "staff"] },
+            { label: "Analytics", path: "/analytics", icon: ChartColumn, roles: ["owner", "staff"] },
+          ],
+        },
+        { title: "Settings", items: [{ label: "Store settings", path: "/settings", icon: Settings, roles: ["owner"] }] },
+      ];
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-surface lg:flex">

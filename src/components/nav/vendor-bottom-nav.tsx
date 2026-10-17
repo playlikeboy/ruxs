@@ -14,12 +14,13 @@ export function VendorBottomNav({ slug, newOrders = 0, provider = false }: { slu
       ? [
           { label: "Bookings", href: base + "/bookings", icon: CalendarClock },
           { label: "Hours", href: base + "/availability", icon: Clock },
+          { label: "Services", href: base + "/services", icon: UtensilsCrossed },
         ]
       : [
           { label: "Orders", href: base + "/orders", icon: ClipboardList, badge: newOrders },
           { label: "Plans", href: base + "/subscriptions", icon: Repeat },
+          { label: "Menu", href: base + "/products", icon: UtensilsCrossed },
         ]),
-    { label: "Menu", href: base + "/products", icon: UtensilsCrossed },
     { label: "More", href: base + "/more", icon: LayoutGrid },
   ];
 

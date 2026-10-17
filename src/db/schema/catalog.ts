@@ -38,7 +38,6 @@ export const products = pgTable(
     allowSubscription: boolean("allow_subscription").notNull().default(true),
     allowOneTime: boolean("allow_one_time").notNull().default(true),
     archivedAt: timestamp("archived_at", { withTimezone: true }), // soft delete: orders keep their product
-    durationMinutes: integer("duration_minutes"), // booking services only: session length
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

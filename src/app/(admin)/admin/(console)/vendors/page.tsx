@@ -38,7 +38,7 @@ export default async function AdminVendorsPage({ searchParams }: { searchParams:
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{vendor.name}</p>
-                  <p className="truncate text-xs text-muted">{vendor.area}, {vendor.city}</p>
+                  <p className="truncate text-xs text-muted">{vendor.businessType === "booking" ? "Booking provider" : "Delivery store"} · {vendor.area}, {vendor.city}</p>
                 </div>
                 <span className={"shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold capitalize " + (STATUS_TONE[vendor.status] ?? "")}>{vendor.status}</span>
               </div>
@@ -69,7 +69,7 @@ export default async function AdminVendorsPage({ searchParams }: { searchParams:
                   <Link href={`/admin/vendors/${vendor.id}`} className="font-semibold text-ink hover:underline">{vendor.name}</Link>
                   <p className="font-mono text-xs text-muted">{vendor.phone}</p>
                 </td>
-                <td className="px-4 py-3 text-muted">{vendor.area}, {vendor.city}</td>
+                <td className="px-4 py-3 text-muted">{vendor.area}, {vendor.city}<br /><span className="text-xs">{vendor.businessType === "booking" ? "Booking provider" : "Delivery store"}</span></td>
                 <td className="px-4 py-3 font-mono text-xs">{vendor.loginId ?? <span className="text-warn">not set</span>}</td>
                 <td className="px-4 py-3 text-right font-mono tabular-nums">{products}</td>
                 <td className="px-4 py-3 text-right font-mono tabular-nums">{customers}</td>

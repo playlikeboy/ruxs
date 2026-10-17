@@ -72,9 +72,15 @@ export function vendorBalance(
   };
 }
 
-/** Which bucket a paid online payment falls in, from its order's status. */
-export function paymentState(purpose: "shop_order" | "dues", orderStatus: string | null): PaymentState {
+/** Which bucket a paid online payment falls in, from its order's or booking's status. */
+export function paymentState(purpose: "shop_order" | "dues" | "booking", status: string | null): PaymentState {
   if (purpose === "dues") return "settled";
+  if (purpose === "booking") {
+    if (status === "done" || status === "no_show") return "settled";
+    if (status === "cancelled") return "excluded";
+    return "pending";
+  }
+  const orderStatus = status;
   if (orderStatus === "delivered") return "settled";
   if (orderStatus === "cancelled" || orderStatus === "rejected") return "excluded";
   return "pending";

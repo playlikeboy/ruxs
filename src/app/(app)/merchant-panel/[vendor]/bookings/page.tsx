@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { CalendarClock, Phone } from "lucide-react";
 import { MODE_LABEL, formatSlotTime } from "@/core/booking";
 import { dayLabelIST, todayIST } from "@/core/time";
@@ -16,7 +17,8 @@ const STATUS_TONE: Record<string, string> = {
 
 export default async function BookingsPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
-  const { rows } = await getProviderSchedule(slug, 14);
+  const { access, rows } = await getProviderSchedule(slug, 14);
+  if (access.vendor.businessType !== "booking") redirect(`/merchant-panel/${slug}/orders`);
   const now = new Date();
   const days = new Map<string, typeof rows>();
   for (const r of rows) {
@@ -43,7 +45,7 @@ export default async function BookingsPage({ params }: { params: Promise<{ vendo
           <section key={date} className="space-y-2">
             <h2 className="text-xs font-bold uppercase tracking-wider text-muted">{dayLabelIST(date)}</h2>
             <ul className="grid gap-3 lg:grid-cols-2">
-              {list.map(({ booking, customerName, customerPhone, productName }) => (
+              {list.map(({ booking, customerName, customerPhone, serviceName }) => (
                 <li key={booking.id} className="rounded-[14px] border border-line bg-surface p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -51,7 +53,7 @@ export default async function BookingsPage({ params }: { params: Promise<{ vendo
                         {formatSlotTime(booking.startsAt)} – {formatSlotTime(booking.endsAt)}
                       </p>
                       <p className="truncate font-semibold text-ink">{customerName}</p>
-                      <p className="truncate text-xs text-muted">{productName ?? "Session"} · {MODE_LABEL[booking.mode] ?? booking.mode}</p>
+                      <p className="truncate text-xs text-muted">{serviceName ?? "Session"} · {MODE_LABEL[booking.mode] ?? booking.mode}</p>
                     </div>
                     <span className={"shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize " + (STATUS_TONE[booking.status] ?? "")}>{booking.status.replace("_", "-")}</span>
                   </div>

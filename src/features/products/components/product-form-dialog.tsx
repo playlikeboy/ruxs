@@ -11,8 +11,6 @@ export interface CategoryOption {
   id: string;
   emoji: string;
   shortLabel: string;
-  /** "booking" categories (trainers, physio) sell timed sessions instead of deliveries. */
-  fulfilment: string;
 }
 import { saveProduct } from "@/features/products/actions";
 
@@ -33,27 +31,18 @@ export interface EditableProduct {
   isAvailable: boolean;
   allowSubscription: boolean;
   allowOneTime: boolean;
-  durationMinutes: number | null;
 }
 
 type Shift = "lunch" | "dinner" | "morning" | "evening";
 type LateRule = "free" | "half" | "full" | "locked";
 
 /** Sensible form defaults for well-known categories; anything else starts as a morning item. */
-const KNOWN_DEFAULTS: Record<
-  string,
-  { shift: Shift; asset: string; cutoff: string }
-> = {
+const KNOWN_DEFAULTS: Record<string, { shift: Shift; asset: string; cutoff: string }> = {
   tiffin: { shift: "lunch", asset: "dabba", cutoff: "10:00" },
   water: { shift: "morning", asset: "can", cutoff: "08:00" },
   milk: { shift: "morning", asset: "", cutoff: "21:00" },
 };
-const defaultsFor = (kind: ServiceKind) =>
-  KNOWN_DEFAULTS[kind] ?? {
-    shift: "morning" as Shift,
-    asset: "",
-    cutoff: "09:00",
-  };
+const defaultsFor = (kind: ServiceKind) => KNOWN_DEFAULTS[kind] ?? { shift: "morning" as Shift, asset: "", cutoff: "09:00" };
 
 const input =
   "w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
@@ -141,11 +130,6 @@ export function ProductFormDialog({
   const [allowOneTime, setAllowOneTime] = useState(
     product?.allowOneTime ?? true
   );
-  const [duration, setDuration] = useState(
-    String(product?.durationMinutes ?? 60)
-  );
-  const isBooking =
-    categories.find((c) => c.id === kind)?.fulfilment === "booking";
 
   function pickKind(k: ServiceKind) {
     setKind(k);
@@ -182,9 +166,8 @@ export function ProductFormDialog({
         cutoffAt,
         lateRule,
         isAvailable,
-        allowSubscription: isBooking ? false : allowSubscription,
-        allowOneTime: isBooking ? true : allowOneTime,
-        durationMinutes: isBooking ? Math.round(Number(duration)) : null,
+        allowSubscription,
+        allowOneTime,
       });
       if (!res.ok) {
         toast.error(res.error ?? "Could not save");
@@ -367,27 +350,6 @@ export function ProductFormDialog({
                   />
                 </div>
 
-                {isBooking && (
-                  <label className="text-ink block text-xs font-medium">
-                    Session length (minutes)
-                    <select
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      className="border-line bg-surface mt-1 w-full rounded-[10px] border px-3 py-2.5 text-sm"
-                    >
-                      {[30, 45, 60, 75, 90, 120].map((m) => (
-                        <option key={m} value={m}>
-                          {m} min
-                        </option>
-                      ))}
-                    </select>
-                    <span className="text-muted mt-1 block text-[11px]">
-                      Clients book this length from your free hours in
-                      Availability.
-                    </span>
-                  </label>
-                )}
-
                 <div className="space-y-2">
                   <Toggle
                     checked={isAvailable}
@@ -395,106 +357,98 @@ export function ProductFormDialog({
                     title="Available"
                     hint="Turn off when sold out for the day"
                   />
-                  {!isBooking && (
-                    <>
-                      <Toggle
-                        checked={allowOneTime}
-                        onChange={setAllowOneTime}
-                        title="One-time orders"
-                        hint="Households can add it to a cart"
-                      />
-                      <Toggle
-                        checked={allowSubscription}
-                        onChange={setAllowSubscription}
-                        title="Subscriptions"
-                        hint="Households can get it on chosen days"
-                      />
-                    </>
-                  )}
+                  <Toggle
+                    checked={allowOneTime}
+                    onChange={setAllowOneTime}
+                    title="One-time orders"
+                    hint="Households can add it to a cart"
+                  />
+                  <Toggle
+                    checked={allowSubscription}
+                    onChange={setAllowSubscription}
+                    title="Subscriptions"
+                    hint="Households can get it on chosen days"
+                  />
                 </div>
 
-                {!isBooking && (
-                  <fieldset className="bg-bg space-y-3 rounded-[12px] p-3">
-                    <legend className="text-muted px-1 text-xs font-semibold tracking-wide uppercase">
-                      Delivery rules
-                    </legend>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label htmlFor="mi-shift" className={label}>
-                          Shift
-                        </label>
-                        <select
-                          id="mi-shift"
-                          value={shift}
-                          onChange={(e) => setShift(e.target.value as Shift)}
-                          className={input + " capitalize"}
-                        >
-                          <option value="morning">Morning</option>
-                          <option value="lunch">Lunch</option>
-                          <option value="evening">Evening</option>
-                          <option value="dinner">Dinner</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="mi-cutoff" className={label}>
-                          Daily cutoff (IST)
-                        </label>
-                        <input
-                          id="mi-cutoff"
-                          type="time"
-                          required
-                          value={cutoffAt}
-                          onChange={(e) => setCutoffAt(e.target.value)}
-                          className={input + " font-mono"}
-                        />
-                      </div>
-                    </div>
+                <fieldset className="bg-bg space-y-3 rounded-[12px] p-3">
+                  <legend className="text-muted px-1 text-xs font-semibold tracking-wide uppercase">
+                    Delivery rules
+                  </legend>
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label htmlFor="mi-late" className={label}>
-                        Skip after cutoff
+                      <label htmlFor="mi-shift" className={label}>
+                        Shift
                       </label>
                       <select
-                        id="mi-late"
-                        value={lateRule}
-                        onChange={(e) =>
-                          setLateRule(e.target.value as LateRule)
-                        }
-                        className={input}
+                        id="mi-shift"
+                        value={shift}
+                        onChange={(e) => setShift(e.target.value as Shift)}
+                        className={input + " capitalize"}
                       >
-                        <option value="free">Free — no charge</option>
-                        <option value="half">Half charge</option>
-                        <option value="full">Full charge</option>
-                        <option value="locked">Not allowed</option>
+                        <option value="morning">Morning</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="evening">Evening</option>
+                        <option value="dinner">Dinner</option>
                       </select>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label htmlFor="mi-asset" className={label}>
-                          Returnable
-                        </label>
-                        <input
-                          id="mi-asset"
-                          value={assetName}
-                          onChange={(e) => setAssetName(e.target.value)}
-                          placeholder="can, dabba"
-                          className={input}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="mi-dep" className={label}>
-                          Deposit (₹)
-                        </label>
-                        <input
-                          id="mi-dep"
-                          inputMode="decimal"
-                          value={deposit}
-                          onChange={(e) => setDeposit(e.target.value)}
-                          className={input + " tabular-nums"}
-                        />
-                      </div>
+                    <div>
+                      <label htmlFor="mi-cutoff" className={label}>
+                        Daily cutoff (IST)
+                      </label>
+                      <input
+                        id="mi-cutoff"
+                        type="time"
+                        required
+                        value={cutoffAt}
+                        onChange={(e) => setCutoffAt(e.target.value)}
+                        className={input + " font-mono"}
+                      />
                     </div>
-                  </fieldset>
-                )}
+                  </div>
+                  <div>
+                    <label htmlFor="mi-late" className={label}>
+                      Skip after cutoff
+                    </label>
+                    <select
+                      id="mi-late"
+                      value={lateRule}
+                      onChange={(e) => setLateRule(e.target.value as LateRule)}
+                      className={input}
+                    >
+                      <option value="free">Free — no charge</option>
+                      <option value="half">Half charge</option>
+                      <option value="full">Full charge</option>
+                      <option value="locked">Not allowed</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="mi-asset" className={label}>
+                        Returnable
+                      </label>
+                      <input
+                        id="mi-asset"
+                        value={assetName}
+                        onChange={(e) => setAssetName(e.target.value)}
+                        placeholder="can, dabba"
+                        className={input}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="mi-dep" className={label}>
+                        Deposit (₹)
+                      </label>
+                      <input
+                        id="mi-dep"
+                        inputMode="decimal"
+                        value={deposit}
+                        onChange={(e) => setDeposit(e.target.value)}
+                        className={input + " tabular-nums"}
+                      />
+                    </div>
+                  </div>
+                </fieldset>
 
                 <button
                   type="submit"

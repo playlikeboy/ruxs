@@ -1,3 +1,5 @@
+import { requireVendorAccess } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatINR } from "@/core/money";
 import { todayIST } from "@/core/time";
@@ -12,6 +14,8 @@ export default async function BillsPage({
   params: Promise<{ vendor: string }>;
 }) {
   const { vendor: slug } = await params;
+  // Booking providers have sessions, not deliveries.
+  if ((await requireVendorAccess(slug)).vendor.businessType === "booking") redirect(`/merchant-panel/${slug}/bookings`);
   const today = todayIST();
   const currentPeriod = today.substring(0, 7);
 

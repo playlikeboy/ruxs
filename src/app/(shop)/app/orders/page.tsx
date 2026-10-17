@@ -15,6 +15,12 @@ export default async function OrdersPage() {
   return (
     <div>
       <PageHeader title="Your orders" />
+      <div className="px-4 pt-3">
+        <Link href="/app/bookings" className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm">
+          <span><span className="font-semibold text-ink">Trainer &amp; physio bookings</span><span className="block text-xs text-neutral-500">Sessions are listed separately</span></span>
+          <ChevronRight className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+        </Link>
+      </div>
       {orders.length === 0 ? (
         <div className="flex flex-col items-center px-6 pt-24 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sky">

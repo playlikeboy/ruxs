@@ -24,6 +24,7 @@ export interface VendorFormValues {
   commissionPercent: string;
   plan: "free" | "starter" | "pro";
   acceptingOrders: boolean;
+  businessType: "delivery" | "booking";
 }
 
 export const EMPTY_VENDOR: VendorFormValues = {
@@ -42,6 +43,7 @@ export const EMPTY_VENDOR: VendorFormValues = {
   commissionPercent: "0",
   plan: "free",
   acceptingOrders: true,
+  businessType: "delivery",
 };
 
 const input = "mt-1 w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
@@ -116,7 +118,7 @@ export function VendorForm({ initial }: { initial: VendorFormValues }) {
         };
         startTransition(async () => {
           if (isNew) {
-            const res = await adminCreateVendor({ ...details, slug: f.slug });
+            const res = await adminCreateVendor({ ...details, slug: f.slug, businessType: f.businessType });
             if (!res.ok) toast.error(res.error);
             else setCreated(res);
           } else {
@@ -130,6 +132,26 @@ export function VendorForm({ initial }: { initial: VendorFormValues }) {
         });
       }}
     >
+      {isNew && (
+        <fieldset>
+          <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Type of business</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              { id: "delivery" as const, title: "Delivery store", text: "Tiffin, water cans, milk, groceries: menu, daily plans, delivery runs" },
+              { id: "booking" as const, title: "Booking provider", text: "Gym trainer, physiotherapist, tutor: services, free hours, sessions" },
+            ].map((t) => (
+              <label key={t.id} className={"flex cursor-pointer gap-3 rounded-[12px] border p-3 " + (f.businessType === t.id ? "border-ink bg-bg" : "border-line")}>
+                <input type="radio" name="businessType" checked={f.businessType === t.id} onChange={() => setF({ ...f, businessType: t.id })} className="mt-1 h-4 w-4 accent-[#BD4B2A]" />
+                <span>
+                  <span className="block text-sm font-semibold text-ink">{t.title}</span>
+                  <span className="block text-xs text-muted">{t.text}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
       <fieldset className="grid gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Business</legend>
         <label className={labelCls}>Business name<input required className={input} value={f.name} onChange={set("name")} /></label>

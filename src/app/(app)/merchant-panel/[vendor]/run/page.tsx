@@ -1,3 +1,5 @@
+import { requireVendorAccess } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { todayIST } from "@/core/time";
 import { getRunSheetOrders } from "@/features/orders/queries";
@@ -10,6 +12,8 @@ export default async function RunPage({
   params: Promise<{ vendor: string }>;
 }) {
   const { vendor: slug } = await params;
+  // Booking providers have sessions, not deliveries.
+  if ((await requireVendorAccess(slug)).vendor.businessType === "booking") redirect(`/merchant-panel/${slug}/bookings`);
   const today = todayIST();
   const stops = await getRunSheetOrders(slug, today);
 

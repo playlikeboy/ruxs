@@ -1,3 +1,5 @@
+import { requireVendorAccess } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import { formatINR } from "@/core/money";
 import { getVendorAnalytics } from "@/features/analytics/queries";
 
@@ -7,6 +9,8 @@ export default async function AnalyticsPage({
   params: Promise<{ vendor: string }>;
 }) {
   const { vendor: slug } = await params;
+  // Booking providers have sessions, not deliveries.
+  if ((await requireVendorAccess(slug)).vendor.businessType === "booking") redirect(`/merchant-panel/${slug}/bookings`);
   const data = await getVendorAnalytics(slug);
 
   const count = (status: string) =>

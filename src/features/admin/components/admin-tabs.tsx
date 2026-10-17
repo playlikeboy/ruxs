@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, LayoutDashboard, Settings, Store, Users, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarClock, ClipboardList, LayoutDashboard, Settings, Store, Users, Wallet, type LucideIcon } from "lucide-react";
 
 const TABS: { href: string; label: string; icon: LucideIcon; exact?: boolean }[] = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/admin/vendors", label: "Vendors", icon: Store },
   { href: "/admin/orders", label: "Orders", icon: ClipboardList },
+  { href: "/admin/bookings", label: "Bookings", icon: CalendarClock },
   { href: "/admin/payouts", label: "Payouts", icon: Wallet },
   { href: "/admin/households", label: "Households", icon: Users },
   { href: "/admin/settings", label: "Settings", icon: Settings },

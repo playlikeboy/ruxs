@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   adminMarkPayoutPaid,
   adminRecordPayout,
+  adminRefundBooking,
   adminRefundShopOrder,
   adminRejectPayout,
   requestWithdrawal,
@@ -118,6 +119,18 @@ export function RefundOrderButton({ orderId, amountLabel }: { orderId: string; a
       className={quiet + " text-bad"}
       done="Refund issued through Razorpay"
       run={async () => (window.confirm(`Refund ${amountLabel} to the customer through Razorpay? This cannot be undone.`) ? adminRefundShopOrder({ orderId }) : null)}
+    />
+  );
+}
+
+export function RefundBookingButton({ bookingId, amountLabel }: { bookingId: string; amountLabel: string }) {
+  return (
+    <ActionButton
+      label={`Refund ${amountLabel}`}
+      busyLabel="Refunding…"
+      className={quiet + " text-bad"}
+      done="Refund issued through Razorpay"
+      run={async () => (window.confirm(`Refund ${amountLabel} for this booking through Razorpay? This cannot be undone.`) ? adminRefundBooking({ bookingId }) : null)}
     />
   );
 }

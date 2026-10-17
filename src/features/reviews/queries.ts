@@ -1,7 +1,7 @@
 import "server-only";
-import { and, count, desc, eq, lte } from "drizzle-orm";
+import { and, count, desc, eq, inArray, lte } from "drizzle-orm";
 import { getDb } from "@/db";
-import { customers, shopOrders, subscriptions, vendorReviews, vendors } from "@/db/schema";
+import { bookings, customers, shopOrders, subscriptions, vendorReviews, vendors } from "@/db/schema";
 import { hexclave } from "@/lib/auth/hexclave";
 import { requireAdmin, requireVendorAccess } from "@/lib/auth/session";
 import { canReview } from "@/core/ratings";
@@ -39,13 +39,14 @@ export async function getMyReviewState(vendorId: string) {
     .limit(1);
   if (!customer) return { eligible: false, mine: null };
 
-  const [[delivered], [started], [mine]] = await Promise.all([
+  const [[delivered], [started], [sessions], [mine]] = await Promise.all([
     db.select({ n: count() }).from(shopOrders).where(and(eq(shopOrders.customerId, customer.id), eq(shopOrders.status, "delivered"))),
     db.select({ n: count() }).from(subscriptions).where(and(eq(subscriptions.customerId, customer.id), lte(subscriptions.startsOn, todayIST()))),
+    db.select({ n: count() }).from(bookings).where(and(eq(bookings.customerId, customer.id), inArray(bookings.status, ["done", "no_show"]))),
     db.select().from(vendorReviews).where(and(eq(vendorReviews.vendorId, vendorId), eq(vendorReviews.userId, user.id))).limit(1),
   ]);
   return {
-    eligible: canReview({ deliveredOrders: delivered?.n ?? 0, startedPlans: started?.n ?? 0 }),
+    eligible: canReview({ deliveredOrders: delivered?.n ?? 0, startedPlans: started?.n ?? 0, completedSessions: sessions?.n ?? 0 }),
     mine: mine ?? null,
   };
 }

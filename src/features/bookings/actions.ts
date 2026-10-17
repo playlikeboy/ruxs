@@ -2,23 +2,25 @@
 
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
-import { and, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
+import { and, eq, gt, isNull, lt, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { availabilityBlocks, availabilityRules, bookings, shopOrderItems, shopOrders, vendors } from "@/db/schema";
+import { availabilityBlocks, availabilityRules, bookings, categories, providerProfiles, services, vendors } from "@/db/schema";
 import { requireUser, requireVendorAccess } from "@/lib/auth/session";
-import { canCancelBooking, formatSlotTime, isValidRule, MODE_LABEL, openSlots, rulesOverlap } from "@/core/booking";
-import { cartTotals, formatOrderNumber } from "@/core/shop";
-import { dayLabelIST, todayIST } from "@/core/time";
+import { canCancelBooking, isValidRule, openSlots, rulesOverlap } from "@/core/booking";
+import { rupeesToPaise } from "@/core/money";
+import { todayIST } from "@/core/time";
 import { addressLine, deliveryCheck, ensureCustomer, loadProfile } from "@/features/consumer/household";
-import { moveOrder } from "@/features/shop-orders/lifecycle";
 import { getBookableService } from "./queries";
 import {
   availabilitySchema,
   bookingIdSchema,
-  bookingSettingsSchema,
+  bookingRulesSchema,
   bookSessionSchema,
   markBookingSchema,
+  providerProfileSchema,
   removeTimeOffSchema,
+  saveServiceSchema,
+  serviceIdSchema,
   timeOffSchema,
 } from "./schemas";
 
@@ -28,11 +30,16 @@ function fail(error: string) {
   return { ok: false as const, error };
 }
 
-function istDate(d: Date): string {
-  return todayIST(d);
+function bookingNumber(date: string): string {
+  return `BK-${date.slice(5, 7)}${date.slice(8, 10)}-${crypto.randomBytes(3).toString("hex").slice(0, 5).toUpperCase()}`;
 }
 
-/** Book one session. Online payments hold the slot for 15 minutes until Razorpay confirms. */
+function revalidateProvider(slug: string) {
+  revalidatePath(`/merchant-panel/${slug}`, "layout");
+  revalidatePath(`/app/store/${slug}`);
+}
+
+/** Book one session. Online payment holds the slot for 15 minutes until Razorpay confirms. */
 export async function bookSession(input: unknown) {
   const parsed = bookSessionSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid booking");
@@ -43,129 +50,96 @@ export async function bookSession(input: unknown) {
   const data = parsed.data;
   const db = getDb();
 
-  const [already] = await db.select({ id: shopOrders.id, userId: shopOrders.userId }).from(shopOrders).where(eq(shopOrders.clientKey, data.clientKey)).limit(1);
-  if (already) return already.userId === user.id ? { ok: true as const, orderId: already.id } : fail("Please try again");
+  const [already] = await db.select({ id: bookings.id, userId: bookings.userId }).from(bookings).where(eq(bookings.clientKey, data.clientKey)).limit(1);
+  if (already) return already.userId === user.id ? { ok: true as const, bookingId: already.id } : fail("Please try again");
 
-  const service = await getBookableService(data.productId);
-  if (!service) return fail("This service is not available right now");
-  const { product, vendor } = service;
+  const found = await getBookableService(data.serviceId);
+  if (!found) return fail("This service is not available right now");
+  const { service, vendor } = found;
   if (!vendor.acceptingOrders) return fail(`${vendor.name} is not taking bookings right now`);
-  if (!vendor.serviceModes.includes(data.mode)) return fail("Pick a session type this provider offers");
+  if (!service.modes.includes(data.mode)) return fail("Pick a session type this service offers");
   if (data.mode === "home") {
     const outOfArea = await deliveryCheck(vendor, profile);
-    if (outOfArea) return fail(outOfArea.startsWith("Set") ? outOfArea : "This provider doesn't do home visits at your address. Try a studio or online session.");
+    if (outOfArea) {
+      return fail(outOfArea.startsWith("Set") ? outOfArea : "This provider doesn't do home visits at your address. Try a studio or online session.");
+    }
   }
 
-  const duration = product.durationMinutes ?? 60;
   const startsAt = new Date(data.startsAt);
-  const endsAt = new Date(startsAt.getTime() + duration * 60_000);
-  const date = istDate(startsAt);
+  const endsAt = new Date(startsAt.getTime() + service.durationMinutes * 60_000);
+  const date = todayIST(startsAt);
   const now = new Date();
-  const totals = cartTotals([{ unitPricePaise: product.pricePaise, qty: 1 }], 0);
-  const sessionLine = `Session ${dayLabelIST(date)}, ${formatSlotTime(startsAt)} · ${MODE_LABEL[data.mode]}`;
+  const online = data.paymentMode === "online";
 
   try {
-    const orderId = await db.transaction(async (tx) => {
+    const bookingId = await db.transaction(async (tx) => {
       // One booking at a time per provider, so two people can't take the same slot.
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${vendor.id}))`);
 
-      // Release unpaid holds that ran out, and their unpaid orders.
-      const expired = await tx
+      // Release unpaid holds that ran out.
+      await tx
         .update(bookings)
         .set({ status: "cancelled", cancelReason: "Payment not completed in time", updatedAt: now })
-        .where(and(eq(bookings.vendorId, vendor.id), eq(bookings.status, "held"), lt(bookings.heldUntil, now)))
-        .returning({ orderId: bookings.shopOrderId });
-      if (expired.length) {
-        await tx
-          .update(shopOrders)
-          .set({ status: "cancelled", cancelReason: "Payment not completed in time", updatedAt: now })
-          .where(and(inArray(shopOrders.id, expired.map((e) => e.orderId)), eq(shopOrders.status, "awaiting_payment")));
-      }
+        .where(and(eq(bookings.vendorId, vendor.id), eq(bookings.status, "held"), lt(bookings.heldUntil, now)));
 
-      // Re-check the slot against the provider's rules, time off and live bookings.
-      const [rules, busy] = await Promise.all([
+      // Re-check the slot against the provider's hours, time off and live bookings.
+      const [rules, blocks, taken] = await Promise.all([
         tx.select().from(availabilityRules).where(eq(availabilityRules.vendorId, vendor.id)),
-        Promise.all([
-          tx
-            .select({ startsAt: availabilityBlocks.startsAt, endsAt: availabilityBlocks.endsAt })
-            .from(availabilityBlocks)
-            .where(and(eq(availabilityBlocks.vendorId, vendor.id), lt(availabilityBlocks.startsAt, endsAt), gt(availabilityBlocks.endsAt, startsAt))),
-          tx
-            .select({ startsAt: bookings.startsAt, endsAt: bookings.endsAt })
-            .from(bookings)
-            .where(
-              and(
-                eq(bookings.vendorId, vendor.id),
-                or(eq(bookings.status, "confirmed"), and(eq(bookings.status, "held"), gt(bookings.heldUntil, now))),
-                lt(bookings.startsAt, endsAt),
-                gt(bookings.endsAt, startsAt)
-              )
-            ),
-        ]).then(([a, b]) => [...a, ...b]),
+        tx
+          .select({ startsAt: availabilityBlocks.startsAt, endsAt: availabilityBlocks.endsAt })
+          .from(availabilityBlocks)
+          .where(and(eq(availabilityBlocks.vendorId, vendor.id), lt(availabilityBlocks.startsAt, endsAt), gt(availabilityBlocks.endsAt, startsAt))),
+        tx
+          .select({ startsAt: bookings.startsAt, endsAt: bookings.endsAt })
+          .from(bookings)
+          .where(
+            and(
+              eq(bookings.vendorId, vendor.id),
+              or(eq(bookings.status, "confirmed"), and(eq(bookings.status, "held"), gt(bookings.heldUntil, now))),
+              lt(bookings.startsAt, endsAt),
+              gt(bookings.endsAt, startsAt)
+            )
+          ),
       ]);
-      const free = openSlots({ date, rules, busy, durationMinutes: duration, noticeMinutes: vendor.bookingNoticeMinutes, now });
+      const free = openSlots({ date, rules, busy: [...blocks, ...taken], durationMinutes: service.durationMinutes, noticeMinutes: vendor.bookingNoticeMinutes, now });
       if (!free.some((s) => s.getTime() === startsAt.getTime())) throw new Error("SLOT_TAKEN");
 
       const customerId = await ensureCustomer(tx, vendor.id, profile);
-      const online = data.paymentMode === "online";
-      const [order] = await tx
-        .insert(shopOrders)
+      const [created] = await tx
+        .insert(bookings)
         .values({
-          number: formatOrderNumber(todayIST(), crypto.randomBytes(3).toString("hex").slice(0, 5)),
+          number: bookingNumber(date),
           clientKey: data.clientKey,
           vendorId: vendor.id,
           customerId,
           userId: user.id,
-          // Sessions come from the provider's own free hours, so they need no separate accept step.
-          status: online ? "awaiting_payment" : "accepted",
-          acceptedAt: online ? null : now,
-          paymentMode: online ? "online" : "cod",
-          subtotalPaise: totals.subtotalPaise,
-          deliveryFeePaise: 0,
-          totalPaise: totals.totalPaise,
-          deliverOn: date,
-          slot: "asap",
-          address: data.mode === "home" ? addressLine(profile) : data.mode === "studio" ? `At ${vendor.name}, ${vendor.area}` : "Online session",
-          notes: data.notes ? `${sessionLine}. ${data.notes}` : sessionLine,
+          serviceId: service.id,
+          startsAt,
+          endsAt,
+          mode: data.mode,
+          address: data.mode === "home" ? addressLine(profile) : null,
+          pricePaise: service.pricePaise,
+          paymentMode: data.paymentMode,
+          paymentStatus: "unpaid",
+          notes: data.notes || null,
+          status: online ? "held" : "confirmed",
+          heldUntil: online ? new Date(now.getTime() + HOLD_MINUTES * 60_000) : null,
         })
-        .returning({ id: shopOrders.id });
-      await tx.insert(shopOrderItems).values({
-        orderId: order!.id,
-        vendorId: vendor.id,
-        productId: product.id,
-        name: product.name,
-        unitPricePaise: product.pricePaise,
-        qty: 1,
-        lineTotalPaise: product.pricePaise,
-      });
-      await tx.insert(bookings).values({
-        vendorId: vendor.id,
-        customerId,
-        userId: user.id,
-        productId: product.id,
-        shopOrderId: order!.id,
-        startsAt,
-        endsAt,
-        mode: data.mode,
-        address: data.mode === "home" ? addressLine(profile) : null,
-        status: online ? "held" : "confirmed",
-        heldUntil: online ? new Date(now.getTime() + HOLD_MINUTES * 60_000) : null,
-      });
-      return order!.id;
+        .returning({ id: bookings.id });
+      return created!.id;
     });
 
-    revalidatePath(`/app/store/${vendor.slug}`);
-    revalidatePath("/app/plans");
-    revalidatePath(`/merchant-panel/${vendor.slug}/bookings`);
-    return { ok: true as const, orderId };
+    revalidateProvider(vendor.slug);
+    revalidatePath("/app/bookings");
+    return { ok: true as const, bookingId };
   } catch (err) {
     if (err instanceof Error && err.message === "SLOT_TAKEN") return fail("That time was just taken. Pick another slot.");
-    if (err instanceof Error && err.message === "PHONE_LINKED_ELSEWHERE") return fail("Your phone number is linked to another account at this provider.");
+    if (err instanceof Error && err.message === "PHONE_LINKED_ELSEWHERE") return fail("Your phone number is linked to another account with this provider.");
     return fail("Could not book. Please try again.");
   }
 }
 
-/** Household cancels before the provider's cutoff; a paid session becomes a refund for admin. */
+/** Household cancels before the provider's cutoff. Paid sessions become a refund for admin. */
 export async function cancelMyBooking(input: unknown) {
   const parsed = bookingIdSchema.safeParse(input);
   if (!parsed.success) return fail("Invalid booking");
@@ -179,25 +153,27 @@ export async function cancelMyBooking(input: unknown) {
     .limit(1);
   if (!row) return fail("Booking not found");
   if (!["held", "confirmed"].includes(row.booking.status)) return fail("This session can't be cancelled");
-  if (!canCancelBooking(row.booking.startsAt, new Date(), row.cutoff)) {
+  if (row.booking.status === "confirmed" && !canCancelBooking(row.booking.startsAt, new Date(), row.cutoff)) {
     return fail(`Sessions can be cancelled up to ${row.cutoff} hours before they start`);
   }
-  // The cutoff was checked above; the order moves like an admin-resolved cancellation.
-  const res = await moveOrder({
-    orderId: row.booking.shopOrderId,
-    vendorId: row.booking.vendorId,
-    to: "cancelled",
-    actor: "admin",
-    actorId: user.id,
-    reason: "Cancelled by customer",
-  });
-  if (!res.ok) return res;
-  revalidatePath("/app/plans");
-  revalidatePath(`/merchant-panel/${row.slug}/bookings`);
+  const [updated] = await db
+    .update(bookings)
+    .set({
+      status: "cancelled",
+      cancelReason: "Cancelled by you",
+      ...(row.booking.paymentStatus === "paid" ? { paymentStatus: "refund_due" } : {}),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(bookings.id, row.booking.id), eq(bookings.status, row.booking.status)))
+    .returning({ id: bookings.id });
+  if (!updated) return fail("This session just changed. Refresh and try again.");
+  revalidatePath("/app/bookings");
+  revalidatePath(`/app/bookings/${row.booking.id}`);
+  revalidateProvider(row.slug);
   return { ok: true as const };
 }
 
-/** Provider closes a session: done or no-show release the money, cancel refunds it. */
+/** Provider closes a session: done or no-show release online money to earnings; cancel refunds it. */
 export async function markBooking(input: unknown) {
   const parsed = markBookingSchema.safeParse(input);
   if (!parsed.success) return fail("Invalid input");
@@ -210,25 +186,32 @@ export async function markBooking(input: unknown) {
     .limit(1);
   if (!booking || booking.status !== "confirmed") return fail("This session is already closed");
 
-  const base = { orderId: booking.shopOrderId, vendorId: access.vendorId, actor: "vendor" as const, actorId: access.user.id };
-  if (parsed.data.outcome === "cancelled") {
-    const res = await moveOrder({ ...base, to: "cancelled", reason: parsed.data.reason || "Cancelled by provider" });
-    if (!res.ok) return res;
-  } else {
-    if (new Date() < booking.startsAt) return fail("You can close a session once it has started");
-    const [order] = await db.select({ status: shopOrders.status }).from(shopOrders).where(eq(shopOrders.id, booking.shopOrderId)).limit(1);
-    if (order?.status === "placed") {
-      const accepted = await moveOrder({ ...base, to: "accepted" });
-      if (!accepted.ok) return accepted;
-    }
-    const res = await moveOrder({ ...base, to: "delivered" });
-    if (!res.ok) return res;
-    if (parsed.data.outcome === "no_show") {
-      await db.update(bookings).set({ status: "no_show", updatedAt: new Date() }).where(eq(bookings.id, booking.id));
-    }
-  }
-  revalidatePath(`/merchant-panel/${parsed.data.slug}/bookings`);
-  revalidatePath(`/merchant-panel/${parsed.data.slug}/today`);
+  const outcome = parsed.data.outcome;
+  if (outcome !== "cancelled" && new Date() < booking.startsAt) return fail("You can close a session once it has started");
+
+  const [updated] = await db
+    .update(bookings)
+    .set(
+      outcome === "cancelled"
+        ? {
+            status: "cancelled",
+            cancelReason: parsed.data.reason || "Cancelled by the provider",
+            ...(booking.paymentStatus === "paid" ? { paymentStatus: "refund_due" } : {}),
+            updatedAt: new Date(),
+          }
+        : {
+            status: outcome,
+            // Pay-at-session money is collected in person when the session happens.
+            ...(booking.paymentMode === "pay_at_session" && outcome === "done" ? { paymentStatus: "paid" } : {}),
+            updatedAt: new Date(),
+          }
+    )
+    .where(and(eq(bookings.id, booking.id), eq(bookings.status, "confirmed")))
+    .returning({ id: bookings.id });
+  if (!updated) return fail("This session just changed. Refresh and try again.");
+
+  revalidateProvider(parsed.data.slug);
+  revalidatePath(`/app/bookings/${booking.id}`);
   return { ok: true as const };
 }
 
@@ -244,8 +227,7 @@ export async function saveAvailability(input: unknown) {
     await tx.delete(availabilityRules).where(eq(availabilityRules.vendorId, access.vendorId));
     if (rules.length) await tx.insert(availabilityRules).values(rules.map((r) => ({ ...r, vendorId: access.vendorId })));
   });
-  revalidatePath(`/merchant-panel/${parsed.data.slug}/availability`);
-  revalidatePath(`/app/store/${parsed.data.slug}`);
+  revalidateProvider(parsed.data.slug);
   return { ok: true as const };
 }
 
@@ -258,7 +240,7 @@ export async function addTimeOff(input: unknown) {
   const access = await requireVendorAccess(parsed.data.slug, ["owner", "staff"]);
   const db = getDb();
   await db.insert(availabilityBlocks).values({ vendorId: access.vendorId, startsAt, endsAt, reason: parsed.data.reason || null });
-  revalidatePath(`/merchant-panel/${parsed.data.slug}/availability`);
+  revalidateProvider(parsed.data.slug);
   return { ok: true as const };
 }
 
@@ -268,25 +250,93 @@ export async function removeTimeOff(input: unknown) {
   const access = await requireVendorAccess(parsed.data.slug, ["owner", "staff"]);
   const db = getDb();
   await db.delete(availabilityBlocks).where(and(eq(availabilityBlocks.id, parsed.data.id), eq(availabilityBlocks.vendorId, access.vendorId)));
-  revalidatePath(`/merchant-panel/${parsed.data.slug}/availability`);
+  revalidateProvider(parsed.data.slug);
   return { ok: true as const };
 }
 
-export async function saveBookingSettings(input: unknown) {
-  const parsed = bookingSettingsSchema.safeParse(input);
+export async function saveBookingRules(input: unknown) {
+  const parsed = bookingRulesSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid settings");
   const access = await requireVendorAccess(parsed.data.slug, ["owner"]);
   const db = getDb();
   await db
     .update(vendors)
-    .set({
-      serviceModes: parsed.data.modes,
-      bookingNoticeMinutes: parsed.data.noticeMinutes,
-      cancelCutoffHours: parsed.data.cancelCutoffHours,
-      updatedAt: new Date(),
-    })
+    .set({ bookingNoticeMinutes: parsed.data.noticeMinutes, cancelCutoffHours: parsed.data.cancelCutoffHours, updatedAt: new Date() })
     .where(eq(vendors.id, access.vendorId));
-  revalidatePath(`/merchant-panel/${parsed.data.slug}/availability`);
-  revalidatePath(`/app/store/${parsed.data.slug}`);
+  revalidateProvider(parsed.data.slug);
+  return { ok: true as const };
+}
+
+/** Create or edit a service. Only booking categories (trainers, physio…) are allowed here. */
+export async function saveService(input: unknown) {
+  const parsed = saveServiceSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid service");
+  const { slug, id, ...data } = parsed.data;
+  const access = await requireVendorAccess(slug, ["owner"]);
+  if (access.vendor.businessType !== "booking") return fail("Only booking providers have services");
+  const db = getDb();
+  const [category] = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(and(eq(categories.id, data.categoryId), eq(categories.fulfilment, "booking"), eq(categories.isActive, true)))
+    .limit(1);
+  if (!category) return fail("Pick a valid category");
+
+  const values = {
+    categoryId: data.categoryId,
+    name: data.name,
+    description: data.description || null,
+    imageUrl: data.imageUrl || null,
+    durationMinutes: data.durationMinutes,
+    pricePaise: rupeesToPaise(data.priceRupees),
+    modes: Array.from(new Set(data.modes)),
+    isActive: data.isActive,
+    updatedAt: new Date(),
+  };
+  if (id) {
+    const [updated] = await db
+      .update(services)
+      .set(values)
+      .where(and(eq(services.id, id), eq(services.vendorId, access.vendorId), isNull(services.archivedAt)))
+      .returning({ id: services.id });
+    if (!updated) return fail("Service not found");
+  } else {
+    await db.insert(services).values({ ...values, vendorId: access.vendorId });
+  }
+  revalidateProvider(slug);
+  return { ok: true as const };
+}
+
+/** Removes a service from the profile. Past bookings keep pointing at it, so it is archived. */
+export async function archiveService(input: unknown) {
+  const parsed = serviceIdSchema.safeParse(input);
+  if (!parsed.success) return fail("Invalid input");
+  const access = await requireVendorAccess(parsed.data.slug, ["owner"]);
+  const db = getDb();
+  await db
+    .update(services)
+    .set({ archivedAt: new Date(), isActive: false, updatedAt: new Date() })
+    .where(and(eq(services.id, parsed.data.id), eq(services.vendorId, access.vendorId)));
+  revalidateProvider(parsed.data.slug);
+  return { ok: true as const };
+}
+
+export async function saveProviderProfile(input: unknown) {
+  const parsed = providerProfileSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid profile");
+  const { slug, ...data } = parsed.data;
+  const access = await requireVendorAccess(slug, ["owner"]);
+  const db = getDb();
+  const values = {
+    headline: data.headline || null,
+    qualifications: data.qualifications || null,
+    experienceYears: data.experienceYears,
+    specialities: data.specialities,
+    languages: data.languages,
+    gender: data.gender,
+    updatedAt: new Date(),
+  };
+  await db.insert(providerProfiles).values({ vendorId: access.vendorId, ...values }).onConflictDoUpdate({ target: providerProfiles.vendorId, set: values });
+  revalidateProvider(slug);
   return { ok: true as const };
 }

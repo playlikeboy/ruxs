@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { eq, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { categories, localities, platformAdmins, platformSettings, vendorMembers, vendors } from "@/db/schema";
+import { categories, localities, platformAdmins, platformSettings, providerProfiles, vendorMembers, vendors } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { hexclave } from "@/lib/auth/hexclave";
 import { rupeesToPaise } from "@/core/money";
@@ -125,8 +125,11 @@ export async function adminCreateVendor(input: unknown) {
 
   const [vendor] = await db
     .insert(vendors)
-    .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, plan: "free", status: "active" })
+    .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType: parsed.data.businessType, plan: "free", status: "active" })
     .returning({ id: vendors.id });
+  if (parsed.data.businessType === "booking") {
+    await db.insert(providerProfiles).values({ vendorId: vendor!.id }).onConflictDoNothing();
+  }
 
   const issued = await issueCredentials(vendor!.id);
   revalidatePath("/admin", "layout");

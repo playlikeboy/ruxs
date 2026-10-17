@@ -5,6 +5,8 @@ import { vendorMembers, vendorInvites } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { InviteStaffForm } from "@/features/vendors/components/invite-staff-form";
 import { StorefrontForm } from "@/features/vendors/components/storefront-form";
+import { ProviderProfileForm } from "@/features/bookings/components/provider-profile-form";
+import { providerProfiles } from "@/db/schema";
 
 export default async function SettingsPage({
   params,
@@ -15,7 +17,8 @@ export default async function SettingsPage({
   const access = await requireVendorAccess(slug, ["owner"]);
   const db = getDb();
 
-  const [members, invites] = await Promise.all([
+  const provider = access.vendor.businessType === "booking";
+  const [members, invites, [profile]] = await Promise.all([
     db
       .select()
       .from(vendorMembers)
@@ -24,6 +27,7 @@ export default async function SettingsPage({
       .select()
       .from(vendorInvites)
       .where(eq(vendorInvites.vendorId, access.vendorId)),
+    db.select().from(providerProfiles).where(eq(providerProfiles.vendorId, access.vendorId)).limit(1),
   ]);
 
   const pendingInvites = invites.filter((invite) => !invite.acceptedAt);
@@ -35,9 +39,19 @@ export default async function SettingsPage({
         <p className="mt-1 text-sm text-muted">Business details, payment configuration and team access.</p>
       </div>
 
+      {provider && (
+        <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
+          <div>
+            <h2 className="text-base font-semibold text-ink">Your profile</h2>
+            <p className="mt-1 text-sm text-muted">Clients see this on your page before booking.</p>
+          </div>
+          <ProviderProfileForm slug={slug} initial={profile ?? null} />
+        </section>
+      )}
+
       <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
         <div>
-          <h2 className="text-base font-semibold text-ink">Storefront &amp; delivery</h2>
+          <h2 className="text-base font-semibold text-ink">{provider ? "Location & home visits" : "Storefront & delivery"}</h2>
           <p className="mt-1 text-sm text-muted">How your store appears in the RUXs app and who can order.</p>
         </div>
         <StorefrontForm
@@ -125,6 +139,7 @@ export default async function SettingsPage({
         </div>
       </section>
 
+      {!provider && (
       <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
         <h2 className="text-base font-semibold text-ink">Your catalogue, your prices</h2>
         <p className="text-sm leading-6 text-muted">
@@ -134,6 +149,7 @@ export default async function SettingsPage({
           Manage products & prices →
         </Link>
       </section>
+      )}
     </div>
   );
 }

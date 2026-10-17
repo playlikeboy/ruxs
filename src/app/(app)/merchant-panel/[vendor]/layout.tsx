@@ -4,7 +4,6 @@ import { VendorBottomNav } from "@/components/nav/vendor-bottom-nav";
 import { VendorSidebar } from "@/components/nav/vendor-sidebar";
 import { UserNav } from "@/components/auth/user-nav";
 import { countOpenShopOrders } from "@/features/shop-orders/queries";
-import { isBookingProvider } from "@/features/bookings/queries";
 
 export default async function VendorLayout({
   children,
@@ -15,7 +14,8 @@ export default async function VendorLayout({
 }) {
   const { vendor: slug } = await params;
   const access = await requireVendorAccess(slug);
-  const [newOrders, provider] = await Promise.all([countOpenShopOrders(access.vendorId), isBookingProvider(access.vendorId)]);
+  const provider = access.vendor.businessType === "booking";
+  const newOrders = provider ? 0 : await countOpenShopOrders(access.vendorId);
 
   return (
     <div className="min-h-dvh bg-bg">

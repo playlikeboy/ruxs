@@ -1,3 +1,5 @@
+import { requireVendorAccess } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatINR } from "@/core/money";
 import type { ShopOrderStatus } from "@/core/shop";
@@ -20,6 +22,8 @@ export default async function MerchantOrdersPage({
   searchParams: Promise<{ view?: string }>;
 }) {
   const { vendor: slug } = await params;
+  // Booking providers have sessions, not deliveries.
+  if ((await requireVendorAccess(slug)).vendor.businessType === "booking") redirect(`/merchant-panel/${slug}/bookings`);
   const { view: rawView } = await searchParams;
   const view = rawView === "done" ? "done" : "open";
   const { orders } = await getVendorShopOrders(slug, view);

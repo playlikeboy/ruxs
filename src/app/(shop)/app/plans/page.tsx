@@ -33,13 +33,16 @@ export default async function PlansPage() {
       <PageHeader title="Your plans" subtitle="Tap a day to skip it or bring it back" />
       {upcoming.length > 0 && (
         <section className="space-y-2 px-4 pt-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-500">Upcoming sessions</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-500">Upcoming sessions</h2>
+            <Link href="/app/bookings" className="text-xs font-semibold text-accent">All bookings →</Link>
+          </div>
           <ul className="space-y-2">
-            {upcoming.map(({ booking, vendorName, productName, cancelCutoffHours }) => (
+            {upcoming.map(({ booking, vendorName, serviceName, cancelCutoffHours }) => (
               <li key={booking.id} className="rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-ink">{productName ?? "Session"}</p>
+                    <p className="truncate font-semibold text-ink">{serviceName ?? "Session"}</p>
                     <p className="truncate text-sm text-neutral-500">{vendorName} · {MODE_LABEL[booking.mode] ?? booking.mode}</p>
                   </div>
                   <div className="shrink-0 text-right">
@@ -48,7 +51,7 @@ export default async function PlansPage() {
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs">
-                  <Link href={`/app/orders/${booking.shopOrderId}`} className="font-semibold text-accent">{booking.status === "held" ? "Pay to confirm →" : "Details →"}</Link>
+                  <Link href={`/app/bookings/${booking.id}`} className="font-semibold text-accent">{booking.status === "held" ? "Pay to confirm →" : "Details →"}</Link>
                   {canCancelBooking(booking.startsAt, now, cancelCutoffHours) && <CancelBookingButton bookingId={booking.id} />}
                 </div>
               </li>

@@ -3,6 +3,8 @@ import "server-only";
 import { and, count, desc, eq, gte, inArray, isNull, or, sql, sum } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
+  bookings,
+  services,
   categories,
   consumers,
   customers,
@@ -124,16 +126,24 @@ export async function getAdminVendor(vendorId: string) {
   const db = getDb();
   const [vendor] = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
   if (!vendor) return null;
-  const [members, [productCount], [customerCount], [orderCount]] = await Promise.all([
+  const [members, [productCount], [customerCount], [orderCount], [serviceCount], [bookingCount]] = await Promise.all([
     db.select().from(vendorMembers).where(eq(vendorMembers.vendorId, vendorId)),
     db.select({ n: count() }).from(products).where(and(eq(products.vendorId, vendorId), isNull(products.archivedAt))),
     db.select({ n: count() }).from(customers).where(eq(customers.vendorId, vendorId)),
     db.select({ n: count() }).from(shopOrders).where(eq(shopOrders.vendorId, vendorId)),
+    db.select({ n: count() }).from(services).where(and(eq(services.vendorId, vendorId), isNull(services.archivedAt))),
+    db.select({ n: count() }).from(bookings).where(eq(bookings.vendorId, vendorId)),
   ]);
   return {
     vendor,
     members,
-    stats: { products: productCount?.n ?? 0, customers: customerCount?.n ?? 0, orders: orderCount?.n ?? 0 },
+    stats: {
+      products: productCount?.n ?? 0,
+      customers: customerCount?.n ?? 0,
+      orders: orderCount?.n ?? 0,
+      services: serviceCount?.n ?? 0,
+      bookings: bookingCount?.n ?? 0,
+    },
   };
 }
 
@@ -163,4 +173,18 @@ export async function getAdminBadges() {
     openPayouts: openPayouts?.n ?? 0,
     refunds: refunds?.n ?? 0,
   };
+}
+
+export async function getAdminBookings(status?: string) {
+  await requireAdmin();
+  const db = getDb();
+  return db
+    .select({ booking: bookings, vendorName: vendors.name, vendorSlug: vendors.slug, customerName: customers.name, serviceName: services.name })
+    .from(bookings)
+    .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
+    .innerJoin(customers, eq(bookings.customerId, customers.id))
+    .leftJoin(services, eq(bookings.serviceId, services.id))
+    .where(status ? eq(bookings.status, status) : undefined)
+    .orderBy(desc(bookings.startsAt))
+    .limit(200);
 }
