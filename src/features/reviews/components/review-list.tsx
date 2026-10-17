@@ -5,6 +5,7 @@ import { ChevronDown, MessageSquare } from "lucide-react";
 import { Stars } from "./rating-badge";
 import { ReplyForm } from "./moderation-buttons";
 import { fetchStoreReviewsPage } from "@/features/reviews/actions";
+import { ReportReviewButton } from "@/features/support/components/report-button";
 
 const dateFmt = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
@@ -76,7 +77,10 @@ export function ReviewList({
                   <p className="text-xs text-neutral-500">{dateFmt.format(new Date(r.updatedAt))}</p>
                 </div>
               </div>
-              <Stars value={r.rating} />
+              <div className="flex items-center gap-2">
+                <Stars value={r.rating} />
+                <ReportReviewButton reviewId={r.id} vendorId={vendorId} vendorName={storeName} />
+              </div>
             </div>
             {r.comment && <p className="mt-2 text-sm leading-6 text-neutral-700">{r.comment}</p>}
             {r.reply && (

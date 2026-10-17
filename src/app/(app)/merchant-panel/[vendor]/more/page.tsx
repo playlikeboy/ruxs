@@ -29,6 +29,13 @@ export default async function MorePage({
       marker: "★",
     },
     {
+      title: "Disputes & issues",
+      description: "Missing deliveries, order complaints or reports raised by households.",
+      href: "/merchant-panel/" + slug + "/disputes",
+      visible: access.role !== "driver",
+      marker: "⚖️",
+    },
+    {
       title: "Delivery run",
       description: "Tower-by-tower run sheet for today's drivers.",
       href: "/merchant-panel/" + slug + "/run",
