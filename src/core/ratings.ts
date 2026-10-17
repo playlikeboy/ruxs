@@ -24,8 +24,8 @@ export function summaryFromTotals(sum: number, count: number): RatingSummary {
 
 /**
  * A household may rate a store once it has really used it: a delivered app
- * order, or a plan that has started.
+ * order, a plan that has started, or a completed session with a provider.
  */
-export function canReview(input: { deliveredOrders: number; startedPlans: number }): boolean {
-  return input.deliveredOrders > 0 || input.startedPlans > 0;
+export function canReview(input: { deliveredOrders: number; startedPlans: number; completedSessions?: number }): boolean {
+  return input.deliveredOrders > 0 || input.startedPlans > 0 || (input.completedSessions ?? 0) > 0;
 }

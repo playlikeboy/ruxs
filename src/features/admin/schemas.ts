@@ -18,6 +18,7 @@ export const vendorDetailsSchema = z.object({
 });
 
 export const createVendorSchema = vendorDetailsSchema.extend({
+  businessType: z.enum(["delivery", "booking"]),
   slug: z
     .string()
     .trim()

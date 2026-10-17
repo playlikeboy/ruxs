@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { requireVendorAccess } from "@/lib/auth/session";
 
+/** Delivery tools that mean nothing to a trainer or physiotherapist. */
+const DELIVERY_ONLY = new Set(["Delivery run", "Bills & payments", "Inventory & returnables", "Analytics", "Menu & prices"]);
+
 export default async function MorePage({
   params,
 }: {
@@ -8,6 +11,7 @@ export default async function MorePage({
 }) {
   const { vendor: slug } = await params;
   const access = await requireVendorAccess(slug);
+  const provider = access.vendor.businessType === "booking";
 
   const links = [
     {
@@ -32,8 +36,8 @@ export default async function MorePage({
       marker: "🛵",
     },
     {
-      title: "Customers",
-      description: "Households, their plans, private links and balances.",
+      title: provider ? "Clients" : "Customers",
+      description: provider ? "People who have booked sessions with you." : "Households, their plans, private links and balances.",
       href: "/merchant-panel/" + slug + "/customers",
       visible: access.role !== "driver",
       marker: "👥",
@@ -90,7 +94,7 @@ export default async function MorePage({
         <p className="mt-1 text-sm text-muted">Everything for managing {access.vendor.name} beyond today&apos;s run.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        {links.filter((link) => link.visible).map((link) => (
+        {links.filter((link) => link.visible && !(provider && DELIVERY_ONLY.has(link.title))).map((link) => (
           <Link
             key={link.href}
             href={link.href}

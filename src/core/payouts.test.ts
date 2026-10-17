@@ -51,5 +51,9 @@ describe("payment state", () => {
     expect(paymentState("shop_order", "delivered")).toBe("settled");
     expect(paymentState("shop_order", "accepted")).toBe("pending");
     expect(paymentState("shop_order", "rejected")).toBe("excluded");
+    expect(paymentState("booking", "done")).toBe("settled");
+    expect(paymentState("booking", "no_show")).toBe("settled");
+    expect(paymentState("booking", "confirmed")).toBe("pending");
+    expect(paymentState("booking", "cancelled")).toBe("excluded");
   });
 });

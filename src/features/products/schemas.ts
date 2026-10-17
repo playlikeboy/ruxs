@@ -27,7 +27,6 @@ export const saveProductSchema = z.object({
   isAvailable: z.boolean().default(true),
   allowSubscription: z.boolean().default(true),
   allowOneTime: z.boolean().default(true),
-  durationMinutes: z.number().int().min(15).max(480).nullable().default(null),
 }).refine((v) => v.allowSubscription || v.allowOneTime, {
   message: "Allow subscriptions, one-time orders, or both",
 });

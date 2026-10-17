@@ -3,6 +3,7 @@ import { cache } from "react";
 import { and, asc, desc, eq, gte, inArray, isNull, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
+  services,
   consumers,
   customers,
   dayChanges,
@@ -104,6 +105,8 @@ const publicVendorFields = {
   longitude: vendors.longitude,
   serviceRadiusKm: vendors.serviceRadiusKm,
   serviceModes: vendors.serviceModes,
+  businessType: vendors.businessType,
+  bookingNoticeMinutes: vendors.bookingNoticeMinutes,
   cancelCutoffHours: vendors.cancelCutoffHours,
   deliveryFeePaise: vendors.deliveryFeePaise,
   minOrderPaise: vendors.minOrderPaise,
@@ -128,17 +131,24 @@ export async function listStores(opts: {
   longitude?: number | null;
 }): Promise<StoreCard[]> {
   const db = getDb();
-  const rows = await db
-    .select({ vendor: publicVendorFields, product: products })
-    .from(vendors)
-    .innerJoin(products, eq(products.vendorId, vendors.id))
-    .where(
-      and(
-        eq(vendors.status, "active"),
-        isNull(products.archivedAt),
-        eq(products.isAvailable, true)
-      )
-    );
+  // Delivery stores list their products; booking providers list their services.
+  const [productRows, serviceRows] = await Promise.all([
+    db
+      .select({ vendor: publicVendorFields, product: products })
+      .from(vendors)
+      .innerJoin(products, eq(products.vendorId, vendors.id))
+      .where(and(eq(vendors.status, "active"), eq(vendors.businessType, "delivery"), isNull(products.archivedAt), eq(products.isAvailable, true))),
+    db
+      .select({ vendor: publicVendorFields, service: services })
+      .from(vendors)
+      .innerJoin(services, eq(services.vendorId, vendors.id))
+      .where(and(eq(vendors.status, "active"), eq(vendors.businessType, "booking"), isNull(services.archivedAt), eq(services.isActive, true))),
+  ]);
+  type Item = { kind: string; name: string; pricePaise: number; allowSubscription: boolean };
+  const rows: { vendor: (typeof productRows)[number]["vendor"]; item: Item }[] = [
+    ...productRows.map((r) => ({ vendor: r.vendor, item: { kind: r.product.kind, name: r.product.name, pricePaise: r.product.pricePaise, allowSubscription: r.product.allowSubscription } })),
+    ...serviceRows.map((r) => ({ vendor: r.vendor, item: { kind: r.service.categoryId, name: r.service.name, pricePaise: r.service.pricePaise, allowSubscription: false } })),
+  ];
 
   const [localities, category, settings, rating] = await Promise.all([
     getLocalities(),
@@ -147,10 +157,10 @@ export async function listStores(opts: {
     getRatingMap(),
   ]);
   const q = opts.q?.trim().toLowerCase() ?? "";
-  const byVendor = new Map<string, { vendor: (typeof rows)[number]["vendor"]; items: (typeof rows)[number]["product"][] }>();
+  const byVendor = new Map<string, { vendor: (typeof rows)[number]["vendor"]; items: Item[] }>();
   for (const row of rows) {
     const entry = byVendor.get(row.vendor.id) ?? { vendor: row.vendor, items: [] };
-    entry.items.push(row.product);
+    entry.items.push(row.item);
     byVendor.set(row.vendor.id, entry);
   }
 
@@ -257,7 +267,6 @@ export async function getStore(slug: string, point?: { latitude: number | null; 
       isAvailable: p.isAvailable,
       allowSubscription: p.allowSubscription,
       allowOneTime: p.allowOneTime,
-      durationMinutes: p.durationMinutes,
     })),
   };
 }

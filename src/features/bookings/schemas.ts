@@ -2,13 +2,20 @@ import { z } from "zod";
 import { WEEKDAYS } from "@/config/service-kinds";
 
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM");
+const mode = z.enum(["home", "studio", "online"]);
+const optionalUrl = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === "" || /^https:\/\//.test(v), "Photo link must start with https://")
+  .optional();
 
 export const bookSessionSchema = z.object({
   clientKey: z.string().uuid(),
-  productId: z.string().min(1),
+  serviceId: z.string().min(1),
   startsAt: z.string().datetime({ offset: true }),
-  mode: z.enum(["home", "studio", "online"]),
-  paymentMode: z.enum(["online", "cod"]),
+  mode,
+  paymentMode: z.enum(["online", "pay_at_session"]),
   notes: z.string().trim().max(300).optional(),
 });
 
@@ -28,9 +35,8 @@ export const timeOffSchema = z.object({
 
 export const removeTimeOffSchema = z.object({ slug: z.string().min(1), id: z.string().min(1) });
 
-export const bookingSettingsSchema = z.object({
+export const bookingRulesSchema = z.object({
   slug: z.string().min(1),
-  modes: z.array(z.enum(["home", "studio", "online"])).min(1, "Offer at least one mode"),
   noticeMinutes: z.number().int().min(0).max(10080),
   cancelCutoffHours: z.number().int().min(0).max(168),
 });
@@ -40,4 +46,29 @@ export const markBookingSchema = z.object({
   bookingId: z.string().min(1),
   outcome: z.enum(["done", "no_show", "cancelled"]),
   reason: z.string().trim().max(200).optional(),
+});
+
+export const saveServiceSchema = z.object({
+  slug: z.string().min(1),
+  id: z.string().optional(),
+  categoryId: z.string().regex(/^[a-z0-9-]+$/, "Pick a category"),
+  name: z.string().trim().min(2, "Name the service").max(80),
+  description: z.string().trim().max(400).optional(),
+  imageUrl: optionalUrl,
+  durationMinutes: z.number().int().min(15).max(480),
+  priceRupees: z.number().min(0).max(100000),
+  modes: z.array(mode).min(1, "Offer at least one session type"),
+  isActive: z.boolean(),
+});
+
+export const serviceIdSchema = z.object({ slug: z.string().min(1), id: z.string().min(1) });
+
+export const providerProfileSchema = z.object({
+  slug: z.string().min(1),
+  headline: z.string().trim().max(120).optional(),
+  qualifications: z.string().trim().max(200).optional(),
+  experienceYears: z.number().int().min(0).max(60).nullable(),
+  specialities: z.array(z.string().trim().min(1).max(40)).max(12),
+  languages: z.array(z.string().trim().min(1).max(30)).max(8),
+  gender: z.enum(["female", "male", "other"]).nullable(),
 });

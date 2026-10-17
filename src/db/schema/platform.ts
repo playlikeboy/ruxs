@@ -67,8 +67,9 @@ export const payments = pgTable(
       .notNull()
       .references(() => customers.id, { onDelete: "cascade" }),
     userId: text("user_id").notNull(),
-    purpose: text("purpose").notNull(), // shop_order, dues
+    purpose: text("purpose").notNull(), // shop_order, dues, booking
     shopOrderId: text("shop_order_id").references(() => shopOrders.id, { onDelete: "set null" }),
+    bookingId: text("booking_id"), // FK to bookings (declared in SQL; kept loose here to avoid a schema import cycle)
     amountPaise: integer("amount_paise").notNull(),
     razorpayOrderId: text("razorpay_order_id").notNull().unique(),
     razorpayPaymentId: text("razorpay_payment_id").unique(),
@@ -80,7 +81,7 @@ export const payments = pgTable(
   (t) => [
     index("payments_vendor_status_idx").on(t.vendorId, t.status),
     index("payments_shop_order_idx").on(t.shopOrderId),
-    check("payments_purpose_check", sql`${t.purpose} in ('shop_order', 'dues')`),
+    check("payments_purpose_check", sql`${t.purpose} in ('shop_order', 'dues', 'booking')`),
     check("payments_status_check", sql`${t.status} in ('created', 'paid', 'failed')`),
     check("payments_amount_check", sql`${t.amountPaise} > 0`),
   ]

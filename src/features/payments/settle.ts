@@ -13,16 +13,16 @@ export async function settlePayment(input: {
   razorpayOrderId: string;
   razorpayPaymentId: string;
   amountPaise?: number;
-}): Promise<{ ok: boolean; shopOrderId: string | null }> {
+}): Promise<{ ok: boolean; shopOrderId: string | null; bookingId: string | null }> {
   const db = getDb();
   const [payment] = await db
     .select()
     .from(payments)
     .where(eq(payments.razorpayOrderId, input.razorpayOrderId))
     .limit(1);
-  if (!payment) return { ok: false, shopOrderId: null };
+  if (!payment) return { ok: false, shopOrderId: null, bookingId: null };
   if (input.amountPaise !== undefined && input.amountPaise !== payment.amountPaise) {
-    return { ok: false, shopOrderId: payment.shopOrderId };
+    return { ok: false, shopOrderId: payment.shopOrderId, bookingId: payment.bookingId };
   }
 
   await db.transaction(async (tx) => {
@@ -42,25 +42,29 @@ export async function settlePayment(input: {
         .where(eq(shopOrders.id, payment.shopOrderId))
         .limit(1);
       const cancelled = order?.status === "cancelled" || order?.status === "rejected";
-      const [session] = await tx.select({ id: bookings.id }).from(bookings).where(eq(bookings.shopOrderId, payment.shopOrderId)).limit(1);
-      const isSession = !!session;
       await tx
         .update(shopOrders)
         .set({
           paymentStatus: cancelled ? "refund_due" : "paid",
-          // Booked sessions skip the accept step: the slot came from the provider's own hours.
-          ...(order?.status === "awaiting_payment" ? { status: isSession ? "accepted" : "placed", ...(isSession ? { acceptedAt: new Date() } : {}) } : {}),
+          ...(order?.status === "awaiting_payment" ? { status: "placed" } : {}),
           updatedAt: new Date(),
         })
         .where(eq(shopOrders.id, payment.shopOrderId));
+    }
 
-      // A held session becomes a confirmed booking once paid.
-      if (!cancelled) {
-        await tx
-          .update(bookings)
-          .set({ status: "confirmed", heldUntil: null, updatedAt: new Date() })
-          .where(and(eq(bookings.shopOrderId, payment.shopOrderId), eq(bookings.status, "held")));
-      }
+    if (payment.purpose === "booking" && payment.bookingId) {
+      // Paid: a held slot becomes a confirmed session. If the hold already ran out
+      // and was cancelled, the money is kept as refund_due for admin to return.
+      const [booking] = await tx.select({ status: bookings.status }).from(bookings).where(eq(bookings.id, payment.bookingId)).limit(1);
+      const cancelled = booking?.status === "cancelled";
+      await tx
+        .update(bookings)
+        .set({
+          paymentStatus: cancelled ? "refund_due" : "paid",
+          ...(booking?.status === "held" ? { status: "confirmed", heldUntil: null } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(bookings.id, payment.bookingId));
     }
 
     if (payment.purpose === "dues") {
@@ -79,7 +83,7 @@ export async function settlePayment(input: {
     }
   });
 
-  return { ok: true, shopOrderId: payment.shopOrderId };
+  return { ok: true, shopOrderId: payment.shopOrderId, bookingId: payment.bookingId };
 }
 
 export async function failPayment(razorpayOrderId: string, reason: string) {

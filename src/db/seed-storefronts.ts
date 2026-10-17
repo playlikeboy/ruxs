@@ -5,7 +5,7 @@
  */
 import { and, eq } from "drizzle-orm";
 import { scriptDb, scriptPool } from "./script-client";
-import { availabilityRules, products, vendors } from "./schema";
+import { availabilityRules, products, providerProfiles, services, vendors } from "./schema";
 
 type Item = {
   kind: "tiffin" | "water" | "milk" | "other" | "fitness" | "physio";
@@ -123,8 +123,7 @@ async function upsertItems(vendorId: string, items: Item[]) {
       shift: item.shift ?? "lunch",
       cutoffAt: item.cutoffAt ?? "11:00",
       pricePaise: item.pricePaise,
-      allowSubscription: item.durationMinutes ? false : (item.allowSubscription ?? true),
-      durationMinutes: item.durationMinutes ?? null,
+      allowSubscription: item.allowSubscription ?? true,
       allowOneTime: true,
       lateRule: "full",
     });
@@ -145,9 +144,10 @@ type DemoVendor = {
   serviceRadiusKm: number;
   deliveryFeePaise: number;
   items: Item[];
-  /** Booking providers: modes and weekly free hours. */
+  /** Booking providers: modes, weekly free hours and profile. Their items become services. */
   serviceModes?: string[];
   hours?: { days: string[]; start: string; end: string }[];
+  profile?: { headline: string; qualifications: string; experienceYears: number; specialities: string[]; languages: string[]; gender: "female" | "male" };
 };
 
 const RANCHI: DemoVendor[] = [
@@ -288,6 +288,7 @@ const WEEK = ["mon", "tue", "wed", "thu", "fri", "sat"];
 const RANCHI_PROVIDERS: DemoVendor[] = [
   {
     slug: "fitwithankit-ranchi",
+    profile: { headline: "Certified personal trainer · weight loss & strength", qualifications: "ACE Certified Personal Trainer", experienceYears: 6, specialities: ["Weight loss", "Strength", "Home workouts", "Yoga"], languages: ["Hindi", "English"], gender: "male" },
     name: "Ankit Fitness Coaching",
     phone: "+919999900111",
     upiVpa: "ankitfit.demo@upi",
@@ -311,6 +312,7 @@ const RANCHI_PROVIDERS: DemoVendor[] = [
   },
   {
     slug: "ironcore-gym-ranchi",
+    profile: { headline: "Gym-floor coaching in Harmu, women-only slots", qualifications: "K11 certified coaches", experienceYears: 8, specialities: ["Strength", "Bodybuilding", "HIIT"], languages: ["Hindi", "English"], gender: "male" },
     name: "IronCore Trainers",
     phone: "+919999900112",
     upiVpa: "ironcore.demo@upi",
@@ -333,6 +335,7 @@ const RANCHI_PROVIDERS: DemoVendor[] = [
   },
   {
     slug: "dr-meera-physio-ranchi",
+    profile: { headline: "Orthopaedic physiotherapist · home visits", qualifications: "BPT, MPT (Ortho)", experienceYears: 9, specialities: ["Back pain", "Knee pain", "Post-surgery rehab", "Elderly care"], languages: ["Hindi", "English", "Bengali"], gender: "female" },
     name: "Dr. Meera's Physio Care",
     phone: "+919999900113",
     upiVpa: "meeraphysio.demo@upi",
@@ -356,6 +359,7 @@ const RANCHI_PROVIDERS: DemoVendor[] = [
   },
   {
     slug: "kineto-physio-doranda",
+    profile: { headline: "Sports injury and posture rehab", qualifications: "BPT, Sports Physio certification", experienceYears: 5, specialities: ["Sports injuries", "Posture", "Online plans"], languages: ["Hindi", "English"], gender: "male" },
     name: "Kineto Physio & Sports Rehab",
     phone: "+919999900114",
     upiVpa: "kineto.demo@upi",
@@ -375,16 +379,45 @@ const RANCHI_PROVIDERS: DemoVendor[] = [
   },
 ];
 
+async function upsertServices(vendorId: string, items: Item[], modes: string[]) {
+  for (const item of items) {
+    const [existing] = await scriptDb
+      .select({ id: services.id })
+      .from(services)
+      .where(and(eq(services.vendorId, vendorId), eq(services.name, item.name)))
+      .limit(1);
+    if (existing) continue;
+    await scriptDb.insert(services).values({
+      vendorId,
+      categoryId: item.kind,
+      name: item.name,
+      description: item.description,
+      durationMinutes: item.durationMinutes ?? 60,
+      pricePaise: item.pricePaise,
+      modes: item.name.toLowerCase().includes("online") ? ["online"] : item.name.toLowerCase().includes("clinic") ? ["studio"] : modes,
+    });
+  }
+}
+
 async function ensureVendor(v: DemoVendor) {
-  const { items, hours, ...fields } = v;
+  const { items, hours, profile, ...fields } = v;
+  const provider = !!hours;
   let [row] = await scriptDb.select({ id: vendors.id }).from(vendors).where(eq(vendors.slug, v.slug)).limit(1);
   if (!row) {
     [row] = await scriptDb
       .insert(vendors)
-      .values({ ...fields, plan: "free", status: "active" })
+      .values({ ...fields, plan: "free", status: "active", businessType: provider ? "booking" : "delivery" })
       .returning({ id: vendors.id });
   }
-  await upsertItems(row!.id, items);
+  if (provider) {
+    await scriptDb.update(vendors).set({ businessType: "booking" }).where(eq(vendors.id, row!.id));
+    await upsertServices(row!.id, items, v.serviceModes ?? ["home"]);
+    if (profile) {
+      await scriptDb.insert(providerProfiles).values({ vendorId: row!.id, ...profile }).onConflictDoUpdate({ target: providerProfiles.vendorId, set: profile });
+    }
+  } else {
+    await upsertItems(row!.id, items);
+  }
   if (hours) {
     const existing = await scriptDb.select({ id: availabilityRules.id }).from(availabilityRules).where(eq(availabilityRules.vendorId, row!.id)).limit(1);
     if (existing.length === 0) {

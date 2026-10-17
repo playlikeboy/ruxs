@@ -1,7 +1,7 @@
 import "server-only";
-import { and, asc, eq, gt, gte, inArray, isNull, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, or } from "drizzle-orm";
 import { getDb } from "@/db";
-import { availabilityBlocks, availabilityRules, bookings, categories, customers, products, vendors } from "@/db/schema";
+import { availabilityBlocks, availabilityRules, bookings, categories, customers, providerProfiles, services, vendors } from "@/db/schema";
 import { requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { openSlots, type Busy } from "@/core/booking";
 import { addDaysIST, istDateTime, todayIST } from "@/core/time";
@@ -11,26 +11,44 @@ function activeBooking(now: Date) {
   return or(eq(bookings.status, "confirmed"), and(eq(bookings.status, "held"), gt(bookings.heldUntil, now)));
 }
 
-export async function getBookableService(productId: string) {
+/** A service households can book right now, with its provider. */
+export async function getBookableService(serviceId: string) {
   const db = getDb();
   const [row] = await db
-    .select({ product: products, vendor: vendors, fulfilment: categories.fulfilment })
-    .from(products)
-    .innerJoin(vendors, eq(products.vendorId, vendors.id))
-    .innerJoin(categories, eq(products.kind, categories.id))
-    .where(and(eq(products.id, productId), eq(vendors.status, "active"), isNull(products.archivedAt), eq(products.isAvailable, true)))
+    .select({ service: services, vendor: vendors, category: categories })
+    .from(services)
+    .innerJoin(vendors, eq(services.vendorId, vendors.id))
+    .innerJoin(categories, eq(services.categoryId, categories.id))
+    .where(
+      and(
+        eq(services.id, serviceId),
+        eq(vendors.status, "active"),
+        eq(vendors.businessType, "booking"),
+        isNull(services.archivedAt),
+        eq(services.isActive, true)
+      )
+    )
     .limit(1);
-  if (!row || row.fulfilment !== "booking") return null;
-  return row;
+  return row ?? null;
+}
+
+/** Public provider page data: profile and active services. */
+export async function getProviderPublic(vendorId: string) {
+  const db = getDb();
+  const [[profile], list] = await Promise.all([
+    db.select().from(providerProfiles).where(eq(providerProfiles.vendorId, vendorId)).limit(1),
+    db
+      .select({ service: services, category: categories })
+      .from(services)
+      .innerJoin(categories, eq(services.categoryId, categories.id))
+      .where(and(eq(services.vendorId, vendorId), isNull(services.archivedAt)))
+      .orderBy(asc(services.sort), asc(services.pricePaise)),
+  ]);
+  return { profile: profile ?? null, services: list };
 }
 
 /** Free start times for the next `days` days, computed from rules, time off and bookings. */
-export async function getSlotCalendar(input: {
-  vendorId: string;
-  durationMinutes: number;
-  noticeMinutes: number;
-  days: number;
-}) {
+export async function getSlotCalendar(input: { vendorId: string; durationMinutes: number; noticeMinutes: number; days: number }) {
   const db = getDb();
   const now = new Date();
   const from = todayIST();
@@ -49,67 +67,66 @@ export async function getSlotCalendar(input: {
   const busy: Busy[] = [...blocks, ...taken];
   return Array.from({ length: input.days }, (_, i) => {
     const date = addDaysIST(from, i);
-    const slots = openSlots({
-      date,
-      rules,
-      busy,
-      durationMinutes: input.durationMinutes,
-      noticeMinutes: input.noticeMinutes,
-      now,
-    });
+    const slots = openSlots({ date, rules, busy, durationMinutes: input.durationMinutes, noticeMinutes: input.noticeMinutes, now });
     return { date, slots: slots.map((d) => d.toISOString()) };
   });
 }
 
+const myBookingFields = {
+  booking: bookings,
+  vendorName: vendors.name,
+  vendorSlug: vendors.slug,
+  vendorArea: vendors.area,
+  vendorCity: vendors.city,
+  cancelCutoffHours: vendors.cancelCutoffHours,
+  serviceName: services.name,
+  durationMinutes: services.durationMinutes,
+};
+
 export async function getMyBookings() {
   const user = await requireUser();
   const db = getDb();
-  const since = new Date(Date.now() - 14 * 86_400_000);
   return db
-    .select({ booking: bookings, vendorName: vendors.name, vendorSlug: vendors.slug, productName: products.name, cancelCutoffHours: vendors.cancelCutoffHours })
+    .select(myBookingFields)
     .from(bookings)
     .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
-    .leftJoin(products, eq(bookings.productId, products.id))
-    .where(and(eq(bookings.userId, user.id), gte(bookings.startsAt, since), inArray(bookings.status, ["held", "confirmed", "done", "no_show"])))
-    .orderBy(asc(bookings.startsAt))
-    .limit(50);
+    .leftJoin(services, eq(bookings.serviceId, services.id))
+    .where(eq(bookings.userId, user.id))
+    .orderBy(desc(bookings.startsAt))
+    .limit(100);
 }
 
-export async function getBookingForOrder(orderId: string) {
+export async function getMyBooking(bookingId: string) {
+  const user = await requireUser();
   const db = getDb();
   const [row] = await db
-    .select({ booking: bookings, cancelCutoffHours: vendors.cancelCutoffHours, vendorArea: vendors.area })
+    .select(myBookingFields)
     .from(bookings)
     .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
-    .where(eq(bookings.shopOrderId, orderId))
+    .leftJoin(services, eq(bookings.serviceId, services.id))
+    .where(and(eq(bookings.id, bookingId), eq(bookings.userId, user.id)))
     .limit(1);
   return row ?? null;
-}
-
-/** Whether a store sells anything in a booking category (trainers, physio…). */
-export async function isBookingProvider(vendorId: string): Promise<boolean> {
-  const db = getDb();
-  const [row] = await db
-    .select({ id: products.id })
-    .from(products)
-    .innerJoin(categories, eq(products.kind, categories.id))
-    .where(and(eq(products.vendorId, vendorId), eq(categories.fulfilment, "booking"), isNull(products.archivedAt)))
-    .limit(1);
-  return !!row;
 }
 
 export async function getProviderSchedule(slug: string, days = 14) {
   const access = await requireVendorAccess(slug);
   const db = getDb();
-  const now = new Date();
-  const from = new Date(now.getTime() - 86_400_000);
+  const from = new Date(Date.now() - 86_400_000);
   const until = istDateTime(addDaysIST(todayIST(), days), "00:00");
   const rows = await db
-    .select({ booking: bookings, customerName: customers.name, customerPhone: customers.phone, productName: products.name })
+    .select({ booking: bookings, customerName: customers.name, customerPhone: customers.phone, serviceName: services.name })
     .from(bookings)
     .innerJoin(customers, eq(bookings.customerId, customers.id))
-    .leftJoin(products, eq(bookings.productId, products.id))
-    .where(and(eq(bookings.vendorId, access.vendorId), gte(bookings.startsAt, from), lt(bookings.startsAt, until), inArray(bookings.status, ["confirmed", "done", "no_show"])))
+    .leftJoin(services, eq(bookings.serviceId, services.id))
+    .where(
+      and(
+        eq(bookings.vendorId, access.vendorId),
+        gte(bookings.startsAt, from),
+        lt(bookings.startsAt, until),
+        inArray(bookings.status, ["confirmed", "done", "no_show"])
+      )
+    )
     .orderBy(asc(bookings.startsAt));
   return { access, rows };
 }
@@ -122,4 +139,23 @@ export async function getAvailability(slug: string) {
     db.select().from(availabilityBlocks).where(and(eq(availabilityBlocks.vendorId, access.vendorId), gt(availabilityBlocks.endsAt, new Date()))).orderBy(asc(availabilityBlocks.startsAt)),
   ]);
   return { access, rules, blocks };
+}
+
+export async function getProviderServices(slug: string) {
+  const access = await requireVendorAccess(slug);
+  const db = getDb();
+  const rows = await db
+    .select({ service: services, category: categories })
+    .from(services)
+    .innerJoin(categories, eq(services.categoryId, categories.id))
+    .where(and(eq(services.vendorId, access.vendorId), isNull(services.archivedAt)))
+    .orderBy(asc(services.sort), asc(services.name));
+  return { access, rows };
+}
+
+export async function getProviderProfile(slug: string) {
+  const access = await requireVendorAccess(slug, ["owner"]);
+  const db = getDb();
+  const [profile] = await db.select().from(providerProfiles).where(eq(providerProfiles.vendorId, access.vendorId)).limit(1);
+  return { access, profile: profile ?? null };
 }

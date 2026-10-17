@@ -24,5 +24,6 @@ describe("ratings", () => {
     expect(canReview({ deliveredOrders: 0, startedPlans: 0 })).toBe(false);
     expect(canReview({ deliveredOrders: 1, startedPlans: 0 })).toBe(true);
     expect(canReview({ deliveredOrders: 0, startedPlans: 1 })).toBe(true);
+    expect(canReview({ deliveredOrders: 0, startedPlans: 0, completedSessions: 1 })).toBe(true);
   });
 });

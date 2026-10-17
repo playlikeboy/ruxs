@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { CreditCard, Home, MapPin, Video, Wallet } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { bookSession } from "@/features/bookings/actions";
-import { startOrderPayment } from "@/features/payments/actions";
+import { startBookingPayment } from "@/features/payments/actions";
 import { useRazorpay } from "@/features/payments/components/use-razorpay";
 
 const MODE_META: Record<string, { label: string; Icon: typeof Home }> = {
@@ -21,7 +21,7 @@ const monFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", mont
 const timeFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit" });
 
 export function BookingPicker({
-  productId,
+  serviceId,
   pricePaise,
   modes,
   calendar,
@@ -29,7 +29,7 @@ export function BookingPicker({
   onlineEnabled,
   studioAddress,
 }: {
-  productId: string;
+  serviceId: string;
   pricePaise: number;
   modes: string[];
   calendar: { date: string; slots: string[] }[];
@@ -42,7 +42,7 @@ export function BookingPicker({
   const [date, setDate] = useState(firstOpen);
   const [slot, setSlot] = useState<string | null>(null);
   const [mode, setMode] = useState(modes[0] ?? "home");
-  const [paymentMode, setPaymentMode] = useState<"online" | "cod">(onlineEnabled ? "online" : "cod");
+  const [paymentMode, setPaymentMode] = useState<"online" | "pay_at_session">(onlineEnabled ? "online" : "pay_at_session");
   const [notes, setNotes] = useState("");
   const [clientKey] = useState(() => crypto.randomUUID());
   const [pending, startTransition] = useTransition();
@@ -69,24 +69,24 @@ export function BookingPicker({
       return;
     }
     startTransition(async () => {
-      const res = await bookSession({ clientKey, productId, startsAt: slot, mode, paymentMode, notes: notes || undefined });
+      const res = await bookSession({ clientKey, serviceId, startsAt: slot, mode, paymentMode, notes: notes || undefined });
       if (!res.ok) {
         toast.error(res.error);
         router.refresh();
         return;
       }
       if (paymentMode === "online") {
-        const start = await startOrderPayment({ orderId: res.orderId });
+        const start = await startBookingPayment({ bookingId: res.bookingId });
         if (start.ok) {
           const outcome = await pay(start.checkout);
           if (outcome.status === "paid") toast.success("Session booked and paid");
           else if (outcome.status === "failed") toast.error(outcome.error);
-          else toast("Slot held for 15 minutes. Pay from the order page to confirm.");
+          else toast("Slot held for 15 minutes. Pay from your booking to confirm.");
         } else toast.error(start.error);
       } else {
         toast.success("Session booked");
       }
-      router.push(`/app/orders/${res.orderId}`);
+      router.push(`/app/bookings/${res.bookingId}`);
     });
   }
 
@@ -180,7 +180,7 @@ export function BookingPicker({
         <div className="mt-3 space-y-2">
           {[
             ...(onlineEnabled ? [{ id: "online" as const, title: "Pay online now", text: "UPI, cards · secured by Razorpay", Icon: CreditCard }] : []),
-            { id: "cod" as const, title: "Pay at the session", text: "Cash or UPI to the provider", Icon: Wallet },
+            { id: "pay_at_session" as const, title: "Pay at the session", text: "Cash or UPI to the provider", Icon: Wallet },
           ].map(({ id, title, text, Icon }) => (
             <label key={id} className={"flex cursor-pointer items-center gap-3 rounded-xl border p-3 " + (paymentMode === id ? "border-ink" : "border-black/10")}>
               <input type="radio" name="pay" className="sr-only" checked={paymentMode === id} onChange={() => setPaymentMode(id)} />

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
-import { addTimeOff, removeTimeOff, saveAvailability, saveBookingSettings } from "@/features/bookings/actions";
+import { addTimeOff, removeTimeOff, saveAvailability, saveBookingRules } from "@/features/bookings/actions";
 
 const DAYS: { id: string; label: string }[] = [
   { id: "mon", label: "Monday" },
@@ -95,43 +95,29 @@ export function WeeklyHoursEditor({ slug, initial }: { slug: string; initial: Wi
   );
 }
 
-export function BookingSettingsForm({ slug, modes, noticeMinutes, cancelCutoffHours }: { slug: string; modes: string[]; noticeMinutes: number; cancelCutoffHours: number }) {
+export function BookingRulesForm({ slug, noticeMinutes, cancelCutoffHours }: { slug: string; noticeMinutes: number; cancelCutoffHours: number }) {
   const router = useRouter();
-  const [m, setM] = useState(modes);
   const [notice, setNotice] = useState(String(noticeMinutes / 60));
   const [cutoff, setCutoff] = useState(String(cancelCutoffHours));
   const [pending, startTransition] = useTransition();
-  const toggle = (id: string) => setM((x) => (x.includes(id) ? x.filter((y) => y !== id) : [...x, id]));
   return (
     <form
       className="space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
         startTransition(async () => {
-          const res = await saveBookingSettings({ slug, modes: m, noticeMinutes: Math.round(Number(notice) * 60), cancelCutoffHours: Math.round(Number(cutoff)) });
+          const res = await saveBookingRules({ slug, noticeMinutes: Math.round(Number(notice) * 60), cancelCutoffHours: Math.round(Number(cutoff)) });
           if (!res.ok) toast.error(res.error);
           else {
-            toast.success("Booking settings saved");
+            toast.success("Booking rules saved");
             router.refresh();
           }
         });
       }}
     >
-      <div className="flex flex-wrap gap-2">
-        {[
-          { id: "home", label: "Home visits" },
-          { id: "studio", label: "At my gym / clinic" },
-          { id: "online", label: "Online (video)" },
-        ].map((o) => (
-          <label key={o.id} className={"flex cursor-pointer items-center gap-2 rounded-[10px] border px-3 py-2 text-sm " + (m.includes(o.id) ? "border-ink bg-bg font-semibold" : "border-line")}>
-            <input type="checkbox" checked={m.includes(o.id)} onChange={() => toggle(o.id)} className="h-4 w-4 accent-[#BD4B2A]" />
-            {o.label}
-          </label>
-        ))}
-      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="text-sm font-medium">
-          Minimum notice (hours)
+          Minimum notice before a session (hours)
           <input inputMode="decimal" value={notice} onChange={(e) => setNotice(e.target.value)} className="mt-1 block h-10 w-full rounded-[10px] border border-line bg-surface px-3" />
         </label>
         <label className="text-sm font-medium">
@@ -140,7 +126,7 @@ export function BookingSettingsForm({ slug, modes, noticeMinutes, cancelCutoffHo
         </label>
       </div>
       <button type="submit" disabled={pending} className="h-10 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60">
-        {pending ? "Saving…" : "Save settings"}
+        {pending ? "Saving…" : "Save rules"}
       </button>
     </form>
   );

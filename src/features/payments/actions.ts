@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
-import { consumers, customers, ledgerEntries, payments, shopOrders, vendors } from "@/db/schema";
+import { bookings, consumers, customers, ledgerEntries, payments, services, shopOrders, vendors } from "@/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { createRazorpayOrder, razorpayKeyId, verifyCheckoutSignature } from "@/lib/razorpay";
 import { balance } from "@/core/ledger";
@@ -84,6 +84,69 @@ export async function startOrderPayment(input: unknown): Promise<StartResult> {
       razorpayOrderId,
       amountPaise: order.order.totalPaise,
       description: `${order.vendorName} · ${order.order.number}`,
+      prefill: await prefillFor(user.id, user.primaryEmail),
+    },
+  };
+}
+
+/** Opens (or re-opens) Razorpay checkout for one of my held online bookings. */
+export async function startBookingPayment(input: unknown): Promise<StartResult> {
+  const parsed = z.object({ bookingId: z.string().min(1) }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid booking" };
+
+  const user = await requireUser();
+  const keyId = razorpayKeyId();
+  if (!keyId) return { ok: false, error: "Online payment is not available right now" };
+  const db = getDb();
+
+  const [row] = await db
+    .select({ booking: bookings, vendorName: vendors.name, serviceName: services.name })
+    .from(bookings)
+    .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
+    .leftJoin(services, eq(bookings.serviceId, services.id))
+    .where(and(eq(bookings.id, parsed.data.bookingId), eq(bookings.userId, user.id)))
+    .limit(1);
+  if (!row) return { ok: false, error: "Booking not found" };
+  const b = row.booking;
+  if (b.paymentMode !== "online" || b.paymentStatus !== "unpaid" || b.status !== "held") {
+    return { ok: false, error: "This booking does not need payment" };
+  }
+  if (b.heldUntil && b.heldUntil < new Date()) return { ok: false, error: "The 15-minute hold ran out. Book the slot again." };
+
+  const [existing] = await db
+    .select()
+    .from(payments)
+    .where(and(eq(payments.bookingId, b.id), eq(payments.status, "created")))
+    .limit(1);
+  let razorpayOrderId = existing?.razorpayOrderId;
+  if (!razorpayOrderId) {
+    try {
+      const rzp = await createRazorpayOrder({
+        amountPaise: b.pricePaise,
+        receipt: b.number,
+        notes: { booking_id: b.id, provider: row.vendorName },
+      });
+      razorpayOrderId = rzp.id;
+    } catch {
+      return { ok: false, error: "Could not start the payment. Please try again." };
+    }
+    await db.insert(payments).values({
+      vendorId: b.vendorId,
+      customerId: b.customerId,
+      userId: user.id,
+      purpose: "booking",
+      bookingId: b.id,
+      amountPaise: b.pricePaise,
+      razorpayOrderId,
+    });
+  }
+  return {
+    ok: true,
+    checkout: {
+      keyId,
+      razorpayOrderId,
+      amountPaise: b.pricePaise,
+      description: `${row.serviceName ?? "Session"} · ${row.vendorName}`,
       prefill: await prefillFor(user.id, user.primaryEmail),
     },
   };
@@ -175,5 +238,9 @@ export async function confirmCheckout(input: unknown) {
   revalidatePath("/app/orders");
   revalidatePath("/app/plans");
   if (result.shopOrderId) revalidatePath(`/app/orders/${result.shopOrderId}`);
-  return { ok: true as const, shopOrderId: result.shopOrderId };
+  if (result.bookingId) {
+    revalidatePath(`/app/bookings/${result.bookingId}`);
+    revalidatePath("/app/bookings");
+  }
+  return { ok: true as const, shopOrderId: result.shopOrderId, bookingId: result.bookingId };
 }

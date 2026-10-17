@@ -25,9 +25,10 @@ export async function saveProduct(input: unknown) {
   const db = getDb();
 
   const [category] = await db
-    .select({ id: categories.id, fulfilment: categories.fulfilment })
+    .select({ id: categories.id })
     .from(categories)
-    .where(and(eq(categories.id, data.kind), eq(categories.isActive, true)))
+    // Menus are for delivery stores; trainers and physios use Services instead.
+    .where(and(eq(categories.id, data.kind), eq(categories.isActive, true), eq(categories.fulfilment, "delivery")))
     .limit(1);
   if (!category) return { ok: false, error: "Pick a valid category" };
 
@@ -47,14 +48,7 @@ export async function saveProduct(input: unknown) {
     isAvailable: data.isAvailable,
     allowSubscription: data.allowSubscription,
     allowOneTime: data.allowOneTime,
-    durationMinutes: null as number | null,
   };
-  // Booking services (trainers, physio) are sold as timed sessions, never as daily plans.
-  if (category.fulfilment === "booking") {
-    values.allowSubscription = false;
-    values.allowOneTime = true;
-    values.durationMinutes = data.durationMinutes ?? 60;
-  }
 
   try {
     if (id) {

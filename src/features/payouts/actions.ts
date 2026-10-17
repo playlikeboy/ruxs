@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
-import { payments, shopOrders, vendorPayouts, vendors } from "@/db/schema";
+import { bookings, payments, shopOrders, vendorPayouts, vendors } from "@/db/schema";
 import { requireAdmin, requireVendorAccess } from "@/lib/auth/session";
 import { refundRazorpayPayment } from "@/lib/razorpay";
 import { todayIST } from "@/core/time";
@@ -138,5 +138,31 @@ export async function adminRefundShopOrder(input: unknown) {
     .where(eq(shopOrders.id, row.order.id));
   revalidatePath("/admin/payouts");
   revalidatePath(`/app/orders/${row.order.id}`);
+  return { ok: true as const };
+}
+
+/** Full refund through Razorpay for a paid online booking that was cancelled. */
+export async function adminRefundBooking(input: unknown) {
+  const parsed = z.object({ bookingId: z.string().min(1) }).safeParse(input);
+  if (!parsed.success) return fail("Invalid input");
+
+  await requireAdmin();
+  const db = getDb();
+  const [row] = await db
+    .select({ booking: bookings, payment: payments })
+    .from(bookings)
+    .innerJoin(payments, and(eq(payments.bookingId, bookings.id), eq(payments.status, "paid")))
+    .where(and(eq(bookings.id, parsed.data.bookingId), eq(bookings.paymentStatus, "refund_due")))
+    .limit(1);
+  if (!row || !row.payment.razorpayPaymentId) return fail("No refund is due for this booking");
+
+  try {
+    await refundRazorpayPayment(row.payment.razorpayPaymentId, row.payment.amountPaise, `RUXs booking ${row.booking.number}`);
+  } catch (err) {
+    return fail(err instanceof Error ? err.message : "Refund failed");
+  }
+  await db.update(bookings).set({ paymentStatus: "refunded", updatedAt: new Date() }).where(eq(bookings.id, row.booking.id));
+  revalidatePath("/admin/payouts");
+  revalidatePath(`/app/bookings/${row.booking.id}`);
   return { ok: true as const };
 }
