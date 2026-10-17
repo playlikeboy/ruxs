@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray, ne, or, gte } from "drizzle-orm";
 import { getDb } from "@/db";
-import { customers, shopOrderItems, shopOrders, vendors } from "@/db/schema";
+import { consumers, customers, shopOrderItems, shopOrders, vendors } from "@/db/schema";
 import { requireAdmin, requireVendorAccess } from "@/lib/auth/session";
 import { addDaysIST, todayIST } from "@/core/time";
 
@@ -25,9 +25,12 @@ export async function getVendorShopOrders(slug: string, view: "open" | "done") {
       order: shopOrders,
       customerName: customers.name,
       customerPhone: customers.phone,
+      latitude: consumers.latitude,
+      longitude: consumers.longitude,
     })
     .from(shopOrders)
     .innerJoin(customers, eq(shopOrders.customerId, customers.id))
+    .leftJoin(consumers, eq(customers.userId, consumers.userId))
     .where(
       and(
         eq(shopOrders.vendorId, access.vendorId),

@@ -1,7 +1,7 @@
 import "server-only";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db";
-import { orders, customers, products } from "@/db/schema";
+import { orders, customers, products, consumers } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { sortRunSheet } from "@/core/run-sheet";
 
@@ -27,10 +27,13 @@ export async function getRunSheetOrders(
       order: orders,
       customer: customers,
       product: products,
+      latitude: consumers.latitude,
+      longitude: consumers.longitude,
     })
     .from(orders)
     .innerJoin(customers, eq(orders.customerId, customers.id))
     .innerJoin(products, eq(orders.productId, products.id))
+    .leftJoin(consumers, eq(customers.userId, consumers.userId))
     .where(and(...conditions));
 
   // Filter out skipped orders from run sheet
@@ -42,6 +45,8 @@ export async function getRunSheetOrders(
       tower: r.customer.tower,
       floor: r.customer.floor,
       flat: r.customer.flat,
+      latitude: r.latitude ?? null,
+      longitude: r.longitude ?? null,
     }));
 
   return sortRunSheet(activeStops);

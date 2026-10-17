@@ -55,6 +55,28 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Native App Feeling & Touch UX */
+html {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+/* Standalone PWA adjustments */
+@media all and (display-mode: standalone) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  input, textarea, [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

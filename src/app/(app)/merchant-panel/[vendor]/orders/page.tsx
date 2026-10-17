@@ -9,6 +9,7 @@ import { getVendorShopOrders } from "@/features/shop-orders/queries";
 import { OrderStatusButtons } from "@/features/shop-orders/components/order-status-buttons";
 import { StatusPill } from "@/features/consumer/components/status-pill";
 import { EmptyState } from "@/components/ui/empty-state";
+import { MapPin } from "lucide-react";
 
 export const metadata = { title: "Orders" };
 
@@ -49,36 +50,52 @@ export default async function MerchantOrdersPage({
         />
       ) : (
         <ul className="grid items-start gap-4 lg:grid-cols-2">
-          {orders.map(({ order, items, customerName, customerPhone }) => (
-            <li key={order.id} className={"space-y-3.5 rounded-2xl border bg-surface p-4.5 shadow-2xs transition hover:shadow-xs " + (order.status === "placed" ? "border-accent/40 shadow-[0_0_0_3px_rgba(189,75,42,0.08)]" : "border-line")}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold text-ink">{customerName}</p>
-                  <p className="text-xs text-muted">{order.number} · {timeFmt.format(order.createdAt)}</p>
+          {orders.map(({ order, items, customerName, customerPhone, latitude, longitude }) => {
+            const mapsUrl = latitude && longitude
+              ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
+              : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.address)}`;
+            return (
+              <li key={order.id} className={"space-y-3.5 rounded-2xl border bg-surface p-4.5 shadow-2xs transition hover:shadow-xs " + (order.status === "placed" ? "border-accent/40 shadow-[0_0_0_3px_rgba(189,75,42,0.08)]" : "border-line")}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-ink">{customerName}</p>
+                    <p className="text-xs text-muted">{order.number} · {timeFmt.format(order.createdAt)}</p>
+                  </div>
+                  <StatusPill status={order.status} />
                 </div>
-                <StatusPill status={order.status} />
-              </div>
-              <ul className="space-y-1 text-sm">
-                {items.map((i) => (
-                  <li key={i.id} className="flex justify-between">
-                    <span className="text-ink"><span className="font-mono font-bold tabular-nums">{i.qty}×</span> {i.name}</span>
-                    <span className="tabular-nums text-muted">{formatINR(i.lineTotalPaise)}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="space-y-1 rounded-[10px] bg-bg p-3 text-xs text-muted">
-                <p><span className="font-semibold text-ink">{dayLabelIST(order.deliverOn)}</span> · {SLOT_LABEL[order.slot] ?? order.slot}</p>
-                <p>{order.address}</p>
-                <p>Phone: <a href={`tel:${customerPhone}`} className="font-mono text-ink">{customerPhone}</a></p>
-                {order.notes && <p className="text-warn">Note: {order.notes}</p>}
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted">{order.paymentMode === "online" ? (order.paymentStatus === "paid" ? "Paid online · do not collect" : "Refund due · do not collect") : order.paymentMode === "cod" ? "Collect on delivery" : "Add to monthly bill"}</span>
-                <span className="font-mono text-base font-bold tabular-nums text-ink">{formatINR(order.totalPaise)}</span>
-              </div>
-              <OrderStatusButtons orderId={order.id} status={order.status as ShopOrderStatus} slug={slug} />
-            </li>
-          ))}
+                <ul className="space-y-1 text-sm">
+                  {items.map((i) => (
+                    <li key={i.id} className="flex justify-between">
+                      <span className="text-ink"><span className="font-mono font-bold tabular-nums">{i.qty}×</span> {i.name}</span>
+                      <span className="tabular-nums text-muted">{formatINR(i.lineTotalPaise)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="space-y-1.5 rounded-[10px] bg-bg p-3 text-xs text-muted">
+                  <p><span className="font-semibold text-ink">{dayLabelIST(order.deliverOn)}</span> · {SLOT_LABEL[order.slot] ?? order.slot}</p>
+                  <p className="text-ink">{order.address}</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-black/5">
+                    <p>Phone: <a href={`tel:${customerPhone}`} className="font-mono text-ink underline">{customerPhone}</a></p>
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded-md bg-white border border-line px-2 py-0.5 text-[11px] font-semibold text-accent hover:border-accent shadow-2xs transition active:scale-95"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      Google Maps ↗
+                    </a>
+                  </div>
+                  {order.notes && <p className="text-warn">Note: {order.notes}</p>}
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted">{order.paymentMode === "online" ? (order.paymentStatus === "paid" ? "Paid online · do not collect" : "Refund due · do not collect") : order.paymentMode === "cod" ? "Collect on delivery" : "Add to monthly bill"}</span>
+                  <span className="font-mono text-base font-bold tabular-nums text-ink">{formatINR(order.totalPaise)}</span>
+                </div>
+                <OrderStatusButtons orderId={order.id} status={order.status as ShopOrderStatus} slug={slug} />
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

@@ -1,10 +1,26 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getMyLocation, listStores } from "@/features/consumer/queries";
 import { getCategories, getPlatformSettings } from "@/features/platform/queries";
 import { CategoryBar } from "@/features/consumer/components/category-bar";
 import { SearchBar } from "@/features/consumer/components/search-bar";
-import { StoreCard } from "@/features/consumer/components/store-card";
+import { StoreFilterList } from "@/features/consumer/components/store-filter-list";
 import { ViewCartBar } from "@/features/consumer/components/view-cart-bar";
+
+export async function generateMetadata({ params }: { params: Promise<{ kind: string }> }): Promise<Metadata> {
+  const { kind } = await params;
+  const categories = await getCategories();
+  const config = categories.find((k) => k.id === kind);
+  if (!config) return { title: "Category" };
+  return {
+    title: `${config.label} Near You`,
+    description: `${config.blurb}. Order or book directly from local neighbourhood providers on RUXs.`,
+    openGraph: {
+      title: `${config.label} · RUXs`,
+      description: `${config.blurb}. Local neighbourhood doorstep service.`,
+    },
+  };
+}
 
 export default async function CategoryPage({ params }: { params: Promise<{ kind: string }> }) {
   const { kind } = await params;
@@ -37,10 +53,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ kind:
             <p className="mt-1 text-sm text-neutral-500">We&apos;re onboarding local vendors in your area.</p>
           </div>
         ) : (
-          <div className="mt-5 space-y-7">
-            {stores.map((store) => (
-              <StoreCard key={store.id} store={store} />
-            ))}
+          <div className="mt-5">
+            <StoreFilterList stores={stores} radius={settings.discoveryRadiusKm} />
           </div>
         )}
       </div>

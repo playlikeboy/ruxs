@@ -32,8 +32,13 @@ export function TabBar() {
             <li key={tab.href}>
               <Link
                 href={tab.href}
+                onClick={() => {
+                  try {
+                    navigator.vibrate?.(10);
+                  } catch {}
+                }}
                 className={
-                  "relative flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors " +
+                  "relative flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium transition-all active:scale-95 " +
                   (active ? "text-accent" : "text-neutral-500 hover:text-ink")
                 }
               >

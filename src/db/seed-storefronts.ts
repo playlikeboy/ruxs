@@ -5,10 +5,10 @@
  */
 import { and, eq } from "drizzle-orm";
 import { scriptDb, scriptPool } from "./script-client";
-import { availabilityRules, products, providerProfiles, services, vendors } from "./schema";
+import { availabilityRules, categories, products, providerProfiles, services, vendors } from "./schema";
 
 type Item = {
-  kind: "tiffin" | "water" | "milk" | "other" | "fitness" | "physio";
+  kind: "tiffin" | "water" | "milk" | "other" | "fitness" | "physio" | "mehndi" | "gifts" | string;
   name: string;
   section: string;
   pricePaise: number;
@@ -279,6 +279,25 @@ const RANCHI: DemoVendor[] = [
       { kind: "other", name: "Newspaper (Hindi)", section: "Daily", pricePaise: 600, description: "Morning paper at your door.", isVeg: null, shift: "morning", cutoffAt: "21:00" },
     ],
   },
+  {
+    slug: "craftyvibes-gifts-ranchi",
+    name: "CraftyVibes Handcrafted Gifts",
+    phone: "+919999900116",
+    upiVpa: "craftyvibes.demo@upi",
+    city: "Ranchi",
+    area: "Kanke Road",
+    description: "Customized gifts, resin floral art, photo lamps & curated celebration hampers. Handcrafted in Ranchi. Demo store.",
+    latitude: 23.4012,
+    longitude: 85.3255,
+    serviceRadiusKm: 12,
+    deliveryFeePaise: 2000,
+    items: [
+      { kind: "gifts", name: "Personalized 3D Illusion Photo Lamp", section: "Custom Lamps", pricePaise: 79900, description: "Warm LED acrylic lamp engraved with your custom photo & message.", isVeg: null, allowSubscription: false },
+      { kind: "gifts", name: "Custom Resin Flower Preservation Frame", section: "Resin Art", pricePaise: 129900, description: "Handcrafted resin keepsake frame with golden flakes and custom text.", isVeg: null, allowSubscription: false },
+      { kind: "gifts", name: "Handmade Scented Candle Gift Set (3 pack)", section: "Hampers", pricePaise: 59900, description: "Soy wax luxury aromatherapy candles in lavender, vanilla & rose.", isVeg: null, allowSubscription: false },
+      { kind: "gifts", name: "Luxury Birthday / Anniversary Gift Hamper", section: "Hampers", pricePaise: 149900, description: "Curated gift box with custom mug, chocolates, handmade card and scented candle.", isVeg: null, allowSubscription: false },
+    ],
+  },
 ];
 
 
@@ -377,6 +396,34 @@ const RANCHI_PROVIDERS: DemoVendor[] = [
       { kind: "physio", name: "Online consultation (30 min)", section: "Online", pricePaise: 34900, description: "Video consult with an exercise plan.", isVeg: null, durationMinutes: 30 },
     ],
   },
+  {
+    slug: "shree-bridal-mehndi-ranchi",
+    profile: {
+      headline: "Professional bridal & festive mehndi artist · 8+ yrs experience",
+      qualifications: "Certified Henna Designer & Bridal Specialist",
+      experienceYears: 8,
+      specialities: ["Bridal Mehndi", "Arabic Henna", "Rajasthani Traditional", "Indo-Western", "Baby Shower & Karwa Chauth"],
+      languages: ["Hindi", "English"],
+      gender: "female",
+    },
+    name: "Shree Bridal Mehndi Designer",
+    phone: "+919999900115",
+    upiVpa: "shreemehndi.demo@upi",
+    city: "Ranchi",
+    area: "Lalpur",
+    description: "Specialist in Bridal, Rajasthani, Arabic & Indo-Western mehndi designs. Organic dark stain henna, available for home visits across Ranchi. Demo artist.",
+    latitude: 23.3712,
+    longitude: 85.3355,
+    serviceRadiusKm: 12,
+    deliveryFeePaise: 0,
+    serviceModes: ["home", "studio"],
+    hours: [{ days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], start: "09:00", end: "20:00" }],
+    items: [
+      { kind: "mehndi", name: "Bridal Full Hands & Feet (Organic Henna)", section: "Bridal Packages", pricePaise: 350000, description: "Intricate bridal patterns up to elbows and calves. 100% natural organic dark stain henna.", isVeg: null, durationMinutes: 180 },
+      { kind: "mehndi", name: "Arabic Designer Mehndi (Both Hands)", section: "Occasions", pricePaise: 69900, description: "Flowing floral and geometric Arabic motifs on both hands (front & back).", isVeg: null, durationMinutes: 45 },
+      { kind: "mehndi", name: "Festive / Party Guest Mehndi (Per Hand)", section: "Occasions", pricePaise: 25000, description: "Quick elegant henna for festive occasions, family and guests.", isVeg: null, durationMinutes: 20 },
+    ],
+  },
 ];
 
 async function upsertServices(vendorId: string, items: Item[], modes: string[]) {
@@ -430,6 +477,56 @@ async function ensureVendor(v: DemoVendor) {
 }
 
 async function main() {
+  const NEW_CATEGORIES = [
+    {
+      id: "mehndi",
+      label: "Mehndi Artists",
+      shortLabel: "Mehndi",
+      emoji: "🌿",
+      blurb: "Bridal, Arabic & festive mehndi designers at home",
+      tint: "#FEF3C7",
+      coverFrom: "#FDE68A",
+      coverTo: "#D97706",
+      sort: 4,
+      isActive: true,
+      fulfilment: "booking" as const,
+    },
+    {
+      id: "gifts",
+      label: "Custom Gifts & Hampers",
+      shortLabel: "Gifts",
+      emoji: "🎁",
+      blurb: "Personalized hampers, resin art & handcrafted gifts",
+      tint: "#FCE7F3",
+      coverFrom: "#FBCFE8",
+      coverTo: "#DB2777",
+      sort: 7,
+      isActive: true,
+      fulfilment: "delivery" as const,
+    },
+  ];
+
+  for (const cat of NEW_CATEGORIES) {
+    await scriptDb
+      .insert(categories)
+      .values(cat)
+      .onConflictDoUpdate({
+        target: categories.id,
+        set: {
+          label: cat.label,
+          shortLabel: cat.shortLabel,
+          emoji: cat.emoji,
+          blurb: cat.blurb,
+          tint: cat.tint,
+          coverFrom: cat.coverFrom,
+          coverTo: cat.coverTo,
+          sort: cat.sort,
+          fulfilment: cat.fulfilment,
+        },
+      });
+    console.log("✓ category", cat.id);
+  }
+
   for (const store of STORES) {
     const [vendor] = await scriptDb
       .update(vendors)
