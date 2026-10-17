@@ -2,10 +2,15 @@ import { Star } from "lucide-react";
 import type { RatingSummary } from "@/core/ratings";
 
 export function Stars({ value, size = "h-3.5 w-3.5" }: { value: number; size?: string }) {
+  const rounded = Math.round(value);
   return (
     <span className="inline-flex items-center gap-0.5" aria-label={`${value} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} className={size + (i <= Math.round(value) ? " fill-[#E8A33D] text-[#E8A33D]" : " text-line")} aria-hidden="true" />
+        <Star
+          key={i}
+          className={`${size} ${i <= rounded ? "fill-[#E8A33D] text-[#E8A33D]" : "fill-neutral-100 text-neutral-300"}`}
+          aria-hidden="true"
+        />
       ))}
     </span>
   );

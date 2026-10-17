@@ -8,6 +8,9 @@ const serverSchema = z.object({
   RAZORPAY_KEY_SECRET: z.string().min(1).optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
   CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: z.string().optional(),
+  CLOUDFLARE_EMAIL_TOKEN: z.string().optional(),
+  CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
+  EMAIL_DOMAIN: z.string().optional(),
 });
 
 import { getCloudflareContext } from "@opennextjs/cloudflare";

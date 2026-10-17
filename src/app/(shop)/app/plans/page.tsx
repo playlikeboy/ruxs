@@ -13,6 +13,7 @@ import { dayLabelIST, todayIST } from "@/core/time";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { StoreCover } from "@/features/consumer/components/store-cover";
 import { EndPlanButton, PlanDays, type PlanDay } from "@/features/consumer/components/plan-days";
+import { TodayPlansOffControl, type ScheduledTodayPlan } from "@/features/consumer/components/today-plans-off-control";
 
 export const metadata = { title: "Plans" };
 
@@ -23,14 +24,33 @@ export default async function PlansPage() {
   const [{ today, plans }, category, sessions] = await Promise.all([getMyPlans(), getCategoryMap(), getMyBookings()]);
   const upcoming = sessions.filter((s) => s.booking.endsAt > now && (s.booking.status === "confirmed" || s.booking.status === "held"));
   const dates = Array.from({ length: 7 }, (_, i) => addDaysIST(today, i));
+  const weekday = weekdayIST(today);
+
+  const scheduledTodayItems: ScheduledTodayPlan[] = plans
+    .filter((p) => p.sub.days.includes(weekday) && p.sub.startsOn <= today && (!p.sub.endsOn || p.sub.endsOn >= today))
+    .map((p) => {
+      const change = p.changes.find((c) => c.serviceDate === today);
+      return {
+        subscriptionId: p.sub.id,
+        productName: p.product.name,
+        vendorName: p.vendorName,
+        emoji: category(p.product.kind).emoji,
+        qty: change?.kind === "extra" ? p.sub.qty + change.qty : change?.kind === "qty" ? change.qty : p.sub.qty,
+        unit: p.product.assetName ?? "unit",
+        cutoffAt: p.product.cutoffAt,
+        skipped: change?.kind === "skip",
+        locked: isLate(now, today, p.product.cutoffAt),
+      };
+    });
 
   // One "pay balance" button per store, not per plan.
   const balances = new Map<string, { vendorId: string; name: string; balancePaise: number }>();
   for (const p of plans) balances.set(p.vendorId, { vendorId: p.vendorId, name: p.vendorName, balancePaise: p.balancePaise });
 
   return (
-    <div className="min-h-dvh bg-neutral-50">
+    <div className="min-h-dvh bg-neutral-50 pb-20">
       <PageHeader title="Your plans" subtitle="Tap a day to skip it or bring it back" />
+      {plans.length > 0 && <TodayPlansOffControl items={scheduledTodayItems} today={today} />}
       {upcoming.length > 0 && (
         <section className="space-y-2 px-4 pt-4">
           <div className="flex items-center justify-between">

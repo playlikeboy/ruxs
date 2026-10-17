@@ -4,6 +4,8 @@ import { getMyLocation, getMyProfile } from "@/features/consumer/queries";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { ProfileForm } from "@/features/consumer/components/profile-form";
 import { SignOutButton } from "@/features/consumer/components/sign-out-button";
+import { NotificationSettings } from "@/features/notifications/components/notification-settings";
+import { getMyNotificationPreferences } from "@/features/notifications/actions";
 
 export const metadata = { title: "Account" };
 
@@ -18,8 +20,11 @@ export default async function AccountPage({
   searchParams: Promise<{ next?: string; area?: string; city?: string; lat?: string; lng?: string }>;
 }) {
   const sp = await searchParams;
-  const { user, profile } = await getMyProfile();
-  const location = await getMyLocation();
+  const [{ user, profile }, location, notificationPrefs] = await Promise.all([
+    getMyProfile(),
+    getMyLocation(),
+    getMyNotificationPreferences(),
+  ]);
   const gps = location.source === "gps" ? location : null;
   const next = sp.next?.startsWith("/app") ? sp.next : undefined;
 
@@ -56,6 +61,14 @@ export default async function AccountPage({
           {!profile && <p className="mt-1 text-sm text-neutral-500">Add your address once to order and subscribe.</p>}
           <div className="mt-4">
             <ProfileForm defaults={defaults} next={next} />
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-ink">Notifications</h2>
+          <p className="mt-1 text-sm text-neutral-500">Manage email and device notifications for your home.</p>
+          <div className="mt-4">
+            <NotificationSettings initial={notificationPrefs} userEmail={user.primaryEmail} />
           </div>
         </section>
 

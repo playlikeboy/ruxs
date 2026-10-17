@@ -5,14 +5,24 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { adminSetReviewHidden, replyToReview } from "@/features/reviews/actions";
 
-export function ReplyForm({ slug, reviewId, initial }: { slug: string; reviewId: string; initial: string | null }) {
+export function ReplyForm({
+  slug,
+  reviewId,
+  initial,
+  onSuccess,
+}: {
+  slug: string;
+  reviewId: string;
+  initial: string | null;
+  onSuccess?: (reply: string | null) => void;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(initial ?? "");
   const [pending, startTransition] = useTransition();
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="text-xs font-semibold text-accent">
+      <button type="button" onClick={() => setOpen(true)} className="text-xs font-semibold text-accent hover:underline">
         {initial ? "Edit reply" : "Reply publicly"}
       </button>
     );
@@ -28,6 +38,7 @@ export function ReplyForm({ slug, reviewId, initial }: { slug: string; reviewId:
           else {
             toast.success(text ? "Reply posted" : "Reply removed");
             setOpen(false);
+            onSuccess?.(text.trim() || null);
             router.refresh();
           }
         });

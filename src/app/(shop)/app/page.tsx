@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getMyLocation, getMyPlans, getMyProfile, listStores } from "@/features/consumer/queries";
 import { getCategoryMap } from "@/features/platform/queries";
 import { TodayCard, type TodayItem } from "@/features/consumer/components/today-card";
+import { HeroSubscriptionPlans, type HeroPlanItem } from "@/features/consumer/components/hero-subscription-plans";
 import { isLate } from "@/core/cutoff";
 import { weekdayIST } from "@/core/time";
 import { getCategories, getPlatformSettings } from "@/features/platform/queries";
@@ -39,6 +40,27 @@ export default async function ExplorePage() {
         locked: isLate(now, today, p.product.cutoffAt),
       };
     });
+
+  const heroPlans: HeroPlanItem[] = plans.map((p) => {
+    const change = p.changes.find((c) => c.serviceDate === today);
+    const isScheduledToday = p.sub.days.includes(weekday) && p.sub.startsOn <= today && (!p.sub.endsOn || p.sub.endsOn >= today);
+    return {
+      id: p.sub.id,
+      productName: p.product.name,
+      vendorName: p.vendorName,
+      vendorSlug: p.vendorSlug,
+      imageUrl: p.product.imageUrl,
+      kind: p.product.kind,
+      pricePaise: p.product.pricePaise,
+      qty: p.sub.qty,
+      shift: p.product.shift,
+      cutoffAt: p.product.cutoffAt,
+      days: p.sub.days,
+      isDeliveringToday: isScheduledToday && change?.kind !== "skip",
+      isSkippedToday: change?.kind === "skip",
+    };
+  });
+
   const firstName = (profile?.name ?? user.displayName ?? "").split(" ")[0];
 
   return (
@@ -54,6 +76,8 @@ export default async function ExplorePage() {
           <br />
           <span className="text-neutral-500">what does home need today?</span>
         </h1>
+
+        <HeroSubscriptionPlans plans={heroPlans} today={today} category={category} />
 
         {todayItems.length > 0 && (
           <div className="mt-5">

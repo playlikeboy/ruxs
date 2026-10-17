@@ -137,14 +137,14 @@ export function VendorSidebar({
                         href={href}
                         aria-current={active ? "page" : undefined}
                         className={
-                          "flex h-10 items-center gap-3 rounded-[10px] px-3 text-sm transition-colors " +
-                          (active ? "bg-peach font-semibold text-accent" : "text-ink hover:bg-bg")
+                          "group flex h-10 items-center gap-3 rounded-xl px-3 text-sm transition-all " +
+                          (active ? "bg-peach/90 font-semibold text-accent shadow-2xs" : "text-neutral-700 hover:bg-neutral-100/70 hover:text-ink")
                         }
                       >
-                        <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={active ? 2.3 : 1.8} aria-hidden="true" />
+                        <Icon className={"h-[18px] w-[18px] shrink-0 " + (active ? "text-accent" : "text-neutral-400 group-hover:text-ink")} strokeWidth={active ? 2.3 : 1.8} aria-hidden="true" />
                         <span className="flex-1">{item.label}</span>
                         {item.badge ? (
-                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white tabular-nums">{item.badge}</span>
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white tabular-nums shadow-2xs">{item.badge}</span>
                         ) : null}
                       </Link>
                     </li>

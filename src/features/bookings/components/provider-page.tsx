@@ -12,6 +12,7 @@ import { ReviewList, type ReviewItem } from "@/features/reviews/components/revie
 
 export interface ProviderPageProps {
   vendor: {
+    id: string;
     slug: string;
     name: string;
     area: string;
@@ -35,7 +36,9 @@ export interface ProviderPageProps {
   profile: { headline: string | null; qualifications: string | null; experienceYears: number | null; specialities: string[]; languages: string[]; gender: string | null } | null;
   services: { id: string; name: string; description: string | null; durationMinutes: number; pricePaise: number; modes: string[]; isActive: boolean }[];
   reviews: ReviewItem[];
+  totalReviews?: number;
   myReview: { eligible: boolean; mine: { rating: number; comment: string | null } | null };
+  canReply?: boolean;
 }
 
 /** Public page for a trainer, physiotherapist or any booking provider. Not a menu: a profile with bookable sessions. */
@@ -158,7 +161,17 @@ export function ProviderPage(p: ProviderPageProps) {
               <ReviewForm vendorSlug={vendor.slug} initialRating={p.myReview.mine?.rating} initialComment={p.myReview.mine?.comment} />
             </div>
           )}
-          <div className="mt-2"><ReviewList reviews={p.reviews} storeName={vendor.name} /></div>
+          <div className="mt-2">
+            <ReviewList
+              reviews={p.reviews}
+              total={p.totalReviews}
+              vendorId={vendor.id}
+              vendorSlug={vendor.slug}
+              storeName={vendor.name}
+              canReply={p.canReply}
+              pageSize={10}
+            />
+          </div>
         </section>
       </div>
     </div>

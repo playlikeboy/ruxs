@@ -30,15 +30,15 @@ export default async function MerchantOrdersPage({
   const base = `/merchant-panel/${slug}/orders`;
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-5 p-4 sm:p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink">Orders</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Orders</h1>
         <p className="mt-0.5 text-sm text-muted">One-time orders from the RUXs app. Daily plans are on Today.</p>
       </div>
 
-      <div className="grid grid-cols-2 rounded-[12px] bg-bg p-1 text-sm font-semibold">
-        <Link href={base} className={"rounded-[10px] py-2 text-center " + (view === "open" ? "bg-surface text-ink shadow-xs" : "text-muted")}>Active</Link>
-        <Link href={base + "?view=done"} className={"rounded-[10px] py-2 text-center " + (view === "done" ? "bg-surface text-ink shadow-xs" : "text-muted")}>Past 14 days</Link>
+      <div className="inline-grid w-full max-w-xs grid-cols-2 rounded-xl border border-line bg-surface p-1 text-sm font-semibold shadow-2xs">
+        <Link href={base} className={"rounded-lg py-1.5 text-center transition " + (view === "open" ? "bg-ink text-white shadow-2xs" : "text-muted hover:text-ink")}>Active</Link>
+        <Link href={base + "?view=done"} className={"rounded-lg py-1.5 text-center transition " + (view === "done" ? "bg-ink text-white shadow-2xs" : "text-muted hover:text-ink")}>Past 14 days</Link>
       </div>
 
       {orders.length === 0 ? (
@@ -48,9 +48,9 @@ export default async function MerchantOrdersPage({
           icon="bill"
         />
       ) : (
-        <ul className="grid items-start gap-3 lg:grid-cols-2">
+        <ul className="grid items-start gap-4 lg:grid-cols-2">
           {orders.map(({ order, items, customerName, customerPhone }) => (
-            <li key={order.id} className={"space-y-3 rounded-[14px] border bg-surface p-4 " + (order.status === "placed" ? "border-accent/40 shadow-[0_0_0_3px_rgba(189,75,42,0.08)]" : "border-line")}>
+            <li key={order.id} className={"space-y-3.5 rounded-2xl border bg-surface p-4.5 shadow-2xs transition hover:shadow-xs " + (order.status === "placed" ? "border-accent/40 shadow-[0_0_0_3px_rgba(189,75,42,0.08)]" : "border-line")}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-semibold text-ink">{customerName}</p>
