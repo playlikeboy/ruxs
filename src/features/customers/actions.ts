@@ -129,7 +129,6 @@ export async function importCustomers(input: unknown) {
         floor: floor!,
         flat: flat!,
         linkTokenHash,
-        optedInAt: null, // Paused WhatsApp: opted_in_at stays null per PROMPT §2.1
       });
 
       results.push({

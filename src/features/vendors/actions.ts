@@ -106,6 +106,12 @@ export async function saveStorefront(input: unknown) {
   await db
     .update(vendors)
     .set({
+      name: data.name,
+      phone: data.phone,
+      upiVpa: data.upiVpa,
+      area: data.area,
+      city: data.city,
+      mapsUrl: data.mapsUrl || null,
       description: data.description || null,
       coverUrl: data.coverUrl || null,
       latitude: data.latitude,
@@ -120,5 +126,6 @@ export async function saveStorefront(input: unknown) {
 
   revalidatePath(`/merchant-panel/${slug}`, "layout");
   revalidatePath("/app", "layout");
+  revalidatePath("/admin", "layout");
   return { ok: true };
 }

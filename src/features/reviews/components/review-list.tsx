@@ -13,7 +13,7 @@ export interface ReviewItem {
 
 export function ReviewList({ reviews, storeName }: { reviews: ReviewItem[]; storeName: string }) {
   if (reviews.length === 0) {
-    return <p className="rounded-2xl bg-neutral-50 p-5 text-sm text-neutral-500">No reviews yet. Be the first after your delivery.</p>;
+    return <p className="rounded-2xl bg-neutral-50 p-5 text-sm text-neutral-500">No reviews yet. Be the first to rate.</p>;
   }
   return (
     <ul className="divide-y divide-black/5">

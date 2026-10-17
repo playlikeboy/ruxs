@@ -31,7 +31,6 @@ export const invoices = pgTable(
     paymentsPaise: integer("payments_paise").notNull().default(0),
     closingPaise: integer("closing_paise").notNull().default(0),
     status: text("status").notNull().default("generated"), // draft, generated, sent, paid, partially_paid
-    sentAt: timestamp("sent_at", { withTimezone: true }),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

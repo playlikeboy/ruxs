@@ -153,31 +153,3 @@ export const requireCustomerByToken = cache(async (rawToken: string) => {
     vendorId: vendor.id,
   };
 });
-
-export const findCustomerByToken = cache(async (rawToken: string) => {
-  if (!rawToken || typeof rawToken !== "string" || !rawToken.trim()) {
-    return null;
-  }
-  const tokenHash = hashToken(rawToken.trim());
-  const db = getDb();
-
-  const [row] = await db
-    .select({
-      customer: customers,
-      vendor: vendors,
-    })
-    .from(customers)
-    .innerJoin(vendors, eq(customers.vendorId, vendors.id))
-    .where(eq(customers.linkTokenHash, tokenHash))
-    .limit(1);
-
-  if (!row || row.vendor.status === "suspended") {
-    return null;
-  }
-
-  return {
-    customer: row.customer,
-    vendor: row.vendor,
-    vendorId: row.vendor.id,
-  };
-});

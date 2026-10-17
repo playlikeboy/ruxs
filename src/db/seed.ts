@@ -9,8 +9,6 @@ import {
   orders,
   dayChanges,
   ledgerEntries,
-  assetMovements,
-  invoices,
 } from "./schema";
 
 function hashToken(rawToken: string): string {
@@ -207,7 +205,6 @@ export async function seed() {
       pricePaise: 9000, // ₹90
       depositPaise: 0,
       assetName: "dabba",
-      pollAt: "08:30",
       cutoffAt: "10:00",
       lateRule: "half",
     })
@@ -223,7 +220,6 @@ export async function seed() {
       pricePaise: 9500, // ₹95
       depositPaise: 0,
       assetName: "dabba",
-      pollAt: "08:30",
       cutoffAt: "10:00",
       lateRule: "half",
     })
@@ -239,7 +235,6 @@ export async function seed() {
       pricePaise: 9000, // ₹90
       depositPaise: 0,
       assetName: "dabba",
-      pollAt: "15:30",
       cutoffAt: "17:00",
       lateRule: "half",
     })
@@ -256,7 +251,6 @@ export async function seed() {
       pricePaise: 4000, // ₹40
       depositPaise: 15000, // ₹150 deposit
       assetName: "can",
-      pollAt: "06:00",
       cutoffAt: "07:00",
       lateRule: "free",
     })
@@ -298,7 +292,6 @@ export async function seed() {
         floor: c.floor,
         flat: c.flat,
         linkTokenHash: hashToken(rawToken),
-        optedInAt: new Date(),
       })
       .returning();
     seededCustomers.push(cust!);

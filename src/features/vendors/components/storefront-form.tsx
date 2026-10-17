@@ -3,13 +3,19 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { LocateFixed } from "lucide-react";
 import { saveStorefront } from "@/features/vendors/actions";
+import { LocationPicker } from "@/features/platform/components/location-picker";
 
 const input = "w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
 const label = "mb-1 block text-xs font-medium text-ink";
 
 export interface StorefrontValues {
+  name: string;
+  phone: string;
+  upiVpa: string;
+  area: string;
+  city: string;
+  mapsUrl: string;
   description: string;
   coverUrl: string;
   latitude: number | null;
@@ -20,55 +26,55 @@ export interface StorefrontValues {
   acceptingOrders: boolean;
 }
 
-export function StorefrontForm({ slug, initial }: { slug: string; initial: StorefrontValues }) {
+/** The vendor's own business details: who they are, where they are, how far they go, and what it costs. */
+export function StorefrontForm({ slug, initial, provider = false }: { slug: string; initial: StorefrontValues; provider?: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [description, setDescription] = useState(initial.description);
-  const [coverUrl, setCoverUrl] = useState(initial.coverUrl);
-  const [lat, setLat] = useState(initial.latitude?.toString() ?? "");
-  const [lng, setLng] = useState(initial.longitude?.toString() ?? "");
-  const [radius, setRadius] = useState(String(initial.serviceRadiusKm));
-  const [fee, setFee] = useState(String(initial.deliveryFeePaise / 100));
-  const [minOrder, setMinOrder] = useState(String(initial.minOrderPaise / 100));
-  const [accepting, setAccepting] = useState(initial.acceptingOrders);
-
-  function locate() {
-    navigator.geolocation?.getCurrentPosition(
-      (pos) => {
-        setLat(pos.coords.latitude.toFixed(6));
-        setLng(pos.coords.longitude.toFixed(6));
-        toast.success("Location captured — save to apply");
-      },
-      () => toast.error("Allow location access, or type the coordinates")
-    );
-  }
+  const [f, setF] = useState({
+    name: initial.name,
+    phone: initial.phone,
+    upiVpa: initial.upiVpa,
+    area: initial.area,
+    city: initial.city,
+    description: initial.description,
+    coverUrl: initial.coverUrl,
+    radius: String(initial.serviceRadiusKm),
+    fee: String(initial.deliveryFeePaise / 100),
+    minOrder: String(initial.minOrderPaise / 100),
+    accepting: initial.acceptingOrders,
+  });
+  const [loc, setLoc] = useState({ latitude: initial.latitude?.toString() ?? "", longitude: initial.longitude?.toString() ?? "", mapsUrl: initial.mapsUrl });
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
 
   return (
     <form
-      className="space-y-4"
+      className="space-y-5"
       onSubmit={(e) => {
         e.preventDefault();
-        const latitude = lat.trim() === "" ? null : Number(lat);
-        const longitude = lng.trim() === "" ? null : Number(lng);
-        if ((latitude === null) !== (longitude === null)) {
-          toast.error("Enter both latitude and longitude, or neither");
-          return;
-        }
+        const latitude = loc.latitude.trim() === "" ? null : Number(loc.latitude);
+        const longitude = loc.longitude.trim() === "" ? null : Number(loc.longitude);
+        if ((latitude === null) !== (longitude === null)) return toast.error("Set both latitude and longitude, or neither");
         startTransition(async () => {
           const res = await saveStorefront({
             slug,
-            description,
-            coverUrl,
+            name: f.name,
+            phone: f.phone,
+            upiVpa: f.upiVpa,
+            area: f.area,
+            city: f.city,
+            mapsUrl: loc.mapsUrl,
+            description: f.description,
+            coverUrl: f.coverUrl,
             latitude,
             longitude,
-            serviceRadiusKm: Math.round(Number(radius)),
-            deliveryFeeRupees: Number(fee || 0),
-            minOrderRupees: Number(minOrder || 0),
-            acceptingOrders: accepting,
+            serviceRadiusKm: Math.round(Number(f.radius)),
+            deliveryFeeRupees: Number(f.fee || 0),
+            minOrderRupees: Number(f.minOrder || 0),
+            acceptingOrders: f.accepting,
           });
           if (!res.ok) toast.error(res.error ?? "Could not save");
           else {
-            toast.success("Storefront updated");
+            toast.success("Business details saved");
             router.refresh();
           }
         });
@@ -76,53 +82,44 @@ export function StorefrontForm({ slug, initial }: { slug: string; initial: Store
     >
       <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[12px] border border-line p-3">
         <span>
-          <span className="block text-sm font-semibold text-ink">Taking one-time orders</span>
-          <span className="block text-xs text-muted">Pause when the kitchen is closed. Plans keep running.</span>
+          <span className="block text-sm font-semibold text-ink">{provider ? "Taking bookings" : "Taking one-time orders"}</span>
+          <span className="block text-xs text-muted">{provider ? "Pause when you're away. Existing sessions stay." : "Pause when the kitchen is closed. Plans keep running."}</span>
         </span>
-        <input type="checkbox" className="peer sr-only" checked={accepting} onChange={(e) => setAccepting(e.target.checked)} />
+        <input type="checkbox" className="peer sr-only" checked={f.accepting} onChange={(e) => setF({ ...f, accepting: e.target.checked })} />
         <span className="relative h-6 w-11 shrink-0 rounded-full bg-line transition peer-checked:bg-good after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5" aria-hidden="true" />
       </label>
 
-      <div>
-        <label htmlFor="sf-desc" className={label}>About your store</label>
-        <textarea id="sf-desc" rows={3} maxLength={400} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ghar jaisa khana since 2015. Fresh rotis, no onion-garlic on request." className={input} />
-      </div>
-      <div>
-        <label htmlFor="sf-cover" className={label}>Cover photo link</label>
-        <input id="sf-cover" type="url" value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} placeholder="https://…" className={input} />
-      </div>
+      <fieldset className="grid gap-3 sm:grid-cols-2">
+        <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Business</legend>
+        <label className={label}>Business name<input required value={f.name} onChange={set("name")} className={input + " mt-1"} /></label>
+        <label className={label}>Phone (+91…)<input required value={f.phone} onChange={set("phone")} className={input + " mt-1 font-mono"} /></label>
+        <label className={label + " sm:col-span-2"}>
+          Payout UPI ID
+          <input required value={f.upiVpa} onChange={set("upiVpa")} placeholder="name@upi" className={input + " mt-1 font-mono"} />
+          <span className="mt-1 block text-[11px] font-normal text-muted">RUXs sends your monthly withdrawals here. Households never see your phone.</span>
+        </label>
+        <label className={label + " sm:col-span-2"}>About{provider ? " you" : " your store"}<textarea rows={3} maxLength={400} value={f.description} onChange={set("description")} className={input + " mt-1"} /></label>
+        <label className={label + " sm:col-span-2"}>Cover photo link<input type="url" value={f.coverUrl} onChange={set("coverUrl")} placeholder="https://…" className={input + " mt-1"} /></label>
+      </fieldset>
 
-      <div className="space-y-2 rounded-[12px] bg-bg p-3">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Kitchen location</p>
-          <button type="button" onClick={locate} className="flex items-center gap-1 text-xs font-semibold text-accent">
-            <LocateFixed className="h-3.5 w-3.5" /> Use my location
-          </button>
+      <fieldset className="space-y-3">
+        <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">{provider ? "Gym / clinic location" : "Kitchen / shop location"}</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className={label}>Area<input required value={f.area} onChange={set("area")} className={input + " mt-1"} /></label>
+          <label className={label}>City<input required value={f.city} onChange={set("city")} className={input + " mt-1"} /></label>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <input aria-label="Latitude" inputMode="decimal" value={lat} onChange={(e) => setLat(e.target.value)} placeholder="Latitude" className={input + " font-mono"} />
-          <input aria-label="Longitude" inputMode="decimal" value={lng} onChange={(e) => setLng(e.target.value)} placeholder="Longitude" className={input + " font-mono"} />
-        </div>
-        <p className="text-[11px] text-muted">Without a pin we use your area&apos;s centre. Set it from the kitchen for accurate distances.</p>
-      </div>
+        <LocationPicker value={loc} onChange={setLoc} />
+      </fieldset>
 
-      <div className="grid grid-cols-3 gap-2">
-        <div>
-          <label htmlFor="sf-radius" className={label}>Radius (km)</label>
-          <input id="sf-radius" inputMode="numeric" value={radius} onChange={(e) => setRadius(e.target.value)} className={input + " tabular-nums"} />
-        </div>
-        <div>
-          <label htmlFor="sf-fee" className={label}>Delivery ₹</label>
-          <input id="sf-fee" inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} className={input + " tabular-nums"} />
-        </div>
-        <div>
-          <label htmlFor="sf-min" className={label}>Min order ₹</label>
-          <input id="sf-min" inputMode="decimal" value={minOrder} onChange={(e) => setMinOrder(e.target.value)} className={input + " tabular-nums"} />
-        </div>
-      </div>
+      <fieldset className="grid grid-cols-3 gap-2">
+        <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">{provider ? "Home visits" : "Delivery"}</legend>
+        <label className={label}>Radius (km)<input inputMode="numeric" value={f.radius} onChange={set("radius")} className={input + " mt-1 tabular-nums"} /></label>
+        <label className={label}>{provider ? "Visit fee ₹" : "Delivery ₹"}<input inputMode="decimal" value={f.fee} onChange={set("fee")} className={input + " mt-1 tabular-nums"} /></label>
+        {!provider && <label className={label}>Min order ₹<input inputMode="decimal" value={f.minOrder} onChange={set("minOrder")} className={input + " mt-1 tabular-nums"} /></label>}
+      </fieldset>
 
-      <button type="submit" disabled={pending} className="w-full rounded-[12px] bg-accent py-3 text-sm font-bold text-white disabled:opacity-60">
-        {pending ? "Saving…" : "Save storefront"}
+      <button type="submit" disabled={pending} className="h-11 w-full rounded-[12px] bg-accent text-sm font-bold text-white disabled:opacity-60 sm:w-auto sm:px-8">
+        {pending ? "Saving…" : "Save business details"}
       </button>
     </form>
   );

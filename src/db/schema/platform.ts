@@ -114,7 +114,7 @@ export const vendorPayouts = pgTable(
   ]
 );
 
-/** One review per household per store. Only households who ordered or subscribed can write one. */
+/** One review per signed-in household per store. */
 export const vendorReviews = pgTable(
   "vendor_reviews",
   {
@@ -124,10 +124,9 @@ export const vendorReviews = pgTable(
     vendorId: text("vendor_id")
       .notNull()
       .references(() => vendors.id, { onDelete: "cascade" }),
-    customerId: text("customer_id")
-      .notNull()
-      .references(() => customers.id, { onDelete: "cascade" }),
+    customerId: text("customer_id").references(() => customers.id, { onDelete: "cascade" }), // set when they are also a customer
     userId: text("user_id").notNull(),
+    authorName: text("author_name").notNull(), // shown as "Priya S."
     rating: integer("rating").notNull(), // 1..5
     comment: text("comment"),
     reply: text("reply"), // the store's public reply

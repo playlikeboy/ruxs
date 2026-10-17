@@ -28,7 +28,7 @@ export function CopyShareButton({
         });
         toast.success("Link shared");
         return;
-      } catch (err) {
+      } catch {
         // Fall back to copy if cancelled or unsupported
       }
     }

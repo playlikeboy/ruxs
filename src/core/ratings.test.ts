@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { canReview, isValidRating, summarizeRatings, summaryFromTotals } from "./ratings";
+import { isValidRating, summarizeRatings, summaryFromTotals } from "./ratings";
 
 describe("ratings", () => {
   it("averages to one decimal and ignores invalid values", () => {
@@ -18,12 +18,5 @@ describe("ratings", () => {
     expect(isValidRating(5)).toBe(true);
     expect(isValidRating(0)).toBe(false);
     expect(isValidRating(4.5)).toBe(false);
-  });
-
-  it("lets only real customers review", () => {
-    expect(canReview({ deliveredOrders: 0, startedPlans: 0 })).toBe(false);
-    expect(canReview({ deliveredOrders: 1, startedPlans: 0 })).toBe(true);
-    expect(canReview({ deliveredOrders: 0, startedPlans: 1 })).toBe(true);
-    expect(canReview({ deliveredOrders: 0, startedPlans: 0, completedSessions: 1 })).toBe(true);
   });
 });

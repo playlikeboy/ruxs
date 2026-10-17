@@ -2,7 +2,7 @@ import "server-only";
 import { eq, and, desc } from "drizzle-orm";
 import { getDb } from "@/db";
 import { dayChanges, subscriptions, customers, products } from "@/db/schema";
-import { requireVendorAccess, requireCustomerByToken } from "@/lib/auth/session";
+import { requireVendorAccess } from "@/lib/auth/session";
 
 export async function getDayChangesForVendor(slug: string, serviceDate: string) {
   const access = await requireVendorAccess(slug);
@@ -27,31 +27,4 @@ export async function getDayChangesForVendor(slug: string, serviceDate: string) 
     .orderBy(desc(dayChanges.receivedAt));
 
   return rows;
-}
-
-export async function getDayChangesForCustomer(token: string) {
-  const { customer, vendorId } = await requireCustomerByToken(token);
-  const db = getDb();
-
-  const rows = await db
-    .select({
-      id: dayChanges.id,
-      subscriptionId: dayChanges.subscriptionId,
-      serviceDate: dayChanges.serviceDate,
-      kind: dayChanges.kind,
-      qty: dayChanges.qty,
-      isLate: dayChanges.isLate,
-      source: dayChanges.source,
-      createdAt: dayChanges.createdAt,
-    })
-    .from(dayChanges)
-    .innerJoin(subscriptions, eq(dayChanges.subscriptionId, subscriptions.id))
-    .where(
-      and(
-        eq(dayChanges.vendorId, vendorId),
-        eq(subscriptions.customerId, customer.id)
-      )
-    );
-
-  return { customer, changes: rows };
 }

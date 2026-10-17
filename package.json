@@ -26,8 +26,6 @@
   "dependencies": {
     "@hexclave/next": "1.0.125",
     "@opennextjs/cloudflare": "1.20.10",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "drizzle-orm": "0.45.4",
     "lucide-react": "^1.54.0",
     "next": "16.4.0",
@@ -36,7 +34,6 @@
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
     "sonner": "2.0.8",
-    "tailwind-merge": "^3.7.0",
     "zod": "4.6.5"
   },
   "devDependencies": {

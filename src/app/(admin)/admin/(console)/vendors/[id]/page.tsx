@@ -88,6 +88,8 @@ export default async function AdminVendorPage({ params }: { params: Promise<{ id
               plan: vendor.plan as "free" | "starter" | "pro",
               acceptingOrders: vendor.acceptingOrders,
               businessType: vendor.businessType as "delivery" | "booking",
+              categoryId: vendor.categoryId ?? "",
+              mapsUrl: vendor.mapsUrl ?? "",
             }}
           />
         </section>

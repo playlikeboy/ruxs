@@ -152,10 +152,3 @@ export async function getProviderServices(slug: string) {
     .orderBy(asc(services.sort), asc(services.name));
   return { access, rows };
 }
-
-export async function getProviderProfile(slug: string) {
-  const access = await requireVendorAccess(slug, ["owner"]);
-  const db = getDb();
-  const [profile] = await db.select().from(providerProfiles).where(eq(providerProfiles.vendorId, access.vendorId)).limit(1);
-  return { access, profile: profile ?? null };
-}
