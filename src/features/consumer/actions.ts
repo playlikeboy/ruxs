@@ -23,6 +23,7 @@ import { cartTotals, canTransition, formatOrderNumber, type ShopOrderStatus } fr
 import { depositKey } from "@/core/ledger";
 import { addDaysIST, todayIST, weekdayIST } from "@/core/time";
 import { isLate } from "@/core/cutoff";
+import { renderEmailHtml, sendUserEmailIfAllowed } from "@/features/notifications/service";
 import { applyHouseholdDayChange } from "@/features/day-changes/household";
 import { addressLine, deliveryCheck, ensureCustomer, loadProfile } from "./household";
 import {
@@ -178,6 +179,7 @@ export async function placeOrder(input: unknown) {
   const today = todayIST();
   const deliverOn = data.deliverOn === "today" ? today : addDaysIST(today, 1);
   const suffix = crypto.randomBytes(3).toString("hex").slice(0, 5);
+  const orderNumber = formatOrderNumber(today, suffix);
 
   try {
     const orderId = await db.transaction(async (tx) => {
@@ -185,7 +187,7 @@ export async function placeOrder(input: unknown) {
       const [order] = await tx
         .insert(shopOrders)
         .values({
-          number: formatOrderNumber(today, suffix),
+          number: orderNumber,
           clientKey: data.clientKey,
           vendorId: vendor.id,
           customerId,
@@ -219,6 +221,29 @@ export async function placeOrder(input: unknown) {
 
     revalidatePath("/app/orders");
     revalidatePath(`/merchant-panel/${vendor.slug}/orders`);
+
+    if (user.primaryEmail) {
+      const emailHtml = renderEmailHtml({
+        heading: `Order Confirmed: #${orderNumber}`,
+        lead: `Thanks for your order from ${vendor.name}! We've notified the kitchen and your meal is being scheduled.`,
+        details: [
+          { label: "Order Number", value: `#${orderNumber}` },
+          { label: "Store", value: vendor.name },
+          { label: "Payment Mode", value: data.paymentMode === "cod" ? "Pay on delivery" : "Monthly bill" },
+        ],
+        actionText: "View Order Details",
+        actionUrl: `https://ruxs.in/app/orders/${orderId}`,
+      });
+      sendUserEmailIfAllowed({
+        userId: user.id,
+        to: user.primaryEmail,
+        category: "orders",
+        subject: `Order Confirmed: #${orderNumber} from ${vendor.name}`,
+        html: emailHtml,
+        text: `Your order #${orderNumber} from ${vendor.name} has been placed. View details: https://ruxs.in/app/orders/${orderId}`,
+      }).catch((e) => console.error("Order placed email notify error:", e));
+    }
+
     return { ok: true as const, orderId };
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "PHONE_LINKED_ELSEWHERE") {
@@ -413,6 +438,34 @@ export async function setMyDay(input: unknown) {
     });
     if (result.ok) revalidatePath("/app/plans");
     if (result.ok) revalidatePath("/app");
+
+    if (result.ok && user.primaryEmail) {
+      const isSkip = kind === "skip";
+      const subject = isSkip
+        ? `Delivery turned OFF for ${serviceDate}`
+        : `Delivery confirmed ON for ${serviceDate}`;
+      const emailHtml = renderEmailHtml({
+        heading: isSkip ? "Delivery Off For Today" : "Delivery Back On",
+        lead: isSkip
+          ? `You have turned off delivery for ${serviceDate}. Your store has been notified and you will not be charged.`
+          : `Your delivery is active and confirmed for ${serviceDate}.`,
+        details: [
+          { label: "Service Date", value: serviceDate },
+          { label: "Status", value: isSkip ? "Off today" : "Delivering" },
+        ],
+        actionText: "View My Plans",
+        actionUrl: "https://ruxs.in/app/plans",
+      });
+      sendUserEmailIfAllowed({
+        userId: user.id,
+        to: user.primaryEmail,
+        category: "plans",
+        subject,
+        html: emailHtml,
+        text: `Your delivery status for ${serviceDate} is: ${isSkip ? "Off today" : "Active"}.`,
+      }).catch((e) => console.error("Plan day change email error:", e));
+    }
+
     return result;
   } catch {
     return fail("Could not update that day. Please try again.");
@@ -425,39 +478,66 @@ export async function setMyDay(input: unknown) {
  * kitchen count drops; skips after cutoff are left alone (they may be charged).
  */
 export async function skipAllToday() {
-  const user = await requireUser();
-  const db = getDb();
-  const today = todayIST();
-  const weekday = weekdayIST(today);
-  const now = new Date();
+  try {
+    const user = await requireUser();
+    const db = getDb();
+    const today = todayIST();
+    const weekday = weekdayIST(today);
+    const now = new Date();
 
-  const mine = await db
-    .select({ sub: subscriptions, customerId: customers.id, cutoffAt: products.cutoffAt })
-    .from(subscriptions)
-    .innerJoin(customers, eq(subscriptions.customerId, customers.id))
-    .innerJoin(products, eq(subscriptions.productId, products.id))
-    .where(and(eq(customers.userId, user.id), or(isNull(subscriptions.endsOn), gte(subscriptions.endsOn, today))));
+    const mine = await db
+      .select({ sub: subscriptions, customerId: customers.id, cutoffAt: products.cutoffAt })
+      .from(subscriptions)
+      .innerJoin(customers, eq(subscriptions.customerId, customers.id))
+      .innerJoin(products, eq(subscriptions.productId, products.id))
+      .where(and(eq(customers.userId, user.id), or(isNull(subscriptions.endsOn), gte(subscriptions.endsOn, today))));
 
-  let skipped = 0;
-  let locked = 0;
-  for (const row of mine) {
-    if (!row.sub.days.includes(weekday) || row.sub.startsOn > today) continue;
-    if (isLate(now, today, row.cutoffAt)) {
-      locked++;
-      continue;
+    let skipped = 0;
+    let locked = 0;
+    for (const row of mine) {
+      if (!row.sub.days.includes(weekday) || row.sub.startsOn > today) continue;
+      if (isLate(now, today, row.cutoffAt)) {
+        locked++;
+        continue;
+      }
+      const res = await applyHouseholdDayChange({
+        vendorId: row.sub.vendorId,
+        customerId: row.customerId,
+        subscriptionId: row.sub.id,
+        serviceDate: today,
+        kind: "skip",
+        qty: 0,
+      });
+      if (res.ok) skipped++;
     }
-    const res = await applyHouseholdDayChange({
-      vendorId: row.sub.vendorId,
-      customerId: row.customerId,
-      subscriptionId: row.sub.id,
-      serviceDate: today,
-      kind: "skip",
-      qty: 0,
-    });
-    if (res.ok) skipped++;
-  }
 
-  revalidatePath("/app");
-  revalidatePath("/app/plans");
-  return { ok: true as const, skipped, locked };
+    revalidatePath("/app");
+    revalidatePath("/app/plans");
+
+    if (skipped > 0 && user.primaryEmail) {
+      const emailHtml = renderEmailHtml({
+        heading: "You're Off Today! 🌴",
+        lead: `You have successfully skipped all ${skipped} recurring deliveries scheduled for ${today}. All stores have been updated.`,
+        details: [
+          { label: "Date", value: today },
+          { label: "Deliveries Skipped", value: String(skipped) },
+        ],
+        actionText: "Manage Plans",
+        actionUrl: "https://ruxs.in/app/plans",
+      });
+      sendUserEmailIfAllowed({
+        userId: user.id,
+        to: user.primaryEmail,
+        category: "plans",
+        subject: `You're off today - ${skipped} deliveries skipped`,
+        html: emailHtml,
+        text: `You have turned off all ${skipped} deliveries for today (${today}).`,
+      }).catch((e) => console.error("Skip all email error:", e));
+    }
+
+    return { ok: true as const, skipped, locked };
+  } catch (err) {
+    console.error("skipAllToday error:", err);
+    return fail("Could not skip all deliveries for today. Please try again.");
+  }
 }

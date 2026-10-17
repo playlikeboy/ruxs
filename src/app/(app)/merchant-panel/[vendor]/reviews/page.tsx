@@ -22,13 +22,13 @@ export default async function ReviewsPage({ params }: { params: Promise<{ vendor
         <p className="mt-0.5 text-sm text-muted">What households say about your store. Replies are public.</p>
       </div>
 
-      <section className="grid gap-4 rounded-[16px] border border-line bg-surface p-5 sm:grid-cols-[200px_1fr]">
+      <section className="grid gap-6 rounded-2xl border border-line bg-surface p-6 shadow-xs sm:grid-cols-[200px_1fr]">
         <div>
           <p className="font-mono text-5xl font-bold tabular-nums text-ink">{summary.average?.toFixed(1) ?? "–"}</p>
           <div className="mt-1"><Stars value={summary.average ?? 0} size="h-4 w-4" /></div>
           <p className="mt-1 text-sm text-muted">{summary.count} {summary.count === 1 ? "review" : "reviews"}</p>
         </div>
-        <ul className="space-y-1.5">
+        <ul className="space-y-2">
           {histogram.map((h) => (
             <li key={h.star} className="flex items-center gap-3 text-sm">
               <span className="w-6 text-right tabular-nums text-muted">{h.star}★</span>
@@ -44,9 +44,9 @@ export default async function ReviewsPage({ params }: { params: Promise<{ vendor
       {reviews.length === 0 ? (
         <EmptyState title="No reviews yet" description="Households can rate you after their first delivery. Great food on time is the best way to get 5 stars." />
       ) : (
-        <ul className="grid items-start gap-3 lg:grid-cols-2">
+        <ul className="grid items-start gap-4 lg:grid-cols-2">
           {reviews.map((r) => (
-            <li key={r.id} className={"rounded-[14px] border border-line bg-surface p-4 " + (r.isHidden ? "opacity-60" : "")}>
+            <li key={r.id} className={"rounded-2xl border border-line bg-surface p-5 shadow-xs transition hover:shadow-sm " + (r.isHidden ? "opacity-60" : "")}>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-ink">{r.author}</p>

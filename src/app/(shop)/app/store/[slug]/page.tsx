@@ -13,7 +13,7 @@ import { ViewCartBar } from "@/features/consumer/components/view-cart-bar";
 import { RatingBadge } from "@/features/reviews/components/rating-badge";
 import { ReviewForm } from "@/features/reviews/components/review-form";
 import { ReviewList } from "@/features/reviews/components/review-list";
-import { getMyReviewState, getStoreReviews } from "@/features/reviews/queries";
+import { canReplyToStoreReviews, getMyReviewState, getStoreReviewsPaginated } from "@/features/reviews/queries";
 
 const SHIFT_LABEL: Record<string, string> = { lunch: "Lunch", dinner: "Dinner", morning: "Morning", evening: "Evening" };
 
@@ -24,7 +24,11 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
   if (!store) notFound();
 
   const { vendor, items } = store;
-  const [reviews, myReview] = await Promise.all([getStoreReviews(vendor.id), getMyReviewState(vendor.id)]);
+  const [reviewData, myReview, canReply] = await Promise.all([
+    getStoreReviewsPaginated(vendor.id, 1, 10),
+    getMyReviewState(vendor.id),
+    canReplyToStoreReviews(vendor.slug),
+  ]);
 
   // Trainers, physiotherapists and other booking providers get a profile page, not a menu.
   if (vendor.businessType === "booking") {
@@ -42,8 +46,10 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
         rating={store.rating}
         profile={provider.profile}
         services={provider.services.map((x) => x.service)}
-        reviews={reviews}
+        reviews={reviewData.reviews}
+        totalReviews={reviewData.total}
         myReview={myReview}
+        canReply={canReply}
       />
     );
   }
@@ -207,7 +213,15 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
             </div>
           )}
           <div className="mt-2">
-            <ReviewList reviews={reviews} storeName={vendor.name} />
+            <ReviewList
+              reviews={reviewData.reviews}
+              total={reviewData.total}
+              vendorId={vendor.id}
+              vendorSlug={vendor.slug}
+              storeName={vendor.name}
+              canReply={canReply}
+              pageSize={10}
+            />
           </div>
         </section>
       </div>

@@ -6,6 +6,8 @@ import { getDb } from "@/db";
 import { consumers, customers, vendorReviews, vendors } from "@/db/schema";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { hideSchema, replySchema, saveReviewSchema } from "./schemas";
+import { getStoreReviewsPaginated } from "./queries";
+import { renderEmailHtml, sendUserEmailIfAllowed } from "@/features/notifications/service";
 
 function fail(error: string) {
   return { ok: false as const, error };
@@ -54,8 +56,38 @@ export async function replyToReview(input: unknown) {
     .update(vendorReviews)
     .set({ reply, repliedAt: reply ? new Date() : null })
     .where(and(eq(vendorReviews.id, parsed.data.reviewId), eq(vendorReviews.vendorId, access.vendorId)))
-    .returning({ id: vendorReviews.id });
+    .returning({ id: vendorReviews.id, userId: vendorReviews.userId, authorName: vendorReviews.authorName });
   if (!updated) return fail("Review not found");
+
+  if (reply) {
+    const [consumer] = await db
+      .select({ email: consumers.email })
+      .from(consumers)
+      .where(eq(consumers.userId, updated.userId))
+      .limit(1);
+
+    if (consumer?.email) {
+      const emailHtml = renderEmailHtml({
+        heading: `New Reply from ${access.vendor.name}`,
+        lead: `${access.vendor.name} has replied to your review:`,
+        details: [
+          { label: "Store", value: access.vendor.name },
+          { label: "Reply", value: reply },
+        ],
+        actionText: "View Store Reviews",
+        actionUrl: `https://ruxs.in/app/store/${parsed.data.slug}#reviews`,
+      });
+      sendUserEmailIfAllowed({
+        userId: updated.userId,
+        to: consumer.email,
+        category: "reviews",
+        subject: `${access.vendor.name} replied to your review`,
+        html: emailHtml,
+        text: `Hi ${updated.authorName},\n\n${access.vendor.name} replied to your review:\n\n"${reply}"\n\nView at https://ruxs.in/app/store/${parsed.data.slug}#reviews`,
+      }).catch((e) => console.error("Review reply email error:", e));
+    }
+  }
+
   revalidatePath(`/merchant-panel/${parsed.data.slug}/reviews`);
   revalidatePath(`/app/store/${parsed.data.slug}`);
   return { ok: true as const };
@@ -76,4 +108,17 @@ export async function adminSetReviewHidden(input: unknown) {
   revalidatePath(`/admin/vendors/${updated.vendorId}`);
   revalidatePath("/app", "layout");
   return { ok: true as const };
+}
+
+/** Fetch next page of reviews for a store. Public query wrapped in a server action. */
+export async function fetchStoreReviewsPage(vendorId: string, page: number, pageSize = 10) {
+  const result = await getStoreReviewsPaginated(vendorId, page, pageSize);
+  return {
+    ...result,
+    reviews: result.reviews.map((r) => ({
+      ...r,
+      repliedAt: r.repliedAt?.toISOString() ?? null,
+      updatedAt: r.updatedAt.toISOString(),
+    })),
+  };
 }

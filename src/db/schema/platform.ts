@@ -149,3 +149,15 @@ export const platformSettings = pgTable("platform_settings", {
   updatedBy: text("updated_by"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+/** Notification preferences for users (orders, plans, bills, reviews, pwa push). */
+export const notificationPreferences = pgTable("notification_preferences", {
+  userId: text("user_id").primaryKey(),
+  emailOrders: boolean("email_orders").notNull().default(true),
+  emailPlans: boolean("email_plans").notNull().default(true),
+  emailBills: boolean("email_bills").notNull().default(true),
+  emailReviews: boolean("email_reviews").notNull().default(true),
+  pwaPush: boolean("pwa_push").notNull().default(true),
+  pushSubscription: text("push_subscription"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});

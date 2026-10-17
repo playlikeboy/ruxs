@@ -25,7 +25,9 @@
   ],
   "vars": {
     "NEXT_PUBLIC_APP_URL": "https://ruxs.in",
-    "NEXT_PUBLIC_HEXCLAVE_PROJECT_ID": "afdff151-7a3c-49b3-830f-abfcc23d8d61"
+    "NEXT_PUBLIC_HEXCLAVE_PROJECT_ID": "afdff151-7a3c-49b3-830f-abfcc23d8d61",
+    "CLOUDFLARE_ACCOUNT_ID": "091539408595ba99a0ef106d42391d5b",
+    "EMAIL_DOMAIN": "notifications.ruxs.in"
   },
   "hyperdrive": [
     {
