@@ -9,6 +9,7 @@ import { StoreCover } from "@/features/consumer/components/store-cover";
 import { RatingBadge } from "@/features/reviews/components/rating-badge";
 import { ReviewForm } from "@/features/reviews/components/review-form";
 import { ReviewList, type ReviewItem } from "@/features/reviews/components/review-list";
+import { ReportStoreButton } from "@/features/support/components/report-button";
 
 export interface ProviderPageProps {
   vendor: {
@@ -173,6 +174,10 @@ export function ProviderPage(p: ProviderPageProps) {
             />
           </div>
         </section>
+
+        <div className="mt-12 flex justify-center pb-4">
+          <ReportStoreButton vendorId={vendor.id} vendorName={vendor.name} />
+        </div>
       </div>
     </div>
   );

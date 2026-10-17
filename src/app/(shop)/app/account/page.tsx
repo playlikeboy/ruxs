@@ -78,6 +78,13 @@ export default async function AccountPage({
         <section className="mt-10 divide-y divide-black/5 border-y border-black/5">
           <Link href="/app/orders" className="flex items-center justify-between py-4 text-[15px] text-ink">Order history <ChevronRight className="h-5 w-5 text-neutral-400" /></Link>
           <Link href="/app/plans" className="flex items-center justify-between py-4 text-[15px] text-ink">My plans &amp; bills <ChevronRight className="h-5 w-5 text-neutral-400" /></Link>
+          <Link href="/app/tickets" className="flex items-center justify-between py-4 text-[15px] text-ink">
+            <div>
+              <p className="font-medium text-ink">Help &amp; Support / Disputes</p>
+              <p className="text-xs text-neutral-500">Raise a ticket, dispute an order, or check resolutions</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-neutral-400" />
+          </Link>
           <Link href="/privacy" className="flex items-center justify-between py-4 text-[15px] text-ink">Privacy <ChevronRight className="h-5 w-5 text-neutral-400" /></Link>
         </section>
 

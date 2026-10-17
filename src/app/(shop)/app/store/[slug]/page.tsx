@@ -14,6 +14,7 @@ import { RatingBadge } from "@/features/reviews/components/rating-badge";
 import { ReviewForm } from "@/features/reviews/components/review-form";
 import { ReviewList } from "@/features/reviews/components/review-list";
 import { canReplyToStoreReviews, getMyReviewState, getStoreReviewsPaginated } from "@/features/reviews/queries";
+import { ReportStoreButton } from "@/features/support/components/report-button";
 
 const SHIFT_LABEL: Record<string, string> = { lunch: "Lunch", dinner: "Dinner", morning: "Morning", evening: "Evening" };
 
@@ -224,6 +225,10 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
             />
           </div>
         </section>
+
+        <div className="mt-12 flex justify-center pb-4">
+          <ReportStoreButton vendorId={vendor.id} vendorName={vendor.name} />
+        </div>
       </div>
       <ViewCartBar onlyFor={vendor.slug} />
     </div>

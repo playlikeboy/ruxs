@@ -13,6 +13,7 @@ import {
   Package,
   Repeat,
   Settings,
+  ShieldAlert,
   Star,
   Users,
   UtensilsCrossed,
@@ -69,6 +70,7 @@ export function VendorSidebar({
             { label: "Services", path: "/services", icon: UtensilsCrossed },
             { label: "Clients", path: "/customers", icon: Users, roles: ["owner", "staff"] },
             { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
+            { label: "Disputes", path: "/disputes", icon: ShieldAlert, roles: ["owner", "staff"] },
           ],
         },
         { title: "Money", items: [{ label: "Earnings", path: "/earnings", icon: Wallet, roles: ["owner", "staff"] }] },
@@ -91,6 +93,7 @@ export function VendorSidebar({
             { label: "Inventory", path: "/inventory", icon: Package },
             { label: "Customers", path: "/customers", icon: Users, roles: ["owner", "staff"] },
             { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
+            { label: "Disputes", path: "/disputes", icon: ShieldAlert, roles: ["owner", "staff"] },
           ],
         },
         {

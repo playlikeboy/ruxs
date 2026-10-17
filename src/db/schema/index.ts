@@ -6,3 +6,4 @@ export * from "./money";
 export * from "./shop";
 export * from "./platform";
 export * from "./bookings";
+export * from "./support";

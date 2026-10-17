@@ -10,6 +10,7 @@ import { PageHeader } from "@/features/consumer/components/page-header";
 import { StatusPill } from "@/features/consumer/components/status-pill";
 import { CancelOrderButton } from "@/features/consumer/components/cancel-order-button";
 import { PayOrderButton } from "@/features/payments/components/pay-buttons";
+import { RaiseDisputeButton } from "@/features/support/components/report-button";
 
 export const metadata = { title: "Order" };
 
@@ -110,7 +111,17 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         {!isOpenStatus(status) && (
           <Link href={`/app/store/${vendorSlug}`} className="flex h-12 items-center justify-center rounded-xl bg-ink text-sm font-semibold text-white">Order again</Link>
         )}
-        <p className="text-center text-xs text-neutral-500">Need help with this order? Write to support@ruxs.in with {order.number}.</p>
+        <div className="pt-1 flex justify-center">
+          <RaiseDisputeButton
+            orderId={order.id}
+            vendorId={order.vendorId}
+            vendorName={vendorName}
+            label="Dispute or Report an Issue with This Order"
+            variant="compact"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-rose-600 transition-colors"
+          />
+        </div>
+        <p className="text-center text-xs text-neutral-500">Need direct escalation? Write to support@ruxs.in with {order.number}.</p>
       </div>
     </div>
   );
