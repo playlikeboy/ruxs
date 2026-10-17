@@ -38,7 +38,8 @@ export const vendors = pgTable(
     loginUserId: text("login_user_id").unique(), // Hexclave user behind that login
     commissionBps: integer("commission_bps").notNull().default(0), // RUXs fee on online payments, 100 = 1%
     businessType: text("business_type").notNull().default("delivery"), // delivery (tiffin, water, milk) or booking (trainers, physio)
-    serviceModes: text("service_modes").array().notNull().default(sql`'{home}'::text[]`), // booking providers: home, studio, online
+    categoryId: text("category_id"), // main category it was onboarded as (FK in SQL)
+    mapsUrl: text("maps_url"), // Google Maps link to the kitchen, shop, gym or clinic
     bookingNoticeMinutes: integer("booking_notice_minutes").notNull().default(120),
     cancelCutoffHours: integer("cancel_cutoff_hours").notNull().default(3),
     createdAt: timestamp("created_at", { withTimezone: true })

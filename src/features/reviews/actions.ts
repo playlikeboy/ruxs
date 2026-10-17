@@ -1,46 +1,41 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, count, eq, inArray, lte } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { bookings, customers, shopOrders, subscriptions, vendorReviews, vendors } from "@/db/schema";
+import { consumers, customers, vendorReviews, vendors } from "@/db/schema";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
-import { canReview } from "@/core/ratings";
-import { todayIST } from "@/core/time";
 import { hideSchema, replySchema, saveReviewSchema } from "./schemas";
 
 function fail(error: string) {
   return { ok: false as const, error };
 }
 
-/** Create or update my review of a store. Only real customers of that store may review. */
+/** Create or update my review of any store. One per person per store. */
 export async function saveMyReview(input: unknown) {
   const parsed = saveReviewSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid review");
 
   const user = await requireUser();
   const db = getDb();
-  const [row] = await db
-    .select({ vendorId: vendors.id, customerId: customers.id })
+  const [vendor] = await db
+    .select({ id: vendors.id })
     .from(vendors)
-    .innerJoin(customers, and(eq(customers.vendorId, vendors.id), eq(customers.userId, user.id)))
-    .where(eq(vendors.slug, parsed.data.vendorSlug))
+    .where(and(eq(vendors.slug, parsed.data.vendorSlug), eq(vendors.status, "active")))
     .limit(1);
-  if (!row) return fail("Order from this store first, then rate it");
+  if (!vendor) return fail("Store not found");
 
-  const [[delivered], [started], [sessions]] = await Promise.all([
-    db.select({ n: count() }).from(shopOrders).where(and(eq(shopOrders.customerId, row.customerId), eq(shopOrders.status, "delivered"))),
-    db.select({ n: count() }).from(subscriptions).where(and(eq(subscriptions.customerId, row.customerId), lte(subscriptions.startsOn, todayIST()))),
-    db.select({ n: count() }).from(bookings).where(and(eq(bookings.customerId, row.customerId), inArray(bookings.status, ["done", "no_show"]))),
+  const [[profile], [customer]] = await Promise.all([
+    db.select({ name: consumers.name }).from(consumers).where(eq(consumers.userId, user.id)).limit(1),
+    db.select({ id: customers.id }).from(customers).where(and(eq(customers.vendorId, vendor.id), eq(customers.userId, user.id))).limit(1),
   ]);
-  if (!canReview({ deliveredOrders: delivered?.n ?? 0, startedPlans: started?.n ?? 0, completedSessions: sessions?.n ?? 0 })) {
-    return fail("You can rate after your first delivery or completed session");
-  }
+  // Never fall back to the email address: reviews are public.
+  const authorName = (profile?.name || user.displayName || "RUXs user").slice(0, 80);
 
-  const values = { rating: parsed.data.rating, comment: parsed.data.comment || null, updatedAt: new Date() };
+  const values = { rating: parsed.data.rating, comment: parsed.data.comment || null, authorName, updatedAt: new Date() };
   await db
     .insert(vendorReviews)
-    .values({ vendorId: row.vendorId, customerId: row.customerId, userId: user.id, ...values })
+    .values({ vendorId: vendor.id, customerId: customer?.id ?? null, userId: user.id, ...values })
     .onConflictDoUpdate({ target: [vendorReviews.vendorId, vendorReviews.userId], set: values });
 
   revalidatePath(`/app/store/${parsed.data.vendorSlug}`);

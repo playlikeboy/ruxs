@@ -15,10 +15,16 @@ export const vendorDetailsSchema = z.object({
   deliveryFeeRupees: z.number().min(0).max(1000),
   minOrderRupees: z.number().min(0).max(10000),
   commissionPercent: z.number().min(0).max(50),
+  mapsUrl: z
+    .string()
+    .trim()
+    .max(2000)
+    .refine((v) => v === "" || /^https:\/\/([a-z.]*\.)?(google\.[a-z.]+|goo\.gl|g\.co)\//.test(v), "Use a Google Maps link")
+    .optional(),
 });
 
 export const createVendorSchema = vendorDetailsSchema.extend({
-  businessType: z.enum(["delivery", "booking"]),
+  categoryId: z.string().regex(/^[a-z0-9-]+$/, "Pick what you are onboarding"),
   slug: z
     .string()
     .trim()

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { adminCreateVendor, adminUpdateVendor, type Credentials } from "@/features/admin/actions";
 import { CredentialsView } from "./credentials-panel";
+import { LocationPicker } from "@/features/platform/components/location-picker";
 
 export interface VendorFormValues {
   vendorId?: string;
@@ -25,6 +26,17 @@ export interface VendorFormValues {
   plan: "free" | "starter" | "pro";
   acceptingOrders: boolean;
   businessType: "delivery" | "booking";
+  categoryId: string;
+  mapsUrl: string;
+}
+
+export interface OnboardCategory {
+  id: string;
+  label: string;
+  emoji: string;
+  blurb: string;
+  fulfilment: string;
+  tint: string;
 }
 
 export const EMPTY_VENDOR: VendorFormValues = {
@@ -44,6 +56,8 @@ export const EMPTY_VENDOR: VendorFormValues = {
   plan: "free",
   acceptingOrders: true,
   businessType: "delivery",
+  categoryId: "",
+  mapsUrl: "",
 };
 
 const input = "mt-1 w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
@@ -57,7 +71,7 @@ function slugify(s: string) {
     .slice(0, 40);
 }
 
-export function VendorForm({ initial }: { initial: VendorFormValues }) {
+export function VendorForm({ initial, categories = [] }: { initial: VendorFormValues; categories?: OnboardCategory[] }) {
   const router = useRouter();
   const isNew = !initial.vendorId;
   const [f, setF] = useState(initial);
@@ -91,6 +105,34 @@ export function VendorForm({ initial }: { initial: VendorFormValues }) {
     return v.trim() === "" ? 0 : Number(v);
   }
 
+  // Step 1 for a new vendor: what kind of business is joining?
+  if (isNew && !f.categoryId) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">What are you onboarding?</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setF({ ...f, categoryId: c.id, businessType: c.fulfilment === "booking" ? "booking" : "delivery" })}
+              className="flex items-center gap-3 rounded-[14px] border border-line p-4 text-left transition hover:border-ink"
+              style={{ backgroundColor: c.tint }}
+            >
+              <span className="text-3xl" aria-hidden="true">{c.emoji}</span>
+              <span>
+                <span className="block font-semibold text-ink">{c.label}</span>
+                <span className="block text-xs text-muted">{c.fulfilment === "booking" ? "Bookable sessions · free hours" : c.blurb || "Menu, daily plans, deliveries"}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-muted">Missing a type? Add it under Settings → Categories first.</p>
+      </div>
+    );
+  }
+  const chosen = categories.find((c) => c.id === f.categoryId);
+
   return (
     <form
       className="space-y-5"
@@ -115,10 +157,11 @@ export function VendorForm({ initial }: { initial: VendorFormValues }) {
           deliveryFeeRupees: num(f.deliveryFeeRupees),
           minOrderRupees: num(f.minOrderRupees),
           commissionPercent: num(f.commissionPercent),
+          mapsUrl: f.mapsUrl,
         };
         startTransition(async () => {
           if (isNew) {
-            const res = await adminCreateVendor({ ...details, slug: f.slug, businessType: f.businessType });
+            const res = await adminCreateVendor({ ...details, slug: f.slug, categoryId: f.categoryId });
             if (!res.ok) toast.error(res.error);
             else setCreated(res);
           } else {
@@ -132,24 +175,14 @@ export function VendorForm({ initial }: { initial: VendorFormValues }) {
         });
       }}
     >
-      {isNew && (
-        <fieldset>
-          <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Type of business</legend>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {[
-              { id: "delivery" as const, title: "Delivery store", text: "Tiffin, water cans, milk, groceries: menu, daily plans, delivery runs" },
-              { id: "booking" as const, title: "Booking provider", text: "Gym trainer, physiotherapist, tutor: services, free hours, sessions" },
-            ].map((t) => (
-              <label key={t.id} className={"flex cursor-pointer gap-3 rounded-[12px] border p-3 " + (f.businessType === t.id ? "border-ink bg-bg" : "border-line")}>
-                <input type="radio" name="businessType" checked={f.businessType === t.id} onChange={() => setF({ ...f, businessType: t.id })} className="mt-1 h-4 w-4 accent-[#BD4B2A]" />
-                <span>
-                  <span className="block text-sm font-semibold text-ink">{t.title}</span>
-                  <span className="block text-xs text-muted">{t.text}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+      {isNew && chosen && (
+        <div className="flex items-center justify-between gap-3 rounded-[12px] border border-line p-3" style={{ backgroundColor: chosen.tint }}>
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            <span className="text-2xl" aria-hidden="true">{chosen.emoji}</span> Onboarding: {chosen.label}
+            <span className="font-normal text-muted">· {chosen.fulfilment === "booking" ? "booking provider" : "delivery store"}</span>
+          </span>
+          <button type="button" onClick={() => setF({ ...f, categoryId: "" })} className="text-xs font-semibold text-accent">Change</button>
+        </div>
       )}
 
       <fieldset className="grid gap-4 sm:grid-cols-2">
@@ -178,8 +211,12 @@ export function VendorForm({ initial }: { initial: VendorFormValues }) {
         <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Location &amp; delivery</legend>
         <label className={labelCls}>Area<input required className={input} value={f.area} onChange={set("area")} placeholder="Lalpur" /></label>
         <label className={labelCls}>City<input required className={input} value={f.city} onChange={set("city")} placeholder="Ranchi" /></label>
-        <label className={labelCls}>Latitude<input className={input + " font-mono"} inputMode="decimal" value={f.latitude} onChange={set("latitude")} placeholder="23.3747" /></label>
-        <label className={labelCls}>Longitude<input className={input + " font-mono"} inputMode="decimal" value={f.longitude} onChange={set("longitude")} placeholder="85.3349" /></label>
+        <div className="sm:col-span-2">
+          <LocationPicker
+            value={{ latitude: f.latitude, longitude: f.longitude, mapsUrl: f.mapsUrl }}
+            onChange={(v) => setF((prev) => ({ ...prev, latitude: v.latitude, longitude: v.longitude, mapsUrl: v.mapsUrl }))}
+          />
+        </div>
         <label className={labelCls}>Delivery radius (km)<input className={input} inputMode="numeric" value={f.serviceRadiusKm} onChange={set("serviceRadiusKm")} /></label>
         <label className={labelCls}>Delivery fee (₹)<input className={input} inputMode="decimal" value={f.deliveryFeeRupees} onChange={set("deliveryFeeRupees")} /></label>
         <label className={labelCls}>Minimum order (₹)<input className={input} inputMode="decimal" value={f.minOrderRupees} onChange={set("minOrderRupees")} /></label>

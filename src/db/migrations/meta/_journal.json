@@ -64,6 +64,13 @@
       "when": 1792400000000,
       "tag": "0008_separate_services",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792500000000,
+      "tag": "0009_vendor_location_open_reviews_cleanup",
+      "breakpoints": true
     }
   ]
 }

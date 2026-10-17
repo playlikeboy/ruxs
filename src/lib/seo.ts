@@ -80,23 +80,6 @@ export function organizationJsonLd() {
   };
 }
 
-export function softwareApplicationJsonLd() {
-  return {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "RUXs",
-    operatingSystem: "Web (Mobile Responsive, Android, iOS)",
-    applicationCategory: "BusinessApplication",
-    description:
-      "Software for neighbourhood tiffin kitchens and 20L water suppliers to manage daily skip polls, driver run sheets, bottle deposits, and direct UPI khata.",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "INR",
-    },
-  };
-}
-
 export function faqJsonLd(faqs: { question: string; answer: string }[]) {
   return {
     "@context": "https://schema.org",

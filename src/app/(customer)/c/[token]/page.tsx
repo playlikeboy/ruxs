@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { eq, desc, and, or, isNull, gte, inArray } from "drizzle-orm";
+import { eq, and, or, isNull, gte, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
 import { subscriptions, products, ledgerEntries, assetMovements, dayChanges } from "@/db/schema";
 import { requireCustomerByToken } from "@/lib/auth/session";

@@ -20,8 +20,20 @@ export const inviteStaffSchema = z.object({
   role: z.enum(["staff", "driver"]),
 });
 
+/** Everything a vendor may change about their own business (not login, plan, fee or status). */
 export const storefrontSchema = z.object({
   slug: z.string(),
+  name: z.string().trim().min(2, "Business name must be at least 2 characters").max(80),
+  phone: z.string().trim().regex(/^\+91[6-9]\d{9}$/, "Use a valid Indian mobile number with +91"),
+  upiVpa: z.string().trim().min(3, "UPI ID is required").max(80),
+  area: z.string().trim().min(2, "Area is required").max(80),
+  city: z.string().trim().min(2, "City is required").max(60),
+  mapsUrl: z
+    .string()
+    .trim()
+    .max(2000)
+    .refine((v) => v === "" || /^https:\/\/([a-z.]*\.)?(google\.[a-z.]+|goo\.gl|g\.co)\//.test(v), "Use a Google Maps link")
+    .optional(),
   description: z.string().trim().max(400).optional(),
   coverUrl: z
     .string()

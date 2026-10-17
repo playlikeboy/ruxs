@@ -22,16 +22,6 @@ import {
 import { requireAdmin } from "@/lib/auth/session";
 import { addDaysIST, todayIST } from "@/core/time";
 
-export async function getAdminVendors() {
-  await requireAdmin();
-  const db = getDb();
-
-  return db
-    .select()
-    .from(vendors)
-    .orderBy(desc(vendors.createdAt));
-}
-
 export async function getAdminOverview() {
   await requireAdmin();
   const db = getDb();

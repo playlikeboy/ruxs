@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, and, desc, lte, gte } from "drizzle-orm";
 import { getDb } from "@/db";
-import { invoices, customers, vendors, ledgerEntries } from "@/db/schema";
+import { invoices, customers, ledgerEntries } from "@/db/schema";
 import { requireVendorAccess, requireCustomerByToken } from "@/lib/auth/session";
 import { buildUpiUrl } from "@/core/upi";
 import { istDateTime } from "@/core/time";

@@ -2,7 +2,6 @@ import { describe, it, expect } from "bun:test";
 import { isLate, lateCharge } from "./cutoff";
 import { istDateTime } from "./time";
 import { deliveryKey, lateFeeKey, balance } from "./ledger";
-import { resolveDay } from "./orders";
 
 describe("Launch Gates (Pure Core Rules)", () => {
   // Launch Gate 1: A skip at 10:00:01 is late against 10:00:00

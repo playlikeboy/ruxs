@@ -218,7 +218,7 @@ describe("Phase 4 Integration Tests", () => {
     if (!dbAvailable) return;
     const period = today.substring(0, 7); // YYYY-MM
 
-    const res1 = await generateBillsForVendor(vendorId, period, scriptDb);
+    await generateBillsForVendor(vendorId, period, scriptDb);
     const invoicesBefore = await scriptDb
       .select()
       .from(invoices)

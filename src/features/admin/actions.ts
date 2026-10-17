@@ -51,6 +51,7 @@ function detailsToColumns(d: {
   deliveryFeeRupees: number;
   minOrderRupees: number;
   commissionPercent: number;
+  mapsUrl?: string;
 }) {
   return {
     name: d.name,
@@ -65,6 +66,7 @@ function detailsToColumns(d: {
     deliveryFeePaise: rupeesToPaise(d.deliveryFeeRupees),
     minOrderPaise: rupeesToPaise(d.minOrderRupees),
     commissionBps: Math.round(d.commissionPercent * 100),
+    mapsUrl: d.mapsUrl || null,
   };
 }
 
@@ -123,11 +125,16 @@ export async function adminCreateVendor(input: unknown) {
   const [taken] = await db.select({ id: vendors.id }).from(vendors).where(eq(vendors.slug, parsed.data.slug)).limit(1);
   if (taken) return fail("That store URL is already used. Pick another.");
 
+  // The category decides the kind of business: delivery store or booking provider.
+  const [category] = await db.select({ fulfilment: categories.fulfilment }).from(categories).where(eq(categories.id, parsed.data.categoryId)).limit(1);
+  if (!category) return fail("Pick what you are onboarding");
+  const businessType = category.fulfilment === "booking" ? "booking" : "delivery";
+
   const [vendor] = await db
     .insert(vendors)
-    .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType: parsed.data.businessType, plan: "free", status: "active" })
+    .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType, categoryId: parsed.data.categoryId, plan: "free", status: "active" })
     .returning({ id: vendors.id });
-  if (parsed.data.businessType === "booking") {
+  if (businessType === "booking") {
     await db.insert(providerProfiles).values({ vendorId: vendor!.id }).onConflictDoNothing();
   }
 

@@ -104,7 +104,7 @@ const publicVendorFields = {
   latitude: vendors.latitude,
   longitude: vendors.longitude,
   serviceRadiusKm: vendors.serviceRadiusKm,
-  serviceModes: vendors.serviceModes,
+  mapsUrl: vendors.mapsUrl,
   businessType: vendors.businessType,
   bookingNoticeMinutes: vendors.bookingNoticeMinutes,
   cancelCutoffHours: vendors.cancelCutoffHours,

@@ -27,7 +27,6 @@ export const products = pgTable(
     pricePaise: integer("price_paise").notNull(),
     depositPaise: integer("deposit_paise").notNull().default(0),
     assetName: text("asset_name"), // can, dabba
-    pollAt: text("poll_at"), // e.g. "08:30"
     cutoffAt: text("cutoff_at").notNull(), // e.g. "10:00"
     lateRule: text("late_rule").notNull().default("full"), // free, half, full, locked
     description: text("description"),

@@ -62,7 +62,6 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
 
   if (importedRows) {
     const successes = importedRows.filter((r) => !r.error);
-    const failures = importedRows.filter((r) => r.error);
 
     return (
       <div className="space-y-4">

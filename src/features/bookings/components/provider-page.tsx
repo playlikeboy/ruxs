@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Award, CalendarClock, ChevronLeft, GraduationCap, Languages, MapPin } from "lucide-react";
+import { Award, CalendarClock, ChevronLeft, GraduationCap, Languages, MapPin, Navigation } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { MODE_LABEL } from "@/core/booking";
+import { directionsUrl } from "@/core/maps";
 import type { RatingSummary } from "@/core/ratings";
 import type { CoverStyle } from "@/config/service-kinds";
 import { StoreCover } from "@/features/consumer/components/store-cover";
@@ -10,7 +11,20 @@ import { ReviewForm } from "@/features/reviews/components/review-form";
 import { ReviewList, type ReviewItem } from "@/features/reviews/components/review-list";
 
 export interface ProviderPageProps {
-  vendor: { slug: string; name: string; area: string; city: string; description: string | null; coverUrl: string | null; acceptingOrders: boolean; serviceRadiusKm: number; cancelCutoffHours: number };
+  vendor: {
+    slug: string;
+    name: string;
+    area: string;
+    city: string;
+    description: string | null;
+    coverUrl: string | null;
+    acceptingOrders: boolean;
+    serviceRadiusKm: number;
+    cancelCutoffHours: number;
+    mapsUrl: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  };
   cover: CoverStyle;
   categoryLabel: string;
   distanceKm: number | null;
@@ -71,6 +85,16 @@ export function ProviderPage(p: ProviderPageProps) {
           </div>
         )}
         {vendor.description && <p className="mt-4 text-[15px] leading-6 text-neutral-700">{vendor.description}</p>}
+        {p.services.some((s) => s.modes.includes("studio")) && (vendor.mapsUrl || (vendor.latitude != null && vendor.longitude != null)) && (
+          <a
+            href={vendor.mapsUrl ?? directionsUrl({ latitude: vendor.latitude!, longitude: vendor.longitude! })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl border border-black/10 px-4 text-sm font-semibold text-ink"
+          >
+            <Navigation className="h-4 w-4" aria-hidden="true" /> Get directions to the gym / clinic
+          </a>
+        )}
 
         {!p.visible && (
           <p className="mt-4 rounded-xl bg-blush px-4 py-3 text-sm font-medium text-bad">This provider is more than {p.discoveryRadiusKm} km from you, so they can&apos;t be booked in your area.</p>

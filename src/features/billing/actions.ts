@@ -7,7 +7,7 @@ import { invoices, customers, ledgerEntries } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { computeInvoice, formatInvoiceNumber } from "@/core/billing";
 import { istDateTime } from "@/core/time";
-import { generateMonthlyBillsSchema, markBillSentSchema } from "./schemas";
+import { generateMonthlyBillsSchema } from "./schemas";
 
 export async function generateBillsForVendor(
   vendorId: string,
@@ -139,48 +139,6 @@ export async function generateMonthlyBillsAction(input: unknown) {
     return { ok: true, data: result };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to generate monthly bills";
-    return { ok: false, error: msg };
-  }
-}
-
-export async function markBillSent(input: unknown) {
-  const parsed = markBillSentSchema.safeParse(input);
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
-  }
-
-  const { slug, invoiceId } = parsed.data;
-  const access = await requireVendorAccess(slug, ["owner", "staff"]);
-  const db = getDb();
-
-  try {
-    const [inv] = await db
-      .select()
-      .from(invoices)
-      .where(
-        and(
-          eq(invoices.id, invoiceId),
-          eq(invoices.vendorId, access.vendorId)
-        )
-      )
-      .limit(1);
-
-    if (!inv) {
-      return { ok: false, error: "Invoice not found" };
-    }
-
-    await db
-      .update(invoices)
-      .set({
-        sentAt: new Date(),
-        status: inv.status === "generated" ? "sent" : inv.status,
-      })
-      .where(eq(invoices.id, inv.id));
-
-    revalidatePath(`/merchant-panel/${slug}/bills`);
-    return { ok: true };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to mark bill as sent";
     return { ok: false, error: msg };
   }
 }

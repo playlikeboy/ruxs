@@ -51,12 +51,19 @@ export default async function SettingsPage({
 
       <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
         <div>
-          <h2 className="text-base font-semibold text-ink">{provider ? "Location & home visits" : "Storefront & delivery"}</h2>
+          <h2 className="text-base font-semibold text-ink">Business details</h2>
           <p className="mt-1 text-sm text-muted">How your store appears in the RUXs app and who can order.</p>
         </div>
         <StorefrontForm
           slug={slug}
+          provider={provider}
           initial={{
+            name: access.vendor.name,
+            phone: access.vendor.phone,
+            upiVpa: access.vendor.upiVpa,
+            area: access.vendor.area,
+            city: access.vendor.city,
+            mapsUrl: access.vendor.mapsUrl ?? "",
             description: access.vendor.description ?? "",
             coverUrl: access.vendor.coverUrl ?? "",
             latitude: access.vendor.latitude,
@@ -67,40 +74,6 @@ export default async function SettingsPage({
             acceptingOrders: access.vendor.acceptingOrders,
           }}
         />
-      </section>
-
-      <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
-        <h2 className="text-base font-semibold text-ink">Business profile</h2>
-        <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-xs text-muted">Business name</dt>
-            <dd className="mt-1 font-medium text-ink">{access.vendor.name}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted">Store page</dt>
-            <dd className="mt-1 break-all font-mono text-ink">ruxs.in/app/store/{access.vendor.slug}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted">Area / city</dt>
-            <dd className="mt-1 font-medium text-ink">{access.vendor.area}, {access.vendor.city}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted">Contact phone</dt>
-            <dd className="mt-1 font-mono text-ink">{access.vendor.phone}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
-        <h2 className="text-base font-semibold text-ink">UPI payment details</h2>
-        <p className="text-sm leading-6 text-muted">Households pay bills directly to your UPI ID. RUXs creates the UPI link and never holds your money.</p>
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-line bg-bg p-3">
-          <div>
-            <p className="text-xs text-muted">Direct UPI VPA</p>
-            <p className="mt-1 font-mono text-sm font-semibold text-ink">{access.vendor.upiVpa}</p>
-          </div>
-          <span className="rounded-full bg-good/10 px-2 py-1 text-xs font-semibold text-good">Active</span>
-        </div>
       </section>
 
       <section className="space-y-4 rounded-[12px] border border-line bg-surface p-4">

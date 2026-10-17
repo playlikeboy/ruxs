@@ -23,7 +23,6 @@ export const customers = pgTable(
     tower: text("tower").notNull(),
     floor: text("floor").notNull(),
     flat: text("flat").notNull(),
-    optedInAt: timestamp("opted_in_at", { withTimezone: true }),
     linkTokenHash: text("link_token_hash").notNull().unique(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
