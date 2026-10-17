@@ -8,7 +8,8 @@ import { weekdayIST } from "@/core/time";
 import { getCategories, getPlatformSettings } from "@/features/platform/queries";
 import { LocationChip } from "@/features/consumer/components/location-chip";
 import { SearchBar } from "@/features/consumer/components/search-bar";
-import { StoreCard } from "@/features/consumer/components/store-card";
+import { StoreFilterList } from "@/features/consumer/components/store-filter-list";
+import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
 import { ViewCartBar } from "@/features/consumer/components/view-cart-bar";
 
 export const metadata = { title: "Explore" };
@@ -68,6 +69,7 @@ export default async function ExplorePage() {
       <div className="space-y-4 px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <LocationChip label={location.label} source={location.source} />
         <SearchBar />
+        <InstallAppPrompt variant="banner" />
       </div>
 
       <div className="px-4">
@@ -128,10 +130,8 @@ export default async function ExplorePage() {
               <p className="mt-1 text-sm text-neutral-500">We&apos;re adding kitchens and suppliers every week. If this location looks wrong, update it above.</p>
             </div>
           ) : (
-            <div className="mt-4 space-y-7">
-              {stores.map((store) => (
-                <StoreCard key={store.id} store={store} />
-              ))}
+            <div className="mt-4">
+              <StoreFilterList stores={stores} radius={radius} />
             </div>
           )}
         </section>

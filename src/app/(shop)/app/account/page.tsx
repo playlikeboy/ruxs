@@ -6,6 +6,7 @@ import { ProfileForm } from "@/features/consumer/components/profile-form";
 import { SignOutButton } from "@/features/consumer/components/sign-out-button";
 import { NotificationSettings } from "@/features/notifications/components/notification-settings";
 import { getMyNotificationPreferences } from "@/features/notifications/actions";
+import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
 
 export const metadata = { title: "Account" };
 
@@ -55,6 +56,8 @@ export default async function AccountPage({
             <p className="truncate text-sm text-neutral-500">{user.primaryEmail}</p>
           </div>
         </div>
+
+        <InstallAppPrompt variant="card" className="mt-5" />
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-ink">{profile ? "Delivery address" : "Where should we deliver?"}</h2>

@@ -27,6 +27,8 @@ interface Stop {
     name: string;
     assetName: string | null;
   };
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export function RunSheetList({
@@ -212,12 +214,22 @@ export function RunSheetList({
               {/* Expanded Action Panel */}
               {isExpanded && !isDone && !isFailed && (
                 <div className="p-4 pt-0 space-y-4 border-t border-line/60 bg-[#FAFAF7]/50">
-                  <div className="flex items-center justify-between text-xs pt-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-3">
                     <a
                       href={`tel:${stop.customer.phone}`}
                       className="inline-flex items-center gap-1 text-accent font-medium hover:underline"
                     >
                       📞 Call {stop.customer.phone}
+                    </a>
+                    <a
+                      href={stop.latitude && stop.longitude
+                        ? `https://www.google.com/maps/dir/?api=1&destination=${stop.latitude},${stop.longitude}`
+                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${stop.customer.flat}, ${stop.customer.society}`)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded-md bg-white border border-line px-2 py-0.5 text-[11px] font-semibold text-accent hover:border-accent shadow-2xs transition active:scale-95"
+                    >
+                      🗺️ Open Maps ↗
                     </a>
                   </div>
 
