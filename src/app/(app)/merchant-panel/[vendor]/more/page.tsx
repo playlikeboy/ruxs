@@ -22,6 +22,13 @@ export default async function MorePage({
       marker: "₹",
     },
     {
+      title: "Kids Zone Activities & Camps",
+      description: "Manage kids classes, holiday workshops, enrollments and child run sheets.",
+      href: "/merchant-panel/" + slug + "/kids",
+      visible: access.role !== "driver",
+      marker: "🚀",
+    },
+    {
       title: "Ratings & reviews",
       description: "See what households say and reply publicly.",
       href: "/merchant-panel/" + slug + "/reviews",

@@ -8,9 +8,7 @@ export function KidsWorkshopCard({ item }: { item: KidsWorkshopItem }) {
   const urgency = formatBatchUrgency(item.batchSize, item.enrolledCount);
   const ageLabel = formatAgeBadge(item.minAge, item.maxAge);
 
-  const bookHref = item.serviceId
-    ? `/app/store/${item.vendor.slug}/book/${item.serviceId}`
-    : `/app/store/${item.vendor.slug}`;
+  const bookHref = `/app/kids/workshops/${item.id}`;
 
   return (
     <div className="relative flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-slate-900 bg-gradient-to-br from-amber-50 to-orange-50 p-4 shadow-[3px_3px_0_0_#0f172a]">
@@ -40,9 +38,11 @@ export function KidsWorkshopCard({ item }: { item: KidsWorkshopItem }) {
             {item.emoji}
           </span>
           <div>
-            <h3 className="text-base font-black leading-tight tracking-tight text-slate-950">
-              {item.title}
-            </h3>
+            <Link href={bookHref} className="hover:text-accent">
+              <h3 className="text-base font-black leading-tight tracking-tight text-slate-950">
+                {item.title}
+              </h3>
+            </Link>
             <span className="mt-1 inline-block text-[11px] font-bold text-slate-500">
               ⏰ {item.timeLabel} · 👶 {ageLabel}
             </span>
@@ -54,7 +54,9 @@ export function KidsWorkshopCard({ item }: { item: KidsWorkshopItem }) {
         </p>
 
         <div className="mt-2.5 flex items-center gap-1 text-xs font-bold text-slate-700">
-          <span>By {item.vendor.name}</span>
+          <Link href={`/app/kids/providers/${item.vendor.slug}`} className="hover:text-accent hover:underline">
+            By {item.vendor.name}
+          </Link>
           <span className="text-slate-400">·</span>
           <span>{item.vendor.area}</span>
         </div>

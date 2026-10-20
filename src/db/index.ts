@@ -9,9 +9,21 @@ import * as schema from "./schema";
  * Hyperdrive connection pool uses maxUses: 1 per request as recommended by OpenNext.
  */
 export const getDb = cache(() => {
-  const { env } = getCloudflareContext();
+  let connectionString: string | undefined;
+  try {
+    const ctx = getCloudflareContext();
+    connectionString = ctx.env.HYPERDRIVE?.connectionString;
+  } catch {
+    // In test / script environments outside of Cloudflare Worker runtime
+    connectionString = process.env.DATABASE_URL;
+  }
+
+  if (!connectionString) {
+    connectionString = process.env.DATABASE_URL;
+  }
+
   const pool = new Pool({
-    connectionString: env.HYPERDRIVE.connectionString,
+    connectionString,
     maxUses: 1,
   });
   return drizzle({ client: pool, schema });

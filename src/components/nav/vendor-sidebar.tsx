@@ -14,6 +14,7 @@ import {
   Repeat,
   Settings,
   ShieldAlert,
+  Sparkles,
   Star,
   Users,
   UtensilsCrossed,
@@ -67,6 +68,7 @@ export function VendorSidebar({
         {
           title: "Profile",
           items: [
+            { label: "Kids Zone", path: "/kids", icon: Sparkles, roles: ["owner", "staff"] },
             { label: "Services", path: "/services", icon: UtensilsCrossed },
             { label: "Clients", path: "/customers", icon: Users, roles: ["owner", "staff"] },
             { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
@@ -89,6 +91,7 @@ export function VendorSidebar({
         {
           title: "Store",
           items: [
+            { label: "Kids Zone", path: "/kids", icon: Sparkles, roles: ["owner", "staff"] },
             { label: "Menu", path: "/products", icon: UtensilsCrossed },
             { label: "Inventory", path: "/inventory", icon: Package },
             { label: "Customers", path: "/customers", icon: Users, roles: ["owner", "staff"] },

@@ -8,6 +8,9 @@ const NAV_ITEMS = [
   { href: "/app/kids/activities", label: "Classes", emoji: "🚀", exact: false },
   { href: "/app/kids/workshops", label: "Workshops", emoji: "🏕️", exact: false },
   { href: "/app/kids/kits", label: "DIY Kits", emoji: "🧩", exact: false },
+  { href: "/app/kids/passes", label: "Passes", emoji: "🎟️", exact: false },
+  { href: "/app/kids/children", label: "My Kids", emoji: "👶", exact: false },
+  { href: "/app/kids/bookings", label: "Bookings", emoji: "📅", exact: false },
 ];
 
 export function KidsSubNav() {

@@ -57,9 +57,12 @@ export function KidsActivityCard({ item }: { item: KidsActivityItem }) {
 
         {/* Vendor info and rating */}
         <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5 text-xs">
-          <span className="font-bold text-slate-700 truncate max-w-[180px]">
+          <Link
+            href={`/app/kids/providers/${item.vendor.slug}`}
+            className="font-bold text-slate-700 hover:text-accent hover:underline truncate max-w-[180px]"
+          >
             {item.vendor.name}
-          </span>
+          </Link>
           <div className="flex items-center gap-1 shrink-0 font-bold text-slate-900">
             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
             <span>{item.vendor.rating.toFixed(1)}</span>
@@ -87,10 +90,10 @@ export function KidsActivityCard({ item }: { item: KidsActivityItem }) {
         </div>
 
         <Link
-          href={`/app/store/${item.vendor.slug}/book/${item.serviceId}`}
+          href={`/app/kids/services/${item.id}`}
           className="inline-flex items-center gap-1 rounded-full border-2 border-slate-900 bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 shadow-[2px_2px_0_0_#0f172a] transition active:translate-y-0.5 active:shadow-none"
         >
-          <span>Book Trial</span>
+          <span>Book Session</span>
           <span aria-hidden="true">→</span>
         </Link>
       </div>
