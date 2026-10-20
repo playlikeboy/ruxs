@@ -32,8 +32,8 @@ export default async function MerchantSignInPage({ searchParams }: { searchParam
             <span className="block text-xs font-medium uppercase tracking-[0.18em] text-white/50">Merchant panel</span>
           </span>
         </div>
-        <h1 className="mt-10 text-[28px] font-bold leading-tight tracking-tight text-white">Run your kitchen or water business.</h1>
-        <p className="mt-2 text-sm leading-6 text-white/60">Orders, daily plans, menu, run sheets and monthly bills, in one place.</p>
+        <h1 className="mt-10 text-[28px] font-bold leading-tight tracking-tight text-white">Run your local business with less busywork.</h1>
+        <p className="mt-2 text-sm leading-6 text-white/60">Manage customers, orders or bookings, recurring plans, daily operations and billing in one workspace.</p>
 
         <div className="mt-8">
           {signedInHousehold ? <NotMerchantCard email={user?.primaryEmail ?? null} /> : <MerchantSignInForm next={next} />}
@@ -43,7 +43,7 @@ export default async function MerchantSignInPage({ searchParams }: { searchParam
           <div className="mt-8 space-y-3 text-center text-sm text-white/60">
             <p>
               New merchant?{" "}
-              <Link href="/onboarding" className="font-semibold text-white underline-offset-4 hover:underline">Apply to sell on RUXs</Link>
+              <Link href="/onboarding" className="font-semibold text-white underline-offset-4 hover:underline">Apply to list your business</Link>
             </p>
             <p>
               Ordering for your home?{" "}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight, GraduationCap } from "lucide-react";
 import { getMyLocation, getMyPlans, getMyProfile, listStores } from "@/features/consumer/queries";
 import { getCategoryMap } from "@/features/platform/queries";
 import { TodayCard, type TodayItem } from "@/features/consumer/components/today-card";
@@ -64,6 +65,38 @@ export default async function ExplorePage() {
 
   const firstName = (profile?.name ?? user.displayName ?? "").split(" ")[0];
 
+  const serviceCategories = categories.length > 0 ? (
+    <section className="mt-6" aria-labelledby="service-categories-heading">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h2 id="service-categories-heading" className="text-lg font-bold tracking-tight text-ink">Explore by service</h2>
+          <p className="mt-1 text-sm leading-5 text-neutral-500">Choose what you need. Discover local providers across categories.</p>
+        </div>
+        <span className="shrink-0 text-xs font-medium text-neutral-500">{categories.length} categories</span>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        {categories.map((k) => {
+          const destination =
+            k.id === "kids" ? "/app/kids" : k.id === "kids-kits" ? "/app/kids/kits" : "/app/category/" + k.id;
+          return (
+            <Link
+              key={k.id}
+              href={destination}
+              className="group relative flex min-h-[124px] flex-col justify-between overflow-hidden rounded-2xl border border-black/5 bg-neutral-50 p-4 transition-colors hover:bg-neutral-100 active:scale-[0.98]"
+            >
+              <span className="relative z-10 max-w-[76%] text-[15px] font-semibold leading-tight text-ink">{k.label}</span>
+              <span className="relative z-10 max-w-[76%] text-[11px] leading-4 text-neutral-600">{k.blurb}</span>
+              <span className="absolute bottom-2 right-3 text-[38px] leading-none" aria-hidden="true">{k.emoji}</span>
+              <span className="absolute right-3 top-3 text-neutral-400 transition-transform group-hover:translate-x-0.5">
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  ) : null;
+
   return (
     <div className="pb-24">
       <div className="space-y-4 px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))]">
@@ -79,6 +112,8 @@ export default async function ExplorePage() {
           <span className="text-neutral-500">what does home need today?</span>
         </h1>
 
+        {plans.length === 0 && serviceCategories}
+
         <HeroSubscriptionPlans plans={heroPlans} today={today} category={category} />
 
         {todayItems.length > 0 && (
@@ -87,45 +122,24 @@ export default async function ExplorePage() {
           </div>
         )}
 
-        {/* Kids Activities & Learning Zone Highlight */}
+        {plans.length > 0 && serviceCategories}
+
         <Link
           href="/app/kids"
-          className="relative mt-5 flex items-center justify-between overflow-hidden rounded-3xl border-2 border-slate-900 bg-gradient-to-r from-amber-200 via-sky-200 to-pink-200 p-4 shadow-[3px_3px_0_0_#0f172a] transition active:translate-y-0.5 active:shadow-[1px_1px_0_0_#0f172a]"
+          className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-neutral-50 p-4 transition-colors hover:bg-neutral-100 active:scale-[0.99]"
         >
-          <div className="z-10 max-w-[72%]">
-            <span className="inline-block rounded-full border border-slate-900/20 bg-white/90 px-2.5 py-0.5 text-[10px] font-black text-slate-900">
-              🎈 KIDS ZONE
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-black/5 bg-white text-accent">
+              <GraduationCap className="h-6 w-6" aria-hidden="true" />
             </span>
-            <h2 className="mt-1 text-base font-black leading-tight text-slate-950">
-              Kids Activities & Learning 🚀
-            </h2>
-            <p className="mt-0.5 text-[11px] font-bold text-slate-700">
-              Robotics, Chess, Pottery, Karate & DIY Kits
-            </p>
+            <span className="min-w-0">
+              <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-500">Family learning</span>
+              <span className="mt-1 block text-base font-bold leading-tight text-ink">Kids activities &amp; learning</span>
+              <span className="mt-1 block text-xs leading-5 text-neutral-600">Robotics, chess, arts, sports and hands-on kits.</span>
+            </span>
           </div>
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-900 bg-white text-2xl shadow-[2px_2px_0_0_#0f172a]">
-            🚀
-          </div>
+          <ArrowRight className="h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
         </Link>
-
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          {categories.map((k) => {
-            const destination =
-              k.id === "kids" ? "/app/kids" : k.id === "kids-kits" ? "/app/kids/kits" : `/app/category/${k.id}`;
-            return (
-              <Link
-                key={k.id}
-                href={destination}
-                className="relative flex h-[104px] flex-col justify-between overflow-hidden rounded-2xl p-3.5 transition active:scale-[0.98]"
-                style={{ backgroundColor: k.tint }}
-              >
-                <span className="text-[15px] font-semibold leading-tight text-ink">{k.label}</span>
-                <span className="max-w-[70%] text-[11px] leading-4 text-neutral-600">{k.blurb}</span>
-                <span className="absolute -bottom-2 -right-1 text-[52px] leading-none" aria-hidden="true">{k.emoji}</span>
-              </Link>
-            );
-          })}
-        </div>
 
         {!profile && (
           <Link href="/app/account" className="mt-5 flex items-center justify-between rounded-2xl border border-black/10 p-4">

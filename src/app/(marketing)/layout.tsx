@@ -14,10 +14,10 @@ export default function MarketingLayout({
             <span className="text-xl font-bold tracking-tight text-ink">RUXs</span>
           </Link>
 
-          <nav aria-label="Main navigation" className="hidden items-center gap-6 text-sm font-medium text-muted md:flex">
-            <Link href="/for/tiffin-services" className="transition-colors hover:text-ink">Tiffin & Meals</Link>
-            <Link href="/for/water-suppliers" className="transition-colors hover:text-ink">Water Cans</Link>
-            <Link href="/app" className="transition-colors hover:text-ink">Consumer Portal</Link>
+          <nav aria-label="Main navigation" className="hidden items-center gap-5 text-sm font-medium text-muted lg:flex">
+            <Link href="/app" className="transition-colors hover:text-ink">All services</Link>
+            <Link href="/app/kids" className="transition-colors hover:text-ink">Kids &amp; learning</Link>
+            <Link href="/merchant-panel" className="transition-colors hover:text-ink">For merchants</Link>
             <Link href="/pricing" className="transition-colors hover:text-ink">Pricing</Link>
             <Link href="/about" className="transition-colors hover:text-ink">About</Link>
           </nav>
@@ -44,7 +44,7 @@ export default function MarketingLayout({
                 <span className="font-bold text-ink">RUXs</span>
               </Link>
               <p className="max-w-sm text-sm leading-6 text-muted">
-                Everyday essentials across India, from your neighbourhood. Discover tiffin subscriptions, water-can delivery and local services.
+                Local services for everyday life — from meals and water delivery to kids’ activities, gifts and neighbourhood specialists.
               </p>
             </div>
 
@@ -62,9 +62,9 @@ export default function MarketingLayout({
               <h2 className="text-sm font-semibold text-ink">For merchants</h2>
               <nav aria-label="Merchant links" className="flex flex-col items-start gap-2.5 text-sm text-muted">
                 <Link href="/merchant-panel" className="font-semibold text-ink hover:text-accent">
-                  Merchant Workspace Portal →
+                  Merchant workspace →
                 </Link>
-                <Link href="/onboarding" className="hover:text-ink">Register as a Supplier</Link>
+                <Link href="/onboarding" className="hover:text-ink">List your local business</Link>
                 <Link href="/for/tiffin-services" className="hover:text-ink">For tiffin kitchens</Link>
                 <Link href="/for/water-suppliers" className="hover:text-ink">For water suppliers</Link>
               </nav>
