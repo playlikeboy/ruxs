@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BellRing, ChartColumn, Navigation, Package, Repeat, UtensilsCrossed, Wallet } from "lucide-react";
+import { ArrowRight, BellRing, ChartColumn, Navigation, Package, Repeat, Sparkles, UtensilsCrossed, Wallet } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { todayIST } from "@/core/time";
 import { requireVendorAccess } from "@/lib/auth/session";
@@ -9,8 +9,13 @@ import { getDayChangesForVendor } from "@/features/day-changes/queries";
 import { countActivePlansByProduct } from "@/features/subscriptions/queries";
 import { countOpenShopOrders } from "@/features/shop-orders/queries";
 import { computeVendorBalance } from "@/features/payouts/queries";
+import { getVendorAssetOverview } from "@/features/assets/queries";
+import { getCustomersForVendor } from "@/features/customers/queries";
 import { BigCount } from "@/features/orders/components/big-count";
 import { ProviderToday } from "@/features/bookings/components/provider-today";
+import { WaterCanHub } from "@/features/assets/components/water-can-hub";
+import { TiffinKitchenPrep } from "@/features/orders/components/tiffin-kitchen-prep";
+import { WeeklyMenuSchedule } from "@/features/orders/components/weekly-menu-schedule";
 
 export const metadata = { title: "Today" };
 
@@ -27,13 +32,20 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
   // Trainers and physiotherapists run on sessions, not deliveries.
   if (access.vendor.businessType === "booking") return <ProviderToday slug={slug} />;
 
-  const [products, todayData, changes, planCounts, newOrders, balance] = await Promise.all([
+  const isWater = access.vendor.categoryId === "water";
+  const isTiffin = access.vendor.categoryId === "tiffin";
+  const isKids = access.vendor.categoryId === "kids" || access.vendor.categoryId === "kids-kits";
+
+  const [products, todayData, changes, planCounts, newOrders, balance, waterData] = await Promise.all([
     getVendorProducts(slug),
     getTodayOrders(slug, today),
     getDayChangesForVendor(slug, today),
     countActivePlansByProduct(slug, today),
     countOpenShopOrders(access.vendorId),
     access.role === "driver" ? null : computeVendorBalance(access.vendorId, access.vendor.commissionBps),
+    isWater
+      ? Promise.all([getVendorAssetOverview(slug), getCustomersForVendor(slug)])
+      : null,
   ]);
 
   const countByProduct = new Map(todayData.counts.map((c) => [c.product.id, c]));
@@ -48,13 +60,63 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
   const dateLabel = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" });
 
   const kpis = [
-    { label: "To prepare today", value: String(totalToPrepare), sub: `${delivered} delivered`, href: `${base}/run`, icon: Navigation },
-    { label: "New app orders", value: String(newOrders), sub: newOrders ? "Waiting for you" : "All caught up", href: `${base}/orders`, icon: BellRing, hot: newOrders > 0 },
-    { label: "Active plans", value: String(activePlans), sub: `${menuItems} menu items`, href: `${base}/subscriptions`, icon: Repeat },
+    {
+      label: isWater ? "Cans to deliver today" : "To prepare today",
+      value: String(totalToPrepare),
+      sub: `${delivered} delivered`,
+      href: `${base}/run`,
+      icon: Navigation,
+    },
+    {
+      label: "New app orders",
+      value: String(newOrders),
+      sub: newOrders ? "Waiting for you" : "All caught up",
+      href: `${base}/orders`,
+      icon: BellRing,
+      hot: newOrders > 0,
+    },
+    {
+      label: "Active plans",
+      value: String(activePlans),
+      sub: `${menuItems} catalog items`,
+      href: `${base}/subscriptions`,
+      icon: Repeat,
+    },
     ...(balance
-      ? [{ label: "Available to withdraw", value: formatINR(balance.availablePaise), sub: balance.pendingPaise ? `${formatINR(balance.pendingPaise)} pending` : "Online payments", href: `${base}/earnings`, icon: Wallet }]
+      ? [
+          {
+            label: "Available to withdraw",
+            value: formatINR(balance.availablePaise),
+            sub: balance.pendingPaise ? `${formatINR(balance.pendingPaise)} pending` : "Online payments",
+            href: `${base}/earnings`,
+            icon: Wallet,
+          },
+        ]
       : []),
   ];
+
+  // Water data extraction
+  const assetOverview = waterData?.[0];
+  const custList = waterData?.[1] ?? [];
+  const canAsset = assetOverview?.assets.find((a) => a.asset === "can");
+  const outstandingCans = canAsset?.outstanding ?? 0;
+  const householdsHoldingCans = canAsset?.households ?? 0;
+
+  // Tiffin data extraction
+  const confirmedProducts = kitchen.map((p) => ({
+    id: p.id,
+    name: p.name,
+    qty: countByProduct.get(p.id)?.confirmedQty ?? 0,
+  }));
+  const skipsToday = changes
+    .filter((c) => c.change.kind === "skip")
+    .map((c) => ({
+      customerName: c.customer.name,
+      flat: c.customer.flat,
+      tower: c.customer.tower,
+      society: c.customer.society,
+      productName: c.product.name,
+    }));
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -67,6 +129,25 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
           <Navigation className="h-4 w-4" aria-hidden="true" /> Start delivery run
         </Link>
       </div>
+
+      {/* Prominent Kids Zone banner if vendor is in kids category */}
+      {isKids && (
+        <Link
+          href={`${base}/kids`}
+          className="flex items-center gap-3.5 rounded-[16px] border border-amber-300 bg-gradient-to-r from-amber-50 via-yellow-50 to-sky-50 p-4 shadow-2xs transition hover:border-amber-400"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-2xs">
+            <Sparkles className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <span className="block font-bold text-ink text-sm">🚀 Kids Zone Hub Active</span>
+            <span className="block text-xs text-muted">
+              Manage children activity workshops, passes, and class attendance roster.
+            </span>
+          </div>
+          <ArrowRight className="h-5 w-5 text-amber-700" aria-hidden="true" />
+        </Link>
+      )}
 
       {newOrders > 0 && (
         <Link href={`${base}/orders`} className="flex items-center gap-3 rounded-[16px] border border-accent/30 bg-peach p-4 transition hover:border-accent">
@@ -81,6 +162,7 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
         </Link>
       )}
 
+      {/* Primary KPI Grid */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {kpis.map((k) => {
           const Icon = k.icon;
@@ -101,16 +183,47 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
         })}
       </div>
 
+      {/* Differentiated Component: Water Can & Bottle Fleet Hub */}
+      {isWater && (
+        <WaterCanHub
+          slug={slug}
+          customers={custList.map((c) => ({
+            id: c.id,
+            name: c.name,
+            flat: c.flat,
+            society: c.society,
+          }))}
+          outstandingCans={outstandingCans}
+          householdsCount={householdsHoldingCans}
+        />
+      )}
+
+      {/* Differentiated Component: Tiffin Kitchen Prep Sheet & Rotating Weekly Menu */}
+      {isTiffin && (
+        <div className="space-y-4">
+          <TiffinKitchenPrep
+            storeName={access.vendor.name}
+            totalMeals={totalToPrepare}
+            confirmedProducts={confirmedProducts}
+            skipsToday={skipsToday}
+          />
+          <WeeklyMenuSchedule />
+        </div>
+      )}
+
+      {/* Standard Product Prep Counts */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ink">Kitchen counts</h2>
+          <h2 className="text-lg font-semibold text-ink">
+            {isWater ? "Water dispatch counts" : isTiffin ? "Tiffin portions to pack" : "Dispatch counts"}
+          </h2>
           <Link href={`${base}/run`} className="text-sm font-semibold text-accent">Run sheet →</Link>
         </div>
         {kitchen.length === 0 ? (
           <div className="rounded-[16px] border border-dashed border-line bg-surface p-8 text-center">
             <p className="font-semibold text-ink">Nothing to deliver today</p>
             <p className="mt-1 text-sm text-muted">Counts appear here for items with active plans. Households subscribe from your store page.</p>
-            <Link href={`${base}/products`} className="mt-4 inline-flex h-10 items-center rounded-[10px] bg-ink px-4 text-sm font-semibold text-white">Manage menu</Link>
+            <Link href={`${base}/products`} className="mt-4 inline-flex h-10 items-center rounded-[10px] bg-ink px-4 text-sm font-semibold text-white">Manage items</Link>
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -165,8 +278,8 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
           <h2 className="text-lg font-semibold text-ink">Shortcuts</h2>
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
             {[
-              { label: "Menu", href: `${base}/products`, icon: UtensilsCrossed },
-              { label: "Cans & dabbas", href: `${base}/inventory`, icon: Package },
+              { label: isTiffin ? "Tiffin Menu" : "Catalog items", href: `${base}/products`, icon: UtensilsCrossed },
+              { label: isWater ? "Cans & Bottles" : isTiffin ? "Dabbas & Returnables" : "Inventory", href: `${base}/inventory`, icon: Package },
               { label: "Analytics", href: `${base}/analytics`, icon: ChartColumn },
               { label: "Earnings", href: `${base}/earnings`, icon: Wallet },
             ].map((s) => {

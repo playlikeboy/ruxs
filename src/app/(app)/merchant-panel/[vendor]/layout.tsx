@@ -27,6 +27,7 @@ export default async function VendorLayout({
         acceptingOrders={access.vendor.acceptingOrders}
         newOrders={newOrders}
         provider={provider}
+        category={access.vendor.categoryId}
       />
 
       <div className="lg:pl-64">

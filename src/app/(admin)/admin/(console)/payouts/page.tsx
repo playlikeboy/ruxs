@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatINR } from "@/core/money";
 import { getAdminPayouts } from "@/features/payouts/queries";
+import { AdminPayoutsExport } from "@/features/payouts/components/admin-payouts-export";
 import {
   MarkPayoutPaidButton,
   RecordPayoutButton,
@@ -23,9 +24,12 @@ export default async function AdminPayoutsPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Payouts</h1>
-        <p className="mt-1 text-sm text-muted">Money collected through Razorpay, what each vendor can withdraw, and transfers you have made.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Payouts</h1>
+          <p className="mt-1 text-sm text-muted">Money collected through Razorpay, what each vendor can withdraw, and transfers you have made.</p>
+        </div>
+        <AdminPayoutsExport balances={balances} requests={requests} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">

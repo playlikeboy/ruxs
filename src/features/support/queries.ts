@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, count } from "drizzle-orm";
 import { getDb } from "@/db";
 import { supportTickets } from "@/db/schema";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
@@ -40,18 +40,44 @@ export async function getVendorTickets(slug: string) {
 }
 
 /** Admin console view for tickets */
-export async function getAdminTickets(opts?: { status?: string; category?: string }) {
+export async function getAdminTickets(opts?: {
+  status?: string;
+  category?: string;
+  page?: number;
+  limit?: number;
+}) {
   await requireAdmin();
   const db = getDb();
+
+  const page = Math.max(1, opts?.page ?? 1);
+  const limit = Math.max(1, Math.min(100, opts?.limit ?? 25));
+  const offset = (page - 1) * limit;
 
   const conditions = [];
   if (opts?.status) conditions.push(eq(supportTickets.status, opts.status));
   if (opts?.category) conditions.push(eq(supportTickets.category, opts.category));
 
-  return db
-    .select()
-    .from(supportTickets)
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(supportTickets.createdAt))
-    .limit(100);
+  const whereClause = conditions.length ? and(...conditions) : undefined;
+
+  const [countRes, rows] = await Promise.all([
+    db.select({ count: count() }).from(supportTickets).where(whereClause),
+    db
+      .select()
+      .from(supportTickets)
+      .where(whereClause)
+      .orderBy(desc(supportTickets.createdAt))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const total = countRes[0]?.count ?? 0;
+  const totalPages = Math.ceil(total / limit) || 1;
+
+  return {
+    tickets: rows,
+    total,
+    totalPages,
+    page,
+    limit,
+  };
 }

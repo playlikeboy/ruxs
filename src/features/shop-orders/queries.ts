@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, inArray, ne, or, gte } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, or, gte, count, ilike } from "drizzle-orm";
 import { getDb } from "@/db";
 import { consumers, customers, shopOrderItems, shopOrders, vendors } from "@/db/schema";
 import { requireAdmin, requireVendorAccess } from "@/lib/auth/session";
@@ -59,21 +59,78 @@ export async function countOpenShopOrders(vendorId: string) {
   return rows.length;
 }
 
-export async function getAdminShopOrders(status?: string) {
+export interface AdminOrdersQueryOptions {
+  status?: string;
+  q?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getAdminShopOrders(optsOrStatus?: string | AdminOrdersQueryOptions) {
   await requireAdmin();
   const db = getDb();
-  const rows = await db
-    .select({
-      order: shopOrders,
-      vendorName: vendors.name,
-      vendorSlug: vendors.slug,
-      customerName: customers.name,
-    })
-    .from(shopOrders)
-    .innerJoin(vendors, eq(shopOrders.vendorId, vendors.id))
-    .innerJoin(customers, eq(shopOrders.customerId, customers.id))
-    .where(status ? eq(shopOrders.status, status) : undefined)
-    .orderBy(desc(shopOrders.createdAt))
-    .limit(200);
-  return withItems(rows);
+
+  const options: AdminOrdersQueryOptions =
+    typeof optsOrStatus === "string"
+      ? { status: optsOrStatus }
+      : optsOrStatus ?? {};
+
+  const page = Math.max(1, options.page ?? 1);
+  const limit = Math.max(1, Math.min(100, options.limit ?? 25));
+  const offset = (page - 1) * limit;
+
+  const conditions = [];
+  if (options.status) {
+    conditions.push(eq(shopOrders.status, options.status));
+  }
+  if (options.q?.trim()) {
+    const term = `%${options.q.trim()}%`;
+    conditions.push(
+      or(
+        ilike(shopOrders.number, term),
+        ilike(vendors.name, term),
+        ilike(customers.name, term),
+        ilike(customers.phone, term),
+        ilike(shopOrders.address, term)
+      )
+    );
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [countRes, rows] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(shopOrders)
+      .innerJoin(vendors, eq(shopOrders.vendorId, vendors.id))
+      .innerJoin(customers, eq(shopOrders.customerId, customers.id))
+      .where(whereClause),
+
+    db
+      .select({
+        order: shopOrders,
+        vendorName: vendors.name,
+        vendorSlug: vendors.slug,
+        customerName: customers.name,
+      })
+      .from(shopOrders)
+      .innerJoin(vendors, eq(shopOrders.vendorId, vendors.id))
+      .innerJoin(customers, eq(shopOrders.customerId, customers.id))
+      .where(whereClause)
+      .orderBy(desc(shopOrders.createdAt))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const itemsWithOrders = await withItems(rows);
+  const total = countRes[0]?.count ?? 0;
+  const totalPages = Math.ceil(total / limit) || 1;
+
+  return {
+    orders: itemsWithOrders,
+    total,
+    totalPages,
+    page,
+    limit,
+  };
 }

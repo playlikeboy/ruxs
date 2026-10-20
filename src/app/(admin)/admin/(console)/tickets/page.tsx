@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminTickets } from "@/features/support/queries";
 import { AdminTicketRow } from "@/features/support/components/admin-ticket-row";
+import { AdminPagination } from "@/features/admin/components/admin-pagination";
 import { TICKET_CATEGORIES } from "@/core/tickets";
 
 export const metadata = { title: "Tickets & Disputes · Admin" };
@@ -16,15 +17,18 @@ const STATUS_FILTERS = [
 export default async function AdminTicketsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; category?: string }>;
+  searchParams: Promise<{ status?: string; category?: string; page?: string }>;
 }) {
-  const { status: rawStatus, category: rawCategory } = await searchParams;
+  const { status: rawStatus, category: rawCategory, page } = await searchParams;
   const status = STATUS_FILTERS.some((f) => f.v === rawStatus) ? rawStatus : "";
   const category = rawCategory && rawCategory in TICKET_CATEGORIES ? rawCategory : "";
+  const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
 
-  const tickets = await getAdminTickets({
+  const { tickets, total, totalPages, limit } = await getAdminTickets({
     status: status || undefined,
     category: category || undefined,
+    page: currentPage,
+    limit: 20,
   });
 
   return (
@@ -80,6 +84,13 @@ export default async function AdminTicketsPage({
           ))}
         </ul>
       )}
+
+      <AdminPagination
+        page={currentPage}
+        totalPages={totalPages}
+        totalItems={total}
+        limit={limit}
+      />
     </div>
   );
 }

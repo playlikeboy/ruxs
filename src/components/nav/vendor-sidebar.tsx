@@ -41,6 +41,7 @@ export function VendorSidebar({
   acceptingOrders,
   newOrders,
   provider,
+  category,
 }: {
   slug: string;
   storeName: string;
@@ -50,15 +51,53 @@ export function VendorSidebar({
   newOrders: number;
   /** Sells booking services (trainers, physio): show sessions instead of deliveries. */
   provider: boolean;
+  category?: string | null;
 }) {
   const pathname = usePathname();
   const base = "/merchant-panel/" + slug;
 
-  // Booking providers (trainers, physio) and delivery stores (tiffin, water) run different businesses.
-  const groups: { title: string; items: Item[] }[] = provider
+  const isKids = category === "kids" || category === "kids-kits";
+  const isWater = category === "water";
+  const isTiffin = category === "tiffin";
+  const isFitness = category === "fitness";
+  const isMehndi = category === "mehndi";
+  const isPhysio = category === "physio";
+
+  // Specialized navigation tailored per merchant kind
+  const groups: { title: string; items: Item[] }[] = isKids
     ? [
         {
-          title: "Sessions",
+          title: "Kids Zone",
+          items: [
+            { label: "Classes & Workshops", path: "/kids", icon: Sparkles, roles: ["owner", "staff"] },
+            { label: "Today Schedule", path: "/today", icon: CalendarDays },
+            { label: "Session Bookings", path: "/bookings", icon: CalendarClock },
+            { label: "Passes & Availability", path: "/availability", icon: Repeat, roles: ["owner", "staff"] },
+          ],
+        },
+        {
+          title: "Academy",
+          items: [
+            { label: "Services & Kits", path: provider ? "/services" : "/products", icon: UtensilsCrossed },
+            { label: "Students & Parents", path: "/customers", icon: Users, roles: ["owner", "staff"] },
+            { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
+            { label: "Disputes", path: "/disputes", icon: ShieldAlert, roles: ["owner", "staff"] },
+          ],
+        },
+        {
+          title: "Money",
+          items: [
+            { label: "Earnings", path: "/earnings", icon: Wallet, roles: ["owner", "staff"] },
+            { label: "Bills & Invoices", path: "/bills", icon: FileText, roles: ["owner", "staff"] },
+            { label: "Analytics", path: "/analytics", icon: ChartColumn, roles: ["owner", "staff"] },
+          ],
+        },
+        { title: "Settings", items: [{ label: "Academy settings", path: "/settings", icon: Settings, roles: ["owner"] }] },
+      ]
+    : provider
+    ? [
+        {
+          title: isFitness ? "Workouts" : isMehndi ? "Appointments" : isPhysio ? "Rehab" : "Sessions",
           items: [
             { label: "Today", path: "/today", icon: CalendarDays },
             { label: "Bookings", path: "/bookings", icon: CalendarClock },
@@ -84,7 +123,7 @@ export function VendorSidebar({
           items: [
             { label: "Today", path: "/today", icon: CalendarDays },
             { label: "Orders", path: "/orders", icon: ClipboardList, badge: newOrders },
-            { label: "Delivery run", path: "/run", icon: Navigation },
+            { label: isWater ? "Water Dispatch Run" : isTiffin ? "Kitchen Run" : "Delivery run", path: "/run", icon: Navigation },
             { label: "Plans", path: "/subscriptions", icon: Repeat, roles: ["owner", "staff"] },
           ],
         },
@@ -92,8 +131,8 @@ export function VendorSidebar({
           title: "Store",
           items: [
             { label: "Kids Zone", path: "/kids", icon: Sparkles, roles: ["owner", "staff"] },
-            { label: "Menu", path: "/products", icon: UtensilsCrossed },
-            { label: "Inventory", path: "/inventory", icon: Package },
+            { label: isTiffin ? "Tiffin Menu & Thalis" : "Menu", path: "/products", icon: UtensilsCrossed },
+            { label: isWater ? "Cans & Bottles" : isTiffin ? "Dabbas & Returnables" : "Inventory", path: "/inventory", icon: Package },
             { label: "Customers", path: "/customers", icon: Users, roles: ["owner", "staff"] },
             { label: "Reviews", path: "/reviews", icon: Star, roles: ["owner", "staff"] },
             { label: "Disputes", path: "/disputes", icon: ShieldAlert, roles: ["owner", "staff"] },

@@ -1,61 +1,60 @@
+import { Search } from "lucide-react";
 import { getAdminHouseholds } from "@/features/admin/queries";
+import { AdminHouseholdsTable } from "@/features/admin/components/admin-households-table";
+import { AdminPagination } from "@/features/admin/components/admin-pagination";
 
-export const metadata = { title: "Households" };
+export const metadata = { title: "Households · Admin" };
 
-const dateFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" });
+export default async function AdminHouseholdsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}) {
+  const { q = "", page } = await searchParams;
+  const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
 
-export default async function AdminHouseholdsPage() {
-  const people = await getAdminHouseholds();
+  const { people, total, totalPages, limit } = await getAdminHouseholds({
+    q: q || undefined,
+    page: currentPage,
+    limit: 25,
+  });
+
   return (
     <div className="space-y-4 p-4 sm:p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Households</h1>
-        <p className="mt-1 text-sm text-muted">{people.length} people have set up the RUXs app.</p>
-      </div>
-      {people.length === 0 ? (
-        <p className="rounded-[12px] border border-line bg-surface p-8 text-center text-sm text-muted">No households yet.</p>
-      ) : (
-        <>
-        <ul className="space-y-2 md:hidden">
-          {people.map((p) => (
-            <li key={p.userId} className="rounded-[14px] border border-line bg-surface p-4 text-sm">
-              <div className="flex items-start justify-between gap-3">
-                <p className="font-semibold">{p.name}</p>
-                <span className="text-xs text-muted">{dateFmt.format(p.createdAt)}</span>
-              </div>
-              <p className="text-xs text-muted">{p.flat}, {p.society} · {p.area}, {p.city}</p>
-              <p className="mt-1 text-xs"><span className="font-mono">{p.phone}</span> · {p.stores} stores · {p.orders} orders</p>
-            </li>
-          ))}
-        </ul>
-        <div className="hidden overflow-x-auto rounded-[12px] border border-line bg-surface md:block">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Name</th>
-                <th className="px-4 py-3 font-semibold">Contact</th>
-                <th className="px-4 py-3 font-semibold">Address</th>
-                <th className="px-4 py-3 text-right font-semibold">Stores</th>
-                <th className="px-4 py-3 text-right font-semibold">Orders</th>
-                <th className="px-4 py-3 font-semibold">Joined</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {people.map((p) => (
-                <tr key={p.userId}>
-                  <td className="px-4 py-3 font-medium">{p.name}</td>
-                  <td className="px-4 py-3 text-muted"><span className="font-mono">{p.phone}</span><br />{p.email}</td>
-                  <td className="px-4 py-3 text-muted">{p.flat}, {p.society}<br />{p.area}, {p.city}</td>
-                  <td className="px-4 py-3 text-right font-mono tabular-nums">{p.stores}</td>
-                  <td className="px-4 py-3 text-right font-mono tabular-nums">{p.orders}</td>
-                  <td className="px-4 py-3 text-muted">{dateFmt.format(p.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Households</h1>
+          <p className="mt-1 text-sm text-muted">
+            {total} registered consumers using the RUXs app.
+          </p>
         </div>
-        </>
+
+        <form className="relative flex-1 min-w-[240px] max-w-sm" role="search">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Search name, phone, email, address…"
+            aria-label="Search households"
+            className="h-10 w-full rounded-[10px] border border-line bg-surface pl-9 pr-3 text-xs placeholder:text-muted focus:border-ink focus:outline-none"
+          />
+        </form>
+      </div>
+
+      {people.length === 0 ? (
+        <div className="rounded-[14px] border border-line bg-surface p-12 text-center text-sm text-muted">
+          No households found matching your query.
+        </div>
+      ) : (
+        <AdminHouseholdsTable people={people} />
       )}
+
+      <AdminPagination
+        page={currentPage}
+        totalPages={totalPages}
+        totalItems={total}
+        limit={limit}
+      />
     </div>
   );
 }
