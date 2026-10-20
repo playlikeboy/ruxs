@@ -29,11 +29,15 @@ export const metadata: Metadata = {
     template: "%s | RUXs",
   },
   description:
-    "Discover neighbourhood tiffin subscriptions, 20L water-can delivery, fresh dairy, mehndi artists, and custom gifts with local doorstep service.",
+    "Discover neighbourhood tiffin subscriptions, 20L water-can delivery, fresh dairy, kids robotics & STEM classes, mehndi artists, and custom gifts with local doorstep service.",
   keywords: [
     "tiffin service",
     "20L water can delivery",
     "fresh milk delivery",
+    "kids robotics classes",
+    "kids chess academy",
+    "stem learning kits",
+    "pottery for kids",
     "mehndi artist",
     "henna designer",
     "custom gifts",

@@ -25,7 +25,11 @@ export function TabBar() {
       <ul className="grid h-16 grid-cols-5">
         {TABS.map((tab) => {
           const active = tab.exact
-            ? pathname === tab.href || pathname.startsWith("/app/category") || pathname.startsWith("/app/search") || pathname.startsWith("/app/store")
+            ? pathname === tab.href ||
+              pathname.startsWith("/app/category") ||
+              pathname.startsWith("/app/search") ||
+              pathname.startsWith("/app/store") ||
+              pathname.startsWith("/app/kids")
             : pathname.startsWith(tab.href);
           const Icon = tab.icon;
           return (
