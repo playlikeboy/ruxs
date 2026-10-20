@@ -25,6 +25,7 @@ import { addDaysIST, todayIST, weekdayIST } from "@/core/time";
 import { isLate } from "@/core/cutoff";
 import { renderEmailHtml, sendUserEmailIfAllowed } from "@/features/notifications/service";
 import { applyHouseholdDayChange } from "@/features/day-changes/household";
+import { moveOrder } from "@/features/shop-orders/lifecycle";
 import { addressLine, deliveryCheck, ensureCustomer, loadProfile } from "./household";
 import {
   cancelOrderSchema,
@@ -285,6 +286,29 @@ export async function cancelMyOrder(input: unknown) {
   revalidatePath("/app/orders");
   revalidatePath(`/app/orders/${order.id}`);
   return { ok: true as const };
+}
+
+export async function confirmMyOrderDelivered(input: unknown) {
+  const parsed = cancelOrderSchema.safeParse(input);
+  if (!parsed.success) return fail("Invalid order");
+
+  const user = await requireUser();
+  const db = getDb();
+  const [order] = await db
+    .select()
+    .from(shopOrders)
+    .where(and(eq(shopOrders.id, parsed.data.orderId), eq(shopOrders.userId, user.id)))
+    .limit(1);
+
+  if (!order) return fail("Order not found");
+
+  return moveOrder({
+    orderId: order.id,
+    vendorId: order.vendorId,
+    to: "delivered",
+    actor: "consumer",
+    actorId: user.id,
+  });
 }
 
 export async function subscribe(input: unknown) {

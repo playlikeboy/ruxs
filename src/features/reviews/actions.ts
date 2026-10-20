@@ -34,11 +34,21 @@ export async function saveMyReview(input: unknown) {
   // Never fall back to the email address: reviews are public.
   const authorName = (profile?.name || user.displayName || "RUXs user").slice(0, 80);
 
+  // Each person can only rate a store once
+  const [existing] = await db
+    .select({ id: vendorReviews.id })
+    .from(vendorReviews)
+    .where(and(eq(vendorReviews.vendorId, vendor.id), eq(vendorReviews.userId, user.id)))
+    .limit(1);
+
+  if (existing) {
+    return fail("You have already rated this store. Only one rating per customer is allowed.");
+  }
+
   const values = { rating: parsed.data.rating, comment: parsed.data.comment || null, authorName, updatedAt: new Date() };
   await db
     .insert(vendorReviews)
-    .values({ vendorId: vendor.id, customerId: customer?.id ?? null, userId: user.id, ...values })
-    .onConflictDoUpdate({ target: [vendorReviews.vendorId, vendorReviews.userId], set: values });
+    .values({ vendorId: vendor.id, customerId: customer?.id ?? null, userId: user.id, ...values });
 
   revalidatePath(`/app/store/${parsed.data.vendorSlug}`);
   revalidatePath("/app", "layout");

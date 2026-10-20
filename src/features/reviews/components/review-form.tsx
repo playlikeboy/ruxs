@@ -16,6 +16,37 @@ export function ReviewForm({ vendorSlug, initialRating, initialComment }: { vend
   const [pending, startTransition] = useTransition();
   const shown = hover || rating;
 
+  if (initialRating) {
+    return (
+      <div className="rounded-2xl border border-black/10 bg-neutral-50/70 p-4">
+        <div className="flex items-center justify-between">
+          <p className="text-[15px] font-semibold text-ink">Your Rating</p>
+          <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+            ✓ Rated
+          </span>
+        </div>
+        <div className="mt-2.5 flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Star
+              key={i}
+              className={"h-5 w-5 " + (i <= initialRating ? "fill-[#E8A33D] text-[#E8A33D]" : "text-neutral-300")}
+              aria-hidden="true"
+            />
+          ))}
+          <span className="ml-2 text-sm font-semibold text-ink">{WORDS[initialRating]}</span>
+        </div>
+        {initialComment && (
+          <p className="mt-2 text-sm text-neutral-700 italic leading-relaxed">
+            &ldquo;{initialComment}&rdquo;
+          </p>
+        )}
+        <p className="mt-3 text-[11px] text-neutral-400">
+          Each customer can rate a store once. Thank you for your feedback!
+        </p>
+      </div>
+    );
+  }
+
   return (
     <form
       className="space-y-3 rounded-2xl border border-black/10 p-4"
@@ -29,13 +60,13 @@ export function ReviewForm({ vendorSlug, initialRating, initialComment }: { vend
           const res = await saveMyReview({ vendorSlug, rating, comment: comment || undefined });
           if (!res.ok) toast.error(res.error);
           else {
-            toast.success(initialRating ? "Review updated" : "Thanks for rating!");
+            toast.success("Thanks for rating!");
             router.refresh();
           }
         });
       }}
     >
-      <p className="text-[15px] font-semibold text-ink">{initialRating ? "Your rating" : "Rate this store"}</p>
+      <p className="text-[15px] font-semibold text-ink">Rate this store</p>
       <div className="flex items-center gap-1" role="radiogroup" aria-label="Rating" onMouseLeave={() => setHover(0)}>
         {[1, 2, 3, 4, 5].map((i) => (
           <button

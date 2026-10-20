@@ -71,6 +71,13 @@
       "when": 1792500000000,
       "tag": "0009_vendor_location_open_reviews_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792600000000,
+      "tag": "0010_dual_delivery_and_support_tickets",
+      "breakpoints": true
     }
   ]
 }

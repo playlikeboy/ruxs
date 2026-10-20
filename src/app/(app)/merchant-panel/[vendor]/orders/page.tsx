@@ -92,7 +92,13 @@ export default async function MerchantOrdersPage({
                   <span className="text-muted">{order.paymentMode === "online" ? (order.paymentStatus === "paid" ? "Paid online · do not collect" : "Refund due · do not collect") : order.paymentMode === "cod" ? "Collect on delivery" : "Add to monthly bill"}</span>
                   <span className="font-mono text-base font-bold tabular-nums text-ink">{formatINR(order.totalPaise)}</span>
                 </div>
-                <OrderStatusButtons orderId={order.id} status={order.status as ShopOrderStatus} slug={slug} />
+                <OrderStatusButtons
+                  orderId={order.id}
+                  status={order.status as ShopOrderStatus}
+                  slug={slug}
+                  vendorDeliveredAt={order.vendorDeliveredAt}
+                  consumerDeliveredAt={order.consumerDeliveredAt}
+                />
               </li>
             );
           })}

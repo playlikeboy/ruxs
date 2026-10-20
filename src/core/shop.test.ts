@@ -5,6 +5,8 @@ import {
   nextVendorStep,
   formatOrderNumber,
   deliveredLedgerLines,
+  isBothDelivered,
+  getDeliveryConfirmationState,
 } from "./shop";
 
 describe("cart totals", () => {
@@ -32,10 +34,24 @@ describe("cart totals", () => {
 });
 
 describe("order status transitions", () => {
-  it("lets a consumer cancel only before the store accepts", () => {
+  it("lets a consumer cancel only before the store accepts, and confirm delivery once active", () => {
     expect(canTransition("placed", "cancelled", "consumer")).toBe(true);
     expect(canTransition("accepted", "cancelled", "consumer")).toBe(false);
     expect(canTransition("placed", "delivered", "consumer")).toBe(false);
+    expect(canTransition("accepted", "delivered", "consumer")).toBe(true);
+    expect(canTransition("out_for_delivery", "delivered", "consumer")).toBe(true);
+  });
+
+  it("checks two-sided delivery confirmation logic", () => {
+    expect(isBothDelivered(null, null)).toBe(false);
+    expect(isBothDelivered(new Date(), null)).toBe(false);
+    expect(isBothDelivered(null, new Date())).toBe(false);
+    expect(isBothDelivered(new Date(), new Date())).toBe(true);
+
+    expect(getDeliveryConfirmationState(null, null)).toBe("pending");
+    expect(getDeliveryConfirmationState(new Date(), null)).toBe("awaiting_consumer");
+    expect(getDeliveryConfirmationState(null, new Date())).toBe("awaiting_vendor");
+    expect(getDeliveryConfirmationState(new Date(), new Date())).toBe("confirmed");
   });
 
   it("walks a vendor forward through the flow", () => {

@@ -61,6 +61,8 @@ export const shopOrders = pgTable(
     notes: text("notes"),
     cancelReason: text("cancel_reason"),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    vendorDeliveredAt: timestamp("vendor_delivered_at", { withTimezone: true }),
+    consumerDeliveredAt: timestamp("consumer_delivered_at", { withTimezone: true }),
     deliveredAt: timestamp("delivered_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

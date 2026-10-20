@@ -65,10 +65,42 @@ export function canTransition(
   if (from === "delivered" || from === "cancelled" || from === "rejected") return false;
   // An unpaid online order only moves when payment lands (placed) or is abandoned (cancelled).
   if (from === "awaiting_payment") return to === "cancelled" || (actor === "admin" && to === "placed");
-  if (actor === "consumer") return from === "placed" && to === "cancelled";
+  if (actor === "consumer") {
+    if (from === "placed" && to === "cancelled") return true;
+    // Consumer can confirm delivery once order has been accepted or is out for delivery
+    if ((from === "accepted" || from === "out_for_delivery") && to === "delivered") return true;
+    return false;
+  }
   if (actor === "vendor") return VENDOR_FLOW[from]?.includes(to) ?? false;
   // Admin can resolve any open order to any status.
   return true;
+}
+
+/**
+ * In RUXs, an order is only marked as fully 'delivered' once both the vendor and the consumer
+ * have marked it delivered.
+ */
+export function isBothDelivered(
+  vendorDeliveredAt: Date | string | null | undefined,
+  consumerDeliveredAt: Date | string | null | undefined
+): boolean {
+  return Boolean(vendorDeliveredAt && consumerDeliveredAt);
+}
+
+export type DeliveryConfirmationState =
+  | "pending" // Neither has confirmed yet
+  | "awaiting_consumer" // Vendor confirmed, consumer has not
+  | "awaiting_vendor" // Consumer confirmed, vendor has not
+  | "confirmed"; // Both confirmed -> status delivered
+
+export function getDeliveryConfirmationState(
+  vendorDeliveredAt: Date | string | null | undefined,
+  consumerDeliveredAt: Date | string | null | undefined
+): DeliveryConfirmationState {
+  if (vendorDeliveredAt && consumerDeliveredAt) return "confirmed";
+  if (vendorDeliveredAt) return "awaiting_consumer";
+  if (consumerDeliveredAt) return "awaiting_vendor";
+  return "pending";
 }
 
 /** The next forward step a vendor would normally take, for one-tap buttons. */
