@@ -79,6 +79,15 @@ const categories = [
     tag: "GIFTS",
   },
   {
+    title: "Kids Activities & Learning",
+    subtitle: "Robotics, chess, art, karate & DIY science kits",
+    detail: "Trial classes · Weekend camps · Hands-on activity boxes",
+    href: "/app/kids",
+    tint: "bg-[#FEF08A]",
+    illustration: <span className="text-5xl sm:text-6xl select-none" aria-hidden="true">🚀</span>,
+    tag: "KIDS",
+  },
+  {
     title: "Everyday essentials",
     subtitle: "Local services for your daily routine",
     detail: "Discover neighbourhood options as they launch",

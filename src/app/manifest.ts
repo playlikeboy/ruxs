@@ -15,9 +15,16 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait",
     lang: "en-IN",
     dir: "ltr",
-    categories: ["food", "shopping", "lifestyle", "utilities"],
+    categories: ["food", "shopping", "lifestyle", "utilities", "education"],
     prefer_related_applications: false,
     shortcuts: [
+      {
+        name: "Kids Zone & STEM",
+        short_name: "Kids",
+        url: "/app/kids",
+        description: "Browse robotics, chess, pottery and kids learning kits",
+        icons: [{ src: "/icon", sizes: "96x96", type: "image/png" }],
+      },
       {
         name: "Explore Stores",
         short_name: "Explore",

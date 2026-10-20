@@ -87,19 +87,44 @@ export default async function ExplorePage() {
           </div>
         )}
 
+        {/* Kids Activities & Learning Zone Highlight */}
+        <Link
+          href="/app/kids"
+          className="relative mt-5 flex items-center justify-between overflow-hidden rounded-3xl border-2 border-slate-900 bg-gradient-to-r from-amber-200 via-sky-200 to-pink-200 p-4 shadow-[3px_3px_0_0_#0f172a] transition active:translate-y-0.5 active:shadow-[1px_1px_0_0_#0f172a]"
+        >
+          <div className="z-10 max-w-[72%]">
+            <span className="inline-block rounded-full border border-slate-900/20 bg-white/90 px-2.5 py-0.5 text-[10px] font-black text-slate-900">
+              🎈 KIDS ZONE
+            </span>
+            <h2 className="mt-1 text-base font-black leading-tight text-slate-950">
+              Kids Activities & Learning 🚀
+            </h2>
+            <p className="mt-0.5 text-[11px] font-bold text-slate-700">
+              Robotics, Chess, Pottery, Karate & DIY Kits
+            </p>
+          </div>
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-900 bg-white text-2xl shadow-[2px_2px_0_0_#0f172a]">
+            🚀
+          </div>
+        </Link>
+
         <div className="mt-5 grid grid-cols-2 gap-3">
-          {categories.map((k) => (
-            <Link
-              key={k.id}
-              href={`/app/category/${k.id}`}
-              className="relative flex h-[104px] flex-col justify-between overflow-hidden rounded-2xl p-3.5 transition active:scale-[0.98]"
-              style={{ backgroundColor: k.tint }}
-            >
-              <span className="text-[15px] font-semibold leading-tight text-ink">{k.label}</span>
-              <span className="max-w-[70%] text-[11px] leading-4 text-neutral-600">{k.blurb}</span>
-              <span className="absolute -bottom-2 -right-1 text-[52px] leading-none" aria-hidden="true">{k.emoji}</span>
-            </Link>
-          ))}
+          {categories.map((k) => {
+            const destination =
+              k.id === "kids" ? "/app/kids" : k.id === "kids-kits" ? "/app/kids/kits" : `/app/category/${k.id}`;
+            return (
+              <Link
+                key={k.id}
+                href={destination}
+                className="relative flex h-[104px] flex-col justify-between overflow-hidden rounded-2xl p-3.5 transition active:scale-[0.98]"
+                style={{ backgroundColor: k.tint }}
+              >
+                <span className="text-[15px] font-semibold leading-tight text-ink">{k.label}</span>
+                <span className="max-w-[70%] text-[11px] leading-4 text-neutral-600">{k.blurb}</span>
+                <span className="absolute -bottom-2 -right-1 text-[52px] leading-none" aria-hidden="true">{k.emoji}</span>
+              </Link>
+            );
+          })}
         </div>
 
         {!profile && (
