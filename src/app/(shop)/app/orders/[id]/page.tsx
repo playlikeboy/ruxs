@@ -9,8 +9,10 @@ import { getMyOrder } from "@/features/consumer/queries";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { StatusPill } from "@/features/consumer/components/status-pill";
 import { CancelOrderButton } from "@/features/consumer/components/cancel-order-button";
+import { ConfirmDeliveryButton } from "@/features/consumer/components/confirm-delivery-button";
 import { PayOrderButton } from "@/features/payments/components/pay-buttons";
 import { RaiseDisputeButton } from "@/features/support/components/report-button";
+import { getMyReviewState } from "@/features/reviews/queries";
 
 export const metadata = { title: "Order" };
 
@@ -29,6 +31,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const status = order.status as ShopOrderStatus;
   const stepIndex = STEPS.findIndex((s) => s.status === status);
   const closedBad = status === "cancelled" || status === "rejected";
+  const myReview = await getMyReviewState(order.vendorId);
 
   return (
     <div className="min-h-dvh bg-neutral-50 pb-8">
@@ -101,12 +104,31 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           {order.notes && <p className="mt-2 text-sm text-neutral-500">Note: {order.notes}</p>}
         </section>
 
+        <ConfirmDeliveryButton
+          orderId={order.id}
+          status={status}
+          vendorDeliveredAt={order.vendorDeliveredAt}
+          consumerDeliveredAt={order.consumerDeliveredAt}
+        />
+
         {status === "awaiting_payment" && <PayOrderButton orderId={order.id} totalPaise={order.totalPaise} />}
         {(status === "placed" || status === "awaiting_payment") && <CancelOrderButton orderId={order.id} />}
         {status === "delivered" && (
-          <Link href={`/app/store/${vendorSlug}#reviews`} className="flex h-12 items-center justify-center gap-2 rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink">
-            ★ Rate {vendorName}
-          </Link>
+          myReview.mine ? (
+            <Link
+              href={`/app/store/${vendorSlug}#reviews`}
+              className="flex h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-100/70"
+            >
+              ★ You rated {vendorName} ({myReview.mine.rating}/5 stars)
+            </Link>
+          ) : (
+            <Link
+              href={`/app/store/${vendorSlug}#reviews`}
+              className="flex h-12 items-center justify-center gap-2 rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink shadow-2xs hover:bg-neutral-50 active:scale-[0.98] transition-all"
+            >
+              ★ Rate {vendorName}
+            </Link>
+          )
         )}
         {!isOpenStatus(status) && (
           <Link href={`/app/store/${vendorSlug}`} className="flex h-12 items-center justify-center rounded-xl bg-ink text-sm font-semibold text-white">Order again</Link>

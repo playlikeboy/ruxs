@@ -32,15 +32,55 @@ export async function moveOrder(opts: {
   }
 
   const now = new Date();
+  const isMarkingDelivered = opts.to === "delivered";
+
+  let finalStatus: ShopOrderStatus = opts.to;
+  let vendorDeliveredAt = order.vendorDeliveredAt;
+  let consumerDeliveredAt = order.consumerDeliveredAt;
+  let deliveredAt = order.deliveredAt;
+
+  if (isMarkingDelivered) {
+    if (opts.actor === "vendor") {
+      vendorDeliveredAt = now;
+      if (consumerDeliveredAt) {
+        finalStatus = "delivered";
+        deliveredAt = now;
+      } else {
+        // Awaiting consumer confirmation; keep active order visible as out_for_delivery
+        finalStatus = from === "accepted" ? "out_for_delivery" : from;
+      }
+    } else if (opts.actor === "consumer") {
+      consumerDeliveredAt = now;
+      if (vendorDeliveredAt) {
+        finalStatus = "delivered";
+        deliveredAt = now;
+      } else {
+        // Awaiting vendor confirmation; keep active order visible as out_for_delivery
+        finalStatus = from === "accepted" ? "out_for_delivery" : from;
+      }
+    } else if (opts.actor === "admin") {
+      vendorDeliveredAt = vendorDeliveredAt ?? now;
+      consumerDeliveredAt = consumerDeliveredAt ?? now;
+      finalStatus = "delivered";
+      deliveredAt = now;
+    }
+  }
+
   const result = await db.transaction(async (tx) => {
     // Compare-and-set on the old status so two taps can't both win.
     const [updated] = await tx
       .update(shopOrders)
       .set({
-        status: opts.to,
+        status: finalStatus,
         updatedAt: now,
         ...(opts.to === "accepted" ? { acceptedAt: now } : {}),
-        ...(opts.to === "delivered" ? { deliveredAt: now } : {}),
+        ...(isMarkingDelivered
+          ? {
+              vendorDeliveredAt,
+              consumerDeliveredAt,
+              ...(finalStatus === "delivered" ? { deliveredAt } : {}),
+            }
+          : {}),
         ...(opts.to === "cancelled" || opts.to === "rejected"
           ? {
               cancelReason: opts.reason || (opts.to === "rejected" ? "The store couldn't take this order" : "Cancelled by the store"),
@@ -53,7 +93,7 @@ export async function moveOrder(opts: {
       .returning({ id: shopOrders.id });
     if (!updated) return false;
 
-    if (opts.to === "delivered") {
+    if (finalStatus === "delivered") {
       for (const line of deliveredLedgerLines(order.totalPaise, order.paymentMode as "cod" | "monthly_bill")) {
         await tx
           .insert(ledgerEntries)
@@ -84,6 +124,17 @@ export async function moveOrder(opts: {
   revalidatePath(`/app/orders/${order.id}`);
   revalidatePath("/app/orders");
   revalidatePath("/admin/orders");
-  return { ok: true as const };
+
+  return {
+    ok: true as const,
+    finalStatus,
+    isDelivered: finalStatus === "delivered",
+    waitingFor:
+      isMarkingDelivered && finalStatus !== "delivered"
+        ? opts.actor === "vendor"
+          ? "consumer"
+          : "vendor"
+        : null,
+  };
 }
 
