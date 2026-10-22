@@ -130,7 +130,7 @@ export default function AboutPage() {
                 <p className="text-xs leading-5 text-muted">Build a dependable delivery routine with a local supplier.</p>
               </div>
             </div>
-            <p className="mt-4 text-center text-[11px] text-muted">Local services, with their own terms and prices.</p>
+            <p className="mt-4 text-center text-xs text-muted">Local services, with their own terms and prices.</p>
           </div>
         </div>
       </section>

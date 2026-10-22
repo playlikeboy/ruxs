@@ -77,6 +77,21 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  caret-color: var(--color-accent);
+}
+
+::selection {
+  background-color: #FFE8DD;
+  color: #BD4B2A;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+a {
+  text-underline-offset: 3px;
 }
 
 /* Tabular figures for numbers, counts, and currency */
