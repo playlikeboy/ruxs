@@ -5,8 +5,10 @@ import {
   ArrowLeft,
   Award,
   CheckCircle2,
+  ExternalLink,
   Globe,
   MapPin,
+  Play,
   ShieldAlert,
   ShieldCheck,
   Star,
@@ -14,6 +16,7 @@ import {
 import { getKidsProviderBySlug } from "@/features/kids/queries";
 import { formatINR } from "@/core/money";
 import { formatAgeRange } from "@/core/kids/age-eligibility";
+import { getYouTubeEmbedUrl } from "@/core/media";
 
 export async function generateMetadata({
   params,
@@ -155,6 +158,93 @@ export default async function KidsProviderProfilePage({
             </div>
           )}
         </div>
+
+        {/* Video Preview if provided */}
+        {profile?.previewVideoUrl && getYouTubeEmbedUrl(profile.previewVideoUrl) && (
+          <div className="mt-5 space-y-2">
+            <div className="flex items-center gap-1.5 text-xs font-black text-kids-ink">
+              <Play size={13} className="text-red-600 fill-current" />
+              <span>Teaching & Performance Preview Video</span>
+            </div>
+            <div className="aspect-video w-full overflow-hidden rounded-[20px] border-2 border-kids-grape/15 bg-black shadow-sm">
+              <iframe
+                src={getYouTubeEmbedUrl(profile.previewVideoUrl)!}
+                title={`${vendor.name} preview video`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full border-0"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Certificates & Accreditations (ImgBB) */}
+        {profile?.certificates && profile.certificates.length > 0 && (
+          <div className="mt-5 space-y-2 border-t border-slate-100 pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-black text-emerald-900">
+                <ShieldCheck size={14} className="text-emerald-700" />
+                <span>Verified Certificates & Accreditations ({profile.certificates.length})</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400">Click to view original</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {profile.certificates.map((certUrl, idx) => (
+                <a
+                  key={idx}
+                  href={certUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group relative flex h-24 flex-col items-center justify-center overflow-hidden rounded-[14px] border-2 border-emerald-200/80 bg-emerald-50/40 p-1 shadow-xs transition hover:scale-102 hover:border-emerald-500"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={certUrl} alt={`Certificate ${idx + 1}`} className="h-full w-full object-cover rounded-[10px]" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-emerald-950/40 opacity-0 transition group-hover:opacity-100">
+                    <span className="flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-emerald-950 shadow">
+                      <ExternalLink size={10} /> View
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Studio / Classroom Photos */}
+        {profile?.galleryImages && profile.galleryImages.length > 0 && (
+          <div className="mt-5 space-y-2 border-t border-slate-100 pt-4">
+            <div className="text-xs font-black text-kids-ink">
+              Studio & Activity Photos ({profile.galleryImages.length})
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {profile.galleryImages.map((imgUrl, idx) => (
+                <a
+                  key={idx}
+                  href={imgUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group relative h-20 overflow-hidden rounded-[14px] border border-line bg-surface shadow-xs transition hover:scale-102"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imgUrl} alt={`Gallery ${idx + 1}`} className="h-full w-full object-cover" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Guardian Supervision Safeguard */}
+        {profile?.guardianSupervisionRequired && (
+          <div className="mt-5 flex items-start gap-2.5 rounded-[18px] border-2 border-amber-300 bg-amber-50 p-3.5 text-xs text-amber-950">
+            <ShieldCheck size={18} className="text-amber-800 shrink-0 mt-0.5" />
+            <div>
+              <span className="block font-black">Home Session Child Safeguarding Policy</span>
+              <p className="mt-0.5 text-[11px] font-medium leading-relaxed text-amber-900/80">
+                For in-home 1-on-1 tutoring and dance sessions, an adult parent or guardian is required to remain present at home throughout the appointment.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Services & Classes Offered */}

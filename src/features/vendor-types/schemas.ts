@@ -42,6 +42,22 @@ function fieldSchema(f: Field): z.ZodType<unknown> {
       return z.array(z.string().trim().min(1).max(40, "Keep each tag under 40 letters")).max(20, "Up to 20 tags");
     case "time":
       return f.required ? z.string().regex(TIME, `${f.label} must look like 07:30`) : z.union([z.literal(""), z.string().regex(TIME, `${f.label} must look like 07:30`)]).nullable().optional().transform((v) => (v ? v : null));
+    case "image":
+    case "video":
+      return z
+        .string()
+        .trim()
+        .max(2000, "URL is too long")
+        .transform((v) => (v === "" ? null : v))
+        .nullable()
+        .optional()
+        .transform((v) => v ?? null);
+    case "images":
+      return z
+        .array(z.string().trim().max(2000))
+        .max(f.max ?? 10, `Up to ${f.max ?? 10} images`)
+        .default([])
+        .transform((arr) => arr.filter((x) => typeof x === "string" && x.trim().length > 0));
   }
 }
 

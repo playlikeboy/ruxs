@@ -138,6 +138,17 @@ Pure functions in `src/core/`, each with a `*.test.ts` next to it. **Write the t
 
 ---
 
+## Phase 8 — Kids Marketplace & Specialized Vendor Scalability
+- [x] 10 Differentiated Kids Vendor Types: `kids_academics`, `kids_stem`, `kids_performing_arts`, `kids_arts_crafts`, `kids_school_projects`, `kids_camps`, `kids_sports_fitness`, `kids_life_skills`, `kids_products`, `kids_institutions`.
+- [x] Schema Isolation: Dedicated profile and item tables for all 10 types with `ruxs_assert_vendor_type` triggers (`migration 0014`).
+- [x] Media & Asset System: ImgBB integration for certificates, galleries, and posters (`src/lib/imgbb.ts`, `src/features/assets/actions.ts`, `src/components/ui/image-upload.tsx`).
+- [x] YouTube Preview Videos: Pure parser, embed builder, and thumbnail generator with privacy parameters (`src/core/media.ts`).
+- [x] Child Safeguarding & Trust: Distinct badges for in-home guardian presence, verified mentor credential displays, and non-toxic kit assurances (`docs/CHILD_SAFEGUARDING_POLICY.md`).
+- [x] Admin Auto-Approval: Vendors created in Admin Panel automatically marked `active`.
+- [x] Playful Micro-Interactions: Cute animated SVG icons inspired by `Avijit07x/animateicons` (`src/components/ui/animate-icons.tsx`).
+
+---
+
 ## Known Gaps (MVP)
 1. Turn on WhatsApp (Meta verification + `src/features/whatsapp`).
 2. Payment gateway and auto-reconciliation (Razorpay/Cashfree UPI AutoPay).

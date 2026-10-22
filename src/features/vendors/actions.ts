@@ -37,8 +37,9 @@ export async function createVendor(input: unknown) {
     .from(categories)
     .where(eq(categories.id, data.categoryId))
     .limit(1);
-  if (!category) return { ok: false, error: "Pick what your business offers" };
-  const vendorType = isVendorType(category.vendorType) ? category.vendorType : vendorTypeForCategory(data.categoryId, category.fulfilment);
+  const vendorType = category && isVendorType(category.vendorType)
+    ? category.vendorType
+    : vendorTypeForCategory(data.categoryId);
 
   try {
     const newVendor = await db.transaction(async (tx) => {

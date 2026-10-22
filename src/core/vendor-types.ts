@@ -4,7 +4,34 @@
  * panel tools it can open. Pure: no db, next or react imports.
  */
 
-export const VENDOR_TYPES = ["tiffin", "water", "milk", "gifts", "store", "fitness", "physio", "mehndi", "kids"] as const;
+export const KIDS_VENDOR_TYPES = [
+  "kids_academics",
+  "kids_stem",
+  "kids_performing_arts",
+  "kids_arts_crafts",
+  "kids_school_projects",
+  "kids_camps",
+  "kids_sports_fitness",
+  "kids_life_skills",
+  "kids_products",
+  "kids_institutions",
+] as const;
+
+export type KidsVendorType = (typeof KIDS_VENDOR_TYPES)[number];
+
+export const VENDOR_TYPES = [
+  "tiffin",
+  "water",
+  "milk",
+  "gifts",
+  "store",
+  "fitness",
+  "physio",
+  "mehndi",
+  "kids", // legacy alias
+  ...KIDS_VENDOR_TYPES,
+] as const;
+
 export type VendorType = (typeof VENDOR_TYPES)[number];
 
 /** A merchant panel area, i.e. the folder under /merchant-panel/[vendor]. */
@@ -49,6 +76,7 @@ export interface VendorTypeInfo {
 const COMMON = ["today", "customers", "reviews", "disputes", "earnings", "settings", "more"] as const;
 const DAILY_DELIVERY = [...COMMON, "orders", "run", "subscriptions", "products", "inventory", "bills", "analytics"] as const;
 const BOOKING = [...COMMON, "bookings", "availability", "services"] as const;
+const KIDS_BOOKING = [...COMMON, "kids", "bookings", "availability"] as const;
 
 export const VENDOR_TYPE_INFO: Record<VendorType, VendorTypeInfo> = {
   tiffin: {
@@ -111,13 +139,89 @@ export const VENDOR_TYPE_INFO: Record<VendorType, VendorTypeInfo> = {
     label: "Kids academy",
     emoji: "🧸",
     fulfilment: "booking",
-    modules: [...COMMON, "kids", "bookings", "availability"],
+    modules: KIDS_BOOKING,
     nouns: { customers: "Students & parents", catalogue: "Classes & workshops", catalogueShort: "Classes", group: "Academy" },
+  },
+
+  // ── 10 Differentiated Kids Vendor Types ──────────────────────────────────────
+  kids_academics: {
+    label: "Home Tutors & Academics",
+    emoji: "📚",
+    fulfilment: "booking",
+    modules: KIDS_BOOKING,
+    nouns: { customers: "Students & Parents", catalogue: "Tuition & Classes", catalogueShort: "Tuition", group: "Academics" },
+  },
+  kids_stem: {
+    label: "Science, STEM & Coding",
+    emoji: "🤖",
+    fulfilment: "booking",
+    modules: KIDS_BOOKING,
+    nouns: { customers: "Young Coders", catalogue: "STEM & Robotics", catalogueShort: "STEM", group: "Lab" },
+  },
+  kids_performing_arts: {
+    label: "Dance, Music & Performing Arts",
+    emoji: "💃",
+    fulfilment: "booking",
+    modules: KIDS_BOOKING,
+    nouns: { customers: "Performers & Parents", catalogue: "Dance & Music Lessons", catalogueShort: "Lessons", group: "Studio" },
+  },
+  kids_arts_crafts: {
+    label: "Art, Craft & Creative",
+    emoji: "🎨",
+    fulfilment: "booking",
+    modules: KIDS_BOOKING,
+    nouns: { customers: "Little Creators", catalogue: "Art & Pottery Classes", catalogueShort: "Art", group: "Art Studio" },
+  },
+  kids_school_projects: {
+    label: "School Projects & Models",
+    emoji: "📐",
+    fulfilment: "booking",
+    modules: KIDS_BOOKING,
+    nouns: { customers: "Students & Parents", catalogue: "Models & Project Guidance", catalogueShort: "Projects", group: "Project Lab" },
+  },
+  kids_camps: {
+    label: "Holiday Camps & Clubs",
+    emoji: "🏕️",
+    fulfilment: "booking",
+    modules: KIDS_BOOKING,
+    nouns: { customers: "Campers & Parents", catalogue: "Camps & Bootcamps", catalogueShort: "Camps", group: "Camp" },
+  },
+  kids_sports_fitness: {
+    label: "Kids Yoga, Chess & Sports",
+    emoji: "♟️",
+    fulfilment: "booking",
+    modules: KIDS_BOOKING,
+    nouns: { customers: "Young Athletes", catalogue: "Sports & Chess Coaching", catalogueShort: "Coaching", group: "Academy" },
+  },
+  kids_life_skills: {
+    label: "Life Skills & Hobbies",
+    emoji: "🍳",
+    fulfilment: "booking",
+    modules: KIDS_BOOKING,
+    nouns: { customers: "Learners & Parents", catalogue: "Hobby & Life Workshops", catalogueShort: "Workshops", group: "Workshop" },
+  },
+  kids_products: {
+    label: "Kids Kits & Materials",
+    emoji: "🧩",
+    fulfilment: "delivery", // physical product kits & materials
+    modules: [...COMMON, "orders", "run", "products", "inventory", "analytics"],
+    nouns: { customers: "Parents & Buyers", catalogue: "DIY Kits & Supplies", catalogueShort: "Kits", run: "Dispatch", inventory: "Kit Stock", group: "Store" },
+  },
+  kids_institutions: {
+    label: "Preschools & Learning Centres",
+    emoji: "🏫",
+    fulfilment: "booking",
+    modules: KIDS_BOOKING,
+    nouns: { customers: "Families & Enrollees", catalogue: "Programmes & Activities", catalogueShort: "Programmes", group: "Centre" },
   },
 };
 
 export function isVendorType(value: unknown): value is VendorType {
   return typeof value === "string" && (VENDOR_TYPES as readonly string[]).includes(value);
+}
+
+export function isKidsVendorType(value: unknown): boolean {
+  return typeof value === "string" && (value === "kids" || value.startsWith("kids_") || (KIDS_VENDOR_TYPES as readonly string[]).includes(value as any));
 }
 
 /** Unknown or legacy values fall back to the safest type for their fulfilment. */
@@ -126,7 +230,7 @@ export function toVendorType(value: string | null | undefined, fulfilment: strin
   return fulfilment === "booking" ? "fitness" : "store";
 }
 
-/** The schema type a category onboards vendors as. kids-kits and other are plain stores. */
+/** The schema type a category onboards vendors as. */
 export function vendorTypeForCategory(categoryId: string | null | undefined, fulfilment: string = "delivery"): VendorType {
   switch (categoryId) {
     case "tiffin":
@@ -136,10 +240,55 @@ export function vendorTypeForCategory(categoryId: string | null | undefined, ful
     case "physio":
     case "mehndi":
     case "kids":
+    case "kids_academics":
+    case "kids_stem":
+    case "kids_performing_arts":
+    case "kids_arts_crafts":
+    case "kids_school_projects":
+    case "kids_camps":
+    case "kids_sports_fitness":
+    case "kids_life_skills":
+    case "kids_products":
+    case "kids_institutions":
       return categoryId;
     case "milk":
     case "dairy":
       return "milk";
+    case "academics":
+      return "kids_academics";
+    case "stem":
+    case "coding":
+      return "kids_stem";
+    case "dance":
+    case "music":
+    case "performing-arts":
+      return "kids_performing_arts";
+    case "art":
+    case "craft":
+    case "art-craft":
+      return "kids_arts_crafts";
+    case "projects":
+    case "school-projects":
+      return "kids_school_projects";
+    case "camps":
+    case "workshops":
+    case "holiday-camps":
+      return "kids_camps";
+    case "chess":
+    case "sports":
+    case "fitness-kids":
+      return "kids_sports_fitness";
+    case "life-skills":
+    case "cooking":
+      return "kids_life_skills";
+    case "kits":
+    case "kids-kits":
+    case "kids_materials":
+      return "kids_products";
+    case "preschool":
+    case "academy":
+    case "institutions":
+      return "kids_institutions";
     default:
       return fulfilment === "booking" ? "fitness" : "store";
   }
@@ -155,8 +304,7 @@ export function homeModule(type: VendorType): Module {
 }
 
 /**
- * Categories a vendor may list items under: only its own. A tiffin kitchen
- * can't add a water can, a physio can't add a gym plan.
+ * Categories a vendor may list items under: only its own.
  */
 export function allowedCategoryIds(type: VendorType, categoryId: string | null | undefined): string[] {
   if (categoryId) return [categoryId];

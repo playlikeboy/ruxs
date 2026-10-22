@@ -87,7 +87,10 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
   if (created) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">{f.name} is live</h2>
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800">✓</span>
+          <h2 className="text-lg font-semibold text-ink">{f.name} is live &amp; Auto-Approved</h2>
+        </div>
         {created.credentials ? (
           <CredentialsView credentials={created.credentials} />
         ) : (
@@ -107,27 +110,62 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
 
   // Step 1 for a new vendor: what kind of business is joining?
   if (isNew && !f.categoryId) {
+    const dailyCats = categories.filter((c) => !c.id.startsWith("kids_") && c.id !== "kids");
+    const kidsCats = categories.filter((c) => c.id.startsWith("kids_") || c.id === "kids");
+
     return (
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">What are you onboarding?</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setF({ ...f, categoryId: c.id, businessType: c.fulfilment === "booking" ? "booking" : "delivery" })}
-              className="flex items-center gap-3 rounded-[14px] border border-line p-4 text-left transition hover:border-ink"
-              style={{ backgroundColor: c.tint }}
-            >
-              <span className="text-3xl" aria-hidden="true">{c.emoji}</span>
-              <span>
-                <span className="block font-semibold text-ink">{c.label}</span>
-                <span className="block text-xs text-muted">{c.fulfilment === "booking" ? "Bookable sessions · free hours" : c.blurb || "Menu, daily plans, deliveries"}</span>
-              </span>
-            </button>
-          ))}
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold">What are you onboarding?</h2>
+          <p className="text-xs text-muted">Auto-approves the vendor and configures their dedicated database tables and workspace tools.</p>
         </div>
-        <p className="text-xs text-muted">Missing a type? Add it under Settings → Categories first.</p>
+
+        <div>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Daily Essentials &amp; Household Services</h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {dailyCats.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setF({ ...f, categoryId: c.id, businessType: c.fulfilment === "booking" ? "booking" : "delivery" })}
+                className="flex items-center gap-3 rounded-[14px] border border-line p-3 text-left transition hover:border-ink hover:scale-101"
+                style={{ backgroundColor: c.tint }}
+              >
+                <span className="text-2xl" aria-hidden="true">{c.emoji}</span>
+                <div>
+                  <span className="block text-sm font-semibold text-ink">{c.label}</span>
+                  <span className="block text-[11px] text-muted">{c.fulfilment === "booking" ? "Bookable sessions" : "Delivery store"}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[18px] border-2 border-kids-grape/25 bg-kids-cream/50 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="text-2xl" aria-hidden="true">🧸</span>
+            <div>
+              <h3 className="text-sm font-black text-kids-ink">Ruxs Kids (10 Differentiated Vendor Types)</h3>
+              <p className="text-[11px] font-medium text-kids-ink/70">Each type gets separate profile &amp; item database tables, certificates &amp; video preview.</p>
+            </div>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {kidsCats.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setF({ ...f, categoryId: c.id, businessType: c.fulfilment === "booking" ? "booking" : "delivery" })}
+                className="flex items-start gap-2.5 rounded-[12px] border-2 border-kids-grape/15 bg-white p-3 text-left shadow-xs transition hover:border-kids-grape hover:scale-101"
+              >
+                <span className="text-2xl leading-none mt-0.5" aria-hidden="true">{c.emoji}</span>
+                <div>
+                  <span className="block text-xs font-black text-kids-ink leading-tight">{c.label}</span>
+                  <span className="block text-[10px] text-kids-ink/70 mt-0.5">{c.blurb || (c.fulfilment === "delivery" ? "Doorstep DIY kits" : "Sessions & workshops")}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ChipGroup, Field, Input, Select, Textarea, Toggle } from "@/components/ui/field";
+import { ImageUpload, MultiImageUpload, VideoInput } from "@/components/ui/image-upload";
 import { PROFILE_FIELDS, ITEM_FIELDS, type Field as FieldSpec, type FieldValues } from "../fields";
 import { saveItemDetails, saveTypeProfile } from "../actions";
 import type { VendorType } from "@/core/vendor-types";
@@ -48,7 +49,7 @@ export function TypeFieldsForm({
       <div className={compact ? "grid gap-3 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-2"}>
         {fields.map((f) => {
           const id = `${itemId ?? "profile"}-${f.key}`;
-          const wide = f.kind === "textarea" || f.kind === "tags" || f.kind === "multi";
+          const wide = f.kind === "textarea" || f.kind === "tags" || f.kind === "multi" || f.kind === "images" || f.kind === "video";
           return (
             <div key={f.key} className={wide ? "sm:col-span-2" : undefined}>
               <FieldInput id={id} field={f} value={values[f.key] ?? null} onChange={(v) => set(f.key, v)} />
@@ -120,6 +121,36 @@ function FieldInput({ id, field: f, value, onChange }: { id: string; field: Fiel
         <Field label={f.label} hint={f.hint} htmlFor={id}>
           <Input id={id} maxLength={f.max} placeholder={f.placeholder} value={typeof value === "string" ? value : ""} onChange={(e) => onChange(e.target.value)} />
         </Field>
+      );
+    case "image":
+      return (
+        <ImageUpload
+          label={f.label}
+          hint={f.hint}
+          value={typeof value === "string" ? value : null}
+          onChange={(url) => onChange(url)}
+        />
+      );
+    case "images":
+      return (
+        <MultiImageUpload
+          label={f.label}
+          hint={f.hint}
+          isCertificate={f.isCertificate}
+          max={f.max ?? 10}
+          values={Array.isArray(value) ? value : []}
+          onChange={(urls) => onChange(urls)}
+        />
+      );
+    case "video":
+      return (
+        <VideoInput
+          label={f.label}
+          hint={f.hint}
+          placeholder={f.placeholder}
+          value={typeof value === "string" ? value : null}
+          onChange={(url) => onChange(url)}
+        />
       );
   }
 }

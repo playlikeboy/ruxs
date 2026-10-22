@@ -6,6 +6,20 @@ import { getDb } from "@/db";
 import { assetMovements, customers, orders } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { recordAssetMovementSchema } from "./schemas";
+import { uploadToImgbb } from "@/lib/imgbb";
+
+export async function uploadImageAction(formData: FormData) {
+  const file = formData.get("image");
+  if (!file || (typeof file !== "string" && !(file instanceof Blob))) {
+    return { ok: false, error: "No image file provided" };
+  }
+  const name = typeof formData.get("name") === "string" ? String(formData.get("name")) : undefined;
+  const res = await uploadToImgbb(file, name);
+  if (!res.success || !res.url) {
+    return { ok: false, error: res.error || "Upload failed" };
+  }
+  return { ok: true, url: res.url, displayUrl: res.displayUrl, thumbUrl: res.thumbUrl };
+}
 
 export async function recordAssetMovement(input: unknown) {
   const parsed = recordAssetMovementSchema.safeParse(input);

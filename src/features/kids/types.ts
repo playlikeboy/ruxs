@@ -26,6 +26,10 @@ export interface KidsActivityItem {
   badge?: string;
   emoji: string;
   highlights: string[];
+  posterUrl?: string;
+  previewVideoUrl?: string;
+  homeSupervisionRequired?: boolean;
+  verifiedTutor?: boolean;
 }
 
 export interface KidsWorkshopItem {
@@ -45,6 +49,8 @@ export interface KidsWorkshopItem {
   enrolledCount: number;
   emoji: string;
   badge?: string;
+  posterUrl?: string;
+  previewVideoUrl?: string;
 }
 
 export interface KidsKitItem {
@@ -60,4 +66,7 @@ export interface KidsKitItem {
   features: string[];
   emoji: string;
   badge?: string;
+  posterUrl?: string;
+  previewVideoUrl?: string;
+  nonToxicCertified?: boolean;
 }

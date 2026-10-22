@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { SegmentedLinks } from "@/components/ui/segmented";
+import { AnimateHomeIcon, AnimateTeddyIcon } from "@/components/ui/animate-icons";
 
 /**
  * Myntra-style switch between the two halves of the household app: Daily
@@ -16,8 +17,8 @@ export function ModeSwitch({ className }: { className?: string }) {
       tone={kids ? "kids" : "default"}
       active={kids ? "kids" : "daily"}
       items={[
-        { key: "daily", label: "Daily", href: "/app", icon: <span aria-hidden="true">🏠</span> },
-        { key: "kids", label: "Kids", href: "/app/kids", icon: <span aria-hidden="true" className={kids ? "animate-wiggle inline-block" : "inline-block"}>🧸</span> },
+        { key: "daily", label: "Daily", href: "/app", icon: <AnimateHomeIcon size={18} /> },
+        { key: "kids", label: "Kids", href: "/app/kids", icon: <AnimateTeddyIcon size={20} animateOnHoverOnly={!kids} /> },
       ]}
     />
   );

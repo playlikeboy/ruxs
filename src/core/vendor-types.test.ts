@@ -22,14 +22,36 @@ describe("vendor types", () => {
     }
   });
 
-  it("only kids academies see the kids workspace", () => {
-    for (const t of VENDOR_TYPES) expect(canUseModule(t, "kids")).toBe(t === "kids");
+  it("only kids providers see the kids workspace", () => {
+    for (const t of ["tiffin", "water", "milk", "gifts", "store", "fitness", "physio", "mehndi"] as const) {
+      expect(canUseModule(t, "kids")).toBe(false);
+    }
+    for (const t of [
+      "kids",
+      "kids_academics",
+      "kids_stem",
+      "kids_performing_arts",
+      "kids_arts_crafts",
+      "kids_school_projects",
+      "kids_camps",
+      "kids_sports_fitness",
+      "kids_life_skills",
+      "kids_institutions",
+    ] as const) {
+      expect(canUseModule(t, "kids")).toBe(true);
+    }
+    // kids_products is delivery fulfilment, so it uses products and inventory
+    expect(canUseModule("kids_products", "products")).toBe(true);
+    expect(canUseModule("kids_products", "kids")).toBe(false);
   });
 
   it("maps categories to types", () => {
     expect(vendorTypeForCategory("tiffin")).toBe("tiffin");
     expect(vendorTypeForCategory("milk")).toBe("milk");
-    expect(vendorTypeForCategory("kids-kits")).toBe("store");
+    expect(vendorTypeForCategory("kids-kits")).toBe("kids_products");
+    expect(vendorTypeForCategory("dance")).toBe("kids_performing_arts");
+    expect(vendorTypeForCategory("coding")).toBe("kids_stem");
+    expect(vendorTypeForCategory("academics")).toBe("kids_academics");
     expect(vendorTypeForCategory("other")).toBe("store");
     expect(vendorTypeForCategory("yoga", "booking")).toBe("fitness");
     expect(toVendorType("nonsense", "delivery")).toBe("store");

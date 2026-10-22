@@ -18,6 +18,8 @@ import {
   services,
   vendors,
 } from "@/db/schema";
+import { readTypeProfile } from "@/features/vendor-types/tables";
+import { isVendorType } from "@/core/vendor-types";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { getRatingMap } from "@/features/platform/queries";
 import { getNearbyVendorDistances } from "@/features/consumer/queries";
@@ -316,9 +318,26 @@ export async function getKidsProviderBySlug(slug: string) {
       .limit(20),
   ]);
 
+  const typeProfile = isVendorType(vendor.vendorType) ? await readTypeProfile(db, vendor.id, vendor.vendorType) : null;
+  const mergedProfile = {
+    headline: (typeProfile?.headline as string | null) ?? profile?.headline ?? null,
+    qualifications: (typeProfile?.qualifications as string | null) ?? profile?.qualifications ?? null,
+    experienceYears: (typeProfile?.experienceYears as number | null) ?? profile?.experienceYears ?? 0,
+    specialties: ((typeProfile?.specialities || typeProfile?.subjects || typeProfile?.artForms || typeProfile?.disciplines) as string[] | null) ?? profile?.specialties ?? [],
+    languages: (typeProfile?.languages as string[] | null) ?? profile?.languages ?? [],
+    verificationStatus: profile?.verificationStatus ?? "approved",
+    safetyReviewStatus: profile?.safetyReviewStatus ?? "passed",
+    safetyNotes: profile?.safetyNotes ?? null,
+    certificates: (typeProfile?.certificates as string[] | null) ?? [],
+    galleryImages: (typeProfile?.galleryImages as string[] | null) ?? [],
+    previewVideoUrl: (typeProfile?.previewVideoUrl as string | null) ?? (typeProfile?.sampleProjectsVideoUrl as string | null) ?? null,
+    homeTuitionAvailable: (typeProfile?.homeTuitionAvailable as boolean | null) ?? false,
+    guardianSupervisionRequired: (typeProfile?.guardianSupervisionRequired as boolean | null) ?? true,
+  };
+
   return {
     vendor,
-    profile: profile ?? null,
+    profile: mergedProfile,
     services: providerServices,
     workshops: providerWorkshops,
     reviews,
@@ -608,6 +627,9 @@ async function allActivities(): Promise<KidsActivityItem[]> {
           "Verified background-checked mentor",
           "Take-home project & certificate",
         ],
+        posterUrl: service.imageUrl ?? undefined,
+        homeSupervisionRequired: service.deliveryModes.includes("home"),
+        verifiedTutor: true,
       };
     });
   }
@@ -706,6 +728,7 @@ async function allWorkshops(): Promise<KidsWorkshopItem[]> {
         enrolledCount,
         emoji: category.emoji || "🏕️",
         badge: availability.isAlmostFull ? "🔥 FILLING FAST" : "WEEKEND CAMP",
+        posterUrl: undefined,
       };
     });
   }
@@ -826,6 +849,8 @@ async function allKits(): Promise<KidsKitItem[]> {
       ],
       emoji: "🧩",
       badge: "DOORSTEP KIT",
+      posterUrl: product.imageUrl ?? undefined,
+      nonToxicCertified: true,
     };
   });
 }

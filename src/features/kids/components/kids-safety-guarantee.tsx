@@ -1,9 +1,8 @@
-import { ShieldCheck, HeartHandshake, Users, Sparkles } from "lucide-react";
+import { AnimateShieldCheckIcon } from "@/components/ui/animate-icons";
 
 export function KidsSafetyGuarantee() {
   const TRUST_POINTS = [
     {
-      icon: ShieldCheck,
       title: "Verified Mentors",
       description: "Police and credential verified educators only.",
       bg: "bg-emerald-50",
@@ -11,23 +10,20 @@ export function KidsSafetyGuarantee() {
       emoji: "🛡️",
     },
     {
-      icon: Users,
-      title: "Small Batches",
-      description: "Max 4 to 6 kids so every child gets personal care.",
+      title: "Guardian-Present Sessions",
+      description: "Mandatory adult guardian supervision for home classes.",
       bg: "bg-sky-50",
       border: "border-sky-300",
-      emoji: "👥",
+      emoji: "🏡",
     },
     {
-      icon: Sparkles,
       title: "Mess-Free & Safe",
-      description: "Non-toxic, kid-tested materials and safety gear.",
+      description: "Non-toxic, child-safe tested materials and safety gear.",
       bg: "bg-amber-50",
       border: "border-amber-300",
       emoji: "🧼",
     },
     {
-      icon: HeartHandshake,
       title: "Free Reschedule",
       description: "Shift class slots or swap dates with zero hassle.",
       bg: "bg-pink-50",
@@ -39,7 +35,7 @@ export function KidsSafetyGuarantee() {
   return (
     <div className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-5 shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)]">
       <div className="flex items-center gap-2">
-        <span className="text-xl" aria-hidden="true">🌟</span>
+        <AnimateShieldCheckIcon size={22} />
         <h3 className="text-base font-black tracking-tight text-kids-ink">
           Why Parents Trust Ruxs Kids
         </h3>

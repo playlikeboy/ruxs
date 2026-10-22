@@ -172,29 +172,68 @@ export function OnboardingForm({ categories }: { categories: OnboardingCategory[
       {step === 0 && (
         <section className="space-y-4" aria-labelledby="business-details-heading">
           <h3 id="business-details-heading" className="sr-only">Business details</h3>
-          <fieldset>
-            <legend className={labelClass}>What does your business offer?</legend>
-            <p className="-mt-0.5 mb-2 text-xs leading-5 text-muted">This sets up a workspace with only the tools your kind of business needs.</p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {categories.map((c) => {
-                const on = c.id === categoryId;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => { setCategoryId(c.id); setError(null); }}
-                    disabled={isPending}
-                    className={
-                      "flex min-h-[84px] flex-col items-start gap-1 rounded-[12px] border p-3 text-left transition " +
-                      (on ? "border-accent bg-peach/60 ring-2 ring-accent/20" : "border-line bg-surface hover:border-ink/20")
-                    }
-                  >
-                    <span className="text-2xl leading-none" aria-hidden="true">{c.emoji}</span>
-                    <span className="text-sm font-semibold leading-tight text-ink">{c.label}</span>
-                  </button>
-                );
-              })}
+          <fieldset className="space-y-4">
+            <div>
+              <legend className={labelClass}>What does your business offer?</legend>
+              <p className="-mt-0.5 mb-2 text-xs leading-5 text-muted">Pick the closest category to set up your dedicated workspace tools and database tables.</p>
+            </div>
+
+            {/* Daily Services */}
+            <div>
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted">Daily &amp; Essential Services</span>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {categories.filter((c) => !c.id.startsWith("kids_") && c.id !== "kids").map((c) => {
+                  const on = c.id === categoryId;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => { setCategoryId(c.id); setError(null); }}
+                      disabled={isPending}
+                      className={
+                        "flex min-h-[76px] flex-col items-start gap-1 rounded-[12px] border p-3 text-left transition " +
+                        (on ? "border-accent bg-peach/60 ring-2 ring-accent/20" : "border-line bg-surface hover:border-ink/20")
+                      }
+                    >
+                      <span className="text-2xl leading-none" aria-hidden="true">{c.emoji}</span>
+                      <span className="text-xs font-semibold leading-tight text-ink">{c.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Kids Section - 10 Vendor Types */}
+            <div className="rounded-[16px] border-2 border-kids-grape/20 bg-kids-cream/40 p-3 sm:p-4">
+              <div className="mb-2.5 flex items-center gap-1.5">
+                <span className="text-xl" aria-hidden="true">🧸</span>
+                <div>
+                  <span className="block text-xs font-black text-kids-ink">RUXs Kids Marketplace</span>
+                  <span className="block text-[11px] text-kids-ink/70">10 specialised categories with child-safeguarding, certificates &amp; video showcase</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {categories.filter((c) => c.id.startsWith("kids_") || c.id === "kids").map((c) => {
+                  const on = c.id === categoryId;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => { setCategoryId(c.id); setError(null); }}
+                      disabled={isPending}
+                      className={
+                        "flex min-h-[76px] flex-col items-start gap-1 rounded-[12px] border p-2.5 text-left transition " +
+                        (on ? "border-kids-grape bg-white shadow-xs ring-2 ring-kids-grape/30" : "border-kids-grape/15 bg-white/80 hover:border-kids-grape/40")
+                      }
+                    >
+                      <span className="text-xl leading-none" aria-hidden="true">{c.emoji}</span>
+                      <span className="text-xs font-bold leading-tight text-kids-ink">{c.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </fieldset>
           <div>

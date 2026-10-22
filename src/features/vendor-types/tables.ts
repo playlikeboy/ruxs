@@ -17,6 +17,26 @@ import {
   tiffinMeals,
   waterCans,
   waterSuppliers,
+  kidsAcademicsProfiles,
+  kidsAcademicsItems,
+  kidsStemProfiles,
+  kidsStemItems,
+  kidsPerformingArtsProfiles,
+  kidsPerformingArtsItems,
+  kidsArtsCraftsProfiles,
+  kidsArtsCraftsItems,
+  kidsSchoolProjectsProfiles,
+  kidsSchoolProjectsItems,
+  kidsCampsProfiles,
+  kidsCampsItems,
+  kidsSportsFitnessProfiles,
+  kidsSportsFitnessItems,
+  kidsLifeSkillsProfiles,
+  kidsLifeSkillsItems,
+  kidsProductsProfiles,
+  kidsProductsItems,
+  kidsInstitutionsProfiles,
+  kidsInstitutionsItems,
 } from "@/db/schema";
 import type { VendorType } from "@/core/vendor-types";
 
@@ -37,11 +57,41 @@ const PROFILE = {
   physio: physioClinics,
   mehndi: mehndiArtists,
   kids: kidsProviderProfiles,
+  kids_academics: kidsAcademicsProfiles,
+  kids_stem: kidsStemProfiles,
+  kids_performing_arts: kidsPerformingArtsProfiles,
+  kids_arts_crafts: kidsArtsCraftsProfiles,
+  kids_school_projects: kidsSchoolProjectsProfiles,
+  kids_camps: kidsCampsProfiles,
+  kids_sports_fitness: kidsSportsFitnessProfiles,
+  kids_life_skills: kidsLifeSkillsProfiles,
+  kids_products: kidsProductsProfiles,
+  kids_institutions: kidsInstitutionsProfiles,
 } as const;
 
 /** Item tables keyed by product id (delivery) or service id (booking). */
-const PRODUCT_ITEMS = { tiffin: tiffinMeals, water: waterCans, milk: dairyItems, gifts: giftItems } as const;
-const SERVICE_ITEMS = { fitness: fitnessPackages, physio: physioTreatments, mehndi: mehndiPackages } as const;
+const PRODUCT_ITEMS = {
+  tiffin: tiffinMeals,
+  water: waterCans,
+  milk: dairyItems,
+  gifts: giftItems,
+  kids_products: kidsProductsItems,
+} as const;
+
+const SERVICE_ITEMS = {
+  fitness: fitnessPackages,
+  physio: physioTreatments,
+  mehndi: mehndiPackages,
+  kids_academics: kidsAcademicsItems,
+  kids_stem: kidsStemItems,
+  kids_performing_arts: kidsPerformingArtsItems,
+  kids_arts_crafts: kidsArtsCraftsItems,
+  kids_school_projects: kidsSchoolProjectsItems,
+  kids_camps: kidsCampsItems,
+  kids_sports_fitness: kidsSportsFitnessItems,
+  kids_life_skills: kidsLifeSkillsItems,
+  kids_institutions: kidsInstitutionsItems,
+} as const;
 
 /** Creates the empty profile row a new vendor of this type needs. Safe to call twice. */
 export async function provisionTypeProfile(db: Executor, vendorId: string, type: VendorType) {

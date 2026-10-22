@@ -133,8 +133,9 @@ export async function adminCreateVendor(input: unknown) {
     .from(categories)
     .where(eq(categories.id, parsed.data.categoryId))
     .limit(1);
-  if (!category) return fail("Pick what you are onboarding");
-  const vendorType = isVendorType(category.vendorType) ? category.vendorType : vendorTypeForCategory(parsed.data.categoryId, category.fulfilment);
+  const vendorType = category && isVendorType(category.vendorType)
+    ? category.vendorType
+    : vendorTypeForCategory(parsed.data.categoryId);
   const businessType = VENDOR_TYPE_INFO[vendorType].fulfilment;
 
   const vendor = await db.transaction(async (tx) => {
