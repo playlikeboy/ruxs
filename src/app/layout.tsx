@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -27,9 +28,13 @@ export const metadata: Metadata = {
     "henna designer", "custom gifts", "fitness trainer", "physiotherapist", "recurring household services", "Ranchi",
   ],
   icons: {
-    icon: [{ url: "/brand/ruxs-app-icon.svg", type: "image/svg+xml", sizes: "512x512" }],
-    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
-    shortcut: ["/brand/ruxs-app-icon.svg"],
+    icon: [
+      { url: "/brand/ruxs-app-icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/brand/ruxs-app-icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/brand/ruxs-app-icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/brand/ruxs-app-icon-192.png"],
   },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "RUXs" },
   formatDetection: { telephone: false },
@@ -69,7 +74,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en-IN">
       <head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} /></head>
-      <body className={geistSans.variable + " " + geistMono.variable + " min-h-screen bg-bg text-ink antialiased"}>{children}</body>
+      <body className={geistSans.variable + " " + geistMono.variable + " min-h-screen bg-bg text-ink antialiased"}>
+        <ServiceWorkerRegister />
+        {children}
+      </body>
     </html>
   );
 }

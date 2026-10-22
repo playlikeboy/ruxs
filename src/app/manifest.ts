@@ -1,12 +1,5 @@
 import type { MetadataRoute } from "next";
 
-const appIcon = {
-  src: "/brand/ruxs-app-icon.svg",
-  sizes: "512x512",
-  type: "image/svg+xml",
-  purpose: "any",
-} as const;
-
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/app",
@@ -24,13 +17,74 @@ export default function manifest(): MetadataRoute.Manifest {
     dir: "ltr",
     categories: ["food", "shopping", "lifestyle", "utilities", "education", "health", "fitness"],
     prefer_related_applications: false,
-    shortcuts: [
-      { name: "Kids Zone & STEM", short_name: "Kids", url: "/app/kids", description: "Explore classes, camps, robotics and learning kits", icons: [appIcon] },
-      { name: "Explore Services", short_name: "Explore", url: "/app", description: "Browse local meals, water, dairy, stores and specialists", icons: [appIcon] },
-      { name: "Today's Deliveries & Plans", short_name: "Plans", url: "/app/plans", description: "Manage active subscriptions and supported daily changes", icons: [appIcon] },
-      { name: "My Orders", short_name: "Orders", url: "/app/orders", description: "Review active and past orders", icons: [appIcon] },
-      { name: "Account & Address", short_name: "Account", url: "/app/account", description: "Update your delivery address and location", icons: [appIcon] },
+    icons: [
+      {
+        src: "/brand/ruxs-app-icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/brand/ruxs-app-icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/brand/ruxs-app-icon-maskable-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/brand/ruxs-app-icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/brand/ruxs-app-icon.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+        purpose: "any",
+      },
     ],
-    icons: [appIcon, { ...appIcon, purpose: "maskable" }],
+    shortcuts: [
+      {
+        name: "Kids Zone & STEM",
+        short_name: "Kids",
+        url: "/app/kids",
+        description: "Explore classes, camps, robotics and learning kits",
+        icons: [{ src: "/brand/ruxs-app-icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Explore Services",
+        short_name: "Explore",
+        url: "/app",
+        description: "Browse local meals, water, dairy, stores and specialists",
+        icons: [{ src: "/brand/ruxs-app-icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Today's Deliveries & Plans",
+        short_name: "Plans",
+        url: "/app/plans",
+        description: "Manage active subscriptions and supported daily changes",
+        icons: [{ src: "/brand/ruxs-app-icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "My Orders",
+        short_name: "Orders",
+        url: "/app/orders",
+        description: "Review active and past orders",
+        icons: [{ src: "/brand/ruxs-app-icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Account & Address",
+        short_name: "Account",
+        url: "/app/account",
+        description: "Update your delivery address and location",
+        icons: [{ src: "/brand/ruxs-app-icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+    ],
   };
 }

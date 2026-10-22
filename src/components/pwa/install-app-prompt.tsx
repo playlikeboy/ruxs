@@ -146,7 +146,7 @@ export function InstallAppPrompt({
             <div className="flex items-center justify-between pb-2 border-b border-black/5">
               <span className="font-semibold text-ink flex items-center gap-1.5">
                 <Share2 className="h-3.5 w-3.5 text-accent" />
-                How to install on iPhone &amp; iPad
+                {isIOS ? "How to install on iPhone & iPad" : "How to install in Chrome / Android"}
               </span>
               <button
                 type="button"
@@ -156,17 +156,31 @@ export function InstallAppPrompt({
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <ol className="mt-2.5 space-y-2 list-decimal list-inside text-neutral-600">
-              <li>
-                Tap the <strong className="text-ink">Share icon</strong> (<Share2 className="inline h-3 w-3 mx-0.5 text-accent" />) in Safari&apos;s bottom toolbar.
-              </li>
-              <li>
-                Scroll down and tap <strong className="text-ink">Add to Home Screen</strong> (<PlusSquare className="inline h-3 w-3 mx-0.5 text-ink" />).
-              </li>
-              <li>
-                Tap <strong className="text-ink">Add</strong> in the top-right corner.
-              </li>
-            </ol>
+            {isIOS ? (
+              <ol className="mt-2.5 space-y-2 list-decimal list-inside text-neutral-600">
+                <li>
+                  Tap the <strong className="text-ink">Share icon</strong> (<Share2 className="inline h-3 w-3 mx-0.5 text-accent" />) in Safari&apos;s bottom toolbar.
+                </li>
+                <li>
+                  Scroll down and tap <strong className="text-ink">Add to Home Screen</strong> (<PlusSquare className="inline h-3 w-3 mx-0.5 text-ink" />).
+                </li>
+                <li>
+                  Tap <strong className="text-ink">Add</strong> in the top-right corner.
+                </li>
+              </ol>
+            ) : (
+              <ol className="mt-2.5 space-y-2 list-decimal list-inside text-neutral-600">
+                <li>
+                  Tap the <strong className="text-ink">menu button (⋮)</strong> in Chrome&apos;s top-right corner.
+                </li>
+                <li>
+                  Select <strong className="text-ink">Install app</strong> or <strong className="text-ink">Add to Home screen</strong>.
+                </li>
+                <li>
+                  Tap <strong className="text-ink">Install</strong> to add RUXs to your home screen.
+                </li>
+              </ol>
+            )}
           </div>
         )}
       </div>
@@ -231,20 +245,37 @@ export function InstallAppPrompt({
               Install RUXs for a full-screen, native experience with zero download required.
             </p>
 
-            <ol className="mt-3.5 space-y-2.5 rounded-2xl bg-neutral-50 p-3.5 text-xs text-neutral-700">
-              <li className="flex items-center gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">1</span>
-                <span>Tap the <strong className="text-ink">Share icon</strong> (<Share2 className="inline h-3.5 w-3.5 text-accent mx-0.5" />) in Safari toolbar</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">2</span>
-                <span>Scroll down and select <strong className="text-ink">Add to Home Screen</strong> (<PlusSquare className="inline h-3.5 w-3.5 text-ink mx-0.5" />)</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">3</span>
-                <span>Tap <strong className="text-ink">Add</strong> in top right corner</span>
-              </li>
-            </ol>
+            {isIOS ? (
+              <ol className="mt-3.5 space-y-2.5 rounded-2xl bg-neutral-50 p-3.5 text-xs text-neutral-700">
+                <li className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">1</span>
+                  <span>Tap the <strong className="text-ink">Share icon</strong> (<Share2 className="inline h-3.5 w-3.5 text-accent mx-0.5" />) in Safari toolbar</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">2</span>
+                  <span>Scroll down and select <strong className="text-ink">Add to Home Screen</strong> (<PlusSquare className="inline h-3.5 w-3.5 text-ink mx-0.5" />)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">3</span>
+                  <span>Tap <strong className="text-ink">Add</strong> in top right corner</span>
+                </li>
+              </ol>
+            ) : (
+              <ol className="mt-3.5 space-y-2.5 rounded-2xl bg-neutral-50 p-3.5 text-xs text-neutral-700">
+                <li className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">1</span>
+                  <span>Tap the <strong className="text-ink">menu button (⋮)</strong> in Chrome&apos;s top-right corner</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">2</span>
+                  <span>Select <strong className="text-ink">Install app</strong> (or <strong className="text-ink">Add to Home screen</strong>)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">3</span>
+                  <span>Tap <strong className="text-ink">Install</strong> to complete</span>
+                </li>
+              </ol>
+            )}
 
             <button
               type="button"
