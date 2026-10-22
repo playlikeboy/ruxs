@@ -186,6 +186,18 @@ const kidsPrograms = [
     href: "/app/kids/kits",
     icon: <FlaskConical className="h-5 w-5" aria-hidden="true" />,
   },
+  {
+    title: "Life skills & hobbies",
+    detail: "Cooking, gardening, practical hobbies and confidence-building workshops.",
+    href: "/app/kids/workshops",
+    icon: <Sparkles className="h-5 w-5" aria-hidden="true" />,
+  },
+  {
+    title: "Preschools & learning centres",
+    detail: "Early learning, activity academies and local learning centres.",
+    href: "/app/kids/activities",
+    icon: <School className="h-5 w-5" aria-hidden="true" />,
+  },
 ];
 
 function ServiceCard({
