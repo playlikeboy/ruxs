@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { RuxsMark } from "@/components/marketing/ruxs-mark";
 
 export default function MarketingLayout({
   children,
@@ -11,7 +10,7 @@ export default function MarketingLayout({
       <header className="sticky top-0 z-30 border-b border-line bg-[#FAFAF7]/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="RUXs home">
-            <RuxsMark className="h-9 w-9 shrink-0" aria-hidden="true" />
+            <img src="/brand/ruxs-app-icon.svg" alt="" width="36" height="36" className="h-9 w-9 shrink-0" />
             <span className="text-xl font-extrabold tracking-[-0.04em] text-accent">RUXs</span>
           </Link>
 
@@ -46,7 +45,7 @@ export default function MarketingLayout({
           <div className="grid gap-8 sm:grid-cols-[1.2fr_1fr_1fr]">
             <div className="space-y-3">
               <Link href="/" className="flex items-center gap-2.5" aria-label="RUXs home">
-                <RuxsMark className="h-8 w-8 shrink-0" aria-hidden="true" />
+                <img src="/brand/ruxs-app-icon.svg" alt="" width="32" height="32" className="h-8 w-8 shrink-0" />
                 <span className="font-extrabold tracking-tight text-accent">RUXs</span>
               </Link>
               <p className="max-w-sm text-sm leading-6 text-muted">
