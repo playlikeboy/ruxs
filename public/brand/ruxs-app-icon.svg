@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">RUXs neighbourhood app icon</title>
+  <rect width="512" height="512" rx="110" fill="#FFF3E9"/>
+  <circle cx="94" cy="146" r="46" fill="#FF6B61"/><path d="M82 120v50m0-26 24 26m0-50v50" stroke="#FFF" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="416" cy="148" r="46" fill="#F8B62D"/><path d="m387 145 29-23 29 23v6h-58zm8 12h42v22h-42z" fill="#FFF"/>
+  <circle cx="98" cy="292" r="42" fill="#36A9E8"/><path d="M98 258c-11 17-17 26-17 36a17 17 0 0 0 34 0c0-10-6-19-17-36Z" fill="#FFF"/>
+  <circle cx="414" cy="290" r="42" fill="#39A96B"/><path d="M414 264v50m-25-35h50m-44-9 38 35m-38 0 38-35" stroke="#FFF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M145 232 256 141l111 91" fill="none" stroke="#E95135" stroke-width="33" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M169 219v106q0 18 18 18h138q18 0 18-18V219" fill="#FFFDF8" stroke="#E95135" stroke-width="15" stroke-linejoin="round"/>
+  <path d="M237 343v-54a19 19 0 0 1 38 0v54" fill="#FFE8DD" stroke="#E95135" stroke-width="10"/>
+  <circle cx="226" cy="259" r="7" fill="#27251F"/><circle cx="286" cy="259" r="7" fill="#27251F"/><path d="M239 279q17 18 34 0" fill="none" stroke="#27251F" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="209" cy="277" r="9" fill="#F5A49B"/><circle cx="303" cy="277" r="9" fill="#F5A49B"/>
+  <rect x="142" y="364" width="228" height="62" rx="16" fill="#F6B65B"/>
+  <rect x="163" y="371" width="56" height="43" rx="7" fill="#FFF" stroke="#176B4B" stroke-width="6"/>
+  <path d="M172 371v-9a12 12 0 0 1 12-12h14a12 12 0 0 1 12 12v9" fill="none" stroke="#176B4B" stroke-width="6"/>
+  <rect x="233" y="373" width="34" height="42" rx="10" fill="#259BE7"/><rect x="240" y="363" width="20" height="15" rx="5" fill="#0876C9"/>
+  <circle cx="311" cy="394" r="18" fill="#F04C43"/><path d="M303 376q8-11 16 0" fill="none" stroke="#278C4B" stroke-width="6" stroke-linecap="round"/>
+  <text x="256" y="476" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="900" letter-spacing="-4" fill="#07583F">RUXs</text>
+</svg>
