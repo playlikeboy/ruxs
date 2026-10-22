@@ -20,7 +20,7 @@ export default async function ConsumerAppLayout({ children }: { children: React.
   return (
     <AuthProvider>
       <div className="min-h-dvh bg-app-canvas sm:py-0">
-        <div className="relative mx-auto min-h-dvh max-w-md overflow-x-clip border-x border-app-canvas bg-app-surface pb-[calc(4rem+env(safe-area-inset-bottom))] text-ink antialiased sm:border-x-app-line sm:shadow-[0_18px_70px_-55px_rgba(42,54,40,0.35)]">
+        <div className="relative mx-auto min-h-dvh max-w-md overflow-x-clip border-x border-app-canvas bg-app-surface pb-[calc(4rem+env(safe-area-inset-bottom))] text-ink antialiased sm:border-x-line sm:shadow-[0_18px_70px_-55px_rgba(42,54,40,0.35)]">
           {children}
         </div>
         <TabBar />
