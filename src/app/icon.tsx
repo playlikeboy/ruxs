@@ -1,11 +1,13 @@
 import { ImageResponse } from "next/og";
+import { RuxsMark } from "@/components/marketing/ruxs-mark";
 
 export const size = {
-  width: 32,
-  height: 32,
+  width: 512,
+  height: 512,
 };
 export const contentType = "image/png";
 
+/** The same neighbourhood-wide mark is used for the favicon and installable app. */
 export default function Icon() {
   return new ImageResponse(
     (
@@ -16,19 +18,15 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#BD4B2A",
-          borderRadius: "8px",
-          color: "#FAFAF7",
-          fontSize: 18,
-          fontWeight: 800,
-          fontFamily: "sans-serif",
+          backgroundColor: "#FAFAF7",
+          padding: 16,
         }}
       >
-        R
+        <RuxsMark width="100%" height="100%" aria-hidden="true" />
       </div>
     ),
     {
       ...size,
-    }
+    },
   );
 }
