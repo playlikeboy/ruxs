@@ -25,26 +25,33 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in"),
   applicationName: "RUXs",
   title: {
-    default: "RUXs — Everyday Essentials From Your Neighbourhood",
+    default: "RUXs — Local Services for Everyday Life",
     template: "%s | RUXs",
   },
   description:
-    "Discover neighbourhood tiffin subscriptions, 20L water-can delivery, fresh dairy, kids robotics & STEM classes, mehndi artists, and custom gifts with local doorstep service.",
+    "Discover neighbourhood meals, water and dairy delivery, kids' learning and activities, DIY kits, gifts, mehndi artists, fitness and physiotherapy.",
   keywords: [
+    "local services",
     "tiffin service",
     "20L water can delivery",
-    "fresh milk delivery",
-    "kids robotics classes",
+    "fresh milk and dairy delivery",
+    "neighbourhood grocery stores",
+    "kids tutoring",
+    "kids robotics and STEM classes",
+    "kids coding classes",
     "kids chess academy",
-    "stem learning kits",
-    "pottery for kids",
+    "kids art and pottery",
+    "kids dance and music classes",
+    "holiday camps for children",
+    "DIY learning kits",
+    "school project materials",
     "mehndi artist",
     "henna designer",
     "custom gifts",
-    "daily subscription",
-    "home kitchen",
+    "fitness trainer",
+    "physiotherapist",
+    "recurring household services",
     "Ranchi",
-    "household services",
   ],
   appleWebApp: {
     capable: true,
@@ -55,9 +62,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: "RUXs — Everyday Essentials From Your Neighbourhood",
+    title: "RUXs — Local Services for Everyday Life",
     description:
-      "Daily tiffin subscriptions, 20L water, fresh dairy, mehndi designers, and custom gifts from trusted local neighbourhood stores.",
+      "Meals, water and dairy, kids' classes and camps, gifts, mehndi artists and wellness providers from your neighbourhood.",
     url: "https://ruxs.in",
     siteName: "RUXs",
     locale: "en_IN",
@@ -65,8 +72,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "RUXs — Everyday Essentials From Your Neighbourhood",
-    description: "Daily tiffin, water, dairy, mehndi artists & local gifts delivered to your doorstep.",
+    title: "RUXs — Local Services for Everyday Life",
+    description:
+      "Discover neighbourhood essentials, kids' learning, gifts and local specialists with RUXs.",
   },
 };
 
@@ -76,24 +84,24 @@ const jsonLd = {
     {
       "@type": "WebApplication",
       "@id": "https://ruxs.in/#app",
-      "name": "RUXs",
-      "url": "https://ruxs.in",
-      "applicationCategory": "ShoppingApplication",
-      "operatingSystem": "All",
-      "browserRequirements": "Requires JavaScript. Requires HTML5.",
-      "offers": {
+      name: "RUXs",
+      url: "https://ruxs.in",
+      applicationCategory: "ShoppingApplication",
+      operatingSystem: "All",
+      browserRequirements: "Requires JavaScript. Requires HTML5.",
+      offers: {
         "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "INR",
+        price: "0",
+        priceCurrency: "INR",
       },
     },
     {
       "@type": "Organization",
       "@id": "https://ruxs.in/#organization",
-      "name": "RUXs",
-      "url": "https://ruxs.in",
-      "logo": "https://ruxs.in/icon",
-      "sameAs": ["https://twitter.com/ruxs_in", "https://github.com/SH20RAJ/ruxs"],
+      name: "RUXs",
+      url: "https://ruxs.in",
+      logo: "https://ruxs.in/icon",
+      sameAs: ["https://twitter.com/ruxs_in", "https://github.com/SH20RAJ/ruxs"],
     },
   ],
 };
@@ -111,7 +119,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-bg text-ink antialiased`}>
+      <body className={geistSans.variable + " " + geistMono.variable + " min-h-screen bg-bg text-ink antialiased"}>
         {children}
       </body>
     </html>
