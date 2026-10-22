@@ -5,7 +5,7 @@ const appIcon = {
   sizes: "512x512",
   type: "image/svg+xml",
   purpose: "any",
-};
+} as const;
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
