@@ -93,7 +93,7 @@ const everydayServices = [
   {
     title: "Neighbourhood stores",
     detail: "Groceries, household supplies and useful everyday finds.",
-    href: "/app/category/store",
+    href: "/app",
     icon: <ShoppingBasket className="h-7 w-7" aria-hidden="true" />,
     tag: "LOCAL",
   },
@@ -124,14 +124,14 @@ const specialistServices = [
   {
     title: "Fitness coaching",
     detail: "Local trainers and fitness sessions, where available.",
-    href: "/app/category/fitness",
+    href: "/app",
     icon: <Dumbbell className="h-7 w-7" aria-hidden="true" />,
     tag: "WELLNESS",
   },
   {
     title: "Physiotherapy",
     detail: "Find local clinics and therapists offering supported appointments.",
-    href: "/app/category/physio",
+    href: "/app",
     icon: <HeartPulse className="h-7 w-7" aria-hidden="true" />,
     tag: "CARE",
   },
@@ -204,7 +204,7 @@ function ServiceCard({
   return (
     <Link
       href={href}
-      className="group flex min-h-full flex-col rounded-[16px] border border-line bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#D7C9BF] hover:shadow-[0_12px_35px_-25px_rgba(28,27,25,0.45)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="group flex min-h-full flex-col rounded-[16px] border border-line bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#D7C9BF]  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <div className="flex items-start justify-between gap-3">
         <span className="flex h-14 w-14 items-center justify-center rounded-[14px] bg-bg text-ink">
@@ -234,8 +234,8 @@ export default function HomePage() {
       />
 
       <section className="relative overflow-hidden border-b border-line bg-[#FFF8F2]">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#FFE8DD]/70 blur-3xl" />
-        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-1/4 h-64 w-64 rounded-full bg-[#E1F3E7]/70 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 rounded-full bg-[#FFE8DD]/70" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 left-1/4 h-36 w-36 rounded-full bg-[#E1F3E7]/80" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-20 md:grid-cols-[1.02fr_0.98fr] md:gap-14 lg:py-24">
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#F2D4C4] bg-white/85 px-3 py-1.5 text-xs font-semibold text-ink">
@@ -268,8 +268,8 @@ export default function HomePage() {
           </div>
 
           <div className="relative mx-auto w-full max-w-lg">
-            <div aria-hidden="true" className="absolute inset-5 rotate-2 rounded-[30px] bg-[#F6D9C8]" />
-            <div className="relative rounded-[24px] border border-line bg-white p-4 shadow-[0_24px_60px_-38px_rgba(62,38,24,0.35)] sm:p-6">
+            <div aria-hidden="true" className="absolute inset-5 rotate-2 rounded-[30px] bg-[#FFE8DD]" />
+            <div className="relative rounded-[24px] border border-line bg-white p-4 shadow-none sm:p-6">
               <div className="flex items-center justify-between border-b border-line pb-4">
                 <div>
                   <p className="text-xs font-semibold tracking-wide text-muted">YOUR NEIGHBOURHOOD</p>
@@ -408,7 +408,7 @@ export default function HomePage() {
               <p className="mt-2 text-xs leading-5 text-muted">Check the provider's prices, service area, schedule and terms.</p>
             </article>
             <article className="rounded-[15px] border border-line bg-bg p-4">
-              <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-[#E1F3E7] text-sm font-bold text-ink">3</span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-[#FFE8DD] text-sm font-bold text-ink">3</span>
               <h3 className="mt-4 text-sm font-semibold text-ink">Choose your next step</h3>
               <p className="mt-2 text-xs leading-5 text-muted">Continue through the supported order, subscription or booking flow.</p>
             </article>
