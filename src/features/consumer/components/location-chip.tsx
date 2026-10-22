@@ -77,11 +77,11 @@ export function LocationChip({
   return (
     <div className="flex items-center justify-between gap-3">
       <Link href="/app/account" className="min-w-0">
-        <span className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+        <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted">
           {source === "approx" ? "Approx. location" : "Deliver to"}
         </span>
         <span className="flex items-center gap-1 truncate text-[15px] font-semibold text-ink">
-          <MapPin className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+          <MapPin className="h-4 w-4 shrink-0 text-brand-coral" aria-hidden="true" />
           <span className="truncate">{label ?? "Set your location"}</span>
         </span>
       </Link>
@@ -89,7 +89,7 @@ export function LocationChip({
         type="button"
         onClick={() => locate(false)}
         disabled={pending}
-        className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 text-[13px] font-semibold text-ink shadow-sm transition active:scale-95 disabled:opacity-60"
+        className="flex h-12 min-h-12 shrink-0 items-center gap-1.5 rounded-xl border border-line bg-brand-peach/55 px-3.5 text-[13px] font-semibold text-ink transition-colors hover:border-brand-coral/30 active:scale-[0.98] disabled:opacity-60"
       >
         <LocateFixed className={"h-4 w-4 " + (pending ? "animate-spin" : "")} aria-hidden="true" />
         {source === "gps" || source === "address" ? "Update" : "Use exact location"}

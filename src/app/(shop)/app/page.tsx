@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, GraduationCap, House, MapPin } from "lucide-react";
+import { RuxsMark } from "@/components/marketing/ruxs-mark";
 import { ModeSwitch } from "@/features/consumer/components/mode-switch";
 import { getMyLocation, getMyPlans, getMyProfile, listStores } from "@/features/consumer/queries";
 import { getCategoryMap } from "@/features/platform/queries";
@@ -75,8 +76,8 @@ export default async function ExplorePage() {
         {dailyCategories.map((k) => (
           <Link key={k.id} href={"/app/category/" + k.id} className="group flex flex-col items-center gap-1.5 text-center active:scale-95">
             <span
-              className="flex h-16 w-16 items-center justify-center rounded-[20px] text-[30px] shadow-[inset_0_-3px_0_rgba(0,0,0,0.05)] ring-1 ring-black/5 transition-transform group-hover:-translate-y-0.5"
-              style={{ background: `linear-gradient(160deg, ${k.coverFrom}, ${k.coverTo})` }}
+              className="flex h-16 w-16 items-center justify-center rounded-[20px] text-[30px] border border-white/80 shadow-[0_2px_4px_rgba(32,36,31,0.035)] transition-transform group-hover:-translate-y-0.5"
+              style={{ backgroundColor: k.tint }}
               aria-hidden="true"
             >
               {k.emoji}
@@ -91,6 +92,13 @@ export default async function ExplorePage() {
   return (
     <div className="pb-24">
       <div className="space-y-3 px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+        <header className="flex items-center justify-between gap-3 px-0.5 pb-1">
+          <Link href="/app" aria-label="RUXs home" className="inline-flex items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+            <RuxsMark className="h-10 w-10 shrink-0" aria-hidden="true" />
+            <span className="text-lg font-extrabold tracking-[-0.03em] text-brand-deep">RUXs</span>
+          </Link>
+          <span className="text-right text-xs font-medium leading-4 text-muted">Good things, close by.</span>
+        </header>
         <ModeSwitch />
         <LocationChip label={location.label} source={location.source} />
         <SearchBar />
@@ -101,7 +109,7 @@ export default async function ExplorePage() {
         <h1 className="text-[26px] font-bold leading-tight tracking-tight text-ink">
           {firstName ? `Hi ${firstName},` : "Hi there,"}
           <br />
-          <span className="text-neutral-500">what does home need today?</span>
+          <span className="text-muted">what does home need today?</span>
         </h1>
 
         {plans.length === 0 && serviceCategories}
@@ -118,21 +126,21 @@ export default async function ExplorePage() {
 
         <Link
           href="/app/kids"
-          className="mt-6 flex items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#FFE1EF] via-[#EDE3FF] to-[#D9F4FF] p-4 transition active:scale-[0.99]"
+          className="mt-6 flex items-center gap-3 overflow-hidden rounded-2xl border border-brand-coral/10 bg-brand-peach p-4 transition active:scale-[0.99]"
         >
-          <span className="text-4xl" aria-hidden="true">🧸</span>
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-butter text-brand-deep" aria-hidden="true"><GraduationCap className="h-6 w-6" /></span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-bold leading-tight text-[#3B1F5C]">Switch to Kids</span>
-            <span className="mt-0.5 block text-xs leading-5 text-[#3B1F5C]/70">Robotics, chess, art, dance and DIY kits near you.</span>
+            <span className="block text-[15px] font-bold leading-tight text-brand-deep">Switch to Kids</span>
+            <span className="mt-0.5 block text-xs leading-5 text-muted">Robotics, chess, art, dance and DIY kits near you.</span>
           </span>
-          <ArrowRight className="h-5 w-5 shrink-0 text-[#9B5CF6]" aria-hidden="true" />
+          <ArrowRight className="h-5 w-5 shrink-0 text-brand-coral" aria-hidden="true" />
         </Link>
 
         {!profile && (
           <Link href="/app/account" className="mt-5 flex items-center justify-between rounded-2xl border border-black/10 p-4">
             <span>
               <span className="block text-[15px] font-semibold text-ink">Add your address</span>
-              <span className="block text-sm text-neutral-500">See stores that deliver to your building</span>
+              <span className="block text-sm text-muted">See stores that deliver to your building</span>
             </span>
             <span className="text-sm font-bold text-accent">Add →</span>
           </Link>
@@ -141,19 +149,19 @@ export default async function ExplorePage() {
         <section className="mt-8">
           <div className="flex items-end justify-between">
             <h2 className="text-xl font-bold tracking-tight text-ink">Within {radius} km of you</h2>
-            {location.source !== "none" && <span className="text-sm text-neutral-500 tabular-nums">{stores.length} stores</span>}
+            {location.source !== "none" && <span className="text-sm text-muted tabular-nums">{stores.length} stores</span>}
           </div>
           {location.source === "none" ? (
             <div className="mt-4 rounded-2xl bg-neutral-50 p-6 text-center">
-              <p className="text-3xl" aria-hidden="true">📍</p>
+              <MapPin className="mx-auto h-8 w-8 text-accent" aria-hidden="true" />
               <p className="mt-2 font-semibold text-ink">Share your location to see stores</p>
-              <p className="mt-1 text-sm text-neutral-500">We only show kitchens and suppliers within {radius} km of you. Tap “Use exact location” above, or add your address.</p>
+              <p className="mt-1 text-sm text-muted">We only show kitchens and suppliers within {radius} km of you. Tap “Use exact location” above, or add your address.</p>
             </div>
           ) : stores.length === 0 ? (
             <div className="mt-4 rounded-2xl bg-neutral-50 p-6 text-center">
-              <p className="text-3xl" aria-hidden="true">🏘️</p>
+              <House className="mx-auto h-8 w-8 text-brand-deep" aria-hidden="true" />
               <p className="mt-2 font-semibold text-ink">No stores within {radius} km yet</p>
-              <p className="mt-1 text-sm text-neutral-500">We&apos;re adding kitchens and suppliers every week. If this location looks wrong, update it above.</p>
+              <p className="mt-1 text-sm text-muted">We&apos;re adding kitchens and suppliers every week. If this location looks wrong, update it above.</p>
             </div>
           ) : (
             <div className="mt-4">

@@ -9,6 +9,11 @@ Start with `PROMPT.md` (build order, checklists, and decisions that override the
 **Adding a new service or category** (gym trainers, maids, tutors, groceries…): follow `docs/ADDING_SERVICES.md`. Most services are data-only (`/admin/settings`); only a new fulfilment model needs code.
 Hexclave handles auth — fetch its skill (https://skill.hexclave.com) before touching auth code.
 
+
+## Frontend and design-system rules
+
+For every UI change, read `PRODUCT.md` and `DESIGN.md` first. Follow the Impeccable design guidance at https://impeccable.style/: use Operate-mode restraint for authenticated app/merchant/admin surfaces and Persuade-mode brand expression for public marketing. Treat the logo palette and existing tokens as source of truth; avoid generic AI-generated gradients, nested cards, decorative motion and invented product claims. Do not claim a visual browser review or automated detector/build ran unless it actually did.
+
 ## Hard lines
 1. Money is integer paise. Never floats.
 2. Never UPDATE or DELETE a `ledger_entries` row. Fix mistakes with a new reversing entry.

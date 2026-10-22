@@ -1,16 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #FAFAF7;
+  /* Core RUXs palette: warm paper, forest green, and tiffin-roof coral. */
+  --color-bg: #FFFDF8;
   --color-surface: #FFFFFF;
-  --color-ink: #1C1B19;
-  --color-muted: #6B6862;
-  --color-line: #E7E5DF;
+  --color-ink: #20241F;
+  --color-muted: #716C62;
+  --color-line: #E9E3D8;
   --color-accent: #BD4B2A;
   --color-good: #2F7D4F;
-  --color-warn: #9A5B00;
+  --color-warn: #8E5700;
   --color-bad: #B42318;
 
+  --color-brand-deep: #07583F;
+  --color-brand-coral: #E95135;
+  --color-brand-peach: #FFF0E8;
+  --color-brand-butter: #FFF4D8;
+  --color-brand-leaf: #E9F4E7;
+  --color-brand-water: #E8F4FB;
+  --color-brand-gift: #FCE8EF;
+  --color-app-canvas: #F7F4ED;
+  --color-app-surface: #FFFDF8;
+
+  /* Marketing tints retained for their original purpose. */
   --color-peach: #FFE8DD;
   --color-butter: #FFF3C9;
   --color-mint: #E1F3E7;
@@ -19,20 +31,19 @@
 
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
-
-  --radius-control: 10px;
-  --radius-card: 12px;
+  --radius-control: 12px;
+  --radius-card: 16px;
   --radius-bubble: 22px;
 
-  /* Kids mode: candy palette, used only inside /app/kids and the kids switch. */
-  --color-kids-cream: #FFF8EC;
-  --color-kids-ink: #3B1F5C;
-  --color-kids-bubblegum: #FF6FAE;
-  --color-kids-grape: #9B5CF6;
-  --color-kids-sunny: #FFD23F;
-  --color-kids-sky: #4CC9F0;
-  --color-kids-mint: #3DDC97;
-  --color-kids-peach: #FFB38A;
+  /* Kids mode uses the same RUXs family, expressed more playfully. */
+  --color-kids-cream: #FFF7EA;
+  --color-kids-ink: #174737;
+  --color-kids-bubblegum: #F6B8AC;
+  --color-kids-grape: #BD4B2A;
+  --color-kids-sunny: #FFE09B;
+  --color-kids-sky: #CBE8F7;
+  --color-kids-mint: #CFE9D2;
+  --color-kids-peach: #FFD3BE;
   --font-kids: var(--font-fredoka), var(--font-geist-sans), system-ui, sans-serif;
 
   --animate-wiggle: wiggle 2.4s ease-in-out infinite;
@@ -48,27 +59,47 @@
     50% { transform: translateY(-6px); }
   }
   @keyframes pop {
-    0% { transform: scale(0.85); opacity: 0; }
+    0% { transform: scale(0.92); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
   }
 }
 
 :root {
-  --bg: #FAFAF7;
+  color-scheme: light;
+  --bg: #FFFDF8;
   --surface: #FFFFFF;
-  --ink: #1C1B19;
-  --muted: #6B6862;
-  --line: #E7E5DF;
+  --ink: #20241F;
+  --muted: #716C62;
+  --line: #E9E3D8;
   --accent: #BD4B2A;
   --good: #2F7D4F;
-  --warn: #9A5B00;
+  --warn: #8E5700;
   --bad: #B42318;
+
+  --brand-deep: #07583F;
+  --brand-coral: #E95135;
+  --brand-peach: #FFF0E8;
+  --brand-butter: #FFF4D8;
+  --brand-leaf: #E9F4E7;
+  --brand-water: #E8F4FB;
+  --brand-gift: #FCE8EF;
+  --app-canvas: #F7F4ED;
+  --app-surface: #FFFDF8;
 
   --peach: #FFE8DD;
   --butter: #FFF3C9;
   --mint: #E1F3E7;
   --sky: #E2EEFA;
   --blush: #FCE4EC;
+
+  --focus-ring: #BD4B2A;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  scrollbar-color: #D9D0C2 #FFFDF8;
+  scrollbar-width: thin;
 }
 
 body {
@@ -77,39 +108,44 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  caret-color: var(--color-accent);
+  overscroll-behavior-y: none;
 }
 
 ::selection {
-  background-color: #FFE8DD;
-  color: #BD4B2A;
+  background: #FADACC;
+  color: #20241F;
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
-a {
-  text-underline-offset: 3px;
+/* Prevent iOS zoom on form focus and keep native forms visually consistent. */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  font-size: 16px;
 }
 
-/* Tabular figures for numbers, counts, and currency */
+input::placeholder,
+textarea::placeholder {
+  color: #716C62;
+  opacity: 1;
+}
+
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Keep measurements stable in quantities, counts, dates, and currency. */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Native App Feeling & Touch UX */
-html {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-body {
-  overscroll-behavior-y: none;
-}
-
-/* Standalone PWA adjustments */
+/* Standalone PWA adjustments: users can still select and edit text. */
 @media all and (display-mode: standalone) {
   body {
     user-select: none;
@@ -121,6 +157,20 @@ body {
   }
 }
 
+/* A paper-like canvas for children's learning, now tied to the core palette. */
+.kids-paper {
+  background-color: var(--color-kids-cream);
+  background-image: radial-gradient(rgba(7, 88, 63, 0.055) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.kids-card {
+  border-radius: var(--radius-bubble);
+  background: #fff;
+  border: 1px solid rgba(7, 88, 63, 0.11);
+  box-shadow: 0 5px 18px -15px rgba(32, 36, 31, 0.35);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -130,18 +180,4 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Kids mode surface: soft dotted paper behind the playful cards. */
-.kids-paper {
-  background-color: var(--color-kids-cream);
-  background-image: radial-gradient(rgba(155, 92, 246, 0.09) 1.2px, transparent 1.2px);
-  background-size: 18px 18px;
-}
-
-.kids-card {
-  border-radius: var(--radius-bubble);
-  background: #fff;
-  border: 2px solid rgba(59, 31, 92, 0.08);
-  box-shadow: 0 4px 0 rgba(59, 31, 92, 0.08);
 }

@@ -20,7 +20,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="App navigation"
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-black/5 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-line bg-white pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="grid h-16 grid-cols-5">
         {TABS.map((tab) => {
@@ -42,14 +42,16 @@ export function TabBar() {
                   } catch {}
                 }}
                 className={
-                  "relative flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium transition-all active:scale-95 " +
-                  (active ? "text-accent" : "text-neutral-500 hover:text-ink")
+                  "relative flex h-full min-h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors active:scale-[0.98] " +
+                  (active ? "text-brand-deep" : "text-muted hover:text-ink")
                 }
               >
-                <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.4 : 1.8} aria-hidden="true" />
-                {tab.label}
+                <span className={"flex h-8 w-10 items-center justify-center rounded-xl transition-colors " + (active ? "bg-brand-peach text-accent" : "text-muted")}>
+                  <Icon className="h-[21px] w-[21px]" strokeWidth={active ? 2.3 : 1.8} aria-hidden="true" />
+                </span>
+                <span>{tab.label}</span>
                 {tab.href === "/app/cart" && count > 0 && (
-                  <span className="absolute right-[calc(50%-20px)] top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white tabular-nums">
+                  <span className="absolute right-[calc(50%-20px)] top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white tabular-nums">
                     {count}
                   </span>
                 )}
