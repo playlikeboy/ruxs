@@ -52,6 +52,9 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
         city: "Ranchi",
         area: "Morabadi",
         status: "active",
+        vendorType: "kids",
+        businessType: "booking",
+        categoryId: "kids",
       })
       .returning();
     vendorId = v!.id;

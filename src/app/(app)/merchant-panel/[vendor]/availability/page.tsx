@@ -1,3 +1,4 @@
+import { requireVendorModule } from "@/lib/auth/session";
 import { getAvailability } from "@/features/bookings/queries";
 import { redirect } from "next/navigation";
 import { BookingRulesForm, TimeOffEditor, WeeklyHoursEditor } from "@/features/bookings/components/availability-editor";
@@ -6,6 +7,7 @@ export const metadata = { title: "Availability" };
 
 export default async function AvailabilityPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
+  await requireVendorModule(slug, "availability");
   const { access, rules, blocks } = await getAvailability(slug);
   if (access.vendor.businessType !== "booking") redirect(`/merchant-panel/${slug}/today`);
 

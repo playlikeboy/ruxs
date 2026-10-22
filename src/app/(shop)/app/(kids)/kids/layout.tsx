@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { Fredoka } from "next/font/google";
 import { KidsHeader } from "@/features/kids/components/kids-header";
 import { KidsSubNav } from "@/features/kids/components/kids-sub-nav";
+
+const fredoka = Fredoka({ subsets: ["latin"], variable: "--font-fredoka", weight: ["400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
   title: "Kids Activities, STEM & Learning Marketplace",
@@ -14,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function KidsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-full bg-amber-50/40 pb-20">
+    <div className={`${fredoka.variable} kids-paper min-h-dvh pb-24 font-kids text-kids-ink`}>
       <KidsHeader />
       <KidsSubNav />
       <main className="px-4 py-3">{children}</main>

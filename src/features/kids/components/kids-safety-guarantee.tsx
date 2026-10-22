@@ -37,14 +37,14 @@ export function KidsSafetyGuarantee() {
   ];
 
   return (
-    <div className="rounded-3xl border-2 border-slate-900 bg-white p-5 shadow-[3px_3px_0_0_#0f172a]">
+    <div className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-5 shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)]">
       <div className="flex items-center gap-2">
         <span className="text-xl" aria-hidden="true">🌟</span>
-        <h3 className="text-base font-black tracking-tight text-slate-950">
+        <h3 className="text-base font-black tracking-tight text-kids-ink">
           Why Parents Trust Ruxs Kids
         </h3>
       </div>
-      <p className="mt-1 text-xs font-semibold text-slate-500">
+      <p className="mt-1 text-xs font-semibold text-kids-ink/60">
         Safe, supervised, high-engagement activities designed to build real-world confidence.
       </p>
 
@@ -52,12 +52,12 @@ export function KidsSafetyGuarantee() {
         {TRUST_POINTS.map((pt, idx) => (
           <div
             key={idx}
-            className={`flex flex-col justify-between rounded-2xl border-2 ${pt.border} ${pt.bg} p-3`}
+            className={`flex flex-col justify-between rounded-[20px] border-2 ${pt.border} ${pt.bg} p-3`}
           >
             <span className="text-2xl mb-1" aria-hidden="true">{pt.emoji}</span>
             <div>
-              <span className="block text-xs font-black text-slate-900">{pt.title}</span>
-              <span className="mt-0.5 block text-[11px] font-medium leading-snug text-slate-600">
+              <span className="block text-xs font-black text-kids-ink">{pt.title}</span>
+              <span className="mt-0.5 block text-[11px] font-medium leading-snug text-kids-ink/70">
                 {pt.description}
               </span>
             </div>

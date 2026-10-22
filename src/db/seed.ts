@@ -1,3 +1,4 @@
+import { vendorTypeForCategory } from "@/core/vendor-types";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 import { scriptDb, scriptPool } from "./script-client";
@@ -126,6 +127,8 @@ export async function seed() {
           area: mv.area,
           plan: mv.plan,
           status: mv.status,
+          vendorType: vendorTypeForCategory(mv.products[0]?.kind),
+          categoryId: mv.products[0]?.kind,
         })
         .returning();
 
@@ -171,6 +174,8 @@ export async function seed() {
       area: "HSR Layout Sector 2",
       plan: "starter",
       status: "active",
+      vendorType: "tiffin",
+      categoryId: "tiffin",
     })
     .returning();
 
@@ -185,6 +190,8 @@ export async function seed() {
       area: "HSR Layout Sector 2",
       plan: "free",
       status: "active",
+      vendorType: "water",
+      categoryId: "water",
     })
     .returning();
 

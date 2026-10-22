@@ -8,3 +8,4 @@ export * from "./platform";
 export * from "./bookings";
 export * from "./support";
 export * from "./kids";
+export * from "./vendor-types";

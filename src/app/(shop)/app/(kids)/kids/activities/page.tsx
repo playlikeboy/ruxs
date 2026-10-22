@@ -14,10 +14,10 @@ export default async function KidsActivitiesPage() {
   return (
     <div className="space-y-4">
       <div className="px-1">
-        <h1 className="text-xl font-black tracking-tight text-slate-950">
+        <h1 className="text-xl font-black tracking-tight text-kids-ink">
           Kids Classes & Activities 🚀
         </h1>
-        <p className="mt-0.5 text-xs font-semibold text-slate-500">
+        <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
           Book 1:1 home sessions or studio batches with verified mentors
         </p>
       </div>

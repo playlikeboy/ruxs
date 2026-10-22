@@ -1,3 +1,4 @@
+import { requireVendorModule } from "@/lib/auth/session";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatINR } from "@/core/money";
@@ -11,6 +12,7 @@ export default async function CustomerDetailPage({
   params: Promise<{ vendor: string; id: string }>;
 }) {
   const { vendor: slug, id } = await params;
+  await requireVendorModule(slug, "customers");
   const data = await getCustomerDetails(slug, id);
 
   if (!data) {

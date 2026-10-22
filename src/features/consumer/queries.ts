@@ -106,6 +106,7 @@ const publicVendorFields = {
   serviceRadiusKm: vendors.serviceRadiusKm,
   mapsUrl: vendors.mapsUrl,
   businessType: vendors.businessType,
+  vendorType: vendors.vendorType,
   bookingNoticeMinutes: vendors.bookingNoticeMinutes,
   cancelCutoffHours: vendors.cancelCutoffHours,
   deliveryFeePaise: vendors.deliveryFeePaise,
@@ -385,3 +386,30 @@ export async function getMyPlans() {
     })),
   };
 }
+
+/**
+ * Geofence for lists that aren't store cards (kids classes, workshops, kits):
+ * the ids of active vendors within the platform discovery radius of the
+ * household, with their distance. Empty when we don't know where they are.
+ */
+export const getNearbyVendorDistances = cache(async (): Promise<Map<string, number>> => {
+  const location = await getMyLocation();
+  const out = new Map<string, number>();
+  if (location.latitude == null || location.longitude == null) return out;
+  const db = getDb();
+  const [rows, localities, settings] = await Promise.all([
+    db
+      .select({ id: vendors.id, latitude: vendors.latitude, longitude: vendors.longitude, city: vendors.city, area: vendors.area })
+      .from(vendors)
+      .where(eq(vendors.status, "active")),
+    getLocalities(),
+    getPlatformSettings(),
+  ]);
+  for (const v of rows) {
+    const p = vendorPoint(v, localities);
+    if (!p) continue;
+    const d = haversineDistanceKm(location.latitude, location.longitude, p.latitude, p.longitude);
+    if (d <= settings.discoveryRadiusKm) out.set(v.id, d);
+  }
+  return out;
+});

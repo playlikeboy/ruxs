@@ -1,7 +1,8 @@
 import "server-only";
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, or } from "drizzle-orm";
 import { getDb } from "@/db";
-import { availabilityBlocks, availabilityRules, bookings, categories, customers, providerProfiles, services, vendors } from "@/db/schema";
+import { availabilityBlocks, availabilityRules, bookings, categories, customers, services, vendors } from "@/db/schema";
+import { getPublicTypeDetails } from "@/features/vendor-types/queries";
 import { requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { openSlots, type Busy } from "@/core/booking";
 import { addDaysIST, istDateTime, todayIST } from "@/core/time";
@@ -32,19 +33,30 @@ export async function getBookableService(serviceId: string) {
   return row ?? null;
 }
 
-/** Public provider page data: profile and active services. */
+/** Public provider page data: the type's own profile (trainer, physio, mehndi) and active services. */
 export async function getProviderPublic(vendorId: string) {
   const db = getDb();
-  const [[profile], list] = await Promise.all([
-    db.select().from(providerProfiles).where(eq(providerProfiles.vendorId, vendorId)).limit(1),
-    db
-      .select({ service: services, category: categories })
-      .from(services)
-      .innerJoin(categories, eq(services.categoryId, categories.id))
-      .where(and(eq(services.vendorId, vendorId), isNull(services.archivedAt)))
-      .orderBy(asc(services.sort), asc(services.pricePaise)),
-  ]);
-  return { profile: profile ?? null, services: list };
+  const list = await db
+    .select({ service: services, category: categories })
+    .from(services)
+    .innerJoin(categories, eq(services.categoryId, categories.id))
+    .where(and(eq(services.vendorId, vendorId), isNull(services.archivedAt)))
+    .orderBy(asc(services.sort), asc(services.pricePaise));
+  const details = await getPublicTypeDetails(vendorId, list.map((r) => r.service.id));
+  const row = details.profile ?? null;
+  const text = (k: string) => (typeof row?.[k] === "string" ? (row[k] as string) : null);
+  const list_ = (k: string) => (Array.isArray(row?.[k]) ? (row[k] as string[]) : []);
+  const profile = row
+    ? {
+        headline: text("headline"),
+        qualifications: text("qualifications") ?? text("certifications"),
+        experienceYears: typeof row.experienceYears === "number" ? row.experienceYears : null,
+        specialities: [...list_("specialities"), ...list_("styles"), ...list_("conditionsTreated")].slice(0, 12),
+        languages: list_("languages"),
+        gender: text("gender"),
+      }
+    : null;
+  return { profile, services: list, highlights: details.highlights, serviceChips: details.itemChips };
 }
 
 /** Free start times for the next `days` days, computed from rules, time off and bookings. */
@@ -128,6 +140,58 @@ export async function getProviderSchedule(slug: string, days = 14) {
       )
     )
     .orderBy(asc(bookings.startsAt));
+  return { access, rows };
+}
+
+const calendarFields = {
+  booking: bookings,
+  customerName: customers.name,
+  customerPhone: customers.phone,
+  serviceName: services.name,
+};
+
+/** Merchant calendar: every booking between two IST dates, plus hours and time off to shade the grid. */
+export async function getProviderCalendar(slug: string, fromDate: string, toDate: string) {
+  const access = await requireVendorAccess(slug);
+  const db = getDb();
+  const from = istDateTime(fromDate, "00:00");
+  const until = istDateTime(addDaysIST(toDate, 1), "00:00");
+  const [rows, rules, blocks] = await Promise.all([
+    db
+      .select(calendarFields)
+      .from(bookings)
+      .innerJoin(customers, eq(bookings.customerId, customers.id))
+      .leftJoin(services, eq(bookings.serviceId, services.id))
+      .where(and(eq(bookings.vendorId, access.vendorId), gte(bookings.startsAt, from), lt(bookings.startsAt, until), inArray(bookings.status, ["held", "confirmed", "done", "no_show", "cancelled"])))
+      .orderBy(asc(bookings.startsAt)),
+    db.select().from(availabilityRules).where(eq(availabilityRules.vendorId, access.vendorId)),
+    db
+      .select({ startsAt: availabilityBlocks.startsAt, endsAt: availabilityBlocks.endsAt, reason: availabilityBlocks.reason })
+      .from(availabilityBlocks)
+      .where(and(eq(availabilityBlocks.vendorId, access.vendorId), lt(availabilityBlocks.startsAt, until), gt(availabilityBlocks.endsAt, from))),
+  ]);
+  return { access, rows, rules, blocks };
+}
+
+/** Merchant list view, like cal.com: upcoming, past or cancelled bookings. */
+export async function getProviderBookingList(slug: string, tab: "upcoming" | "past" | "cancelled", limit = 60) {
+  const access = await requireVendorAccess(slug);
+  const db = getDb();
+  const now = new Date();
+  const where =
+    tab === "upcoming"
+      ? and(eq(bookings.vendorId, access.vendorId), gte(bookings.endsAt, now), inArray(bookings.status, ["held", "confirmed"]))
+      : tab === "past"
+        ? and(eq(bookings.vendorId, access.vendorId), lt(bookings.endsAt, now), inArray(bookings.status, ["confirmed", "done", "no_show"]))
+        : and(eq(bookings.vendorId, access.vendorId), eq(bookings.status, "cancelled"));
+  const rows = await db
+    .select(calendarFields)
+    .from(bookings)
+    .innerJoin(customers, eq(bookings.customerId, customers.id))
+    .leftJoin(services, eq(bookings.serviceId, services.id))
+    .where(where)
+    .orderBy(tab === "upcoming" ? asc(bookings.startsAt) : desc(bookings.startsAt))
+    .limit(limit);
   return { access, rows };
 }
 

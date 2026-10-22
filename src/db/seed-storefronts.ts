@@ -5,7 +5,9 @@
  */
 import { and, eq } from "drizzle-orm";
 import { scriptDb, scriptPool } from "./script-client";
-import { availabilityRules, categories, products, providerProfiles, services, vendors } from "./schema";
+import { availabilityRules, categories, products, services, vendors } from "./schema";
+import { vendorTypeForCategory } from "../core/vendor-types";
+import { provisionTypeProfile, writeTypeProfile } from "../features/vendor-types/tables";
 
 type Item = {
   kind: "tiffin" | "water" | "milk" | "other" | "fitness" | "physio" | "mehndi" | "gifts" | string;
@@ -550,17 +552,27 @@ async function ensureVendor(v: DemoVendor) {
   const { items, hours, profile, ...fields } = v;
   const provider = !!hours;
   let [row] = await scriptDb.select({ id: vendors.id }).from(vendors).where(eq(vendors.slug, v.slug)).limit(1);
+  const categoryId = items[0]?.kind ?? "other";
+  const vendorType = vendorTypeForCategory(categoryId, provider ? "booking" : "delivery");
   if (!row) {
     [row] = await scriptDb
       .insert(vendors)
-      .values({ ...fields, plan: "free", status: "active", businessType: provider ? "booking" : "delivery" })
+      .values({ ...fields, plan: "free", status: "active", categoryId, vendorType, businessType: provider ? "booking" : "delivery" })
       .returning({ id: vendors.id });
   }
+  await provisionTypeProfile(scriptDb, row!.id, vendorType);
   if (provider) {
-    await scriptDb.update(vendors).set({ businessType: "booking" }).where(eq(vendors.id, row!.id));
     await upsertServices(row!.id, items, v.serviceModes ?? ["home"]);
     if (profile) {
-      await scriptDb.insert(providerProfiles).values({ vendorId: row!.id, ...profile }).onConflictDoUpdate({ target: providerProfiles.vendorId, set: profile });
+      // Each booking type keeps its profile in its own table (fitness_trainers, physio_clinics, mehndi_artists).
+      const common = { headline: profile.headline, experienceYears: profile.experienceYears, languages: profile.languages, gender: profile.gender };
+      const values =
+        vendorType === "physio"
+          ? { ...common, qualifications: profile.qualifications, specialities: profile.specialities }
+          : vendorType === "mehndi"
+            ? { ...common, styles: profile.specialities }
+            : { ...common, certifications: profile.qualifications, specialities: profile.specialities };
+      await writeTypeProfile(scriptDb, row!.id, vendorType, values);
     }
   } else {
     await upsertItems(row!.id, items);
@@ -679,7 +691,7 @@ async function main() {
   if (!dairy) {
     [dairy] = await scriptDb
       .insert(vendors)
-      .values({ ...DAIRY, plan: "free", status: "active", serviceRadiusKm: 6 })
+      .values({ ...DAIRY, plan: "free", status: "active", serviceRadiusKm: 6, categoryId: "milk", vendorType: "milk" })
       .returning({ id: vendors.id });
   }
   await upsertItems(dairy!.id, DAIRY_ITEMS);

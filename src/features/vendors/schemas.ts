@@ -12,6 +12,9 @@ export const createVendorSchema = z.object({
   upiVpa: z.string().min(3, "Valid UPI VPA required"),
   city: z.string().min(2, "City is required"),
   area: z.string().min(2, "Area is required"),
+  categoryId: z.string().regex(/^[a-z0-9-]+$/, "Pick what your business offers"),
+  latitude: z.number().min(-90).max(90).nullable().default(null),
+  longitude: z.number().min(-180).max(180).nullable().default(null),
 });
 
 export const inviteStaffSchema = z.object({

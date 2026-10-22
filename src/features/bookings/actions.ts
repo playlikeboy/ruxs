@@ -4,9 +4,11 @@ import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { and, eq, gt, isNull, lt, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { availabilityBlocks, availabilityRules, bookings, categories, providerProfiles, services, vendors } from "@/db/schema";
+import { availabilityBlocks, availabilityRules, bookings, categories, services, vendors } from "@/db/schema";
 import { requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { canCancelBooking, isValidRule, openSlots, rulesOverlap } from "@/core/booking";
+import { allowedCategoryIds, canUseModule, toVendorType } from "@/core/vendor-types";
+import { hasItemTable, provisionItemDetails } from "@/features/vendor-types/tables";
 import { rupeesToPaise } from "@/core/money";
 import { todayIST } from "@/core/time";
 import { addressLine, deliveryCheck, ensureCustomer, loadProfile } from "@/features/consumer/household";
@@ -17,7 +19,6 @@ import {
   bookingRulesSchema,
   bookSessionSchema,
   markBookingSchema,
-  providerProfileSchema,
   removeTimeOffSchema,
   saveServiceSchema,
   serviceIdSchema,
@@ -273,7 +274,9 @@ export async function saveService(input: unknown) {
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid service");
   const { slug, id, ...data } = parsed.data;
   const access = await requireVendorAccess(slug, ["owner"]);
-  if (access.vendor.businessType !== "booking") return fail("Only booking providers have services");
+  const type = toVendorType(access.vendor.vendorType, access.vendor.businessType);
+  if (!canUseModule(type, "services")) return fail(type === "kids" ? "Add classes from the Classes & workshops page" : "Only booking providers have services");
+  if (!allowedCategoryIds(type, access.vendor.categoryId).includes(data.categoryId)) return fail("You can only add services in your own category");
   const db = getDb();
   const [category] = await db
     .select({ id: categories.id })
@@ -301,7 +304,8 @@ export async function saveService(input: unknown) {
       .returning({ id: services.id });
     if (!updated) return fail("Service not found");
   } else {
-    await db.insert(services).values({ ...values, vendorId: access.vendorId });
+    const [created] = await db.insert(services).values({ ...values, vendorId: access.vendorId }).returning({ id: services.id });
+    if (created && hasItemTable(type)) await provisionItemDetails(db, access.vendorId, type, created.id);
   }
   revalidateProvider(slug);
   return { ok: true as const };
@@ -318,25 +322,5 @@ export async function archiveService(input: unknown) {
     .set({ archivedAt: new Date(), isActive: false, updatedAt: new Date() })
     .where(and(eq(services.id, parsed.data.id), eq(services.vendorId, access.vendorId)));
   revalidateProvider(parsed.data.slug);
-  return { ok: true as const };
-}
-
-export async function saveProviderProfile(input: unknown) {
-  const parsed = providerProfileSchema.safeParse(input);
-  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid profile");
-  const { slug, ...data } = parsed.data;
-  const access = await requireVendorAccess(slug, ["owner"]);
-  const db = getDb();
-  const values = {
-    headline: data.headline || null,
-    qualifications: data.qualifications || null,
-    experienceYears: data.experienceYears,
-    specialities: data.specialities,
-    languages: data.languages,
-    gender: data.gender,
-    updatedAt: new Date(),
-  };
-  await db.insert(providerProfiles).values({ vendorId: access.vendorId, ...values }).onConflictDoUpdate({ target: providerProfiles.vendorId, set: values });
-  revalidateProvider(slug);
   return { ok: true as const };
 }

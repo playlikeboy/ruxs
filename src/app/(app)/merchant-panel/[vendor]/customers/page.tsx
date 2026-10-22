@@ -1,3 +1,4 @@
+import { requireVendorModule } from "@/lib/auth/session";
 import Link from "next/link";
 import { getCustomersForVendor } from "@/features/customers/queries";
 import { CustomerListView } from "@/features/customers/components/customer-list-view";
@@ -9,6 +10,7 @@ export default async function CustomersPage({
   params: Promise<{ vendor: string }>;
 }) {
   const { vendor: slug } = await params;
+  await requireVendorModule(slug, "customers");
   const custList = await getCustomersForVendor(slug);
 
   return (

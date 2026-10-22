@@ -4,7 +4,9 @@ import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { eq, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { categories, localities, platformAdmins, platformSettings, providerProfiles, vendorMembers, vendors } from "@/db/schema";
+import { categories, localities, platformAdmins, platformSettings, vendorMembers, vendors } from "@/db/schema";
+import { VENDOR_TYPE_INFO, isVendorType, vendorTypeForCategory } from "@/core/vendor-types";
+import { provisionTypeProfile } from "@/features/vendor-types/tables";
 import { requireAdmin } from "@/lib/auth/session";
 import { hexclave } from "@/lib/auth/hexclave";
 import { rupeesToPaise } from "@/core/money";
@@ -125,18 +127,24 @@ export async function adminCreateVendor(input: unknown) {
   const [taken] = await db.select({ id: vendors.id }).from(vendors).where(eq(vendors.slug, parsed.data.slug)).limit(1);
   if (taken) return fail("That store URL is already used. Pick another.");
 
-  // The category decides the kind of business: delivery store or booking provider.
-  const [category] = await db.select({ fulfilment: categories.fulfilment }).from(categories).where(eq(categories.id, parsed.data.categoryId)).limit(1);
+  // The category decides the vendor type, which decides its tables and tools.
+  const [category] = await db
+    .select({ fulfilment: categories.fulfilment, vendorType: categories.vendorType })
+    .from(categories)
+    .where(eq(categories.id, parsed.data.categoryId))
+    .limit(1);
   if (!category) return fail("Pick what you are onboarding");
-  const businessType = category.fulfilment === "booking" ? "booking" : "delivery";
+  const vendorType = isVendorType(category.vendorType) ? category.vendorType : vendorTypeForCategory(parsed.data.categoryId, category.fulfilment);
+  const businessType = VENDOR_TYPE_INFO[vendorType].fulfilment;
 
-  const [vendor] = await db
-    .insert(vendors)
-    .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType, categoryId: parsed.data.categoryId, plan: "free", status: "active" })
-    .returning({ id: vendors.id });
-  if (businessType === "booking") {
-    await db.insert(providerProfiles).values({ vendorId: vendor!.id }).onConflictDoNothing();
-  }
+  const vendor = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(vendors)
+      .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType, vendorType, categoryId: parsed.data.categoryId, plan: "free", status: "active" })
+      .returning({ id: vendors.id });
+    await provisionTypeProfile(tx, row!.id, vendorType);
+    return row;
+  });
 
   const issued = await issueCredentials(vendor!.id);
   revalidatePath("/admin", "layout");
@@ -192,8 +200,10 @@ export async function adminSaveCategory(input: unknown) {
   if (!parsed.success) return fail(firstIssue(parsed.error));
   await requireAdmin();
   const db = getDb();
-  const { id, ...rest } = parsed.data;
-  await db.insert(categories).values({ id, ...rest }).onConflictDoUpdate({ target: categories.id, set: rest });
+  const { id, vendorType, ...rest } = parsed.data;
+  // Fulfilment always follows the vendor type; the type itself is fixed after creation.
+  const values = { ...rest, fulfilment: VENDOR_TYPE_INFO[vendorType].fulfilment };
+  await db.insert(categories).values({ id, vendorType, ...values }).onConflictDoUpdate({ target: categories.id, set: values });
   revalidatePath("/admin/settings");
   revalidatePath("/app", "layout");
   return { ok: true as const };

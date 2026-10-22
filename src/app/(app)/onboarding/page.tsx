@@ -4,6 +4,7 @@ import { getDb } from "@/db";
 import { vendorMembers } from "@/db/schema";
 import { hexclave } from "@/lib/auth/hexclave";
 import { OnboardingForm } from "./onboarding-form";
+import { getCategories } from "@/features/platform/queries";
 
 export default async function OnboardingPage() {
   const user = await hexclave.getUser();
@@ -45,7 +46,7 @@ export default async function OnboardingPage() {
         </p>
       </div>
 
-      <OnboardingForm />
+      <OnboardingForm categories={(await getCategories()).map((c) => ({ id: c.id, label: c.label, emoji: c.emoji, blurb: c.blurb }))} />
     </div>
   );
 }

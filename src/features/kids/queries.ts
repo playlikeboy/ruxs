@@ -20,6 +20,7 @@ import {
 } from "@/db/schema";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { getRatingMap } from "@/features/platform/queries";
+import { getNearbyVendorDistances } from "@/features/consumer/queries";
 import { calculateWorkshopAvailability } from "@/core/kids/workshop-capacity";
 import type { KidsActivityItem, KidsKitItem, KidsWorkshopItem, KidsVendorSummary } from "./types";
 import type { KidsCategoryId, KidsFormat } from "@/core/kids";
@@ -548,7 +549,7 @@ function inferEmojiFallback(cat: KidsCategoryId): string {
   }
 }
 
-export async function getKidsActivities(): Promise<KidsActivityItem[]> {
+async function allActivities(): Promise<KidsActivityItem[]> {
   const db = getDb();
   const getRatings = await getRatingMap();
 
@@ -596,8 +597,8 @@ export async function getKidsActivities(): Promise<KidsActivityItem[]> {
           name: vendor.name,
           slug: vendor.slug,
           area: vendor.area,
-          rating: ratingSummary.average ?? 4.9,
-          reviewCount: ratingSummary.count ?? 12,
+          rating: ratingSummary.average ?? 0,
+          reviewCount: ratingSummary.count ?? 0,
           serviceModes: service.deliveryModes,
         },
         badge: "⭐ VERIFIED MENTOR",
@@ -654,8 +655,8 @@ export async function getKidsActivities(): Promise<KidsActivityItem[]> {
         name: vendor.name,
         slug: vendor.slug,
         area: vendor.area,
-        rating: ratingSummary.average ?? 4.9,
-        reviewCount: ratingSummary.count ?? 12,
+        rating: ratingSummary.average ?? 0,
+        reviewCount: ratingSummary.count ?? 0,
         serviceModes: service.modes,
       },
       badge: isTrial ? "⭐ TRIAL CLASS" : "🏆 SMALL BATCH",
@@ -669,7 +670,7 @@ export async function getKidsActivities(): Promise<KidsActivityItem[]> {
   });
 }
 
-export async function getKidsWorkshops(): Promise<KidsWorkshopItem[]> {
+async function allWorkshops(): Promise<KidsWorkshopItem[]> {
   const catalog = await getKidsWorkshopsCatalog();
   const getRatings = await getRatingMap();
 
@@ -696,8 +697,8 @@ export async function getKidsWorkshops(): Promise<KidsWorkshopItem[]> {
           name: vendor.name,
           slug: vendor.slug,
           area: vendor.area,
-          rating: ratingSummary.average ?? 4.9,
-          reviewCount: ratingSummary.count ?? 16,
+          rating: ratingSummary.average ?? 0,
+          reviewCount: ratingSummary.count ?? 0,
           serviceModes: ["studio", "home"],
         },
         pricePaise: workshop.pricePaise,
@@ -775,7 +776,7 @@ export async function getKidsWorkshops(): Promise<KidsWorkshopItem[]> {
   ];
 }
 
-export async function getKidsKits(): Promise<KidsKitItem[]> {
+async function allKits(): Promise<KidsKitItem[]> {
   const db = getDb();
   const getRatings = await getRatingMap();
 
@@ -814,8 +815,8 @@ export async function getKidsKits(): Promise<KidsKitItem[]> {
         name: vendor.name,
         slug: vendor.slug,
         area: vendor.area,
-        rating: ratingSummary.average ?? 4.9,
-        reviewCount: ratingSummary.count ?? 14,
+        rating: ratingSummary.average ?? 0,
+        reviewCount: ratingSummary.count ?? 0,
         serviceModes: ["delivery"],
       },
       features: [
@@ -827,4 +828,22 @@ export async function getKidsKits(): Promise<KidsKitItem[]> {
       badge: "DOORSTEP KIT",
     };
   });
+}
+
+/** Geofence: households only see kids classes, workshops and kits from providers within the discovery radius. */
+async function nearby<T extends { vendor: { id: string } }>(items: T[]): Promise<T[]> {
+  const near = await getNearbyVendorDistances();
+  return items.filter((i) => near.has(i.vendor.id)).sort((a, b) => (near.get(a.vendor.id) ?? 0) - (near.get(b.vendor.id) ?? 0));
+}
+
+export async function getKidsActivities(): Promise<KidsActivityItem[]> {
+  return nearby(await allActivities());
+}
+
+export async function getKidsWorkshops(): Promise<KidsWorkshopItem[]> {
+  return nearby(await allWorkshops());
+}
+
+export async function getKidsKits(): Promise<KidsKitItem[]> {
+  return nearby(await allKits());
 }

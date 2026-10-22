@@ -35,6 +35,8 @@ export interface ProviderPageProps {
   discoveryRadiusKm: number;
   rating: RatingSummary;
   profile: { headline: string | null; qualifications: string | null; experienceYears: number | null; specialities: string[]; languages: string[]; gender: string | null } | null;
+  highlights: string[];
+  serviceChips: Map<string, string[]>;
   services: { id: string; name: string; description: string | null; durationMinutes: number; pricePaise: number; modes: string[]; isActive: boolean }[];
   reviews: ReviewItem[];
   totalReviews?: number;
@@ -88,6 +90,13 @@ export function ProviderPage(p: ProviderPageProps) {
             ))}
           </div>
         )}
+        {p.highlights.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {p.highlights.map((h) => (
+              <span key={h} className="rounded-full border border-black/5 bg-neutral-50 px-2.5 py-1 text-xs font-medium text-neutral-700">{h}</span>
+            ))}
+          </div>
+        )}
         {vendor.description && <p className="mt-4 text-[15px] leading-6 text-neutral-700">{vendor.description}</p>}
         {p.services.some((s) => s.modes.includes("studio")) && (vendor.mapsUrl || (vendor.latitude != null && vendor.longitude != null)) && (
           <a
@@ -133,6 +142,9 @@ export function ProviderPage(p: ProviderPageProps) {
                       <div className="flex flex-wrap gap-1.5">
                         {s.modes.map((m) => (
                           <span key={m} className="rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-medium text-neutral-700">{MODE_LABEL[m] ?? m}</span>
+                        ))}
+                        {(p.serviceChips.get(s.id) ?? []).map((c) => (
+                          <span key={c} className="rounded-full bg-peach px-2.5 py-1 text-[11px] font-medium text-accent">{c}</span>
                         ))}
                       </div>
                       {bookable && !(homeOnly && !p.homeVisitsReach) ? (

@@ -1,3 +1,4 @@
+import { requireVendorModule } from "@/lib/auth/session";
 import Link from "next/link";
 import { ImportCustomerForm } from "@/features/customers/components/import-customer-form";
 
@@ -7,6 +8,7 @@ export default async function NewCustomerPage({
   params: Promise<{ vendor: string }>;
 }) {
   const { vendor: slug } = await params;
+  await requireVendorModule(slug, "customers");
 
   return (
     <div className="p-4 sm:p-6 space-y-4">

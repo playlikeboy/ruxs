@@ -62,13 +62,3 @@ export const saveServiceSchema = z.object({
 });
 
 export const serviceIdSchema = z.object({ slug: z.string().min(1), id: z.string().min(1) });
-
-export const providerProfileSchema = z.object({
-  slug: z.string().min(1),
-  headline: z.string().trim().max(120).optional(),
-  qualifications: z.string().trim().max(200).optional(),
-  experienceYears: z.number().int().min(0).max(60).nullable(),
-  specialities: z.array(z.string().trim().min(1).max(40)).max(12),
-  languages: z.array(z.string().trim().min(1).max(30)).max(8),
-  gender: z.enum(["female", "male", "other"]).nullable(),
-});

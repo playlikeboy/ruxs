@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, GraduationCap } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { ModeSwitch } from "@/features/consumer/components/mode-switch";
 import { getMyLocation, getMyPlans, getMyProfile, listStores } from "@/features/consumer/queries";
 import { getCategoryMap } from "@/features/platform/queries";
 import { TodayCard, type TodayItem } from "@/features/consumer/components/today-card";
@@ -65,41 +66,32 @@ export default async function ExplorePage() {
 
   const firstName = (profile?.name ?? user.displayName ?? "").split(" ")[0];
 
-  const serviceCategories = categories.length > 0 ? (
+  // Kids categories live behind the Daily ↔ Kids switch, not in the Daily grid.
+  const dailyCategories = categories.filter((k) => k.vendorType !== "kids" && k.id !== "kids-kits");
+  const serviceCategories = dailyCategories.length > 0 ? (
     <section className="mt-6" aria-labelledby="service-categories-heading">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h2 id="service-categories-heading" className="text-lg font-bold tracking-tight text-ink">Explore by service</h2>
-          <p className="mt-1 text-sm leading-5 text-neutral-500">Choose what you need. Discover local providers across categories.</p>
-        </div>
-        <span className="shrink-0 text-xs font-medium text-neutral-500">{categories.length} categories</span>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        {categories.map((k) => {
-          const destination =
-            k.id === "kids" ? "/app/kids" : k.id === "kids-kits" ? "/app/kids/kits" : "/app/category/" + k.id;
-          return (
-            <Link
-              key={k.id}
-              href={destination}
-              className="group relative flex min-h-[124px] flex-col justify-between overflow-hidden rounded-2xl border border-black/5 bg-neutral-50 p-4 transition-colors hover:bg-neutral-100 active:scale-[0.98]"
+      <h2 id="service-categories-heading" className="text-[17px] font-bold tracking-tight text-ink">What do you need?</h2>
+      <div className="mt-3 grid grid-cols-4 gap-x-2 gap-y-4">
+        {dailyCategories.map((k) => (
+          <Link key={k.id} href={"/app/category/" + k.id} className="group flex flex-col items-center gap-1.5 text-center active:scale-95">
+            <span
+              className="flex h-16 w-16 items-center justify-center rounded-[20px] text-[30px] shadow-[inset_0_-3px_0_rgba(0,0,0,0.05)] ring-1 ring-black/5 transition-transform group-hover:-translate-y-0.5"
+              style={{ background: `linear-gradient(160deg, ${k.coverFrom}, ${k.coverTo})` }}
+              aria-hidden="true"
             >
-              <span className="relative z-10 max-w-[76%] text-[15px] font-semibold leading-tight text-ink">{k.label}</span>
-              <span className="relative z-10 max-w-[76%] text-[11px] leading-4 text-neutral-600">{k.blurb}</span>
-              <span className="absolute bottom-2 right-3 text-[38px] leading-none" aria-hidden="true">{k.emoji}</span>
-              <span className="absolute right-3 top-3 text-neutral-400 transition-transform group-hover:translate-x-0.5">
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </span>
-            </Link>
-          );
-        })}
+              {k.emoji}
+            </span>
+            <span className="line-clamp-2 text-[12px] font-medium leading-tight text-ink">{k.shortLabel}</span>
+          </Link>
+        ))}
       </div>
     </section>
   ) : null;
 
   return (
     <div className="pb-24">
-      <div className="space-y-4 px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))]">
+      <div className="space-y-3 px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+        <ModeSwitch />
         <LocationChip label={location.label} source={location.source} />
         <SearchBar />
         <InstallAppPrompt variant="banner" />
@@ -126,19 +118,14 @@ export default async function ExplorePage() {
 
         <Link
           href="/app/kids"
-          className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-neutral-50 p-4 transition-colors hover:bg-neutral-100 active:scale-[0.99]"
+          className="mt-6 flex items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#FFE1EF] via-[#EDE3FF] to-[#D9F4FF] p-4 transition active:scale-[0.99]"
         >
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-black/5 bg-white text-accent">
-              <GraduationCap className="h-6 w-6" aria-hidden="true" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-500">Family learning</span>
-              <span className="mt-1 block text-base font-bold leading-tight text-ink">Kids activities &amp; learning</span>
-              <span className="mt-1 block text-xs leading-5 text-neutral-600">Robotics, chess, arts, sports and hands-on kits.</span>
-            </span>
-          </div>
-          <ArrowRight className="h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
+          <span className="text-4xl" aria-hidden="true">🧸</span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-bold leading-tight text-[#3B1F5C]">Switch to Kids</span>
+            <span className="mt-0.5 block text-xs leading-5 text-[#3B1F5C]/70">Robotics, chess, art, dance and DIY kits near you.</span>
+          </span>
+          <ArrowRight className="h-5 w-5 shrink-0 text-[#9B5CF6]" aria-hidden="true" />
         </Link>
 
         {!profile && (

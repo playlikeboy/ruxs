@@ -1,5 +1,7 @@
 # Adding new services to RUXs (gym trainers and anything else)
 
+> **Update 2026-10-22 — vendor types.** A new category now picks a **vendor type** in `/admin/settings` (tiffin, water, milk, gifts, store, fitness, physio, mehndi, kids). Vendors onboarded under it get that type's tables, form fields and merchant tools. A service that fits an existing type is still data-only. A genuinely new kind of business needs: a value in `VENDOR_TYPES` (`src/core/vendor-types.ts`), a profile table (+ item table if its items differ) in `src/db/schema/vendor-types.ts` with a `ruxs_assert_vendor_type` trigger, and its fields in `src/features/vendor-types/fields.ts`.
+
 > Read [`AGENTS.md`](../AGENTS.md) first. Its hard lines (integer paise, insert-only ledger, `vendorId` only from `requireVendorAccess()`), layer rules and Next.js rules apply to every step below. `PROMPT.md` and `docs/PRD.md` still win over this file where they conflict.
 
 Today the household app shows four categories: 🍱 Tiffin · 💧 Water · 🥛 Milk · 🧺 More. This document explains how to add a fifth (🏋️ Gym trainers) and gives a repeatable method for adding any other service: maids, cooks, tutors, laundry, salon at home, car cleaning, and so on.

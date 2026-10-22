@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Store } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, LocateFixed, Store } from "lucide-react";
 import { toast } from "sonner";
 import { createVendor } from "@/features/vendors/actions";
 
@@ -10,7 +10,7 @@ const inputClass =
   "min-h-12 w-full rounded-[10px] border border-line bg-surface px-3.5 text-base text-ink placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:opacity-60";
 const labelClass = "mb-1.5 block text-sm font-medium text-ink";
 const steps = [
-  { title: "Business details", hint: "Name and workspace link" },
+  { title: "Your business", hint: "What you offer, name and workspace link" },
   { title: "Contact & location", hint: "How to reach your business" },
   { title: "Payout details", hint: "Review before submitting" },
 ];
@@ -22,7 +22,14 @@ function slugFromName(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-export function OnboardingForm() {
+export interface OnboardingCategory {
+  id: string;
+  label: string;
+  emoji: string;
+  blurb: string;
+}
+
+export function OnboardingForm({ categories }: { categories: OnboardingCategory[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(0);
@@ -33,10 +40,33 @@ export function OnboardingForm() {
   const [upiVpa, setUpiVpa] = useState("");
   const [city, setCity] = useState("");
   const [area, setArea] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [point, setPoint] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const pinLocation = () => {
+    if (!("geolocation" in navigator)) {
+      setError("Your browser can't share location. You can pin it later in Settings.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setPoint({ latitude: Number(pos.coords.latitude.toFixed(6)), longitude: Number(pos.coords.longitude.toFixed(6)) });
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        setError("Couldn't get your location. Stand at your shop or kitchen and try again, or pin it later in Settings.");
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  };
 
   const validateStep = () => {
     if (step === 0) {
+      if (!categoryId) return "Pick what your business offers.";
       if (name.trim().length < 2) return "Enter your business name (at least 2 characters).";
       if (slug.trim().length < 2 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug.trim())) {
         return "Use lowercase letters or numbers in your workspace link, with hyphens between words.";
@@ -85,6 +115,9 @@ export function OnboardingForm() {
           upiVpa: upiVpa.trim(),
           city: city.trim(),
           area: area.trim(),
+          categoryId,
+          latitude: point?.latitude ?? null,
+          longitude: point?.longitude ?? null,
         });
 
         if (!result.ok) {
@@ -139,6 +172,31 @@ export function OnboardingForm() {
       {step === 0 && (
         <section className="space-y-4" aria-labelledby="business-details-heading">
           <h3 id="business-details-heading" className="sr-only">Business details</h3>
+          <fieldset>
+            <legend className={labelClass}>What does your business offer?</legend>
+            <p className="-mt-0.5 mb-2 text-xs leading-5 text-muted">This sets up a workspace with only the tools your kind of business needs.</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {categories.map((c) => {
+                const on = c.id === categoryId;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => { setCategoryId(c.id); setError(null); }}
+                    disabled={isPending}
+                    className={
+                      "flex min-h-[84px] flex-col items-start gap-1 rounded-[12px] border p-3 text-left transition " +
+                      (on ? "border-accent bg-peach/60 ring-2 ring-accent/20" : "border-line bg-surface hover:border-ink/20")
+                    }
+                  >
+                    <span className="text-2xl leading-none" aria-hidden="true">{c.emoji}</span>
+                    <span className="text-sm font-semibold leading-tight text-ink">{c.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
           <div>
             <label htmlFor="business-name" className={labelClass}>Business name</label>
             <input
@@ -149,7 +207,6 @@ export function OnboardingForm() {
               minLength={2}
               maxLength={80}
               autoComplete="organization"
-              autoFocus
               placeholder="e.g. Annapurna Kitchen or Little Makers Club"
               value={name}
               onChange={(event) => handleNameChange(event.target.value)}
@@ -238,9 +295,25 @@ export function OnboardingForm() {
               />
             </div>
           </div>
-          <p className="rounded-[10px] bg-bg px-3.5 py-3 text-xs leading-5 text-muted">
-            This helps RUXs understand where your business operates. Your exact service area and delivery settings can be refined in the workspace.
-          </p>
+          <div className="rounded-[12px] border border-line p-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-ink">Exact location</p>
+                <p className="text-xs leading-5 text-muted">
+                  {point ? `Pinned at ${point.latitude}, ${point.longitude}` : "Households within your radius find you by distance. Pin it from your shop, kitchen or clinic."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={pinLocation}
+                disabled={isPending || locating}
+                className={"inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-[10px] px-3 text-sm font-semibold transition " + (point ? "bg-mint text-good" : "bg-ink text-white hover:opacity-90")}
+              >
+                {point ? <Check className="h-4 w-4" aria-hidden="true" /> : <LocateFixed className="h-4 w-4" aria-hidden="true" />}
+                {locating ? "Locating…" : point ? "Pinned" : "Pin here"}
+              </button>
+            </div>
+          </div>
         </section>
       )}
 
@@ -270,6 +343,10 @@ export function OnboardingForm() {
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Review your details</p>
             <dl className="mt-3 space-y-3 text-sm">
               <div className="flex items-start justify-between gap-4">
+                <dt className="text-muted">Type</dt>
+                <dd className="text-right font-medium text-ink">{categories.find((c) => c.id === categoryId)?.emoji} {categories.find((c) => c.id === categoryId)?.label}</dd>
+              </div>
+              <div className="flex items-start justify-between gap-4">
                 <dt className="text-muted">Business</dt>
                 <dd className="text-right font-medium text-ink">{name.trim()}</dd>
               </div>
@@ -279,7 +356,7 @@ export function OnboardingForm() {
               </div>
               <div className="flex items-start justify-between gap-4">
                 <dt className="text-muted">Location</dt>
-                <dd className="text-right font-medium text-ink">{area.trim()}, {city.trim()}</dd>
+                <dd className="text-right font-medium text-ink">{area.trim()}, {city.trim()}{point ? " · pinned" : ""}</dd>
               </div>
               <div className="flex items-start justify-between gap-4">
                 <dt className="text-muted">Contact</dt>

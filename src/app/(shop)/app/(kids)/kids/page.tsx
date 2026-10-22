@@ -19,6 +19,7 @@ export default async function KidsHomePage() {
     getKidsKits(),
   ]);
 
+  const nothingNearby = activities.length === 0 && workshops.length === 0 && kits.length === 0;
   const featuredActivities = activities.slice(0, 3);
   const featuredWorkshops = workshops.slice(0, 2);
   const featuredKits = kits.slice(0, 2);
@@ -28,15 +29,26 @@ export default async function KidsHomePage() {
       {/* Cartoon Hero Banner */}
       <KidsHeroBanner />
 
+      {nothingNearby && (
+        <div className="kids-card p-6 text-center">
+          <p className="animate-float text-5xl" aria-hidden="true">🗺️</p>
+          <p className="mt-3 text-lg font-bold text-kids-ink">No kids classes near you yet</p>
+          <p className="mt-1 text-sm text-kids-ink/70">We only show mentors within your area. Check your location on the Daily tab, or come back soon — new academies join every week.</p>
+          <Link href="/app" className="mt-4 inline-flex min-h-10 items-center rounded-full bg-kids-grape px-4 text-sm font-bold text-white shadow-[0_4px_0_#7C3AED]">
+            Check my location
+          </Link>
+        </div>
+      )}
+
       {/* Quick Age Brackets Explorer */}
       <div>
         <div className="flex items-center justify-between px-1">
-          <span className="text-xs font-black uppercase tracking-wider text-slate-500">
+          <span className="text-xs font-black uppercase tracking-wider text-kids-ink/60">
             Pick by Age
           </span>
           <Link
             href="/app/kids/activities"
-            className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-bold text-kids-grape hover:underline"
           >
             <span>All ages</span>
             <ArrowRight className="h-3 w-3" />
@@ -48,14 +60,14 @@ export default async function KidsHomePage() {
             <Link
               key={bracket.id}
               href={`/app/kids/activities`}
-              className={`flex shrink-0 items-center gap-2 rounded-2xl border-2 border-slate-900 bg-white px-3.5 py-2 shadow-[2px_2px_0_0_#0f172a] transition active:translate-y-0.5`}
+              className={`flex shrink-0 items-center gap-2 rounded-[20px] border-2 border-kids-grape/15 bg-white px-3.5 py-2 shadow-[0_3px_0_rgba(155,92,246,0.18)] transition active:translate-y-0.5`}
             >
               <span className="text-xl" aria-hidden="true">{bracket.emoji}</span>
               <div>
-                <span className="block text-xs font-black leading-tight text-slate-900">
+                <span className="block text-xs font-black leading-tight text-kids-ink">
                   {bracket.label}
                 </span>
-                <span className="block text-[10px] font-semibold text-slate-500">
+                <span className="block text-[10px] font-semibold text-kids-ink/60">
                   {bracket.tagline}
                 </span>
               </div>
@@ -65,22 +77,22 @@ export default async function KidsHomePage() {
       </div>
 
       {/* Featured Classes & Trial Sessions */}
-      <section className="space-y-3">
+      {featuredActivities.length > 0 && <section className="space-y-3">
         <div className="flex items-end justify-between px-1">
           <div>
             <div className="flex items-center gap-1.5">
               <Sparkles className="h-4 w-4 text-amber-500" />
-              <h3 className="text-lg font-black tracking-tight text-slate-950">
+              <h3 className="text-lg font-black tracking-tight text-kids-ink">
                 Popular Classes & Trials
               </h3>
             </div>
-            <p className="text-xs font-semibold text-slate-500">
+            <p className="text-xs font-semibold text-kids-ink/60">
               Low-cost trial sessions to spark your child&apos;s interest
             </p>
           </div>
           <Link
             href="/app/kids/activities"
-            className="text-xs font-black text-accent hover:underline shrink-0"
+            className="text-xs font-black text-kids-grape hover:underline shrink-0"
           >
             View all →
           </Link>
@@ -91,23 +103,23 @@ export default async function KidsHomePage() {
             <KidsActivityCard key={act.id} item={act} />
           ))}
         </div>
-      </section>
+      </section>}
 
       {/* Upcoming Weekend Camps & Workshops */}
       {featuredWorkshops.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-end justify-between px-1">
             <div>
-              <span className="text-lg font-black tracking-tight text-slate-950">
+              <span className="text-lg font-black tracking-tight text-kids-ink">
                 🏕️ Weekend Workshops
               </span>
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-semibold text-kids-ink/60">
                 2-hour hands-on holiday & weekend creative camps
               </p>
             </div>
             <Link
               href="/app/kids/workshops"
-              className="text-xs font-black text-accent hover:underline shrink-0"
+              className="text-xs font-black text-kids-grape hover:underline shrink-0"
             >
               See schedule →
             </Link>
@@ -126,16 +138,16 @@ export default async function KidsHomePage() {
         <section className="space-y-3">
           <div className="flex items-end justify-between px-1">
             <div>
-              <span className="text-lg font-black tracking-tight text-slate-950">
+              <span className="text-lg font-black tracking-tight text-kids-ink">
                 🧩 DIY Kits & Activity Boxes
               </span>
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-semibold text-kids-ink/60">
                 Delivered straight to your doorstep
               </p>
             </div>
             <Link
               href="/app/kids/kits"
-              className="text-xs font-black text-accent hover:underline shrink-0"
+              className="text-xs font-black text-kids-grape hover:underline shrink-0"
             >
               Shop kits →
             </Link>

@@ -41,19 +41,19 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
   };
 
   return (
-    <div className="relative flex flex-col justify-between rounded-3xl border-2 border-slate-900 bg-white p-4 shadow-[3px_3px_0_0_#0f172a] transition hover:translate-y-[-1px]">
+    <div className="relative flex flex-col justify-between rounded-[26px] border-2 border-kids-grape/15 bg-white p-4 shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)] transition hover:translate-y-[-1px]">
       <div>
         {/* Top Badges */}
         <div className="flex items-start justify-between gap-2">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-900 bg-sky-100 text-2xl shadow-[2px_2px_0_0_#0f172a]">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] border-2 border-kids-grape/15 bg-sky-100 text-2xl shadow-[0_3px_0_rgba(155,92,246,0.18)]">
             {item.emoji}
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-1.5">
-            <span className="inline-flex items-center rounded-full border border-slate-900 bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-slate-900">
+            <span className="inline-flex items-center rounded-full border border-kids-grape/20 bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-kids-ink">
               👶 {ageLabel}
             </span>
-            <span className="inline-flex items-center rounded-full border border-slate-900 bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-950">
+            <span className="inline-flex items-center rounded-full border border-kids-grape/20 bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-950">
               📦 DOORSTEP KIT
             </span>
           </div>
@@ -61,16 +61,16 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
 
         {/* Title & Description */}
         <div className="mt-3">
-          <h3 className="text-base font-black leading-snug tracking-tight text-slate-950">
+          <h3 className="text-base font-black leading-snug tracking-tight text-kids-ink">
             {item.name}
           </h3>
-          <p className="mt-1 line-clamp-2 text-xs font-medium leading-relaxed text-slate-600">
+          <p className="mt-1 line-clamp-2 text-xs font-medium leading-relaxed text-kids-ink/70">
             {item.description}
           </p>
         </div>
 
         {/* Highlights */}
-        <ul className="mt-3 space-y-1 border-t border-slate-100 pt-2 text-[11px] font-semibold text-slate-600">
+        <ul className="mt-3 space-y-1 border-t border-slate-100 pt-2 text-[11px] font-semibold text-kids-ink/70">
           {item.features.map((feat, idx) => (
             <li key={idx} className="flex items-center gap-1.5">
               <PackageCheck className="h-3 w-3 text-emerald-600 shrink-0" />
@@ -80,8 +80,8 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
         </ul>
 
         {/* Store */}
-        <div className="mt-2 text-xs font-bold text-slate-500">
-          <Link href={`/app/store/${item.vendor.slug}`} className="hover:text-accent underline underline-offset-2">
+        <div className="mt-2 text-xs font-bold text-kids-ink/60">
+          <Link href={`/app/store/${item.vendor.slug}`} className="hover:text-kids-grape underline underline-offset-2">
             By {item.vendor.name}
           </Link>
         </div>
@@ -91,16 +91,16 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
       <div className="mt-4 flex items-center justify-between border-t-2 border-dashed border-slate-200 pt-3">
         <div>
           <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Kit Price</span>
-          <span className="text-lg font-black text-slate-950">{formatINR(item.pricePaise)}</span>
+          <span className="text-lg font-black text-kids-ink">{formatINR(item.pricePaise)}</span>
         </div>
 
         <button
           type="button"
           onClick={handleAddToCart}
-          className={`inline-flex items-center gap-1.5 rounded-full border-2 border-slate-900 px-4 py-2 text-xs font-black shadow-[2px_2px_0_0_#0f172a] transition active:translate-y-0.5 active:shadow-none ${
+          className={`inline-flex items-center gap-1.5 rounded-full border-2 border-kids-grape/15 px-4 py-2 text-xs font-black shadow-[0_3px_0_rgba(155,92,246,0.18)] transition active:translate-y-0.5 active:shadow-none ${
             justAdded
-              ? "bg-emerald-400 text-slate-950"
-              : "bg-sky-400 text-slate-950 hover:bg-sky-300"
+              ? "bg-emerald-400 text-kids-ink"
+              : "bg-sky-400 text-kids-ink hover:bg-sky-300"
           }`}
         >
           {justAdded ? (

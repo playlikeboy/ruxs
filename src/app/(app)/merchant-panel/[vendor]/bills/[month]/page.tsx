@@ -1,3 +1,4 @@
+import { requireVendorModule } from "@/lib/auth/session";
 import Link from "next/link";
 import { formatINR } from "@/core/money";
 import { getVendorBills } from "@/features/billing/queries";
@@ -11,6 +12,7 @@ export default async function VendorMonthlyBillsPage({
   params: Promise<{ vendor: string; month: string }>;
 }) {
   const { vendor: slug, month } = await params;
+  await requireVendorModule(slug, "bills");
   const bills = await getVendorBills(slug, month);
 
   return (

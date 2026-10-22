@@ -54,6 +54,9 @@ describe("Phase 4 Integration Tests", () => {
         city: "Bengaluru",
         area: "Koramangala",
         status: "active",
+        vendorType: "tiffin",
+        businessType: "delivery",
+        categoryId: "tiffin",
       })
       .returning();
     expect(v).toBeDefined();

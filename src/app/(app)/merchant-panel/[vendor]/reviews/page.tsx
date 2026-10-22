@@ -1,3 +1,4 @@
+import { requireVendorModule } from "@/lib/auth/session";
 import { summarizeRatings } from "@/core/ratings";
 import { getVendorPanelReviews } from "@/features/reviews/queries";
 import { Stars } from "@/features/reviews/components/rating-badge";
@@ -10,6 +11,7 @@ const dateFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day
 
 export default async function ReviewsPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
+  await requireVendorModule(slug, "reviews");
   const reviews = await getVendorPanelReviews(slug);
   const visible = reviews.filter((r) => !r.isHidden);
   const summary = summarizeRatings(visible.map((r) => r.rating));

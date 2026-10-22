@@ -2,11 +2,14 @@ import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendorMembers, vendorInvites } from "@/db/schema";
-import { requireVendorAccess } from "@/lib/auth/session";
+import { requireVendorModule } from "@/lib/auth/session";
 import { InviteStaffForm } from "@/features/vendors/components/invite-staff-form";
 import { StorefrontForm } from "@/features/vendors/components/storefront-form";
-import { ProviderProfileForm } from "@/features/bookings/components/provider-profile-form";
-import { providerProfiles } from "@/db/schema";
+import { TypeFieldsForm } from "@/features/vendor-types/components/type-fields-form";
+import { ChangePasswordForm } from "@/features/vendor-types/components/change-password-form";
+import { getMyTypeProfile } from "@/features/vendor-types/queries";
+import { VENDOR_TYPE_INFO } from "@/core/vendor-types";
+import { CardSection } from "@/components/ui/card";
 
 export default async function SettingsPage({
   params,
@@ -14,11 +17,12 @@ export default async function SettingsPage({
   params: Promise<{ vendor: string }>;
 }) {
   const { vendor: slug } = await params;
-  const access = await requireVendorAccess(slug, ["owner"]);
+  const access = await requireVendorModule(slug, "settings", ["owner"]);
   const db = getDb();
 
-  const provider = access.vendor.businessType === "booking";
-  const [members, invites, [profile]] = await Promise.all([
+  const info = VENDOR_TYPE_INFO[access.vendorType];
+  const provider = info.fulfilment === "booking";
+  const [members, invites, typeProfile] = await Promise.all([
     db
       .select()
       .from(vendorMembers)
@@ -27,7 +31,7 @@ export default async function SettingsPage({
       .select()
       .from(vendorInvites)
       .where(eq(vendorInvites.vendorId, access.vendorId)),
-    db.select().from(providerProfiles).where(eq(providerProfiles.vendorId, access.vendorId)).limit(1),
+    getMyTypeProfile(slug),
   ]);
 
   const pendingInvites = invites.filter((invite) => !invite.acceptedAt);
@@ -39,15 +43,12 @@ export default async function SettingsPage({
         <p className="mt-1 text-sm text-muted">Business details, payment configuration and team access.</p>
       </div>
 
-      {provider && (
-        <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
-          <div>
-            <h2 className="text-base font-semibold text-ink">Your profile</h2>
-            <p className="mt-1 text-sm text-muted">Clients see this on your page before booking.</p>
-          </div>
-          <ProviderProfileForm slug={slug} initial={profile ?? null} />
-        </section>
-      )}
+      <CardSection
+        title={`${info.emoji} ${info.label} profile`}
+        description={`Details only a ${info.label.toLowerCase()} needs. Households see the highlights on your page.`}
+      >
+        <TypeFieldsForm slug={slug} type={typeProfile.type} initial={typeProfile.values} submitLabel="Save profile" />
+      </CardSection>
 
       <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
         <div>
@@ -112,6 +113,10 @@ export default async function SettingsPage({
         </div>
       </section>
 
+      <CardSection title="Password" description="Change the password you use at the merchant sign-in.">
+        <ChangePasswordForm />
+      </CardSection>
+
       {!provider && (
       <section className="space-y-3 rounded-[12px] border border-line bg-surface p-4">
         <h2 className="text-base font-semibold text-ink">Your catalogue, your prices</h2>
@@ -119,7 +124,7 @@ export default async function SettingsPage({
           Set prices independently for this business&apos;s meals, water cans, deposits and products. Another vendor can sell a similar item at a different price. Existing orders keep their recorded price when you update your catalogue.
         </p>
         <Link href={"/merchant-panel/" + slug + "/products"} className="inline-flex min-h-10 items-center justify-center rounded-[10px] bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
-          Manage products & prices →
+          Manage {info.nouns.catalogue.toLowerCase()} →
         </Link>
       </section>
       )}

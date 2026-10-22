@@ -1,5 +1,4 @@
-import { requireVendorAccess } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
+import { requireVendorModule } from "@/lib/auth/session";
 import Link from "next/link";
 import { formatINR } from "@/core/money";
 import { todayIST } from "@/core/time";
@@ -11,7 +10,7 @@ export const metadata = { title: "Subscriptions" };
 export default async function SubscriptionsPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
   // Booking providers have sessions, not deliveries.
-  if ((await requireVendorAccess(slug)).vendor.businessType === "booking") redirect(`/merchant-panel/${slug}/bookings`);
+  await requireVendorModule(slug, "subscriptions");
   const rows = await getVendorSubscriptions(slug);
   const today = todayIST();
   const active = rows.filter((r) => !r.subscription.endsOn || r.subscription.endsOn >= today);

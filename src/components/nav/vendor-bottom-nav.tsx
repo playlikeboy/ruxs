@@ -2,45 +2,35 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarClock, CalendarDays, ClipboardList, Clock, LayoutGrid, Repeat, UtensilsCrossed } from "lucide-react";
+import type { VendorType } from "@/core/vendor-types";
+import { vendorTabs } from "./vendor-nav-items";
+import { MODULE_ICON } from "./vendor-icons";
 
-export function VendorBottomNav({ slug, newOrders = 0, provider = false }: { slug: string; newOrders?: number; provider?: boolean }) {
+export function VendorBottomNav({ slug, newOrders = 0, vendorType }: { slug: string; newOrders?: number; vendorType: VendorType }) {
   const pathname = usePathname();
   const base = "/merchant-panel/" + slug;
-
-  const navItems = [
-    { label: "Today", href: base + "/today", icon: CalendarDays },
-    ...(provider
-      ? [
-          { label: "Bookings", href: base + "/bookings", icon: CalendarClock },
-          { label: "Hours", href: base + "/availability", icon: Clock },
-          { label: "Services", href: base + "/services", icon: UtensilsCrossed },
-        ]
-      : [
-          { label: "Orders", href: base + "/orders", icon: ClipboardList, badge: newOrders },
-          { label: "Plans", href: base + "/subscriptions", icon: Repeat },
-          { label: "Menu", href: base + "/products", icon: UtensilsCrossed },
-        ]),
-    { label: "More", href: base + "/more", icon: LayoutGrid },
-  ];
+  const tabs = [...vendorTabs(vendorType), { module: "more" as const, label: "More" }];
 
   return (
     <nav aria-label="Merchant navigation" className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
       <ul className="grid h-16 grid-cols-5">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          const Icon = item.icon;
+        {tabs.map((tab) => {
+          const href = base + "/" + tab.module;
+          const isActive = pathname.startsWith(href);
+          const Icon = MODULE_ICON[tab.module];
+          const badge = tab.module === "orders" ? newOrders : 0;
           return (
-            <li key={item.href}>
+            <li key={tab.module}>
               <Link
-                href={item.href}
+                href={href}
+                aria-current={isActive ? "page" : undefined}
                 className={"relative flex h-full flex-col items-center justify-center gap-1 text-[11px] transition-colors " + (isActive ? "font-semibold text-accent" : "text-muted hover:text-ink")}
               >
                 <Icon className="h-5 w-5" strokeWidth={isActive ? 2.3 : 1.8} aria-hidden="true" />
-                {item.label}
-                {item.badge ? (
+                <span className="max-w-full truncate px-1">{tab.label}</span>
+                {badge ? (
                   <span className="absolute right-[calc(50%-20px)] top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white tabular-nums">
-                    {item.badge}
+                    {badge}
                   </span>
                 ) : null}
               </Link>

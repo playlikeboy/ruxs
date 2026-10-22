@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { VENDOR_TYPE_INFO, toVendorType } from "@/core/vendor-types";
 import { ExportButton, type ExportData } from "./export-button";
 
 interface VendorRow {
@@ -13,6 +14,7 @@ interface VendorRow {
     area: string;
     status: string;
     businessType: string;
+    vendorType: string;
     categoryId: string | null;
     loginId: string | null;
     createdAt: Date;
@@ -82,7 +84,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-sm text-ink">{vendor.name}</p>
                   <p className="truncate text-xs text-muted">
-                    {vendor.businessType === "booking" ? "Booking provider" : "Delivery store"} · {vendor.area}, {vendor.city}
+                    {VENDOR_TYPE_INFO[toVendorType(vendor.vendorType, vendor.businessType)].emoji} {VENDOR_TYPE_INFO[toVendorType(vendor.vendorType, vendor.businessType)].label} · {vendor.area}, {vendor.city}
                   </p>
                 </div>
                 <span className={"shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold capitalize " + (STATUS_TONE[vendor.status] ?? "")}>
@@ -121,7 +123,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                 </td>
                 <td className="px-4 py-3 text-xs text-muted">
                   <p className="text-ink font-medium">{vendor.area}, {vendor.city}</p>
-                  <span className="text-[11px] capitalize">{vendor.categoryId ?? vendor.businessType}</span>
+                  <span className="text-[11px] capitalize">{vendor.vendorType} · {vendor.categoryId ?? "—"}</span>
                 </td>
                 <td className="px-4 py-3 font-mono text-xs">
                   {vendor.loginId ? (

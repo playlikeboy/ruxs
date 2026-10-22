@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { VENDOR_TYPES } from "@/core/vendor-types";
 
 const optionalCoord = (min: number, max: number) => z.number().min(min).max(max).nullable();
 
@@ -60,6 +61,7 @@ export const categorySchema = z.object({
   sort: z.number().int().min(0).max(999),
   isActive: z.boolean(),
   fulfilment: z.enum(["delivery", "booking"]),
+  vendorType: z.enum(VENDOR_TYPES),
 });
 
 export const localitySchema = z.object({

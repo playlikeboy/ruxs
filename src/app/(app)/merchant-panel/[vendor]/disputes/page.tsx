@@ -1,4 +1,4 @@
-import { requireVendorAccess } from "@/lib/auth/session";
+import { requireVendorAccess, requireVendorModule } from "@/lib/auth/session";
 import { getVendorTickets } from "@/features/support/queries";
 import { AdminTicketRow } from "@/features/support/components/admin-ticket-row";
 import { ShieldCheck } from "lucide-react";
@@ -11,6 +11,7 @@ export default async function VendorDisputesPage({
   params: Promise<{ vendor: string }>;
 }) {
   const { vendor: slug } = await params;
+  await requireVendorModule(slug, "disputes");
   const access = await requireVendorAccess(slug);
   const tickets = await getVendorTickets(slug);
 

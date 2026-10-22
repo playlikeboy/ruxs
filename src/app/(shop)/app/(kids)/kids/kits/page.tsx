@@ -19,15 +19,15 @@ export default async function KidsKitsPage() {
           <Package className="h-4 w-4" />
           <span className="text-[11px] font-black uppercase tracking-wider">Doorstep Delivery</span>
         </div>
-        <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">
+        <h1 className="mt-0.5 text-xl font-black tracking-tight text-kids-ink">
           DIY Learning & Science Kits 🧩
         </h1>
-        <p className="mt-0.5 text-xs font-semibold text-slate-500">
+        <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
           Hands-on screen-free activity boxes delivered to your doorstep
         </p>
       </div>
 
-      <div className="flex items-center justify-between rounded-2xl border-2 border-slate-900 bg-amber-200/60 p-3 text-xs font-bold text-slate-900 shadow-[2px_2px_0_0_#0f172a]">
+      <div className="flex items-center justify-between rounded-[20px] border-2 border-kids-grape/15 bg-amber-200/60 p-3 text-xs font-bold text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]">
         <span className="flex items-center gap-1.5">
           <Truck className="h-4 w-4" />
           <span>Same / Next Day Delivery</span>

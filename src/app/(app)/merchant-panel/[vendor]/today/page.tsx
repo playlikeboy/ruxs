@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, BellRing, ChartColumn, Navigation, Package, Repeat, Sparkles, UtensilsCrossed, Wallet } from "lucide-react";
+import { ArrowRight, BellRing, ChartColumn, Navigation, Package, Repeat, UtensilsCrossed, Wallet } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { todayIST } from "@/core/time";
-import { requireVendorAccess } from "@/lib/auth/session";
+import { requireVendorModule } from "@/lib/auth/session";
+import { VENDOR_TYPE_INFO, canUseModule } from "@/core/vendor-types";
+import { SetupChecklist } from "@/features/vendor-types/components/setup-checklist";
 import { getVendorProducts } from "@/features/products/queries";
 import { getTodayOrders } from "@/features/orders/queries";
 import { getDayChangesForVendor } from "@/features/day-changes/queries";
@@ -27,14 +29,25 @@ const CHANGE_LABEL: Record<string, { text: (qty: number) => string; tone: string
 
 export default async function TodayPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
+  const access = await requireVendorModule(slug, "today");
   const today = todayIST();
-  const access = await requireVendorAccess(slug);
-  // Trainers and physiotherapists run on sessions, not deliveries.
-  if (access.vendor.businessType === "booking") return <ProviderToday slug={slug} />;
+  const type = access.vendorType;
+  // Trainers, physios, mehndi artists and kids academies run on sessions, not deliveries.
+  if (VENDOR_TYPE_INFO[type].fulfilment === "booking") {
+    return (
+      <>
+        <div className="px-4 pt-4 sm:px-6 sm:pt-6">
+          <SetupChecklist slug={slug} />
+        </div>
+        <ProviderToday slug={slug} />
+      </>
+    );
+  }
 
-  const isWater = access.vendor.categoryId === "water";
-  const isTiffin = access.vendor.categoryId === "tiffin";
-  const isKids = access.vendor.categoryId === "kids" || access.vendor.categoryId === "kids-kits";
+  const isWater = type === "water";
+  const isTiffin = type === "tiffin";
+  const hasRun = canUseModule(type, "run");
+  const hasPlans = canUseModule(type, "subscriptions");
 
   const [products, todayData, changes, planCounts, newOrders, balance, waterData] = await Promise.all([
     getVendorProducts(slug),
@@ -64,7 +77,7 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
       label: isWater ? "Cans to deliver today" : "To prepare today",
       value: String(totalToPrepare),
       sub: `${delivered} delivered`,
-      href: `${base}/run`,
+      href: hasRun ? `${base}/run` : `${base}/orders`,
       icon: Navigation,
     },
     {
@@ -76,11 +89,11 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
       hot: newOrders > 0,
     },
     {
-      label: "Active plans",
-      value: String(activePlans),
-      sub: `${menuItems} catalog items`,
-      href: `${base}/subscriptions`,
-      icon: Repeat,
+      label: hasPlans ? "Active plans" : "Catalogue items",
+      value: String(hasPlans ? activePlans : menuItems),
+      sub: hasPlans ? `${menuItems} catalogue items` : "Live in the app",
+      href: hasPlans ? `${base}/subscriptions` : `${base}/products`,
+      icon: hasPlans ? Repeat : UtensilsCrossed,
     },
     ...(balance
       ? [
@@ -125,29 +138,14 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
           <p className="text-sm text-muted">{dateLabel}</p>
           <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Today at {access.vendor.name}</h1>
         </div>
-        <Link href={`${base}/run`} className="flex h-11 items-center gap-2 rounded-[12px] bg-accent px-4 text-sm font-bold text-white shadow-xs transition active:scale-95">
-          <Navigation className="h-4 w-4" aria-hidden="true" /> Start delivery run
-        </Link>
+        {hasRun && (
+          <Link href={`${base}/run`} className="flex h-11 items-center gap-2 rounded-[12px] bg-accent px-4 text-sm font-bold text-white shadow-xs transition active:scale-95">
+            <Navigation className="h-4 w-4" aria-hidden="true" /> Start {VENDOR_TYPE_INFO[type].nouns.run?.toLowerCase() ?? "delivery run"}
+          </Link>
+        )}
       </div>
 
-      {/* Prominent Kids Zone banner if vendor is in kids category */}
-      {isKids && (
-        <Link
-          href={`${base}/kids`}
-          className="flex items-center gap-3.5 rounded-[16px] border border-amber-300 bg-gradient-to-r from-amber-50 via-yellow-50 to-sky-50 p-4 shadow-2xs transition hover:border-amber-400"
-        >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-2xs">
-            <Sparkles className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div className="flex-1 min-w-0">
-            <span className="block font-bold text-ink text-sm">🚀 Kids Zone Hub Active</span>
-            <span className="block text-xs text-muted">
-              Manage children activity workshops, passes, and class attendance roster.
-            </span>
-          </div>
-          <ArrowRight className="h-5 w-5 text-amber-700" aria-hidden="true" />
-        </Link>
-      )}
+      <SetupChecklist slug={slug} />
 
       {newOrders > 0 && (
         <Link href={`${base}/orders`} className="flex items-center gap-3 rounded-[16px] border border-accent/30 bg-peach p-4 transition hover:border-accent">
@@ -278,11 +276,11 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
           <h2 className="text-lg font-semibold text-ink">Shortcuts</h2>
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
             {[
-              { label: isTiffin ? "Tiffin Menu" : "Catalog items", href: `${base}/products`, icon: UtensilsCrossed },
-              { label: isWater ? "Cans & Bottles" : isTiffin ? "Dabbas & Returnables" : "Inventory", href: `${base}/inventory`, icon: Package },
-              { label: "Analytics", href: `${base}/analytics`, icon: ChartColumn },
-              { label: "Earnings", href: `${base}/earnings`, icon: Wallet },
-            ].map((s) => {
+              { module: "products" as const, label: VENDOR_TYPE_INFO[type].nouns.catalogue, href: `${base}/products`, icon: UtensilsCrossed },
+              { module: "inventory" as const, label: VENDOR_TYPE_INFO[type].nouns.inventory ?? "Returnables", href: `${base}/inventory`, icon: Package },
+              { module: "analytics" as const, label: "Analytics", href: `${base}/analytics`, icon: ChartColumn },
+              { module: "earnings" as const, label: "Earnings", href: `${base}/earnings`, icon: Wallet },
+            ].filter((s) => canUseModule(type, s.module)).map((s) => {
               const Icon = s.icon;
               return (
                 <Link key={s.label} href={s.href} className="flex h-12 items-center gap-3 rounded-[12px] border border-line bg-surface px-4 text-sm font-medium text-ink transition hover:border-ink/30">

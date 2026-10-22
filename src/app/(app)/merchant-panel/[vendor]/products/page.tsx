@@ -1,20 +1,28 @@
-import { redirect } from "next/navigation";
 import { formatINR } from "@/core/money";
-import { requireVendorAccess } from "@/lib/auth/session";
+import { requireVendorModule } from "@/lib/auth/session";
+import { VENDOR_TYPE_INFO, allowedCategoryIds } from "@/core/vendor-types";
+import { getMyItemDetails } from "@/features/vendor-types/queries";
+import { ITEM_FIELDS, chipsFor } from "@/features/vendor-types/fields";
+import { TypeFieldsForm } from "@/features/vendor-types/components/type-fields-form";
 import { getCategories, getCategoryMap } from "@/features/platform/queries";
 import { getMenuForVendor } from "@/features/products/queries";
 import { ProductFormDialog } from "@/features/products/components/product-form-dialog";
 import { ArchiveButton, AvailabilitySwitch } from "@/features/products/components/menu-item-actions";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export const metadata = { title: "Menu" };
+export const metadata = { title: "Catalogue" };
 
 export default async function MenuPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
-  const access = await requireVendorAccess(slug);
-  if (access.vendor.businessType === "booking") redirect(`/merchant-panel/${slug}/services`);
+  const access = await requireVendorModule(slug, "products");
+  const type = access.vendorType;
+  const info = VENDOR_TYPE_INFO[type];
+  const allowed = allowedCategoryIds(type, access.vendor.categoryId);
   const [{ rows, role }, categoryList, category] = await Promise.all([getMenuForVendor(slug), getCategories(), getCategoryMap()]);
-  const categories = categoryList.filter((c) => c.fulfilment === "delivery").map((c) => ({ id: c.id, emoji: c.emoji, shortLabel: c.shortLabel }));
+  // Only the vendor's own category: a tiffin kitchen never sees "Water" in its form.
+  const categories = categoryList.filter((c) => allowed.includes(c.id)).map((c) => ({ id: c.id, emoji: c.emoji, shortLabel: c.shortLabel }));
+  const { details } = await getMyItemDetails(slug, rows.map((r) => r.id));
+  const itemFields = ITEM_FIELDS[type];
   const isOwner = role === "owner";
 
   const groups = new Map<string, typeof rows>();
@@ -27,7 +35,8 @@ export default async function MenuPage({ params }: { params: Promise<{ vendor: s
     <div className="space-y-5 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">Menu</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent">{info.emoji} {info.label}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">{info.nouns.catalogue}</h1>
           <p className="mt-0.5 text-sm text-muted">{rows.length} items · what households see on your store</p>
         </div>
         {isOwner && <ProductFormDialog slug={slug} categories={categories} />}
@@ -35,8 +44,8 @@ export default async function MenuPage({ params }: { params: Promise<{ vendor: s
 
       {rows.length === 0 ? (
         <EmptyState
-          title="Your menu is empty"
-          description="Add your first meal, water can or dairy item. You can offer it for one-time orders, subscriptions, or both."
+          title={`Your ${info.nouns.catalogue.toLowerCase()} is empty`}
+          description="Add your first item. You can offer it for one-time orders, subscriptions, or both."
           action={isOwner ? <ProductFormDialog slug={slug} categories={categories} triggerLabel="Add first item" /> : undefined}
         />
       ) : (
@@ -59,10 +68,23 @@ export default async function MenuPage({ params }: { params: Promise<{ vendor: s
                         {p.allowSubscription && <span className="rounded-full bg-mint px-2 py-0.5 text-good">Subscribe</span>}
                         <span className="rounded-full bg-bg px-2 py-0.5 capitalize text-muted">{p.shift} · cutoff {p.cutoffAt}</span>
                         {p.assetName && <span className="rounded-full bg-bg px-2 py-0.5 text-muted">{p.assetName}{p.depositPaise > 0 ? ` · ${formatINR(p.depositPaise)} dep.` : ""}</span>}
+                        {itemFields && chipsFor(itemFields, details.get(p.id)).map((c) => (
+                          <span key={c} className="rounded-full bg-butter/70 px-2 py-0.5 text-warn">{c}</span>
+                        ))}
                       </div>
                     </div>
                     <p className="shrink-0 font-mono text-base font-bold tabular-nums text-ink">{formatINR(p.pricePaise)}</p>
                   </div>
+                  {isOwner && itemFields && (
+                    <details className="group rounded-control border border-line bg-bg/60 px-3 py-2">
+                      <summary className="cursor-pointer list-none text-xs font-semibold text-ink">
+                        {info.emoji} {info.label} details <span className="text-muted group-open:hidden">· edit</span>
+                      </summary>
+                      <div className="pt-3">
+                        <TypeFieldsForm slug={slug} type={type} itemId={p.id} initial={details.get(p.id) ?? {}} submitLabel="Save details" compact />
+                      </div>
+                    </details>
+                  )}
                   <div className="flex items-center justify-between">
                     <AvailabilitySwitch slug={slug} id={p.id} isAvailable={p.isAvailable} />
                     {isOwner && (

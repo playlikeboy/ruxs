@@ -14,15 +14,15 @@ export default async function KidsChildrenPage() {
   return (
     <div className="space-y-4">
       <div className="px-1">
-        <h1 className="text-xl font-black tracking-tight text-slate-950">
+        <h1 className="text-xl font-black tracking-tight text-kids-ink">
           Child Profiles 👶
         </h1>
-        <p className="mt-0.5 text-xs font-semibold text-slate-500">
+        <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
           Manage your children for 1-click booking into age-appropriate activities & camps
         </p>
       </div>
 
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-900/10 bg-white p-3 text-[11px] font-semibold text-slate-600 shadow-sm">
+      <div className="flex items-center gap-2 rounded-2xl border border-kids-grape/20/10 bg-white p-3 text-[11px] font-semibold text-kids-ink/70 shadow-sm">
         <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
         <span>Child profiles are completely private and never shared publicly.</span>
       </div>

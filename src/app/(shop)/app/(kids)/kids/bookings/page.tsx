@@ -23,17 +23,17 @@ export default async function KidsBookingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-1">
         <div>
-          <h1 className="text-xl font-black tracking-tight text-slate-950">
+          <h1 className="text-xl font-black tracking-tight text-kids-ink">
             My Activities & Bookings 📅
           </h1>
-          <p className="mt-0.5 text-xs font-semibold text-slate-500">
+          <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
             Upcoming sessions and holiday camp enrollments for your family
           </p>
         </div>
 
         <Link
           href="/app/kids/children"
-          className="inline-flex items-center gap-1.5 rounded-full border-2 border-slate-900 bg-white px-3 py-1 text-xs font-black text-slate-900 shadow-[1px_1px_0_0_#0f172a] hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-full border-2 border-kids-grape/15 bg-white px-3 py-1 text-xs font-black text-kids-ink shadow-[0_2px_0_rgba(155,92,246,0.18)] hover:bg-slate-50"
         >
           <UserPlus className="h-3.5 w-3.5 text-pink-600" />
           <span>My Kids</span>

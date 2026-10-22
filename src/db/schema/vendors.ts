@@ -39,6 +39,7 @@ export const vendors = pgTable(
     commissionBps: integer("commission_bps").notNull().default(0), // RUXs fee on online payments, 100 = 1%
     businessType: text("business_type").notNull().default("delivery"), // delivery (tiffin, water, milk) or booking (trainers, physio)
     categoryId: text("category_id"), // main category it was onboarded as (FK in SQL)
+    vendorType: text("vendor_type").notNull(), // tiffin, water, milk, gifts, store, fitness, physio, mehndi, kids — see core/vendor-types
     mapsUrl: text("maps_url"), // Google Maps link to the kitchen, shop, gym or clinic
     bookingNoticeMinutes: integer("booking_notice_minutes").notNull().default(120),
     cancelCutoffHours: integer("cancel_cutoff_hours").notNull().default(3),
@@ -56,6 +57,11 @@ export const vendors = pgTable(
       "vendors_status_check",
       sql`${t.status} in ('pending', 'active', 'suspended')`
     ),
+    check(
+      "vendors_vendor_type_check",
+      sql`${t.vendorType} in ('tiffin', 'water', 'milk', 'gifts', 'store', 'fitness', 'physio', 'mehndi', 'kids')`
+    ),
+    index("vendors_vendor_type_idx").on(t.vendorType, t.status),
   ]
 );
 

@@ -7,6 +7,7 @@ import {
   timestamp,
   boolean,
   index,
+  uniqueIndex,
   check,
 } from "drizzle-orm/pg-core";
 import { vendors } from "./vendors";
@@ -43,6 +44,7 @@ export const products = pgTable(
   },
   (t) => [
     index("products_vendor_idx").on(t.vendorId),
+    uniqueIndex("products_id_vendor_idx").on(t.id, t.vendorId),
     check(
       "products_shift_check",
       sql`${t.shift} in ('lunch', 'dinner', 'morning', 'evening')`

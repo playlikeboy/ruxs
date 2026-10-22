@@ -22,6 +22,35 @@
 
   --radius-control: 10px;
   --radius-card: 12px;
+  --radius-bubble: 22px;
+
+  /* Kids mode: candy palette, used only inside /app/kids and the kids switch. */
+  --color-kids-cream: #FFF8EC;
+  --color-kids-ink: #3B1F5C;
+  --color-kids-bubblegum: #FF6FAE;
+  --color-kids-grape: #9B5CF6;
+  --color-kids-sunny: #FFD23F;
+  --color-kids-sky: #4CC9F0;
+  --color-kids-mint: #3DDC97;
+  --color-kids-peach: #FFB38A;
+  --font-kids: var(--font-fredoka), var(--font-geist-sans), system-ui, sans-serif;
+
+  --animate-wiggle: wiggle 2.4s ease-in-out infinite;
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-pop: pop 0.35s cubic-bezier(.3,1.6,.6,1) both;
+
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-4deg); }
+    50% { transform: rotate(4deg); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  @keyframes pop {
+    0% { transform: scale(0.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
 }
 
 :root {
@@ -86,4 +115,18 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Kids mode surface: soft dotted paper behind the playful cards. */
+.kids-paper {
+  background-color: var(--color-kids-cream);
+  background-image: radial-gradient(rgba(155, 92, 246, 0.09) 1.2px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+
+.kids-card {
+  border-radius: var(--radius-bubble);
+  background: #fff;
+  border: 2px solid rgba(59, 31, 92, 0.08);
+  box-shadow: 0 4px 0 rgba(59, 31, 92, 0.08);
 }

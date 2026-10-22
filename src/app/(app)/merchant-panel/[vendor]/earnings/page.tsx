@@ -1,3 +1,4 @@
+import { requireVendorModule } from "@/lib/auth/session";
 import { formatINR } from "@/core/money";
 import { getVendorEarnings } from "@/features/payouts/queries";
 import { RequestWithdrawalButton } from "@/features/payouts/components/payout-buttons";
@@ -15,6 +16,7 @@ const PAYOUT_TONE: Record<string, string> = {
 
 export default async function EarningsPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
+  await requireVendorModule(slug, "earnings");
   const { access, balance, recent, payouts } = await getVendorEarnings(slug);
   const hasOpenRequest = payouts.some((p) => p.status === "requested");
 

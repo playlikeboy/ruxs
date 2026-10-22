@@ -46,7 +46,7 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search robotics, chess, pottery, karate…"
-          className="w-full rounded-2xl border-2 border-slate-900 bg-white py-2.5 pl-10 pr-4 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 shadow-[2px_2px_0_0_#0f172a]"
+          className="w-full rounded-[20px] border-2 border-kids-grape/15 bg-white py-2.5 pl-10 pr-4 text-xs font-bold text-kids-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 shadow-[0_3px_0_rgba(155,92,246,0.18)]"
         />
       </div>
 
@@ -68,8 +68,8 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
               onClick={() => setFormat(fmtKey)}
               className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
                 isSelected
-                  ? "border border-slate-900 bg-slate-900 text-white"
-                  : "border border-slate-200 bg-white text-slate-600 hover:border-slate-400"
+                  ? "border border-kids-grape/20 bg-kids-grape text-white"
+                  : "border border-slate-200 bg-white text-kids-ink/70 hover:border-slate-400"
               }`}
             >
               <span aria-hidden="true">{fmt.emoji}</span>
@@ -81,7 +81,7 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
 
       {/* Result Counter */}
       <div className="flex items-center justify-between px-1 pt-1">
-        <span className="text-xs font-black text-slate-700">
+        <span className="text-xs font-black text-kids-ink/80">
           Showing {filtered.length} {filtered.length === 1 ? "activity" : "activities"}
         </span>
         {(ageBracket !== "all" || category !== "all" || format !== "all" || searchQuery) && (
@@ -93,7 +93,7 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
               setFormat("all");
               setSearchQuery("");
             }}
-            className="text-[11px] font-bold text-accent hover:underline"
+            className="text-[11px] font-bold text-kids-grape hover:underline"
           >
             Reset Filters
           </button>
@@ -102,10 +102,10 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
 
       {/* Activity Cards List */}
       {filtered.length === 0 ? (
-        <div className="rounded-3xl border-2 border-dashed border-slate-300 bg-amber-50/60 p-8 text-center">
+        <div className="rounded-[26px] border-2 border-dashed border-slate-300 bg-amber-50/60 p-8 text-center">
           <span className="text-4xl" aria-hidden="true">🐣</span>
-          <p className="mt-2 text-sm font-black text-slate-900">No activities match your filters</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">
+          <p className="mt-2 text-sm font-black text-kids-ink">No activities match your filters</p>
+          <p className="mt-1 text-xs font-semibold text-kids-ink/60">
             Try clearing filters or selecting another age group.
           </p>
           <button
@@ -116,7 +116,7 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
               setFormat("all");
               setSearchQuery("");
             }}
-            className="mt-3 rounded-full border-2 border-slate-900 bg-amber-300 px-4 py-1.5 text-xs font-black shadow-[2px_2px_0_0_#0f172a]"
+            className="mt-3 rounded-full border-2 border-kids-grape/15 bg-kids-sunny/80 px-4 py-1.5 text-xs font-black shadow-[0_3px_0_rgba(155,92,246,0.18)]"
           >
             Show All Activities
           </button>

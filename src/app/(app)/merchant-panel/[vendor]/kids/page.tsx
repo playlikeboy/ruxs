@@ -1,3 +1,4 @@
+import { requireVendorModule } from "@/lib/auth/session";
 import type { Metadata } from "next";
 import { getProviderKidsWorkspace, getKidsCategories } from "@/features/kids/queries";
 import { ProviderKidsManager } from "@/features/kids/components/provider-kids-manager";
@@ -13,6 +14,7 @@ export default async function ProviderKidsPage({
   params: Promise<{ vendor: string }>;
 }) {
   const { vendor: slug } = await params;
+  await requireVendorModule(slug, "kids");
   const [workspace, categories] = await Promise.all([
     getProviderKidsWorkspace(slug),
     getKidsCategories(),

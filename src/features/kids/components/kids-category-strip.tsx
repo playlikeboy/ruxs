@@ -22,8 +22,8 @@ export function KidsCategoryStrip({ selected, onChange }: KidsCategoryStripProps
             onClick={() => onChange(key)}
             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-black transition active:scale-95 ${
               isSelected
-                ? "border-2 border-slate-900 bg-emerald-300 text-slate-950 shadow-[2px_2px_0_0_#0f172a]"
-                : "border-2 border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                ? "border-2 border-kids-grape/15 bg-emerald-300 text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+                : "border-2 border-slate-200 bg-white text-kids-ink/80 hover:border-slate-300 hover:bg-slate-50"
             }`}
           >
             <span className="text-sm" aria-hidden="true">{cat.emoji}</span>

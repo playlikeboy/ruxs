@@ -120,19 +120,19 @@ export function ServiceBookingForm({
 
   if (confirmedNumber) {
     return (
-      <div className="rounded-3xl border-2 border-slate-900 bg-white p-6 text-center shadow-[4px_4px_0_0_#0f172a] space-y-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-slate-900 bg-emerald-300 text-3xl shadow-sm">
-          <CheckCircle2 className="h-8 w-8 text-slate-950" />
+      <div className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-6 text-center shadow-[0_7px_0_rgba(155,92,246,0.16),0_16px_28px_-14px_rgba(59,31,92,0.4)] space-y-4">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[20px] border-2 border-kids-grape/15 bg-emerald-300 text-3xl shadow-sm">
+          <CheckCircle2 className="h-8 w-8 text-kids-ink" />
         </div>
         <div>
           <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-900">
             Booking Confirmed! 🎉
           </span>
-          <h2 className="mt-2 text-xl font-black text-slate-950">{service.title}</h2>
-          <p className="mt-1 text-xs font-bold text-slate-500">
-            Booking Ref: <span className="font-mono text-slate-900">{confirmedNumber}</span>
+          <h2 className="mt-2 text-xl font-black text-kids-ink">{service.title}</h2>
+          <p className="mt-1 text-xs font-bold text-kids-ink/60">
+            Booking Ref: <span className="font-mono text-kids-ink">{confirmedNumber}</span>
           </p>
-          <p className="mt-2 text-xs font-semibold text-slate-600">
+          <p className="mt-2 text-xs font-semibold text-kids-ink/70">
             Scheduled for {sessionDate} at {sessionTime} ({deliveryMode.toUpperCase()}) with {service.vendor.name}.
           </p>
         </div>
@@ -140,13 +140,13 @@ export function ServiceBookingForm({
         <div className="flex flex-col gap-2 pt-2">
           <Link
             href="/app/kids/bookings"
-            className="rounded-full border-2 border-slate-900 bg-amber-400 py-2.5 text-xs font-black text-slate-950 shadow-[2px_2px_0_0_#0f172a]"
+            className="rounded-full border-2 border-kids-grape/15 bg-kids-sunny py-2.5 text-xs font-black text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
           >
             View My Bookings →
           </Link>
           <Link
             href="/app/kids"
-            className="rounded-full border border-slate-300 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+            className="rounded-full border border-slate-300 py-2 text-xs font-bold text-kids-ink/80 hover:bg-slate-50"
           >
             Explore More Activities
           </Link>
@@ -158,28 +158,28 @@ export function ServiceBookingForm({
   return (
     <form onSubmit={handleBooking} className="space-y-4">
       {error && (
-        <div className="rounded-2xl border-2 border-red-500 bg-red-50 p-3 text-xs font-bold text-red-900 shadow-sm">
+        <div className="rounded-[20px] border-2 border-red-500 bg-red-50 p-3 text-xs font-bold text-red-900 shadow-sm">
           {error}
         </div>
       )}
 
       {/* Select Child */}
-      <div className="rounded-2xl border-2 border-slate-900 bg-white p-3.5 shadow-[2px_2px_0_0_#0f172a]">
+      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-white p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-black uppercase tracking-wider text-slate-500">
+          <label className="text-xs font-black uppercase tracking-wider text-kids-ink/60">
             Participating Child
           </label>
-          <Link href="/app/kids/children" className="text-xs font-bold text-accent hover:underline">
+          <Link href="/app/kids/children" className="text-xs font-bold text-kids-grape hover:underline">
             + Manage profiles
           </Link>
         </div>
 
         {childProfiles.length === 0 ? (
           <div className="mt-2 text-center">
-            <p className="text-xs font-semibold text-slate-600">No child profiles found.</p>
+            <p className="text-xs font-semibold text-kids-ink/70">No child profiles found.</p>
             <Link
               href="/app/kids/children"
-              className="mt-2 inline-block rounded-full border-2 border-slate-900 bg-amber-300 px-3 py-1 text-xs font-black"
+              className="mt-2 inline-block rounded-full border-2 border-kids-grape/15 bg-kids-sunny/80 px-3 py-1 text-xs font-black"
             >
               Add Child Profile First
             </Link>
@@ -188,7 +188,7 @@ export function ServiceBookingForm({
           <select
             value={selectedChildId}
             onChange={(e) => setSelectedChildId(e.target.value)}
-            className="mt-2 w-full rounded-xl border-2 border-slate-900 bg-amber-50 px-3 py-2 text-xs font-black text-slate-900 focus:outline-none"
+            className="mt-2 w-full rounded-xl border-2 border-kids-grape/15 bg-amber-50 px-3 py-2 text-xs font-black text-kids-ink focus:outline-none"
           >
             {childProfiles.map((child) => (
               <option key={child.id} value={child.id}>
@@ -200,8 +200,8 @@ export function ServiceBookingForm({
       </div>
 
       {/* Mode selection */}
-      <div className="rounded-2xl border-2 border-slate-900 bg-white p-3.5 shadow-[2px_2px_0_0_#0f172a]">
-        <label className="block text-xs font-black uppercase tracking-wider text-slate-500">
+      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-white p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
+        <label className="block text-xs font-black uppercase tracking-wider text-kids-ink/60">
           Delivery Mode
         </label>
         <div className="mt-2 grid grid-cols-3 gap-2">
@@ -212,8 +212,8 @@ export function ServiceBookingForm({
               onClick={() => setDeliveryMode(mode as "home" | "studio" | "online")}
               className={`rounded-xl border-2 p-2 text-center text-xs font-black capitalize transition ${
                 deliveryMode === mode
-                  ? "border-slate-900 bg-amber-300 text-slate-950 shadow-[2px_2px_0_0_#0f172a]"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  ? "border-kids-grape/20 bg-kids-sunny/80 text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+                  : "border-slate-200 bg-white text-kids-ink/70 hover:border-slate-300"
               }`}
             >
               {mode === "home" ? "🏡 Home Visit" : mode === "studio" ? "🏫 Studio" : "💻 Online"}
@@ -223,41 +223,41 @@ export function ServiceBookingForm({
 
         {deliveryMode === "home" && (
           <div className="mt-3">
-            <label className="block text-[11px] font-bold text-slate-700">Home Address</label>
+            <label className="block text-[11px] font-bold text-kids-ink/80">Home Address</label>
             <input
               type="text"
               required
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Society, Flat / House No., Landmark"
-              className="mt-1 w-full rounded-xl border-2 border-slate-900 bg-white px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+              className="mt-1 w-full rounded-xl border-2 border-kids-grape/15 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
             />
           </div>
         )}
       </div>
 
       {/* Date & Time selection */}
-      <div className="rounded-2xl border-2 border-slate-900 bg-white p-3.5 shadow-[2px_2px_0_0_#0f172a]">
-        <label className="block text-xs font-black uppercase tracking-wider text-slate-500">
+      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-white p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
+        <label className="block text-xs font-black uppercase tracking-wider text-kids-ink/60">
           Session Slot
         </label>
         <div className="mt-2 grid grid-cols-2 gap-2.5">
           <div>
-            <label className="block text-[11px] font-bold text-slate-700">Date</label>
+            <label className="block text-[11px] font-bold text-kids-ink/80">Date</label>
             <input
               type="date"
               required
               value={sessionDate}
               onChange={(e) => setSessionDate(e.target.value)}
-              className="mt-1 w-full rounded-xl border-2 border-slate-900 bg-white px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+              className="mt-1 w-full rounded-xl border-2 border-kids-grape/15 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold text-slate-700">Time</label>
+            <label className="block text-[11px] font-bold text-kids-ink/80">Time</label>
             <select
               value={sessionTime}
               onChange={(e) => setSessionTime(e.target.value)}
-              className="mt-1 w-full rounded-xl border-2 border-slate-900 bg-white px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+              className="mt-1 w-full rounded-xl border-2 border-kids-grape/15 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
             >
               {["10:00", "11:30", "14:00", "15:30", "17:00", "18:30"].map((t) => (
                 <option key={t} value={t}>
@@ -271,10 +271,10 @@ export function ServiceBookingForm({
 
       {/* Material Add-on if extra */}
       {service.materialFeePolicy === "extra" && service.materialFeePaise > 0 && (
-        <div className="flex items-center justify-between rounded-2xl border-2 border-slate-900 bg-sky-50 p-3.5 shadow-[2px_2px_0_0_#0f172a]">
+        <div className="flex items-center justify-between rounded-[20px] border-2 border-kids-grape/15 bg-sky-50 p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
           <div>
-            <span className="block text-xs font-black text-slate-900">Include Project Material Kit</span>
-            <span className="block text-[11px] font-medium text-slate-600">
+            <span className="block text-xs font-black text-kids-ink">Include Project Material Kit</span>
+            <span className="block text-[11px] font-medium text-kids-ink/70">
               Take-home hardware parts & workbox (+{formatINR(service.materialFeePaise)})
             </span>
           </div>
@@ -282,24 +282,24 @@ export function ServiceBookingForm({
             type="checkbox"
             checked={includeMaterials}
             onChange={(e) => setIncludeMaterials(e.target.checked)}
-            className="h-5 w-5 rounded border-2 border-slate-900 text-amber-500"
+            className="h-5 w-5 rounded border-2 border-kids-grape/15 text-amber-500"
           />
         </div>
       )}
 
       {/* Price Summary */}
-      <div className="rounded-2xl border-2 border-slate-900 bg-amber-50 p-3.5 shadow-[2px_2px_0_0_#0f172a]">
-        <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-amber-50 p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
+        <div className="flex items-center justify-between text-xs font-bold text-kids-ink/80">
           <span>Session Fee</span>
           <span>{formatINR(service.pricePaise)}</span>
         </div>
         {materialFee > 0 && (
-          <div className="mt-1 flex items-center justify-between text-xs font-bold text-slate-700">
+          <div className="mt-1 flex items-center justify-between text-xs font-bold text-kids-ink/80">
             <span>Material Fee</span>
             <span>+{formatINR(materialFee)}</span>
           </div>
         )}
-        <div className="mt-2 flex items-center justify-between border-t border-slate-300 pt-2 text-sm font-black text-slate-950">
+        <div className="mt-2 flex items-center justify-between border-t border-slate-300 pt-2 text-sm font-black text-kids-ink">
           <span>Total Payable</span>
           <span>{formatINR(totalAmountPaise)}</span>
         </div>
@@ -309,7 +309,7 @@ export function ServiceBookingForm({
       <button
         type="submit"
         disabled={isPending || childProfiles.length === 0}
-        className="w-full rounded-full border-2 border-slate-900 bg-amber-400 py-3 text-sm font-black text-slate-950 shadow-[3px_3px_0_0_#0f172a] transition active:translate-y-0.5 active:shadow-none disabled:opacity-50"
+        className="w-full rounded-full border-2 border-kids-grape/15 bg-kids-sunny py-3 text-sm font-black text-kids-ink shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)] transition active:translate-y-0.5 active:shadow-none disabled:opacity-50"
       >
         {isPending ? "Confirming Session..." : `Book Session (${formatINR(totalAmountPaise)}) →`}
       </button>

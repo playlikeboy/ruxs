@@ -6,6 +6,7 @@ import { eq, and, or } from "drizzle-orm";
 import { hexclave } from "./hexclave";
 import { getDb } from "@/db";
 import { vendors, vendorMembers, customers, platformAdmins } from "@/db/schema";
+import { canUseModule, homeModule, toVendorType, type Module } from "@/core/vendor-types";
 
 export type Role = "owner" | "staff" | "driver";
 const ALL_ROLES: Role[] = ["owner", "staff", "driver"];
@@ -103,6 +104,20 @@ export const requireVendorAccess = cache(
     notFound();
   }
 );
+
+/**
+ * requireVendorAccess plus the vendor-type gate: a tool the vendor's type
+ * doesn't have (a physiotherapist opening /kids or /products) redirects to
+ * the type's home instead of rendering someone else's workspace.
+ */
+export const requireVendorModule = cache(async (slug: string, module: Module, allowedRoles: Role[] = ALL_ROLES) => {
+  const access = await requireVendorAccess(slug, allowedRoles);
+  const type = toVendorType(access.vendor.vendorType, access.vendor.businessType);
+  if (!canUseModule(type, module)) {
+    redirect(`/merchant-panel/${slug}/${homeModule(type)}`);
+  }
+  return { ...access, vendorType: type };
+});
 
 /**
  * Platform admin only. Signed-out visitors go to the hidden admin sign-in;

@@ -1,127 +1,51 @@
 import Link from "next/link";
-import { requireVendorAccess } from "@/lib/auth/session";
+import { ExternalLink } from "lucide-react";
+import { requireVendorModule } from "@/lib/auth/session";
+import { VENDOR_TYPE_INFO } from "@/core/vendor-types";
+import { vendorNav } from "@/components/nav/vendor-nav-items";
+import { MODULE_ICON } from "@/components/nav/vendor-icons";
+import { PageHeader } from "@/components/ui/card";
 
-/** Delivery tools that mean nothing to a trainer or physiotherapist. */
-const DELIVERY_ONLY = new Set(["Delivery run", "Bills & payments", "Inventory & returnables", "Analytics", "Menu & prices"]);
-
-export default async function MorePage({
-  params,
-}: {
-  params: Promise<{ vendor: string }>;
-}) {
+export default async function MorePage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
-  const access = await requireVendorAccess(slug);
-  const provider = access.vendor.businessType === "booking";
-
-  const links = [
-    {
-      title: "Earnings & withdrawals",
-      description: "Online payments RUXs collected for you, and monthly withdrawals.",
-      href: "/merchant-panel/" + slug + "/earnings",
-      visible: access.role !== "driver",
-      marker: "₹",
-    },
-    {
-      title: "Kids Zone Activities & Camps",
-      description: "Manage kids classes, holiday workshops, enrollments and child run sheets.",
-      href: "/merchant-panel/" + slug + "/kids",
-      visible: access.role !== "driver",
-      marker: "🚀",
-    },
-    {
-      title: "Ratings & reviews",
-      description: "See what households say and reply publicly.",
-      href: "/merchant-panel/" + slug + "/reviews",
-      visible: access.role !== "driver",
-      marker: "★",
-    },
-    {
-      title: "Disputes & issues",
-      description: "Missing deliveries, order complaints or reports raised by households.",
-      href: "/merchant-panel/" + slug + "/disputes",
-      visible: access.role !== "driver",
-      marker: "⚖️",
-    },
-    {
-      title: "Delivery run",
-      description: "Tower-by-tower run sheet for today's drivers.",
-      href: "/merchant-panel/" + slug + "/run",
-      visible: true,
-      marker: "🛵",
-    },
-    {
-      title: provider ? "Clients" : "Customers",
-      description: provider ? "People who have booked sessions with you." : "Households, their plans, private links and balances.",
-      href: "/merchant-panel/" + slug + "/customers",
-      visible: access.role !== "driver",
-      marker: "👥",
-    },
-    {
-      title: "View your store",
-      description: "See your store page exactly as households see it.",
-      href: "/app/store/" + slug,
-      visible: true,
-      marker: "🏪",
-    },
-    {
-      title: "Bills & payments",
-      description: "Monthly invoices, balances and payment status.",
-      href: "/merchant-panel/" + slug + "/bills",
-      visible: true,
-      marker: "₹",
-    },
-    {
-      title: "Inventory & returnables",
-      description: "Cans, dabbas and household asset balances.",
-      href: "/merchant-panel/" + slug + "/inventory",
-      visible: true,
-      marker: "02",
-    },
-    {
-      title: "Analytics",
-      description: "Order activity, delivered value and product performance for the last 30 days.",
-      href: "/merchant-panel/" + slug + "/analytics",
-      visible: access.role === "owner" || access.role === "staff",
-      marker: "03",
-    },
-    {
-      title: "Menu & prices",
-      description: "Add, edit and remove items, prices, cutoffs and returnables.",
-      href: "/merchant-panel/" + slug + "/products",
-      visible: access.role === "owner",
-      marker: "04",
-    },
-    {
-      title: "Store settings",
-      description: "Storefront, delivery area, fees, opening status and team.",
-      href: "/merchant-panel/" + slug + "/settings",
-      visible: access.role === "owner",
-      marker: "05",
-    },
-  ];
+  const access = await requireVendorModule(slug, "more");
+  const info = VENDOR_TYPE_INFO[access.vendorType];
+  const groups = vendorNav(access.vendorType, access.role);
+  const publicHref = access.vendorType === "kids" ? "/app/kids/providers/" + slug : "/app/store/" + slug;
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">Workspace</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">More tools</h1>
-        <p className="mt-1 text-sm text-muted">Everything for managing {access.vendor.name} beyond today&apos;s run.</p>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {links.filter((link) => link.visible && !(provider && DELIVERY_ONLY.has(link.title))).map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="group flex min-h-28 gap-4 rounded-[12px] border border-line bg-surface p-4 transition-colors hover:border-accent"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-bg text-sm font-semibold tabular-nums text-accent" aria-hidden="true">{link.marker}</span>
-            <span className="block">
-              <span className="block font-semibold text-ink group-hover:text-accent">{link.title}</span>
-              <span className="mt-1 block text-sm leading-5 text-muted">{link.description}</span>
-            </span>
-          </Link>
-        ))}
-      </div>
+      <PageHeader eyebrow={`${info.emoji} ${info.label}`} title="All tools" description={`Everything for running ${access.vendor.name}.`} />
+      {groups.map((g) => (
+        <section key={g.title} aria-labelledby={`more-${g.title}`}>
+          <h2 id={`more-${g.title}`} className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
+            {g.title}
+          </h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {g.items.map((item) => {
+              const Icon = MODULE_ICON[item.module];
+              return (
+                <Link
+                  key={item.module}
+                  href={`/merchant-panel/${slug}/${item.module}`}
+                  className="group flex items-center gap-3 rounded-card border border-line bg-surface p-3.5 transition-colors hover:border-accent/40"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-bg text-accent" aria-hidden="true">
+                    <Icon className="h-5 w-5" strokeWidth={1.9} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-semibold text-ink group-hover:text-accent">{item.label}</span>
+                    <span className="block truncate text-sm text-muted">{item.description}</span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+      <Link href={publicHref} className="flex items-center gap-2 text-sm font-semibold text-accent">
+        <ExternalLink className="h-4 w-4" aria-hidden="true" /> See your page as households see it
+      </Link>
     </div>
   );
 }

@@ -88,6 +88,7 @@ export const services = pgTable(
   },
   (t) => [
     index("services_vendor_idx").on(t.vendorId),
+    uniqueIndex("services_id_vendor_idx").on(t.id, t.vendorId),
     check("services_duration_check", sql`${t.durationMinutes} between 15 and 480`),
     check("services_price_check", sql`${t.pricePaise} >= 0`),
   ]

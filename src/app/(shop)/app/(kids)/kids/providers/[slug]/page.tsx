@@ -52,7 +52,7 @@ export default async function KidsProviderProfilePage({
       <div>
         <Link
           href="/app/kids/activities"
-          className="inline-flex items-center gap-1.5 rounded-full border-2 border-slate-900 bg-white px-3 py-1 text-xs font-black text-slate-800 shadow-[2px_2px_0_0_#0f172a] transition hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-full border-2 border-kids-grape/15 bg-white px-3 py-1 text-xs font-black text-slate-800 shadow-[0_3px_0_rgba(155,92,246,0.18)] transition hover:bg-slate-50"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back to Classes</span>
@@ -60,45 +60,45 @@ export default async function KidsProviderProfilePage({
       </div>
 
       {/* Provider Hero Header */}
-      <div className="rounded-3xl border-2 border-slate-900 bg-white p-5 shadow-[3px_3px_0_0_#0f172a]">
+      <div className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-5 shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)]">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               {isVerified ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-slate-900 bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-900">
+                <span className="inline-flex items-center gap-1 rounded-full border border-kids-grape/20 bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-900">
                   <ShieldCheck className="h-3 w-3 text-emerald-700" />
                   <span>VERIFIED MENTOR</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
+                <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-kids-ink/70">
                   <ShieldAlert className="h-3 w-3 text-slate-400" />
                   <span>VERIFICATION PENDING</span>
                 </span>
               )}
 
               {safetyPassed && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-slate-900 bg-amber-200 px-2.5 py-0.5 text-[10px] font-black text-slate-950">
+                <span className="inline-flex items-center gap-1 rounded-full border border-kids-grape/20 bg-amber-200 px-2.5 py-0.5 text-[10px] font-black text-kids-ink">
                   <CheckCircle2 className="h-3 w-3 text-amber-800" />
                   <span>CHILD SAFETY CLEARED</span>
                 </span>
               )}
             </div>
 
-            <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950">
+            <h1 className="mt-2 text-2xl font-black tracking-tight text-kids-ink">
               {vendor.name}
             </h1>
-            <p className="mt-1 text-xs font-semibold text-slate-600">
+            <p className="mt-1 text-xs font-semibold text-kids-ink/70">
               {profile?.headline ?? "Local kids activity educator and mentor."}
             </p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-bold text-slate-600">
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-bold text-kids-ink/70">
               <span className="inline-flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                <MapPin className="h-3.5 w-3.5 text-kids-ink/60" />
                 <span>{vendor.area}</span>
               </span>
               {profile?.experienceYears ? (
                 <span className="inline-flex items-center gap-1">
-                  <Award className="h-3.5 w-3.5 text-slate-500" />
+                  <Award className="h-3.5 w-3.5 text-kids-ink/60" />
                   <span>{profile.experienceYears} Years Teaching</span>
                 </span>
               ) : null}
@@ -107,8 +107,8 @@ export default async function KidsProviderProfilePage({
         </div>
 
         {/* Credentials Breakdown: Verified vs Claimed */}
-        <div className="mt-4 rounded-2xl border-2 border-slate-900 bg-slate-50 p-4">
-          <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+        <div className="mt-4 rounded-[20px] border-2 border-kids-grape/15 bg-slate-50 p-4">
+          <div className="text-[11px] font-black uppercase tracking-wider text-kids-ink/60">
             Safety & Qualification Standards
           </div>
 
@@ -117,16 +117,16 @@ export default async function KidsProviderProfilePage({
               <span className="block font-black text-emerald-800">
                 🛡️ Verified by RUXs Admin
               </span>
-              <p className="mt-1 text-[11px] font-medium text-slate-600">
+              <p className="mt-1 text-[11px] font-medium text-kids-ink/70">
                 {profile?.safetyNotes || "Identity verified, premise inspected, child safety guidelines signed."}
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-3">
-              <span className="block font-black text-slate-900">
+              <span className="block font-black text-kids-ink">
                 🎓 Claimed Credentials
               </span>
-              <p className="mt-1 text-[11px] font-medium text-slate-600">
+              <p className="mt-1 text-[11px] font-medium text-kids-ink/70">
                 {profile?.qualifications || "Certified educator in subject domain."}
               </p>
             </div>
@@ -134,7 +134,7 @@ export default async function KidsProviderProfilePage({
 
           {profile?.specialties && profile.specialties.length > 0 && (
             <div className="mt-3">
-              <span className="text-[11px] font-bold text-slate-700">Specialties: </span>
+              <span className="text-[11px] font-bold text-kids-ink/80">Specialties: </span>
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {profile.specialties.map((spec, i) => (
                   <span
@@ -149,7 +149,7 @@ export default async function KidsProviderProfilePage({
           )}
 
           {profile?.languages && profile.languages.length > 0 && (
-            <div className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-slate-600">
+            <div className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-kids-ink/70">
               <Globe className="h-3 w-3 text-slate-400" />
               <span>Languages: {profile.languages.join(", ")}</span>
             </div>
@@ -159,12 +159,12 @@ export default async function KidsProviderProfilePage({
 
       {/* Services & Classes Offered */}
       <section className="space-y-3">
-        <h2 className="px-1 text-base font-black text-slate-950">
+        <h2 className="px-1 text-base font-black text-kids-ink">
           Classes & Sessions ({services.length})
         </h2>
 
         {services.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-4 text-center text-xs font-semibold text-slate-500">
+          <div className="rounded-[20px] border-2 border-dashed border-slate-300 bg-white p-4 text-center text-xs font-semibold text-kids-ink/60">
             No active individual sessions published yet.
           </div>
         ) : (
@@ -174,35 +174,35 @@ export default async function KidsProviderProfilePage({
               return (
                 <div
                   key={service.id}
-                  className="rounded-2xl border-2 border-slate-900 bg-white p-4 shadow-[2px_2px_0_0_#0f172a]"
+                  className="rounded-[20px] border-2 border-kids-grape/15 bg-white p-4 shadow-[0_3px_0_rgba(155,92,246,0.18)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="rounded-full border border-slate-900 bg-amber-200 px-2 py-0.5 text-[9px] font-black text-slate-950">
+                        <span className="rounded-full border border-kids-grape/20 bg-amber-200 px-2 py-0.5 text-[9px] font-black text-kids-ink">
                           {category.name}
                         </span>
-                        <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-700">
+                        <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-kids-ink/80">
                           👶 {ageLabel}
                         </span>
                       </div>
-                      <h3 className="mt-1.5 text-sm font-black text-slate-950">
+                      <h3 className="mt-1.5 text-sm font-black text-kids-ink">
                         {service.title}
                       </h3>
                       {service.description && (
-                        <p className="mt-1 text-xs font-medium text-slate-600 line-clamp-2">
+                        <p className="mt-1 text-xs font-medium text-kids-ink/70 line-clamp-2">
                           {service.description}
                         </p>
                       )}
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="block text-base font-black text-slate-950">
+                      <span className="block text-base font-black text-kids-ink">
                         {formatINR(service.pricePaise)}
                       </span>
                       <Link
                         href={`/app/kids/services/${service.id}`}
-                        className="mt-2 inline-flex items-center gap-1 rounded-full border-2 border-slate-900 bg-amber-400 px-3 py-1 text-xs font-black text-slate-950 shadow-[1px_1px_0_0_#0f172a] hover:bg-amber-300"
+                        className="mt-2 inline-flex items-center gap-1 rounded-full border-2 border-kids-grape/15 bg-kids-sunny px-3 py-1 text-xs font-black text-kids-ink shadow-[0_2px_0_rgba(155,92,246,0.18)] hover:bg-kids-sunny/80"
                       >
                         Book →
                       </Link>
@@ -218,7 +218,7 @@ export default async function KidsProviderProfilePage({
       {/* Upcoming Multi-session Workshops */}
       {workshops.length > 0 && (
         <section className="space-y-3">
-          <h2 className="px-1 text-base font-black text-slate-950">
+          <h2 className="px-1 text-base font-black text-kids-ink">
             Workshops & Holiday Camps ({workshops.length})
           </h2>
 
@@ -226,28 +226,28 @@ export default async function KidsProviderProfilePage({
             {workshops.map(({ workshop, category }) => (
               <div
                 key={workshop.id}
-                className="rounded-2xl border-2 border-slate-900 bg-emerald-50/60 p-4 shadow-[2px_2px_0_0_#0f172a]"
+                className="rounded-[20px] border-2 border-kids-grape/15 bg-emerald-50/60 p-4 shadow-[0_3px_0_rgba(155,92,246,0.18)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <span className="rounded-full border border-slate-900 bg-emerald-200 px-2 py-0.5 text-[9px] font-black text-emerald-950">
+                    <span className="rounded-full border border-kids-grape/20 bg-emerald-200 px-2 py-0.5 text-[9px] font-black text-emerald-950">
                       CAMP · {category.name}
                     </span>
-                    <h3 className="mt-1.5 text-sm font-black text-slate-950">
+                    <h3 className="mt-1.5 text-sm font-black text-kids-ink">
                       {workshop.title}
                     </h3>
-                    <p className="mt-1 text-xs font-medium text-slate-600 line-clamp-2">
+                    <p className="mt-1 text-xs font-medium text-kids-ink/70 line-clamp-2">
                       {workshop.description}
                     </p>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="block text-base font-black text-slate-950">
+                    <span className="block text-base font-black text-kids-ink">
                       {formatINR(workshop.pricePaise)}
                     </span>
                     <Link
                       href={`/app/kids/workshops/${workshop.id}`}
-                      className="mt-2 inline-flex items-center gap-1 rounded-full border-2 border-slate-900 bg-emerald-400 px-3 py-1 text-xs font-black text-slate-950 shadow-[1px_1px_0_0_#0f172a] hover:bg-emerald-300"
+                      className="mt-2 inline-flex items-center gap-1 rounded-full border-2 border-kids-grape/15 bg-emerald-400 px-3 py-1 text-xs font-black text-kids-ink shadow-[0_2px_0_rgba(155,92,246,0.18)] hover:bg-emerald-300"
                     >
                       Enroll →
                     </Link>
@@ -262,13 +262,13 @@ export default async function KidsProviderProfilePage({
       {/* Verified Reviews */}
       <section className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-base font-black text-slate-950">
+          <h2 className="text-base font-black text-kids-ink">
             Parent Reviews ({reviews.length})
           </h2>
         </div>
 
         {reviews.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-4 text-center text-xs font-semibold text-slate-500">
+          <div className="rounded-[20px] border-2 border-dashed border-slate-300 bg-white p-4 text-center text-xs font-semibold text-kids-ink/60">
             No parent reviews yet. Completed bookings are eligible to review!
           </div>
         ) : (
@@ -276,7 +276,7 @@ export default async function KidsProviderProfilePage({
             {reviews.map((rev) => (
               <div
                 key={rev.id}
-                className="rounded-2xl border-2 border-slate-900 bg-white p-3.5 shadow-[2px_2px_0_0_#0f172a]"
+                className="rounded-[20px] border-2 border-kids-grape/15 bg-white p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
@@ -296,7 +296,7 @@ export default async function KidsProviderProfilePage({
                   </span>
                 </div>
                 {rev.reviewText && (
-                  <p className="mt-2 text-xs font-medium text-slate-700">
+                  <p className="mt-2 text-xs font-medium text-kids-ink/80">
                     &ldquo;{rev.reviewText}&rdquo;
                   </p>
                 )}

@@ -78,6 +78,27 @@
       "when": 1792600000000,
       "tag": "0010_dual_delivery_and_support_tickets",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792700000000,
+      "tag": "0011_kids_activities_marketplace",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792800000000,
+      "tag": "0012_kids_activities_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792900000000,
+      "tag": "0013_vendor_type_tables",
+      "breakpoints": true
     }
   ]
 }

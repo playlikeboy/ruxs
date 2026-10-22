@@ -4,6 +4,7 @@ import { VendorBottomNav } from "@/components/nav/vendor-bottom-nav";
 import { VendorSidebar } from "@/components/nav/vendor-sidebar";
 import { UserNav } from "@/components/auth/user-nav";
 import { countOpenShopOrders } from "@/features/shop-orders/queries";
+import { VENDOR_TYPE_INFO, canUseModule, toVendorType } from "@/core/vendor-types";
 
 export default async function VendorLayout({
   children,
@@ -14,8 +15,9 @@ export default async function VendorLayout({
 }) {
   const { vendor: slug } = await params;
   const access = await requireVendorAccess(slug);
-  const provider = access.vendor.businessType === "booking";
-  const newOrders = provider ? 0 : await countOpenShopOrders(access.vendorId);
+  const vendorType = toVendorType(access.vendor.vendorType, access.vendor.businessType);
+  const newOrders = canUseModule(vendorType, "orders") ? await countOpenShopOrders(access.vendorId) : 0;
+  const info = VENDOR_TYPE_INFO[vendorType];
 
   return (
     <div className="min-h-dvh bg-bg">
@@ -26,16 +28,15 @@ export default async function VendorLayout({
         role={access.role}
         acceptingOrders={access.vendor.acceptingOrders}
         newOrders={newOrders}
-        provider={provider}
-        category={access.vendor.categoryId}
+        vendorType={vendorType}
       />
 
       <div className="lg:pl-64">
         <header className="sticky top-0 z-30 border-b border-line bg-surface/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:h-16">
             <div className="flex min-w-0 items-center gap-3 lg:hidden">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink text-sm font-bold text-white shadow-2xs" aria-hidden="true">
-                {access.vendor.name.charAt(0)}
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-bg text-lg ring-1 ring-line" aria-hidden="true">
+                {info.emoji}
               </span>
               <div className="min-w-0">
                 <Link href={"/merchant-panel/" + slug + "/today"} className="block truncate text-[15px] font-semibold leading-tight text-ink">
@@ -49,8 +50,8 @@ export default async function VendorLayout({
             </div>
 
             <div className="hidden items-center gap-3 lg:flex">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink text-xs font-bold text-white shadow-2xs">
-                {access.vendor.name.charAt(0)}
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-bg text-base ring-1 ring-line" aria-hidden="true">
+                {info.emoji}
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-ink">{access.vendor.name}</span>
@@ -61,6 +62,8 @@ export default async function VendorLayout({
                 <span className="rounded-full bg-peach/80 px-2 py-0.5 text-xs font-semibold capitalize text-accent">
                   {access.role}
                 </span>
+                <span className="rounded-full border border-line px-2 py-0.5 text-xs text-muted">{info.label}</span>
+                {access.vendor.status === "pending" && <span className="rounded-full bg-butter px-2 py-0.5 text-xs font-semibold text-warn">Under review</span>}
               </div>
             </div>
             <UserNav />
@@ -71,7 +74,7 @@ export default async function VendorLayout({
       </div>
 
       <div className="lg:hidden">
-        <VendorBottomNav slug={slug} newOrders={newOrders} provider={provider} />
+        <VendorBottomNav slug={slug} newOrders={newOrders} vendorType={vendorType} />
       </div>
     </div>
   );

@@ -19,10 +19,10 @@ export default async function KidsWorkshopsPage() {
           <Calendar className="h-4 w-4" />
           <span className="text-[11px] font-black uppercase tracking-wider">Holiday & Weekend</span>
         </div>
-        <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">
+        <h1 className="mt-0.5 text-xl font-black tracking-tight text-kids-ink">
           Weekend Bootcamps & Workshops 🏕️
         </h1>
-        <p className="mt-0.5 text-xs font-semibold text-slate-500">
+        <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
           Intensive 2-hour holiday sessions with take-home projects and certificates
         </p>
       </div>
@@ -33,12 +33,12 @@ export default async function KidsWorkshopsPage() {
         ))}
       </div>
 
-      <div className="mt-6 rounded-3xl border-2 border-slate-900 bg-sky-100 p-4 shadow-[2px_2px_0_0_#0f172a]">
+      <div className="mt-6 rounded-[26px] border-2 border-kids-grape/15 bg-sky-100 p-4 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-sky-800" />
-          <h3 className="text-xs font-black text-slate-900">Need a Custom Birthday or Group Camp?</h3>
+          <h3 className="text-xs font-black text-kids-ink">Need a Custom Birthday or Group Camp?</h3>
         </div>
-        <p className="mt-1 text-[11px] font-semibold text-slate-700">
+        <p className="mt-1 text-[11px] font-semibold text-kids-ink/80">
           We arrange private STEM, pottery, or chess bootcamps for apartment societies and birthday parties.
         </p>
       </div>

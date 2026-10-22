@@ -325,6 +325,7 @@ export async function saveKidsServiceAction(input: unknown) {
 
   const data = parsed.data;
   const access = await requireVendorAccess(data.slug, ["owner"]);
+  if (access.vendor.vendorType !== "kids") return { ok: false as const, error: "Only kids academies can list kids classes" };
   const db = getDb();
 
   const pricePaise = rupeesToPaise(data.priceRupees);
@@ -404,6 +405,7 @@ export async function saveKidsWorkshopAction(input: unknown) {
 
   const data = parsed.data;
   const access = await requireVendorAccess(data.slug, ["owner"]);
+  if (access.vendor.vendorType !== "kids") return { ok: false as const, error: "Only kids academies can list kids classes" };
   const db = getDb();
 
   const pricePaise = rupeesToPaise(data.priceRupees);

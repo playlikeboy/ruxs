@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { vendors, vendorMembers, vendorInvites } from "@/db/schema";
+import { categories, vendors, vendorMembers, vendorInvites } from "@/db/schema";
+import { VENDOR_TYPE_INFO, isVendorType, vendorTypeForCategory } from "@/core/vendor-types";
+import { provisionTypeProfile } from "@/features/vendor-types/tables";
 import { requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { createVendorSchema, inviteStaffSchema, storefrontSchema } from "./schemas";
 import { rupeesToPaise } from "@/core/money";
@@ -30,30 +32,39 @@ export async function createVendor(input: unknown) {
     return { ok: false, error: "That vendor URL slug is already taken" };
   }
 
+  const [category] = await db
+    .select({ fulfilment: categories.fulfilment, vendorType: categories.vendorType })
+    .from(categories)
+    .where(eq(categories.id, data.categoryId))
+    .limit(1);
+  if (!category) return { ok: false, error: "Pick what your business offers" };
+  const vendorType = isVendorType(category.vendorType) ? category.vendorType : vendorTypeForCategory(data.categoryId, category.fulfilment);
+
   try {
-    const [newVendor] = await db
-      .insert(vendors)
-      .values({
-        name: data.name,
-        slug: data.slug,
-        phone: data.phone,
-        upiVpa: data.upiVpa,
-        city: data.city,
-        area: data.area,
-        plan: "free",
-        status: "pending", // New vendors start pending admin approval
-      })
-      .returning();
-
-    if (!newVendor) {
-      return { ok: false, error: "Could not create vendor record" };
-    }
-
-    // Assign creating user as owner
-    await db.insert(vendorMembers).values({
-      vendorId: newVendor.id,
-      userId: user.id,
-      role: "owner",
+    const newVendor = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(vendors)
+        .values({
+          name: data.name,
+          slug: data.slug,
+          phone: data.phone,
+          upiVpa: data.upiVpa,
+          city: data.city,
+          area: data.area,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          categoryId: data.categoryId,
+          vendorType,
+          businessType: VENDOR_TYPE_INFO[vendorType].fulfilment,
+          plan: "free",
+          status: "pending", // New vendors start pending admin approval
+        })
+        .returning();
+      if (!row) throw new Error("Could not create vendor record");
+      await provisionTypeProfile(tx, row.id, vendorType);
+      // Assign creating user as owner
+      await tx.insert(vendorMembers).values({ vendorId: row.id, userId: user.id, role: "owner" });
+      return row;
     });
 
     revalidatePath("/merchant-panel");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { VENDOR_TYPES, VENDOR_TYPE_INFO, type VendorType } from "@/core/vendor-types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { adminAddAdmin, adminRemoveAdmin, adminSaveCategory, adminSaveDiscoveryRadius, adminSaveLocality } from "@/features/admin/actions";
@@ -35,9 +36,10 @@ export interface CategoryRow {
   sort: number;
   isActive: boolean;
   fulfilment: string;
+  vendorType: string;
 }
 
-const BLANK_CATEGORY: CategoryRow = { id: "", label: "", shortLabel: "", emoji: "🛍️", blurb: "", tint: "#F4F4F5", coverFrom: "#F4F4F5", coverTo: "#FFFFFF", sort: 10, isActive: true, fulfilment: "delivery" };
+const BLANK_CATEGORY: CategoryRow = { id: "", label: "", shortLabel: "", emoji: "🛍️", blurb: "", tint: "#F4F4F5", coverFrom: "#F4F4F5", coverTo: "#FFFFFF", sort: 10, isActive: true, fulfilment: "delivery", vendorType: "store" };
 
 function CategoryEditor({ row, isNew }: { row: CategoryRow; isNew?: boolean }) {
   const [f, setF] = useState(row);
@@ -59,9 +61,22 @@ function CategoryEditor({ row, isNew }: { row: CategoryRow; isNew?: boolean }) {
         </div>
       </td>
       <td className="p-2">
-        <select value={f.fulfilment} onChange={(e) => setF({ ...f, fulfilment: e.target.value })} aria-label="Type" className={input + " w-28"}>
-          <option value="delivery">Delivery</option>
-          <option value="booking">Booking</option>
+        {/* The vendor type picks which tables and merchant tools its vendors get. Fixed once vendors exist. */}
+        <select
+          value={f.vendorType}
+          disabled={!isNew}
+          onChange={(e) => {
+            const t = e.target.value as VendorType;
+            setF({ ...f, vendorType: t, fulfilment: VENDOR_TYPE_INFO[t].fulfilment });
+          }}
+          aria-label="Vendor type"
+          className={input + " w-40"}
+        >
+          {VENDOR_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {VENDOR_TYPE_INFO[t].emoji} {VENDOR_TYPE_INFO[t].label}
+            </option>
+          ))}
         </select>
       </td>
       <td className="p-2"><input className={input + " w-16"} type="number" value={f.sort} onChange={set("sort")} aria-label="Sort" /></td>
@@ -85,7 +100,7 @@ export function CategoriesEditor({ rows }: { rows: CategoryRow[] }) {
     <div className="overflow-x-auto rounded-[12px] border border-line bg-surface">
       <table className="w-full min-w-[1080px] text-left text-sm">
         <thead className="border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
-          <tr>{["", "Id", "Label", "Short", "Blurb", "Colours", "Type", "Order", "On", ""].map((h, i) => <th key={i} className="p-2 font-semibold">{h}</th>)}</tr>
+          <tr>{["", "Id", "Label", "Short", "Blurb", "Colours", "Vendor type", "Order", "On", ""].map((h, i) => <th key={i} className="p-2 font-semibold">{h}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-line">
           {rows.map((r) => <CategoryEditor key={r.id} row={r} />)}

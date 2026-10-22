@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getPublicTypeDetails } from "@/features/vendor-types/queries";
 import { ChevronLeft, Clock, MapPin, Repeat, Truck } from "lucide-react";
 import { getProviderPublic } from "@/features/bookings/queries";
 import { ProviderPage } from "@/features/bookings/components/provider-page";
@@ -25,6 +26,8 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
   if (!store) notFound();
 
   const { vendor, items } = store;
+  // Kids academies have their own playful profile page in Kids mode.
+  if (vendor.vendorType === "kids") redirect(`/app/kids/providers/${vendor.slug}`);
   const [reviewData, myReview, canReply] = await Promise.all([
     getStoreReviewsPaginated(vendor.id, 1, 10),
     getMyReviewState(vendor.id),
@@ -46,6 +49,8 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
         discoveryRadiusKm={store.discoveryRadiusKm}
         rating={store.rating}
         profile={provider.profile}
+        highlights={provider.highlights}
+        serviceChips={provider.serviceChips}
         services={provider.services.map((x) => x.service)}
         reviews={reviewData.reviews}
         totalReviews={reviewData.total}
@@ -64,6 +69,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
     sections.set(key, [...(sections.get(key) ?? []), item]);
   }
   const canOrder = vendor.acceptingOrders && store.inRange;
+  const typeDetails = await getPublicTypeDetails(vendor.id, items.map((i) => i.id));
 
   const storeInfo = {
     vendorSlug: vendor.slug,
@@ -94,6 +100,13 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           {vendor.area}, {vendor.city}
           {store.distanceKm != null && <span>· {store.distanceKm < 1 ? "under 1" : store.distanceKm} km away</span>}
         </p>
+        {typeDetails.highlights.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {typeDetails.highlights.map((h) => (
+              <span key={h} className="rounded-full border border-black/5 bg-neutral-50 px-2.5 py-1 text-xs font-medium text-neutral-700">{h}</span>
+            ))}
+          </div>
+        )}
         {vendor.description && <p className="mt-3 text-[15px] leading-6 text-neutral-700">{vendor.description}</p>}
 
         <div className="mt-5 grid grid-cols-3 divide-x divide-black/5 rounded-2xl border border-black/10 py-3 text-center">
@@ -177,6 +190,13 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                       <p className="mt-0.5 text-[15px] font-medium text-ink tabular-nums">{formatINR(item.pricePaise)}</p>
 
                       {item.description && <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-neutral-500">{item.description}</p>}
+                      {(typeDetails.itemChips.get(item.id) ?? []).length > 0 && (
+                        <p className="mt-1.5 flex flex-wrap gap-1">
+                          {(typeDetails.itemChips.get(item.id) ?? []).slice(0, 3).map((c) => (
+                            <span key={c} className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">{c}</span>
+                          ))}
+                        </p>
+                      )}
                       {item.depositPaise > 0 && item.assetName && (
                         <p className="mt-1 text-xs text-neutral-500">Returnable {item.assetName} · deposit on subscriptions</p>
                       )}

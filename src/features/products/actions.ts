@@ -7,6 +7,8 @@ import { categories, products, subscriptions } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { rupeesToPaise } from "@/core/money";
 import { todayIST } from "@/core/time";
+import { allowedCategoryIds, canUseModule, toVendorType } from "@/core/vendor-types";
+import { hasItemTable, provisionItemDetails } from "@/features/vendor-types/tables";
 import { productIdSchema, saveProductSchema, toggleAvailabilitySchema } from "./schemas";
 
 function revalidateMenu(slug: string) {
@@ -22,6 +24,9 @@ export async function saveProduct(input: unknown) {
 
   const { slug, id, ...data } = parsed.data;
   const access = await requireVendorAccess(slug, ["owner"]);
+  const type = toVendorType(access.vendor.vendorType, access.vendor.businessType);
+  if (!canUseModule(type, "products")) return { ok: false, error: "Your business type lists services, not products" };
+  if (!allowedCategoryIds(type, access.vendor.categoryId).includes(data.kind)) return { ok: false, error: "You can only add items in your own category" };
   const db = getDb();
 
   const [category] = await db
@@ -59,7 +64,9 @@ export async function saveProduct(input: unknown) {
         .returning({ id: products.id });
       if (!updated) return { ok: false, error: "Item not found" };
     } else {
-      await db.insert(products).values({ ...values, vendorId: access.vendorId, kind: data.kind });
+      const [created] = await db.insert(products).values({ ...values, vendorId: access.vendorId, kind: data.kind }).returning({ id: products.id });
+      // Every item gets its type's detail row (tiffin_meals, water_cans…) straight away.
+      if (created && hasItemTable(type)) await provisionItemDetails(db, access.vendorId, type, created.id);
     }
 
     revalidateMenu(slug);

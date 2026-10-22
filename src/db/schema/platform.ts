@@ -27,6 +27,7 @@ export const categories = pgTable("categories", {
   sort: integer("sort").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   fulfilment: text("fulfilment").notNull().default("delivery"), // delivery (tiffin, water) or booking (trainers, physio)
+  vendorType: text("vendor_type").notNull().default("store"), // which per-type tables its vendors use, see core/vendor-types
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
