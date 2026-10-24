@@ -10,3 +10,4 @@ export * from "./support";
 export * from "./kids";
 export * from "./vendor-types";
 export * from "./notifications";
+export * from "./applications";

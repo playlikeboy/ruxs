@@ -11,8 +11,6 @@ import {
   Receipt,
   AlertTriangle,
   Clock,
-  Sparkles,
-  ExternalLink,
 } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { getAdminBadges, getAdminOverview } from "@/features/admin/queries";

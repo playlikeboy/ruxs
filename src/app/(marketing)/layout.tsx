@@ -71,7 +71,7 @@ export default function MarketingLayout({
                 <Link href="/merchant-panel" className="inline-flex items-center gap-1 font-semibold text-ink hover:text-accent">
                   Merchant workspace <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                 </Link>
-                <Link href="/onboarding" className="hover:text-ink">List your business</Link>
+                <Link href="/apply" className="hover:text-ink">List your business</Link>
                 <Link href="/for/tiffin-services" className="hover:text-ink">For tiffin kitchens</Link>
                 <Link href="/for/water-suppliers" className="hover:text-ink">For water suppliers</Link>
               </nav>

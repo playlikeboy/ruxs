@@ -43,7 +43,7 @@ export default async function MerchantSignInPage({ searchParams }: { searchParam
           <div className="mt-8 space-y-3 text-center text-sm text-white/60">
             <p>
               New merchant?{" "}
-              <Link href="/onboarding" className="font-semibold text-white underline-offset-4 hover:underline">Apply to list your business</Link>
+              <Link href="/apply" className="font-semibold text-white underline-offset-4 hover:underline">Apply to list your business</Link>
             </p>
             <p>
               Ordering for your home?{" "}

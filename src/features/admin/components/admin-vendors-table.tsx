@@ -322,7 +322,6 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
           const typeInfo = VENDOR_TYPE_INFO[toVendorType(vendor.vendorType, vendor.businessType)];
           const statusCfg = STATUS_CONFIG[vendor.status] ?? DEFAULT_STATUS_CONFIG;
           const isSelected = selectedIds.includes(vendor.id);
-          const accepting = vendor.acceptingOrders !== false;
 
           return (
             <li

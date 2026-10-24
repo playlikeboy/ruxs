@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ExternalLink, Plus, ShieldCheck, Store, Home } from "lucide-react";
+import { ExternalLink, Plus, Store, Home } from "lucide-react";
 import { UserNav } from "@/components/auth/user-nav";
 import { requireAdmin } from "@/lib/auth/session";
 import { getAdminBadges } from "@/features/admin/queries";

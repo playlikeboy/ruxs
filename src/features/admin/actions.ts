@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { eq, inArray, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { categories, ledgerEntries, localities, platformAdmins, platformSettings, vendorMembers, vendors } from "@/db/schema";
+import { categories, ledgerEntries, localities, platformAdmins, platformSettings, vendorApplications, vendorMembers, vendors } from "@/db/schema";
 import { VENDOR_TYPE_INFO, isVendorType, vendorTypeForCategory } from "@/core/vendor-types";
 import { provisionTypeProfile } from "@/features/vendor-types/tables";
 import { requireAdmin } from "@/lib/auth/session";
@@ -20,6 +20,7 @@ import {
   createVendorSchema,
   discoverySchema,
   localitySchema,
+  loginIdSchema,
   toggleAcceptingOrdersSchema,
   updateVendorSchema,
   vendorIdSchema,
@@ -150,6 +151,12 @@ export async function adminCreateVendor(input: unknown) {
     return row;
   });
 
+  if (parsed.data.applicationId) {
+    await db
+      .update(vendorApplications)
+      .set({ status: "approved", vendorId: vendor!.id, updatedAt: new Date() })
+      .where(eq(vendorApplications.id, parsed.data.applicationId));
+  }
   const issued = await issueCredentials(vendor!.id);
   revalidatePath("/admin", "layout");
   if (!issued.ok) return { ok: true as const, vendorId: vendor!.id, credentials: null, warning: issued.error };
@@ -182,6 +189,29 @@ export async function adminGenerateCredentials(input: unknown) {
   const issued = await issueCredentials(parsed.data.vendorId);
   revalidatePath(`/admin/vendors/${parsed.data.vendorId}`);
   return issued;
+}
+
+/** Changes the ID a merchant signs in with. The password stays the same. */
+export async function adminSetLoginId(input: unknown) {
+  const parsed = loginIdSchema.safeParse(input);
+  if (!parsed.success) return fail(firstIssue(parsed.error));
+  await requireAdmin();
+  const db = getDb();
+  const { vendorId, loginId } = parsed.data;
+  const [vendor] = await db.select({ id: vendors.id, loginUserId: vendors.loginUserId }).from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+  if (!vendor?.loginUserId) return fail("Generate a login first.");
+  const [taken] = await db.select({ id: vendors.id }).from(vendors).where(eq(vendors.loginId, loginId)).limit(1);
+  if (taken && taken.id !== vendor.id) return fail("That login ID is already used by another store.");
+  try {
+    const user = await hexclave.getUser(vendor.loginUserId);
+    if (!user) return fail("The login account is missing. Generate a new login.");
+    await user.setPrimaryEmail(merchantLoginEmail(loginId), { verified: true });
+  } catch (err) {
+    return fail("Login service error: " + (err instanceof Error ? err.message : String(err)));
+  }
+  await db.update(vendors).set({ loginId, updatedAt: new Date() }).where(eq(vendors.id, vendor.id));
+  revalidatePath(`/admin/vendors/${vendor.id}`);
+  return { ok: true as const, loginId };
 }
 
 export async function adminSetVendorStatus(input: unknown) {

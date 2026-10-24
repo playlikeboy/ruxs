@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { Download, Share2, PlusSquare, CheckCircle, X, Sparkles, Smartphone } from "lucide-react";
+import { Download, Share2, PlusSquare, CheckCircle, X, Smartphone } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;

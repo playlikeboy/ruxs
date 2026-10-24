@@ -10,6 +10,7 @@ import { LocationPicker } from "@/features/platform/components/location-picker";
 
 export interface VendorFormValues {
   vendorId?: string;
+  applicationId?: string;
   slug: string;
   name: string;
   phone: string;
@@ -199,7 +200,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
         };
         startTransition(async () => {
           if (isNew) {
-            const res = await adminCreateVendor({ ...details, slug: f.slug, categoryId: f.categoryId });
+            const res = await adminCreateVendor({ ...details, slug: f.slug, categoryId: f.categoryId, applicationId: f.applicationId });
             if (!res.ok) toast.error(res.error);
             else setCreated(res);
           } else {

@@ -12,7 +12,7 @@ interface VendorDangerZoneProps {
   status: string;
 }
 
-export function VendorDangerZone({ vendorId, vendorName, status }: VendorDangerZoneProps) {
+export function VendorDangerZone({ vendorId, vendorName }: VendorDangerZoneProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");

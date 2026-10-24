@@ -73,7 +73,7 @@ export default function HomePage() {
               <Link href="/app" className={primaryButton}>
                 Find services near you <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
-              <Link href="/onboarding" className="text-base font-semibold text-ink underline decoration-line decoration-2 underline-offset-4 hover:decoration-accent">
+              <Link href="/apply" className="text-base font-semibold text-ink underline decoration-line decoration-2 underline-offset-4 hover:decoration-accent">
                 I run a business
               </Link>
             </div>
@@ -218,7 +218,7 @@ export default function HomePage() {
               ))}
             </ul>
             <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
-              <Link href="/onboarding" className={inkButton}>
+              <Link href="/apply" className={inkButton}>
                 List your business <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <Link href="/merchant-panel/sign-in" className="text-base font-semibold text-ink underline decoration-line decoration-2 underline-offset-4 hover:decoration-accent">

@@ -10,7 +10,7 @@ export function NotMerchantCard({ email }: { email: string | null }) {
         {email ? <strong className="text-white">{email}</strong> : "This account"} is signed in as a household. Merchant logins are issued by the RUXs team, or you can apply to list your business.
       </p>
       <div className="grid gap-2">
-        <Link href="/onboarding" className="flex h-11 items-center justify-center rounded-[12px] bg-accent text-sm font-bold text-white">Apply to sell on RUXs</Link>
+        <Link href="/apply" className="flex h-11 items-center justify-center rounded-[12px] bg-accent text-sm font-bold text-white">Apply to sell on RUXs</Link>
         <Link href="/app" className="flex h-11 items-center justify-center rounded-[12px] border border-white/15 text-sm font-semibold text-white">Go to the household app</Link>
         <SignOutButton className="h-11 justify-center rounded-[12px] text-sm text-white/70" />
       </div>

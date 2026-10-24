@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   CalendarClock,
   ClipboardList,
+  Inbox,
   LayoutDashboard,
   Receipt,
   Settings,
@@ -33,6 +34,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: "Marketplace",
     items: [
       { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
+      { href: "/admin/applications", label: "Applications", icon: Inbox },
       { href: "/admin/vendors", label: "Vendors", icon: Store },
       { href: "/admin/orders", label: "Orders", icon: ClipboardList },
       { href: "/admin/bookings", label: "Bookings", icon: CalendarClock },

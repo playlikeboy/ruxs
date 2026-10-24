@@ -9,7 +9,11 @@ import { Glob } from "bun";
  * read-only public endpoints.
  */
 const GUARD = /\b(requireUser|requireVendorAccess|requireVendorModule|requireAdmin)\(|\bhexclave\.getUser\(/;
-const PUBLIC = new Set(["src/features/reviews/actions.ts#fetchStoreReviewsPage"]);
+const PUBLIC = new Set([
+  "src/features/reviews/actions.ts#fetchStoreReviewsPage",
+  // Public merchant application form: honeypot, per-phone and hourly limits inside.
+  "src/features/applications/actions.ts#submitVendorApplication",
+]);
 
 function serverActionFiles() {
   return [...new Glob("src/**/*.{ts,tsx}").scanSync(".")].filter((f) => /^\s*["']use server["']/.test(readFileSync(f, "utf8")));

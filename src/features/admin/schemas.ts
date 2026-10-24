@@ -25,6 +25,7 @@ export const vendorDetailsSchema = z.object({
 });
 
 export const createVendorSchema = vendorDetailsSchema.extend({
+  applicationId: z.string().uuid().optional(),
   categoryId: z.string().regex(/^[a-z0-9-]+$/, "Pick what you are onboarding"),
   slug: z
     .string()
@@ -92,3 +93,14 @@ export const discoverySchema = z.object({ discoveryRadiusKm: z.number().int().mi
 
 export const adminEmailSchema = z.object({ email: z.string().trim().toLowerCase().email("Enter a valid email") });
 export const adminIdSchema = z.object({ id: z.string().min(1) });
+
+export const loginIdSchema = z.object({
+  vendorId: z.string().min(1),
+  loginId: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(3, "Login ID must be at least 3 characters")
+    .max(40)
+    .regex(/^[a-z0-9]+([.-][a-z0-9]+)*$/, "Use lowercase letters, numbers, dots or hyphens"),
+});

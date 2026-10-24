@@ -14,8 +14,6 @@ import {
   HelpCircle,
   TrendingUp,
   Receipt,
-  CheckCircle2,
-  Store,
   Layers,
 } from "lucide-react";
 
