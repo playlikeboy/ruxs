@@ -10,11 +10,13 @@ import {
   orders,
   invoices,
 } from "@/db/schema";
-import { lockCutoffForProduct } from "@/features/orders/actions";
-import { generateBillsForVendor } from "@/features/billing/actions";
+import { lockCutoffForProduct } from "@/features/orders/cutoff-service";
+import { generateBillsForVendor } from "@/features/billing/generate-bills";
 import { resolveDay } from "@/core/orders";
 import { todayIST, weekdayIST } from "@/core/time";
-import { hashToken } from "@/lib/auth/session";
+import crypto from "crypto";
+
+const hashToken = (raw: string) => crypto.createHash("sha256").update(raw).digest("hex");
 
 describe("Phase 4 Integration Tests", () => {
   let dbAvailable = false;
@@ -255,8 +257,6 @@ describe("Phase 4 Integration Tests", () => {
     if (vendorId && dbAvailable) {
       await scriptDb.delete(vendors).where(eq(vendors.id, vendorId));
     }
-    if (dbAvailable) {
-      await scriptPool.end();
-    }
+    // The pool is shared by every integration file in this process; Bun closes it on exit.
   });
 });

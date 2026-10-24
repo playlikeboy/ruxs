@@ -11,8 +11,9 @@ import {
   kidsHolidayPasses,
   kidsPassPurchases,
   kidsPassRedemptions,
+  kidsProviderProfiles,
 } from "@/db/schema";
-import { createKidsBooking } from "@/features/kids/booking-service";
+import { createKidsBooking, transitionKidsBookingForProvider } from "@/features/kids/booking-service";
 import { enrollInWorkshop } from "@/features/kids/workshop-service";
 import { purchaseHolidayPass, redeemPassCredit } from "@/features/kids/holiday-pass-service";
 
@@ -36,8 +37,8 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
       const client = await scriptPool.connect();
       client.release();
       dbAvailable = true;
-    } catch {
-      console.warn("Neon Database is not reachable from this environment; skipping DB tests.");
+    } catch (e) {
+      console.warn("Neon Database is not reachable from this environment; skipping DB tests.", String(e));
       return;
     }
 
@@ -58,6 +59,9 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
       })
       .returning();
     vendorId = v!.id;
+
+    // 1b. Child-safety vetting: only approved + passed providers are bookable
+    await scriptDb.insert(kidsProviderProfiles).values({ vendorId, verificationStatus: "approved", safetyReviewStatus: "passed" });
 
     // 2. Create test kids service
     const [svc] = await scriptDb
@@ -157,6 +161,7 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
       await scriptDb.delete(kidsServices).where(eq(kidsServices.id, serviceId));
       await scriptDb.delete(kidsChildren).where(eq(kidsChildren.id, child1Id));
       await scriptDb.delete(kidsChildren).where(eq(kidsChildren.id, child2Id));
+      await scriptDb.delete(kidsProviderProfiles).where(eq(kidsProviderProfiles.vendorId, vendorId));
       await scriptDb.delete(vendors).where(eq(vendors.id, vendorId));
     } catch (e) {
       console.error("Cleanup error in tests:", e);
@@ -204,6 +209,17 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
     expect(res1.ok).toBe(true);
     if (res1.ok) {
       expect(res1.number).toContain("KBK-");
+      // New requests wait for the provider, then show as confirmed once accepted
+      const [row] = await scriptDb.select().from(kidsServiceBookings).where(eq(kidsServiceBookings.id, res1.bookingId));
+      expect(row?.bookingStatus).toBe("held");
+      const otherVendor = await transitionKidsBookingForProvider({ vendorId: "not-this-vendor", bookingId: res1.bookingId, action: "accept" });
+      expect(otherVendor.ok).toBe(false);
+      const accepted = await transitionKidsBookingForProvider({ vendorId, bookingId: res1.bookingId, action: "accept" });
+      expect(accepted.ok).toBe(true);
+      const again = await transitionKidsBookingForProvider({ vendorId, bookingId: res1.bookingId, action: "accept" });
+      expect(again.ok).toBe(false);
+      const [after] = await scriptDb.select().from(kidsServiceBookings).where(eq(kidsServiceBookings.id, res1.bookingId));
+      expect(after?.bookingStatus).toBe("confirmed");
     }
 
     // Second booking by Guardian 2 for the exact same provider slot
@@ -221,6 +237,34 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
     if (!res2.ok) {
       expect(res2.error).toContain("taken by another parent");
     }
+  }, 30000);
+
+  it("refuses online payment and unvetted providers", async () => {
+    if (!dbAvailable) return;
+    const startsAt = new Date(Date.now() + 86400000 * 4);
+    const online = await createKidsBooking({
+      guardianUserId: guardian1,
+      childId: child1Id,
+      serviceId,
+      startsAt,
+      deliveryMode: "studio",
+      paymentMode: "online",
+      clientKey: `test-key-online-${ts}`,
+    });
+    expect(online.ok).toBe(false);
+
+    await scriptDb.update(kidsProviderProfiles).set({ safetyReviewStatus: "flagged" }).where(eq(kidsProviderProfiles.vendorId, vendorId));
+    const flagged = await createKidsBooking({
+      guardianUserId: guardian1,
+      childId: child1Id,
+      serviceId,
+      startsAt,
+      deliveryMode: "studio",
+      paymentMode: "pay_at_session",
+      clientKey: `test-key-flagged-${ts}`,
+    });
+    expect(flagged.ok).toBe(false);
+    await scriptDb.update(kidsProviderProfiles).set({ safetyReviewStatus: "passed" }).where(eq(kidsProviderProfiles.vendorId, vendorId));
   }, 30000);
 
   it("enforces workshop capacity clamp (capacity = 2)", async () => {
@@ -284,16 +328,29 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
   it("handles pass purchase, atomic credit deduction and double-redemption prevention", async () => {
     if (!dbAvailable) return;
 
-    // 1. Purchase pass (2 credits)
+    // 1. Purchases stay closed until online payment exists: no unpaid credits
     const pRes = await purchaseHolidayPass({
       guardianUserId: guardian1,
       passId,
       clientKey: `pass-purchase-${ts}`,
     });
-    expect(pRes.ok).toBe(true);
-    if (!pRes.ok) return;
+    expect(pRes.ok).toBe(false);
 
-    const purchaseId = pRes.purchaseId;
+    // A captured purchase (as the payment flow would write it) with 2 credits
+    const [paid] = await scriptDb
+      .insert(kidsPassPurchases)
+      .values({
+        guardianUserId: guardian1,
+        passId,
+        purchasedCredits: 2,
+        remainingCredits: 2,
+        purchasePricePaise: 90000,
+        validFrom: new Date(),
+        validUntil: new Date(Date.now() + 14 * 86400000),
+        paymentStatus: "paid",
+      })
+      .returning({ id: kidsPassPurchases.id });
+    const purchaseId = paid!.id;
 
     // 2. Redeem 1 credit
     const r1 = await redeemPassCredit({

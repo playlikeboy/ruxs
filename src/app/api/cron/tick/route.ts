@@ -4,8 +4,8 @@ import { getDb } from "@/db";
 import { vendors, products } from "@/db/schema";
 import { getServerEnv } from "@/lib/env";
 import { todayIST, istDateTime } from "@/core/time";
-import { lockCutoffForProduct } from "@/features/orders/actions";
-import { generateBillsForVendor } from "@/features/billing/actions";
+import { lockCutoffForProduct } from "@/features/orders/cutoff-service";
+import { generateBillsForVendor } from "@/features/billing/generate-bills";
 
 export async function POST(req: Request) {
   const env = getServerEnv();

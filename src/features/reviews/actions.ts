@@ -121,8 +121,11 @@ export async function adminSetReviewHidden(input: unknown) {
 }
 
 /** Fetch next page of reviews for a store. Public query wrapped in a server action. */
+/** Public read: published store reviews only. Inputs are clamped because anyone can call it. */
 export async function fetchStoreReviewsPage(vendorId: string, page: number, pageSize = 10) {
-  const result = await getStoreReviewsPaginated(vendorId, page, pageSize);
+  const safePage = Number.isInteger(page) && page > 0 ? Math.min(page, 1000) : 1;
+  const safeSize = Number.isInteger(pageSize) ? Math.min(Math.max(pageSize, 1), 50) : 10;
+  const result = await getStoreReviewsPaginated(String(vendorId).slice(0, 64), safePage, safeSize);
   return {
     ...result,
     reviews: result.reviews.map((r) => ({

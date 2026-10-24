@@ -1,18 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   kidsChildren,
   kidsReviews,
   kidsServiceBookings,
   kidsServices,
+  kidsWorkshopEnrollments,
   kidsWorkshops,
 } from "@/db/schema";
+import { isReviewEligible } from "@/core/kids/booking-status";
+import { todayIST } from "@/core/time";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { rupeesToPaise } from "@/core/money";
-import { createKidsBooking, cancelKidsBooking } from "./booking-service";
+import { createKidsBooking, cancelKidsBooking, transitionKidsBookingForProvider } from "./booking-service";
 import { enrollInWorkshop, cancelWorkshopEnrollment } from "./workshop-service";
 import { purchaseHolidayPass, redeemPassCredit } from "./holiday-pass-service";
 import { recordGuardianConsent, updateProviderVerification } from "./safety-service";
@@ -23,6 +26,7 @@ import {
   cancelWorkshopEnrollmentSchema,
   childIdSchema,
   enrollWorkshopSchema,
+  providerKidsBookingSchema,
   purchasePassSchema,
   redeemPassSchema,
   saveChildSchema,
@@ -105,18 +109,23 @@ export async function deleteChildAction(input: unknown) {
     .where(
       and(
         eq(kidsServiceBookings.childId, parsed.data.childId),
-        eq(kidsServiceBookings.bookingStatus, "confirmed")
+        inArray(kidsServiceBookings.bookingStatus, ["held", "confirmed"])
       )
     )
     .limit(1);
 
   if (activeBooking) {
-    return fail("Cannot remove child profile with active confirmed sessions.");
+    return fail("Cancel this child's upcoming sessions and requests before removing the profile.");
   }
 
-  await db
-    .delete(kidsChildren)
-    .where(and(eq(kidsChildren.id, parsed.data.childId), eq(kidsChildren.guardianUserId, user.id)));
+  try {
+    await db
+      .delete(kidsChildren)
+      .where(and(eq(kidsChildren.id, parsed.data.childId), eq(kidsChildren.guardianUserId, user.id)));
+  } catch {
+    // Past sessions reference the child (FK restrict); history must stay intact.
+    return fail("This child has past sessions on record, so the profile can't be removed.");
+  }
 
   revalidatePath("/app/kids/children");
   return { ok: true as const };
@@ -167,6 +176,27 @@ export async function cancelKidsBookingAction(input: unknown) {
 
   revalidatePath("/app/kids/bookings");
   return result;
+}
+
+/** Provider accepts, declines, completes or cancels a kids session. */
+export async function providerKidsBookingAction(input: unknown) {
+  const parsed = providerKidsBookingSchema.safeParse(input);
+  if (!parsed.success) return fail("Invalid booking update.");
+
+  const access = await requireVendorAccess(parsed.data.slug, ["owner", "staff"]);
+  const result = await transitionKidsBookingForProvider({
+    vendorId: access.vendorId,
+    bookingId: parsed.data.bookingId,
+    action: parsed.data.action,
+    reason: parsed.data.reason,
+  });
+  if (!result.ok) return fail(result.error);
+
+  revalidatePath(`/merchant-panel/${parsed.data.slug}/bookings`);
+  revalidatePath(`/merchant-panel/${parsed.data.slug}/kids`);
+  revalidatePath(`/merchant-panel/${parsed.data.slug}`);
+  revalidatePath("/app/kids/bookings");
+  return { ok: true as const };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -282,34 +312,66 @@ export async function submitKidsReviewAction(input: unknown) {
   const db = getDb();
   const data = parsed.data;
 
-  // Verify completed activity eligibility
-  if (data.bookingId) {
-    const [booking] = await db
-      .select({ id: kidsServiceBookings.id, status: kidsServiceBookings.bookingStatus })
-      .from(kidsServiceBookings)
-      .where(
-        and(
-          eq(kidsServiceBookings.id, data.bookingId),
-          eq(kidsServiceBookings.guardianUserId, user.id)
+  // Only a guardian whose session with this provider is completed may review it, once.
+  const eligible = data.bookingId
+    ? await db
+        .select({ status: kidsServiceBookings.bookingStatus })
+        .from(kidsServiceBookings)
+        .where(
+          and(
+            eq(kidsServiceBookings.id, data.bookingId),
+            eq(kidsServiceBookings.guardianUserId, user.id),
+            eq(kidsServiceBookings.vendorId, data.vendorId)
+          )
         )
+        .limit(1)
+        .then(([b]) => Boolean(b && isReviewEligible(b.status)))
+    : await db
+        .select({ endDate: kidsWorkshops.endDate })
+        .from(kidsWorkshopEnrollments)
+        .innerJoin(kidsWorkshops, eq(kidsWorkshopEnrollments.workshopId, kidsWorkshops.id))
+        .where(
+          and(
+            eq(kidsWorkshopEnrollments.id, data.enrollmentId!),
+            eq(kidsWorkshopEnrollments.guardianUserId, user.id),
+            eq(kidsWorkshopEnrollments.status, "confirmed"),
+            eq(kidsWorkshops.vendorId, data.vendorId)
+          )
+        )
+        .limit(1)
+        .then(([e]) => Boolean(e && e.endDate < todayIST()));
+  if (!eligible) return fail("You can review once the session is completed.");
+
+  const [existing] = await db
+    .select({ id: kidsReviews.id })
+    .from(kidsReviews)
+    .where(
+      and(
+        eq(kidsReviews.guardianUserId, user.id),
+        data.bookingId ? eq(kidsReviews.bookingId, data.bookingId) : eq(kidsReviews.enrollmentId, data.enrollmentId!)
       )
-      .limit(1);
+    )
+    .limit(1);
+  if (existing) return fail("You have already reviewed this session.");
 
-    if (!booking) return fail("Eligible completed session not found.");
+  let review: { id: string } | undefined;
+  try {
+    [review] = await db
+      .insert(kidsReviews)
+      .values({
+        guardianUserId: user.id,
+        vendorId: data.vendorId,
+        bookingId: data.bookingId || null,
+        enrollmentId: data.enrollmentId || null,
+        rating: data.rating,
+        reviewText: data.reviewText || null,
+        moderationStatus: "published",
+      })
+      .returning({ id: kidsReviews.id });
+  } catch {
+    // Unique index (migration 0015) catches a concurrent double submit.
+    return fail("You have already reviewed this session.");
   }
-
-  const [review] = await db
-    .insert(kidsReviews)
-    .values({
-      guardianUserId: user.id,
-      vendorId: data.vendorId,
-      bookingId: data.bookingId || null,
-      enrollmentId: data.enrollmentId || null,
-      rating: data.rating,
-      reviewText: data.reviewText || null,
-      moderationStatus: "published",
-    })
-    .returning({ id: kidsReviews.id });
 
   revalidatePath("/app/kids");
   return { ok: true as const, reviewId: review!.id };

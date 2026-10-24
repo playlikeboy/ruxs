@@ -2,7 +2,6 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
-  kidsHolidayPasses,
   kidsPassPurchases,
   kidsPassRedemptions,
 } from "@/db/schema";
@@ -12,41 +11,16 @@ import {
   canRedeemPass,
 } from "@/core/kids/pass-redemption";
 
-export async function purchaseHolidayPass(input: {
+/**
+ * Pass purchases are closed until passes are wired to verified online payment.
+ * Never grant paid credits without a captured payment.
+ */
+export async function purchaseHolidayPass(_input: {
   guardianUserId: string;
   passId: string;
   clientKey: string;
 }) {
-  const db = getDb();
-
-  const [passDef] = await db
-    .select()
-    .from(kidsHolidayPasses)
-    .where(and(eq(kidsHolidayPasses.id, input.passId), eq(kidsHolidayPasses.isActive, true)))
-    .limit(1);
-
-  if (!passDef) {
-    return { ok: false as const, error: "Pass definition not found or inactive." };
-  }
-
-  const now = new Date();
-  const validUntil = new Date(now.getTime() + passDef.validityDays * 86400_000);
-
-  const [purchase] = await db
-    .insert(kidsPassPurchases)
-    .values({
-      guardianUserId: input.guardianUserId,
-      passId: passDef.id,
-      purchasedCredits: passDef.creditsTotal,
-      remainingCredits: passDef.creditsTotal,
-      purchasePricePaise: passDef.pricePaise,
-      validFrom: now,
-      validUntil,
-      paymentStatus: "paid", // Demo / test mode confirms
-    })
-    .returning({ id: kidsPassPurchases.id });
-
-  return { ok: true as const, purchaseId: purchase!.id };
+  return { ok: false as const, error: "Online checkout for holiday passes opens soon. Book single sessions for now." };
 }
 
 export async function redeemPassCredit(input: {

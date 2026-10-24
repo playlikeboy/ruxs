@@ -80,7 +80,7 @@ export function WorkshopEnrollForm({
           Enrollment Confirmed! 🎉
         </h3>
         <p className="mt-1 text-xs font-semibold text-kids-ink/70">
-          Your child&apos;s seat has been reserved. You can review schedule details in your Bookings dashboard.
+          Your child&apos;s seat has been reserved. Pay {formatINR(pricePaise)} at the venue on the first day. Schedule details are in your Bookings dashboard.
         </p>
         <div className="mt-5 flex justify-center gap-3">
           <Link
@@ -203,7 +203,7 @@ export function WorkshopEnrollForm({
         disabled={isPending || childProfiles.length === 0}
         className="w-full rounded-[20px] border-2 border-kids-grape/15 bg-emerald-400 py-3 text-xs font-black text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)] transition active:translate-y-0.5 disabled:opacity-50"
       >
-        {isPending ? "Confirming Spot..." : `Confirm Enrollment (${formatINR(pricePaise)})`}
+        {isPending ? "Confirming Spot..." : `Reserve seat · pay ${formatINR(pricePaise)} at venue`}
       </button>
     </form>
   );

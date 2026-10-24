@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { notificationPreferences } from "@/db/schema";
 import { getServerEnv } from "@/lib/env";
+import { escapeHtml, safeHttpUrl } from "@/core/html";
 import type { NotificationCategory } from "./types";
 
 const DEFAULT_CF_ACCOUNT_ID = "091539408595ba99a0ef106d42391d5b";
@@ -30,6 +31,10 @@ export function renderEmailHtml({
   actionText?: string;
   actionUrl?: string;
 }): string {
+  heading = escapeHtml(heading);
+  lead = escapeHtml(lead);
+  details = details?.map((d) => ({ label: escapeHtml(d.label), value: escapeHtml(d.value) }));
+  const safeUrl = actionUrl ? safeHttpUrl(actionUrl) : null;
   const detailsHtml = details && details.length
     ? `<div style="margin: 20px 0; background: #fafaf7; border-radius: 12px; padding: 16px; border: 1px solid #e7e5df;">
         ${details
@@ -44,10 +49,10 @@ export function renderEmailHtml({
       </div>`
     : "";
 
-  const actionHtml = actionText && actionUrl
+  const actionHtml = actionText && safeUrl
     ? `<div style="margin: 24px 0;">
-        <a href="${actionUrl}" style="background: #1c1b19; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; font-size: 14px; display: inline-block;">
-          ${actionText}
+        <a href="${escapeHtml(safeUrl)}" style="background: #1c1b19; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; font-size: 14px; display: inline-block;">
+          ${escapeHtml(actionText)}
         </a>
       </div>`
     : "";

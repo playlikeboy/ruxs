@@ -26,6 +26,12 @@ import { getNearbyVendorDistances } from "@/features/consumer/queries";
 import { calculateWorkshopAvailability } from "@/core/kids/workshop-capacity";
 import type { KidsActivityItem, KidsKitItem, KidsWorkshopItem, KidsVendorSummary } from "./types";
 import type { KidsCategoryId, KidsFormat } from "@/core/kids";
+import { isKidsProviderVetted } from "@/core/kids/booking-status";
+
+/** Child-safety gate for every public kids listing: approved provider with a passed safety review. */
+function vettedProvider() {
+  return and(eq(kidsProviderProfiles.verificationStatus, "approved"), eq(kidsProviderProfiles.safetyReviewStatus, "passed"))!;
+}
 
 /**
  * All active categories in display order.
@@ -63,6 +69,7 @@ export async function searchKidsServices(filters?: {
     eq(kidsServices.isActive, true),
     isNull(kidsServices.archivedAt),
     eq(vendors.status, "active"),
+    vettedProvider(),
   ];
 
   if (filters?.categoryId && filters.categoryId !== "all") {
@@ -118,7 +125,8 @@ export async function getKidsServiceById(id: string) {
         eq(kidsServices.id, id),
         eq(kidsServices.isActive, true),
         isNull(kidsServices.archivedAt),
-        eq(vendors.status, "active")
+        eq(vendors.status, "active"),
+        vettedProvider()
       )
     )
     .limit(1);
@@ -144,6 +152,7 @@ export async function getKidsWorkshopsCatalog(filters?: {
   const conditions = [
     eq(kidsWorkshops.publicationState, "published"),
     eq(vendors.status, "active"),
+    vettedProvider(),
   ];
 
   if (filters?.categoryId && filters.categoryId !== "all") {
@@ -223,7 +232,7 @@ export async function getKidsWorkshopById(id: string) {
     .innerJoin(kidsCategories, eq(kidsWorkshops.categoryId, kidsCategories.id))
     .innerJoin(vendors, eq(kidsWorkshops.vendorId, vendors.id))
     .leftJoin(kidsProviderProfiles, eq(vendors.id, kidsProviderProfiles.vendorId))
-    .where(and(eq(kidsWorkshops.id, id), eq(kidsWorkshops.publicationState, "published")))
+    .where(and(eq(kidsWorkshops.id, id), eq(kidsWorkshops.publicationState, "published"), eq(vendors.status, "active"), vettedProvider()))
     .limit(1);
 
   if (!row) return null;
@@ -279,6 +288,7 @@ export async function getKidsProviderBySlug(slug: string) {
     .from(kidsProviderProfiles)
     .where(eq(kidsProviderProfiles.vendorId, vendor.id))
     .limit(1);
+  if (!isKidsProviderVetted(profile)) return null;
 
   const [providerServices, providerWorkshops, reviews] = await Promise.all([
     db
@@ -325,9 +335,9 @@ export async function getKidsProviderBySlug(slug: string) {
     experienceYears: (typeProfile?.experienceYears as number | null) ?? profile?.experienceYears ?? 0,
     specialties: ((typeProfile?.specialities || typeProfile?.subjects || typeProfile?.artForms || typeProfile?.disciplines) as string[] | null) ?? profile?.specialties ?? [],
     languages: (typeProfile?.languages as string[] | null) ?? profile?.languages ?? [],
-    verificationStatus: profile?.verificationStatus ?? "approved",
-    safetyReviewStatus: profile?.safetyReviewStatus ?? "passed",
-    safetyNotes: profile?.safetyNotes ?? null,
+    verificationStatus: profile!.verificationStatus,
+    safetyReviewStatus: profile!.safetyReviewStatus,
+    safetyNotes: profile!.safetyNotes ?? null,
     certificates: (typeProfile?.certificates as string[] | null) ?? [],
     galleryImages: (typeProfile?.galleryImages as string[] | null) ?? [],
     previewVideoUrl: (typeProfile?.previewVideoUrl as string | null) ?? (typeProfile?.sampleProjectsVideoUrl as string | null) ?? null,
@@ -582,11 +592,13 @@ async function allActivities(): Promise<KidsActivityItem[]> {
     .from(kidsServices)
     .innerJoin(kidsCategories, eq(kidsServices.categoryId, kidsCategories.id))
     .innerJoin(vendors, eq(kidsServices.vendorId, vendors.id))
+    .innerJoin(kidsProviderProfiles, eq(vendors.id, kidsProviderProfiles.vendorId))
     .where(
       and(
         eq(kidsServices.isActive, true),
         isNull(kidsServices.archivedAt),
-        eq(vendors.status, "active")
+        eq(vendors.status, "active"),
+        vettedProvider()
       )
     )
     .orderBy(asc(kidsServices.pricePaise));
@@ -642,10 +654,12 @@ async function allActivities(): Promise<KidsActivityItem[]> {
     })
     .from(services)
     .innerJoin(vendors, eq(services.vendorId, vendors.id))
+    .innerJoin(kidsProviderProfiles, eq(vendors.id, kidsProviderProfiles.vendorId))
     .where(
       and(
         eq(services.categoryId, "kids"),
         eq(vendors.status, "active"),
+        vettedProvider(),
         isNull(services.archivedAt),
         eq(services.isActive, true)
       )
@@ -810,10 +824,12 @@ async function allKits(): Promise<KidsKitItem[]> {
     })
     .from(products)
     .innerJoin(vendors, eq(products.vendorId, vendors.id))
+    .innerJoin(kidsProviderProfiles, eq(vendors.id, kidsProviderProfiles.vendorId))
     .where(
       and(
         eq(products.kind, "kids-kits"),
         eq(vendors.status, "active"),
+        vettedProvider(),
         isNull(products.archivedAt),
         eq(products.isAvailable, true)
       )

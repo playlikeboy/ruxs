@@ -3,6 +3,7 @@ import { and, eq, gt, gte, inArray, isNull, lt, lte, or, sql } from "drizzle-orm
 import { getDb } from "@/db";
 import {
   kidsChildren,
+  kidsProviderProfiles,
   kidsServiceBookings,
   kidsServices,
   vendors,
@@ -18,6 +19,12 @@ import {
   generateKidsBookingNumber,
   validateBookingWindow,
 } from "@/core/kids/booking-rules";
+import {
+  KIDS_AWAITING_PROVIDER,
+  canGuardianCancel,
+  canProviderComplete,
+  canProviderRespond,
+} from "@/core/kids/booking-status";
 
 export interface CreateBookingInput {
   guardianUserId: string;
@@ -32,6 +39,10 @@ export interface CreateBookingInput {
 }
 
 export async function createKidsBooking(input: CreateBookingInput) {
+  // Online checkout is not wired to kids bookings yet; never confirm money we did not take.
+  if (input.paymentMode !== "pay_at_session") {
+    return { ok: false as const, error: "Online payment is not available for kids sessions yet. Choose pay at session." };
+  }
   const db = getDb();
 
   // 1. Check idempotency first
@@ -71,12 +82,15 @@ export async function createKidsBooking(input: CreateBookingInput) {
     })
     .from(kidsServices)
     .innerJoin(vendors, eq(kidsServices.vendorId, vendors.id))
+    .innerJoin(kidsProviderProfiles, eq(kidsProviderProfiles.vendorId, vendors.id))
     .where(
       and(
         eq(kidsServices.id, input.serviceId),
         eq(kidsServices.isActive, true),
         isNull(kidsServices.archivedAt),
-        eq(vendors.status, "active")
+        eq(vendors.status, "active"),
+        eq(kidsProviderProfiles.verificationStatus, "approved"),
+        eq(kidsProviderProfiles.safetyReviewStatus, "passed")
       )
     )
     .limit(1);
@@ -176,9 +190,10 @@ export async function createKidsBooking(input: CreateBookingInput) {
           address: input.address || null,
           priceSnapshotPaise: pricing.servicePaise,
           materialFeeSnapshotPaise: pricing.materialPaise,
-          paymentStatus: input.paymentMode === "online" ? "unpaid" : "unpaid",
-          bookingStatus: "confirmed",
-          heldUntil: input.paymentMode === "online" ? new Date(now.getTime() + 15 * 60_000) : null,
+          paymentStatus: "unpaid",
+          // The provider accepts or declines from the merchant panel.
+          bookingStatus: KIDS_AWAITING_PROVIDER,
+          heldUntil: null,
         })
         .returning({ id: kidsServiceBookings.id, number: kidsServiceBookings.number });
 
@@ -187,8 +202,15 @@ export async function createKidsBooking(input: CreateBookingInput) {
 
     return { ok: true as const, bookingId: result!.id, number: result!.number };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Failed to confirm session booking.";
-    return { ok: false as const, error: message };
+    // A concurrent double submit with the same clientKey: return the booking that won.
+    const [dupe] = await db
+      .select({ id: kidsServiceBookings.id, number: kidsServiceBookings.number, guardianUserId: kidsServiceBookings.guardianUserId })
+      .from(kidsServiceBookings)
+      .where(eq(kidsServiceBookings.clientKey, input.clientKey))
+      .limit(1);
+    if (dupe?.guardianUserId === input.guardianUserId) return { ok: true as const, bookingId: dupe.id, number: dupe.number };
+    if (err instanceof Error && err.message.includes("timeslot was just taken")) return { ok: false as const, error: err.message };
+    return { ok: false as const, error: "This time is no longer available. Please choose another slot." };
   }
 }
 
@@ -229,8 +251,8 @@ export async function cancelKidsBooking(input: { bookingId: string; guardianUser
   const cutoff = vendor?.cancelCutoffHours ?? 3;
   const cancelCheck = canCancelKidsBooking(booking.startsAt, cutoff);
 
-  if (!cancelCheck.canCancel) {
-    return { ok: false as const, error: "Past sessions cannot be cancelled." };
+  if (!cancelCheck.canCancel || !canGuardianCancel(booking.status, booking.startsAt)) {
+    return { ok: false as const, error: "This session can no longer be cancelled." };
   }
 
   const nextPaymentStatus =
@@ -238,7 +260,7 @@ export async function cancelKidsBooking(input: { bookingId: string; guardianUser
       ? "refund_due"
       : booking.paymentStatus;
 
-  await db
+  const cancelled = await db
     .update(kidsServiceBookings)
     .set({
       bookingStatus: "cancelled",
@@ -247,10 +269,74 @@ export async function cancelKidsBooking(input: { bookingId: string; guardianUser
       cancelledAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(kidsServiceBookings.id, booking.id));
+    .where(and(eq(kidsServiceBookings.id, booking.id), eq(kidsServiceBookings.bookingStatus, booking.status)))
+    .returning({ id: kidsServiceBookings.id });
+  if (cancelled.length === 0) {
+    return { ok: false as const, error: "This booking just changed. Refresh and try again." };
+  }
 
   return {
     ok: true as const,
     refundEligible: cancelCheck.refundEligible,
   };
+}
+
+type ProviderDecision = "accept" | "decline";
+type ProviderOutcome = "completed" | "cancelled";
+
+/** Provider-side transitions. `vendorId` must come from requireVendorAccess(). */
+export async function transitionKidsBookingForProvider(input: {
+  vendorId: string;
+  bookingId: string;
+  action: ProviderDecision | ProviderOutcome;
+  reason?: string;
+}) {
+  const db = getDb();
+  const [booking] = await db
+    .select({
+      id: kidsServiceBookings.id,
+      startsAt: kidsServiceBookings.startsAt,
+      status: kidsServiceBookings.bookingStatus,
+      paymentStatus: kidsServiceBookings.paymentStatus,
+    })
+    .from(kidsServiceBookings)
+    .where(and(eq(kidsServiceBookings.id, input.bookingId), eq(kidsServiceBookings.vendorId, input.vendorId)))
+    .limit(1);
+  if (!booking) return { ok: false as const, error: "Booking not found." };
+
+  const next = providerNextState(booking, input.action, input.reason);
+  if (!next) return { ok: false as const, error: "This booking has already changed. Refresh and try again." };
+
+  const [updated] = await db
+    .update(kidsServiceBookings)
+    .set({ ...next, updatedAt: new Date() })
+    .where(and(eq(kidsServiceBookings.id, booking.id), eq(kidsServiceBookings.bookingStatus, booking.status)))
+    .returning({ id: kidsServiceBookings.id });
+  if (!updated) return { ok: false as const, error: "This booking has already changed. Refresh and try again." };
+  return { ok: true as const };
+}
+
+function providerNextState(
+  booking: { startsAt: Date; status: string; paymentStatus: string },
+  action: ProviderDecision | ProviderOutcome,
+  reason?: string
+) {
+  const cancelled = (fallback: string) => ({
+    bookingStatus: "cancelled",
+    cancellationReason: reason || fallback,
+    cancelledAt: new Date(),
+    ...(booking.paymentStatus === "paid" ? { paymentStatus: "refund_due" } : {}),
+  });
+  switch (action) {
+    case "accept":
+      return canProviderRespond(booking.status, booking.startsAt) ? { bookingStatus: "confirmed" } : null;
+    case "decline":
+      return canProviderRespond(booking.status, booking.startsAt) ? cancelled("Declined by the provider") : null;
+    case "completed":
+      return canProviderComplete(booking.status, booking.startsAt)
+        ? { bookingStatus: "completed", ...(booking.paymentStatus === "unpaid" ? { paymentStatus: "paid" } : {}) }
+        : null;
+    case "cancelled":
+      return booking.status === "confirmed" && booking.startsAt > new Date() ? cancelled("Cancelled by the provider") : null;
+  }
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { providerStatusLabel, toCalendarStatus } from "@/core/kids/booking-status";
+import { KidsBookingActions } from "./provider-booking-actions";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -493,7 +495,7 @@ export function ProviderKidsManager({
                           </span>
                         )}
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold uppercase text-slate-700">
-                          {booking.bookingStatus}
+                          {providerStatusLabel(booking.bookingStatus, new Date(booking.startsAt))}
                         </span>
                       </div>
 
@@ -512,6 +514,12 @@ export function ProviderKidsManager({
                         </div>
                       )}
                     </div>
+                    <KidsBookingActions
+                      slug={slug}
+                      bookingId={booking.id}
+                      status={toCalendarStatus(booking.bookingStatus, new Date(booking.startsAt))}
+                      started={new Date(booking.startsAt) <= new Date()}
+                    />
                   </div>
                 ))}
 

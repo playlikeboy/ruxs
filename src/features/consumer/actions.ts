@@ -223,14 +223,15 @@ export async function placeOrder(input: unknown) {
     revalidatePath("/app/orders");
     revalidatePath(`/merchant-panel/${vendor.slug}/orders`);
 
-    if (user.primaryEmail) {
+    // Online orders are not placed until payment is captured; only email orders that are really placed.
+    if (user.primaryEmail && data.paymentMode !== "online") {
       const emailHtml = renderEmailHtml({
-        heading: `Order Confirmed: #${orderNumber}`,
-        lead: `Thanks for your order from ${vendor.name}! We've notified the kitchen and your meal is being scheduled.`,
+        heading: `Order placed: #${orderNumber}`,
+        lead: `Thanks for your order from ${vendor.name}. The store has been notified and will accept it shortly.`,
         details: [
           { label: "Order Number", value: `#${orderNumber}` },
           { label: "Store", value: vendor.name },
-          { label: "Payment Mode", value: data.paymentMode === "cod" ? "Pay on delivery" : "Monthly bill" },
+          { label: "Payment Mode", value: data.paymentMode === "cod" ? "Pay on delivery" : "Added to monthly bill" },
         ],
         actionText: "View Order Details",
         actionUrl: `https://ruxs.in/app/orders/${orderId}`,
@@ -239,7 +240,7 @@ export async function placeOrder(input: unknown) {
         userId: user.id,
         to: user.primaryEmail,
         category: "orders",
-        subject: `Order Confirmed: #${orderNumber} from ${vendor.name}`,
+        subject: `Order placed: #${orderNumber} from ${vendor.name}`,
         html: emailHtml,
         text: `Your order #${orderNumber} from ${vendor.name} has been placed. View details: https://ruxs.in/app/orders/${orderId}`,
       }).catch((e) => console.error("Order placed email notify error:", e));

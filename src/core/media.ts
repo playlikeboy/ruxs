@@ -85,3 +85,21 @@ export function getYouTubeThumbnailUrl(url: string | null | undefined, quality: 
 export function isValidYouTubeUrl(url: string | null | undefined): boolean {
   return getYouTubeVideoId(url) !== null;
 }
+
+/** Largest image a merchant or admin may upload. */
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+const SIGNATURES: Record<string, (b: Uint8Array) => boolean> = {
+  "image/png": (b) => b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47,
+  "image/jpeg": (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  "image/webp": (b) => b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50,
+};
+
+/** Checks declared type, size and the file's magic bytes (first 12 bytes are enough). */
+export function validateImageUpload(file: { type: string; size: number; head: Uint8Array }): { ok: true } | { ok: false; error: string } {
+  const matches = SIGNATURES[file.type];
+  if (!matches) return { ok: false, error: "Upload a PNG, JPG or WEBP image." };
+  if (file.size <= 0 || file.size > MAX_IMAGE_BYTES) return { ok: false, error: "Image must be under 5 MB." };
+  if (!matches(file.head)) return { ok: false, error: "This file is not a valid image." };
+  return { ok: true };
+}

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { bookings, consumers, customers, ledgerEntries, payments, services, shopOrders, vendors } from "@/db/schema";
@@ -177,25 +177,55 @@ export async function startDuesPayment(input: unknown): Promise<StartResult> {
   const duePaise = balance(rows);
   if (duePaise < 100) return { ok: false, error: "Nothing to pay right now" };
 
+  // One open checkout per customer balance: retries and double taps reuse it.
+  const lockKey = "dues:" + customer.id;
+  const openDues = (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) =>
+    tx
+      .select({ id: payments.id, amountPaise: payments.amountPaise, razorpayOrderId: payments.razorpayOrderId })
+      .from(payments)
+      .where(and(eq(payments.customerId, customer.id), eq(payments.purpose, "dues"), eq(payments.status, "created")))
+      .limit(1);
+
+  const [existing] = await db.select({ amountPaise: payments.amountPaise, razorpayOrderId: payments.razorpayOrderId })
+    .from(payments)
+    .where(and(eq(payments.customerId, customer.id), eq(payments.purpose, "dues"), eq(payments.status, "created")))
+    .limit(1);
+
   let razorpayOrderId: string;
-  try {
-    const rzp = await createRazorpayOrder({
-      amountPaise: duePaise,
-      receipt: `DUES-${customer.id.slice(0, 8)}-${Date.now().toString(36)}`,
-      notes: { customer_id: customer.id, vendor: customer.vendorName },
+  if (existing && existing.amountPaise === duePaise) {
+    razorpayOrderId = existing.razorpayOrderId;
+  } else {
+    // The Razorpay call stays outside the transaction so no DB connection waits on the network.
+    // If a concurrent tap wins below, this order is never shown and simply expires unpaid.
+    let created: string;
+    try {
+      const rzp = await createRazorpayOrder({
+        amountPaise: duePaise,
+        receipt: `DUES-${customer.id.slice(0, 8)}-${Date.now().toString(36)}`,
+        notes: { customer_id: customer.id, vendor: customer.vendorName },
+      });
+      created = rzp.id;
+    } catch {
+      return { ok: false, error: "Could not start the payment. Please try again." };
+    }
+    razorpayOrderId = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`);
+      const [open] = await openDues(tx);
+      if (open && open.amountPaise === duePaise) return open.razorpayOrderId;
+      if (open) {
+        await tx.update(payments).set({ status: "failed", failureReason: "Superseded: balance changed" }).where(eq(payments.id, open.id));
+      }
+      await tx.insert(payments).values({
+        vendorId: parsed.data.vendorId,
+        customerId: customer.id,
+        userId: user.id,
+        purpose: "dues",
+        amountPaise: duePaise,
+        razorpayOrderId: created,
+      });
+      return created;
     });
-    razorpayOrderId = rzp.id;
-  } catch {
-    return { ok: false, error: "Could not start the payment. Please try again." };
   }
-  await db.insert(payments).values({
-    vendorId: parsed.data.vendorId,
-    customerId: customer.id,
-    userId: user.id,
-    purpose: "dues",
-    amountPaise: duePaise,
-    razorpayOrderId,
-  });
 
   return {
     ok: true,

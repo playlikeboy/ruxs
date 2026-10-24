@@ -8,8 +8,10 @@ import { istMinutes, layoutLanes } from "@/core/calendar";
 import { formatSlotTime, MODE_LABEL } from "@/core/booking";
 import { cn } from "@/components/ui/cn";
 import { SessionActions } from "./booking-buttons";
+import { KidsBookingActions } from "@/features/kids/components/provider-booking-actions";
 
 export interface CalEvent {
+  kind: "service" | "kids";
   id: string;
   number: string;
   start: string; // ISO
@@ -32,11 +34,13 @@ export type ListTab = "upcoming" | "past" | "cancelled";
 const HOUR_PX = 60;
 
 const STATUS: Record<string, { label: string; block: string; dot: string }> = {
+  requested: { label: "Needs your approval", block: "border-warn border-dashed bg-butter text-ink", dot: "bg-warn" },
   confirmed: { label: "Confirmed", block: "border-accent bg-peach text-ink", dot: "bg-accent" },
   held: { label: "Awaiting payment", block: "border-warn border-dashed bg-butter text-ink", dot: "bg-warn" },
   done: { label: "Done", block: "border-good bg-mint text-ink", dot: "bg-good" },
   no_show: { label: "No-show", block: "border-bad bg-blush text-ink", dot: "bg-bad" },
   cancelled: { label: "Cancelled", block: "border-line bg-bg text-muted line-through", dot: "bg-muted" },
+  expired: { label: "Request expired", block: "border-line border-dashed bg-bg text-muted", dot: "bg-muted" },
 };
 
 const MODE_ICON: Record<string, typeof Home> = { home: Home, studio: Building2, online: Video };
@@ -349,14 +353,16 @@ function DetailSheet({ slug, event: e, onClose }: { slug: string; event: CalEven
             <dt className="w-20 shrink-0 text-muted">Client</dt>
             <dd className="font-medium text-ink">{e.customerName}</dd>
           </div>
-          <div className="flex gap-3">
-            <dt className="w-20 shrink-0 text-muted">Phone</dt>
-            <dd>
-              <a href={`tel:${e.customerPhone}`} className="inline-flex items-center gap-1.5 font-semibold text-accent">
-                <Phone className="h-3.5 w-3.5" /> {e.customerPhone}
-              </a>
-            </dd>
-          </div>
+          {e.customerPhone && (
+            <div className="flex gap-3">
+              <dt className="w-20 shrink-0 text-muted">Phone</dt>
+              <dd>
+                <a href={`tel:${e.customerPhone}`} className="inline-flex items-center gap-1.5 font-semibold text-accent">
+                  <Phone className="h-3.5 w-3.5" /> {e.customerPhone}
+                </a>
+              </dd>
+            </div>
+          )}
           <div className="flex gap-3">
             <dt className="w-20 shrink-0 text-muted">Where</dt>
             <dd className="text-ink">
@@ -391,7 +397,15 @@ function DetailSheet({ slug, event: e, onClose }: { slug: string; event: CalEven
           </div>
         </dl>
 
-        {e.status === "confirmed" && (
+        {e.kind === "kids" && (e.status === "requested" || e.status === "confirmed") && (
+          <div className="mt-6 border-t border-line pt-4">
+            <p className="mb-2 text-xs text-muted">
+              {e.status === "requested" ? "A parent asked for this session. Accept to confirm it, or decline with a reason." : start <= new Date() ? "Session started. Mark it done once it is over." : "You can cancel; the parent is told."}
+            </p>
+            <KidsBookingActions slug={slug} bookingId={e.id} status={e.status} started={start <= new Date()} />
+          </div>
+        )}
+        {e.kind === "service" && e.status === "confirmed" && (
           <div className="mt-6 border-t border-line pt-4">
             <p className="mb-2 text-xs text-muted">{start <= new Date() ? "Session started. Mark how it went to release payment." : "You can cancel; the client is told and refunded if they paid online."}</p>
             <SessionActions slug={slug} bookingId={e.id} started={start <= new Date()} />

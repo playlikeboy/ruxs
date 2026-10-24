@@ -5,6 +5,8 @@ import { formatINR } from "@/core/money";
 import { addDaysIST, istDateTime, todayIST, weekdayIST } from "@/core/time";
 import { gridHours, hhmmToMinutes, istMinutes, parseDateParam, weekDates, weekStartIST } from "@/core/calendar";
 import { getProviderBookingList, getProviderCalendar } from "@/features/bookings/queries";
+import { countKidsRequests } from "@/features/kids/provider-calendar";
+import { isKidsVendorType } from "@/core/vendor-types";
 import { BookingCalendar, type CalEvent, type CalView, type ListTab } from "@/features/bookings/components/booking-calendar";
 import { PageHeader } from "@/components/ui/card";
 import { buttonClass } from "@/components/ui/button";
@@ -13,8 +15,9 @@ export const metadata = { title: "Calendar" };
 
 type Row = Awaited<ReturnType<typeof getProviderCalendar>>["rows"][number];
 
-function toEvent({ booking: b, customerName, customerPhone, serviceName }: Row): CalEvent {
+function toEvent({ kind, booking: b, customerName, customerPhone, serviceName }: Row): CalEvent {
   return {
+    kind,
     id: b.id,
     number: b.number,
     start: b.startsAt.toISOString(),
@@ -40,7 +43,7 @@ export default async function BookingsPage({
   searchParams: Promise<{ view?: string; date?: string; tab?: string }>;
 }) {
   const { vendor: slug } = await params;
-  await requireVendorModule(slug, "bookings");
+  const access = await requireVendorModule(slug, "bookings");
   const q = await searchParams;
   const view: CalView = q.view === "day" || q.view === "list" ? q.view : "week";
   const tab: ListTab = q.tab === "past" || q.tab === "cancelled" ? q.tab : "upcoming";
@@ -50,10 +53,11 @@ export default async function BookingsPage({
   const step = view === "day" ? 1 : 7;
 
   // The calendar always loads the visible range; the list loads its tab.
-  const [cal, list, week] = await Promise.all([
+  const [cal, list, week, requests] = await Promise.all([
     getProviderCalendar(slug, days[0]!, days[days.length - 1]!),
     view === "list" ? getProviderBookingList(slug, tab) : null,
     view === "week" ? null : getProviderCalendar(slug, weekStartIST(today), addDaysIST(weekStartIST(today), 6)),
+    isKidsVendorType(access.vendorType) ? countKidsRequests(access.vendorId) : 0,
   ]);
 
   const events = (list ? list.rows : cal.rows).map(toEvent);
@@ -75,7 +79,8 @@ export default async function BookingsPage({
   const hours = gridHours(cal.rules, cal.rows.map((r) => ({ start: istMinutes(r.booking.startsAt), end: istMinutes(r.booking.endsAt) || 1440 })));
 
   // This week at a glance, whatever range is on screen.
-  const weekRows = (week ?? cal).rows.filter((r) => r.booking.status !== "cancelled");
+  // Only sessions that are on: pending requests, expired requests and cancellations don't count.
+  const weekRows = (week ?? cal).rows.filter((r) => !["cancelled", "expired", "requested"].includes(r.booking.status));
   const stats = {
     sessions: weekRows.length,
     value: weekRows.reduce((s, r) => s + r.booking.pricePaise, 0),
@@ -103,6 +108,18 @@ export default async function BookingsPage({
           </Link>
         }
       />
+
+      {requests > 0 && (
+        <Link
+          href={`/merchant-panel/${slug}/bookings?view=list&tab=upcoming`}
+          className="block rounded-card border border-warn/40 bg-butter px-4 py-3 text-sm text-ink"
+        >
+          <span className="font-semibold">
+            {requests} {requests === 1 ? "booking request needs" : "booking requests need"} your approval.
+          </span>{" "}
+          Open one to accept or decline →
+        </Link>
+      )}
 
       <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[

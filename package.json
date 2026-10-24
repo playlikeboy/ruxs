@@ -13,6 +13,7 @@
     "format": "prettier --write .",
     "test": "bun test src tests",
     "test:e2e": "playwright test",
+    "db:migrate:fresh": "bun scripts/migrate-fresh.ts",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && OPEN_NEXT_DEPLOY=true wrangler deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",

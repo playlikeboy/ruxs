@@ -1,9 +1,10 @@
-/**
- * ImgBB Image Upload Service
- * Uses the API key provided for RUXs vendor and kids image & certificate uploads.
- */
+import "server-only";
+import { getServerEnv } from "@/lib/env";
 
-export const IMGBB_API_KEY = "f17ca0bb7aec377dd84d30b752c8d6ba";
+/**
+ * ImgBB Image Upload Service (server only).
+ * The key lives in the IMGBB_API_KEY secret; it must never reach the browser bundle.
+ */
 
 export interface ImgbbUploadResponse {
   success: boolean;
@@ -14,41 +15,26 @@ export interface ImgbbUploadResponse {
   error?: string;
 }
 
-/**
- * Uploads an image (File, Blob, or base64 string) to ImgBB.
- * Can be called from server actions or client-side form submitters.
- */
-export async function uploadToImgbb(
-  image: File | Blob | string,
-  name?: string
-): Promise<ImgbbUploadResponse> {
+/** Uploads an already-validated image to ImgBB. Call only from an authorized server action. */
+export async function uploadToImgbb(image: Blob, name?: string): Promise<ImgbbUploadResponse> {
+  const key = getServerEnv().IMGBB_API_KEY;
+  if (!key) return { success: false, error: "Image uploads are not configured." };
   try {
     const formData = new FormData();
-
-    if (typeof image === "string") {
-      // If it's data URI (e.g. data:image/png;base64,....), strip prefix for ImgBB if needed, or pass directly
-      const cleanString = image.replace(/^data:image\/[a-z]+;base64,/, "");
-      formData.append("image", cleanString);
-    } else {
-      formData.append("image", image);
-    }
+    formData.append("image", image);
 
     if (name) {
       formData.append("name", name.slice(0, 50));
     }
 
-    const endpoint = `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`;
-    const response = await fetch(endpoint, {
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(key)}`, {
       method: "POST",
       body: formData,
     });
 
     if (!response.ok) {
-      const errText = await response.text().catch(() => "");
-      return {
-        success: false,
-        error: `ImgBB upload failed (${response.status}): ${errText || response.statusText}`,
-      };
+      console.error("ImgBB upload failed", response.status);
+      return { success: false, error: "Upload failed. Please try again." };
     }
 
     const json = (await response.json()) as {
@@ -78,9 +64,7 @@ export async function uploadToImgbb(
       deleteUrl: json.data.delete_url,
     };
   } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Network error uploading image to ImgBB",
-    };
+    console.error("ImgBB upload error", err instanceof Error ? err.message : err);
+    return { success: false, error: "Upload failed. Please try again." };
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { canGuardianCancel, guardianStatusLabel, isReviewEligible } from "@/core/kids/booking-status";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -204,9 +205,8 @@ export function BookingsManager({
           ) : (
             initialBookings.map(({ booking, service, child, vendor }) => {
               const startDate = new Date(booking.startsAt);
-              const isPast = startDate < new Date();
-              const isConfirmed = booking.bookingStatus === "confirmed";
-              const isCompleted = booking.bookingStatus === "completed" || (isConfirmed && isPast);
+              const isCompleted = isReviewEligible(booking.bookingStatus);
+              const canCancel = canGuardianCancel(booking.bookingStatus, startDate);
 
               return (
                 <div
@@ -228,7 +228,7 @@ export function BookingsManager({
                               : "border-slate-300 bg-slate-100 text-kids-ink/80"
                           }`}
                         >
-                          {booking.bookingStatus.toUpperCase()}
+                          {guardianStatusLabel(booking.bookingStatus, startDate).toUpperCase()}
                         </span>
                       </div>
 
@@ -285,14 +285,18 @@ export function BookingsManager({
                         <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
                         <span>Leave Review</span>
                       </button>
-                    ) : booking.bookingStatus === "confirmed" ? (
+                    ) : booking.bookingStatus === "confirmed" && !canCancel ? (
+                      <span className="text-[11px] font-semibold text-kids-ink/60">
+                        You can review once {vendor.name} marks this session done.
+                      </span>
+                    ) : canCancel ? (
                       <button
                         type="button"
                         disabled={cancellingId === booking.id}
                         onClick={() => handleCancelBooking(booking.id)}
                         className="rounded-full border border-rose-300 px-3 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
                       >
-                        {cancellingId === booking.id ? "Cancelling..." : "Cancel Booking"}
+                        {cancellingId === booking.id ? "Cancelling..." : booking.bookingStatus === "held" ? "Withdraw Request" : "Cancel Booking"}
                       </button>
                     ) : null}
                   </div>

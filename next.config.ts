@@ -30,6 +30,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Image uploads go through a Server Action: 5 MB cap (core/media) plus multipart overhead.
+  experimental: { serverActions: { bodySizeLimit: "6mb" } },
   typedRoutes: false,
   async headers() {
     return [

@@ -3,6 +3,7 @@ import { and, count, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   kidsChildren,
+  kidsProviderProfiles,
   kidsWorkshopEnrollments,
   kidsWorkshops,
   vendors,
@@ -39,11 +40,14 @@ export async function enrollInWorkshop(input: EnrollWorkshopInput) {
     })
     .from(kidsWorkshops)
     .innerJoin(vendors, eq(kidsWorkshops.vendorId, vendors.id))
+    .innerJoin(kidsProviderProfiles, eq(kidsProviderProfiles.vendorId, vendors.id))
     .where(
       and(
         eq(kidsWorkshops.id, input.workshopId),
         eq(kidsWorkshops.publicationState, "published"),
-        eq(vendors.status, "active")
+        eq(vendors.status, "active"),
+        eq(kidsProviderProfiles.verificationStatus, "approved"),
+        eq(kidsProviderProfiles.safetyReviewStatus, "passed")
       )
     )
     .limit(1);
@@ -119,6 +123,7 @@ export async function enrollInWorkshop(input: EnrollWorkshopInput) {
           workshopId: ws.id,
           childId: child.id,
           guardianUserId: input.guardianUserId,
+          // Seat is reserved; workshops are paid at the venue (no online checkout yet).
           status: "confirmed",
           priceSnapshotPaise: ws.pricePaise,
           paymentStatus: "unpaid",
@@ -169,7 +174,7 @@ export async function cancelWorkshopEnrollment(input: {
   const nextPaymentStatus =
     enrollment.paymentStatus === "paid" ? "refund_due" : enrollment.paymentStatus;
 
-  await db
+  const cancelled = await db
     .update(kidsWorkshopEnrollments)
     .set({
       status: "cancelled",
@@ -178,7 +183,9 @@ export async function cancelWorkshopEnrollment(input: {
       cancelledAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(kidsWorkshopEnrollments.id, enrollment.id));
+    .where(and(eq(kidsWorkshopEnrollments.id, enrollment.id), eq(kidsWorkshopEnrollments.status, enrollment.status)))
+    .returning({ id: kidsWorkshopEnrollments.id });
+  if (cancelled.length === 0) return { ok: false as const, error: "This enrollment just changed. Refresh and try again." };
 
   return { ok: true as const };
 }

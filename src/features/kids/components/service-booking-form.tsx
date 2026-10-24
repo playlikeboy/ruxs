@@ -126,14 +126,14 @@ export function ServiceBookingForm({
         </div>
         <div>
           <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-900">
-            Booking Confirmed! 🎉
+            Request sent 🎉
           </span>
           <h2 className="mt-2 text-xl font-black text-kids-ink">{service.title}</h2>
           <p className="mt-1 text-xs font-bold text-kids-ink/60">
             Booking Ref: <span className="font-mono text-kids-ink">{confirmedNumber}</span>
           </p>
           <p className="mt-2 text-xs font-semibold text-kids-ink/70">
-            Scheduled for {sessionDate} at {sessionTime} ({deliveryMode.toUpperCase()}) with {service.vendor.name}.
+            Requested for {sessionDate} at {sessionTime} ({deliveryMode.toUpperCase()}) with {service.vendor.name}. You will see it as confirmed once they accept.
           </p>
         </div>
 
@@ -311,7 +311,7 @@ export function ServiceBookingForm({
         disabled={isPending || childProfiles.length === 0}
         className="w-full rounded-full border-2 border-kids-grape/15 bg-kids-sunny py-3 text-sm font-black text-kids-ink shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)] transition active:translate-y-0.5 active:shadow-none disabled:opacity-50"
       >
-        {isPending ? "Confirming Session..." : `Book Session (${formatINR(totalAmountPaise)}) →`}
+        {isPending ? "Sending request..." : `Request Session (${formatINR(totalAmountPaise)}) →`}
       </button>
     </form>
   );

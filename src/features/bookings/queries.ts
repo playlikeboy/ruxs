@@ -6,6 +6,19 @@ import { getPublicTypeDetails } from "@/features/vendor-types/queries";
 import { requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { openSlots, type Busy } from "@/core/booking";
 import { addDaysIST, istDateTime, todayIST } from "@/core/time";
+import { isKidsVendorType } from "@/core/vendor-types";
+import { getKidsBookingListRows, getKidsCalendarRows } from "@/features/kids/provider-calendar";
+
+type Access = Awaited<ReturnType<typeof requireVendorAccess>>;
+
+/** Kids academies keep their sessions in kids_service_bookings; merge them into every provider view. */
+function hasKidsSessions(access: Access) {
+  return isKidsVendorType(access.vendor.vendorType);
+}
+
+function byStart<T extends { booking: { startsAt: Date } }>(desc_ = false) {
+  return (a: T, b: T) => (a.booking.startsAt.getTime() - b.booking.startsAt.getTime()) * (desc_ ? -1 : 1);
+}
 
 /** Bookings that occupy the calendar: confirmed, or held and not yet expired. */
 function activeBooking(now: Date) {
@@ -140,7 +153,10 @@ export async function getProviderSchedule(slug: string, days = 14) {
       )
     )
     .orderBy(asc(bookings.startsAt));
-  return { access, rows };
+  const kids = hasKidsSessions(access)
+    ? (await getKidsCalendarRows(access.vendorId, from, until)).filter((r) => ["requested", "confirmed", "done"].includes(r.booking.status))
+    : [];
+  return { access, rows: [...rows.map((r) => ({ ...r, kind: "service" as const })), ...kids].sort(byStart()) };
 }
 
 const calendarFields = {
@@ -170,7 +186,8 @@ export async function getProviderCalendar(slug: string, fromDate: string, toDate
       .from(availabilityBlocks)
       .where(and(eq(availabilityBlocks.vendorId, access.vendorId), lt(availabilityBlocks.startsAt, until), gt(availabilityBlocks.endsAt, from))),
   ]);
-  return { access, rows, rules, blocks };
+  const kids = hasKidsSessions(access) ? await getKidsCalendarRows(access.vendorId, from, until) : [];
+  return { access, rows: [...rows.map((r) => ({ ...r, kind: "service" as const })), ...kids].sort(byStart()), rules, blocks };
 }
 
 /** Merchant list view, like cal.com: upcoming, past or cancelled bookings. */
@@ -192,7 +209,9 @@ export async function getProviderBookingList(slug: string, tab: "upcoming" | "pa
     .where(where)
     .orderBy(tab === "upcoming" ? asc(bookings.startsAt) : desc(bookings.startsAt))
     .limit(limit);
-  return { access, rows };
+  const kids = hasKidsSessions(access) ? await getKidsBookingListRows(access.vendorId, tab, limit) : [];
+  const merged = [...rows.map((r) => ({ ...r, kind: "service" as const })), ...kids].sort(byStart(tab !== "upcoming"));
+  return { access, rows: merged.slice(0, limit) };
 }
 
 export async function getAvailability(slug: string) {

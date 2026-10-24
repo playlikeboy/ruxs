@@ -29,6 +29,13 @@ export const cancelKidsBookingSchema = z.object({
   reason: z.string().max(255).optional(),
 });
 
+export const providerKidsBookingSchema = z.object({
+  slug: z.string().min(1).max(120),
+  bookingId: z.string().uuid(),
+  action: z.enum(["accept", "decline", "completed", "cancelled"]),
+  reason: z.string().max(255).optional(),
+});
+
 export const enrollWorkshopSchema = z.object({
   workshopId: z.string().uuid(),
   childId: z.string().uuid(),
@@ -58,13 +65,17 @@ export const saveConsentSchema = z.object({
   policyVersion: z.string().default("2026-v1"),
 });
 
-export const submitKidsReviewSchema = z.object({
-  vendorId: z.string().uuid(),
-  bookingId: z.string().uuid().optional(),
-  enrollmentId: z.string().uuid().optional(),
-  rating: z.coerce.number().int().min(1).max(5),
-  reviewText: z.string().trim().max(1000).optional(),
-});
+export const submitKidsReviewSchema = z
+  .object({
+    vendorId: z.string().uuid(),
+    bookingId: z.string().uuid().optional(),
+    enrollmentId: z.string().uuid().optional(),
+    rating: z.coerce.number().int().min(1).max(5),
+    reviewText: z.string().trim().max(1000).optional(),
+  })
+  .refine((d) => Boolean(d.bookingId) !== Boolean(d.enrollmentId), {
+    message: "Pick the completed session or workshop you are reviewing.",
+  });
 
 export const saveKidsServiceSchema = z.object({
   id: z.string().uuid().optional(),

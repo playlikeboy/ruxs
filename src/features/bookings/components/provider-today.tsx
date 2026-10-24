@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CalendarClock, Clock, Star, Wallet } from "lucide-react";
+import { ArrowRight, BellRing, CalendarClock, Clock, Star, Wallet } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { MODE_LABEL, formatSlotTime } from "@/core/booking";
 import { todayIST } from "@/core/time";
@@ -7,6 +7,7 @@ import { getProviderSchedule } from "@/features/bookings/queries";
 import { computeVendorBalance } from "@/features/payouts/queries";
 import { getRatingMap } from "@/features/platform/queries";
 import { SessionActions } from "./booking-buttons";
+import { KidsBookingActions } from "@/features/kids/components/provider-booking-actions";
 import { ProviderSessionSheet } from "./provider-session-sheet";
 
 /** Merchant Today for booking providers: today's sessions, what's next, and money. */
@@ -20,6 +21,7 @@ export async function ProviderToday({ slug }: { slug: string }) {
   const now = new Date();
   const todays = rows.filter((r) => todayIST(r.booking.startsAt) === today);
   const upcoming = rows.filter((r) => r.booking.startsAt > now && r.booking.status === "confirmed");
+  const requests = rows.filter((r) => r.booking.status === "requested");
   const next = upcoming[0];
   const toClose = rows.filter((r) => r.booking.status === "confirmed" && r.booking.startsAt <= now);
   const base = `/merchant-panel/${slug}`;
@@ -44,6 +46,17 @@ export async function ProviderToday({ slug }: { slug: string }) {
           <Clock className="h-4 w-4" aria-hidden="true" /> Edit availability
         </Link>
       </div>
+
+      {requests.length > 0 && (
+        <Link href={`${base}/bookings?view=list&tab=upcoming`} className="flex items-center gap-3 rounded-[16px] border border-warn/40 bg-butter p-4">
+          <BellRing className="h-5 w-5 shrink-0 text-warn" aria-hidden="true" />
+          <span className="flex-1 text-sm">
+            <span className="block font-semibold text-ink">{requests.length} booking {requests.length === 1 ? "request needs" : "requests need"} your approval</span>
+            <span className="block text-muted">Accept or decline so parents know the session is on.</span>
+          </span>
+          <ArrowRight className="h-5 w-5 text-warn" aria-hidden="true" />
+        </Link>
+      )}
 
       {toClose.length > 0 && (
         <Link href={`${base}/bookings`} className="flex items-center gap-3 rounded-[16px] border border-accent/30 bg-peach p-4">
@@ -78,12 +91,15 @@ export async function ProviderToday({ slug }: { slug: string }) {
           <p className="rounded-[16px] border border-dashed border-line bg-surface p-6 text-center text-sm text-muted">No sessions today. Keep your weekly hours up to date so clients can book.</p>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {todays.map(({ booking, customerName, serviceName }) => (
+            {todays.map(({ kind, booking, customerName, serviceName }) => (
               <li key={booking.id} className="rounded-[16px] border border-line bg-surface p-4">
                 <p className="font-mono text-lg font-bold tabular-nums text-ink">{formatSlotTime(booking.startsAt)} – {formatSlotTime(booking.endsAt)}</p>
                 <p className="truncate font-semibold text-ink">{customerName}</p>
                 <p className="truncate text-xs text-muted">{serviceName ?? "Session"} · {MODE_LABEL[booking.mode] ?? booking.mode} · <span className="capitalize">{booking.status.replace("_", "-")}</span></p>
-                {booking.status === "confirmed" && access.role !== "driver" && (
+                {access.role !== "driver" && kind === "kids" && (
+                  <div className="mt-3 empty:hidden"><KidsBookingActions slug={slug} bookingId={booking.id} status={booking.status} started={booking.startsAt <= now} /></div>
+                )}
+                {access.role !== "driver" && kind === "service" && booking.status === "confirmed" && (
                   <div className="mt-3"><SessionActions slug={slug} bookingId={booking.id} started={booking.startsAt <= now} /></div>
                 )}
               </li>

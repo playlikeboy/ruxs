@@ -430,6 +430,8 @@ export const kidsReviews = pgTable(
   },
   (t) => [
     index("kids_reviews_vendor_idx").on(t.vendorId),
+    uniqueIndex("kids_reviews_guardian_booking_uniq").on(t.guardianUserId, t.bookingId).where(sql`${t.bookingId} is not null`),
+    uniqueIndex("kids_reviews_guardian_enrollment_uniq").on(t.guardianUserId, t.enrollmentId).where(sql`${t.enrollmentId} is not null`),
     check("kids_reviews_rating_check", sql`${t.rating} between 1 and 5`),
     check("kids_reviews_moderation_check", sql`${t.moderationStatus} in ('pending', 'published', 'hidden', 'flagged')`),
   ]

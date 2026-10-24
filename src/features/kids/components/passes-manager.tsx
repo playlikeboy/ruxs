@@ -203,7 +203,7 @@ export function PassesManager({
 
               <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
                 <span className="text-[11px] font-bold text-emerald-700">
-                  ✓ Instant activation · Priority booking
+                  Online checkout opening soon
                 </span>
 
                 <button
@@ -212,7 +212,7 @@ export function PassesManager({
                   onClick={() => handlePurchase(pass.id)}
                   className="rounded-full border-2 border-kids-grape/15 bg-kids-sunny px-5 py-2 text-xs font-black text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)] transition active:translate-y-0.5 hover:bg-kids-sunny/80 disabled:opacity-50"
                 >
-                  {purchasingId === pass.id ? "Activating..." : "Get Pass →"}
+                  {purchasingId === pass.id ? "Checking..." : "Coming soon"}
                 </button>
               </div>
             </div>

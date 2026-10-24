@@ -3,7 +3,15 @@
 import { useState, useRef } from "react";
 import { Upload, X, Loader2, Play, ExternalLink, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { uploadToImgbb } from "@/lib/imgbb";
+import { uploadImageAction } from "@/features/assets/actions";
+import { MAX_IMAGE_BYTES } from "@/core/media";
+
+async function upload(file: File) {
+  const fd = new FormData();
+  fd.append("image", file);
+  fd.append("name", file.name);
+  return uploadImageAction(fd);
+}
 import { getYouTubeEmbedUrl, getYouTubeThumbnailUrl, isValidYouTubeUrl } from "@/core/media";
 
 interface ImageUploadProps {
@@ -27,17 +35,17 @@ export function ImageUpload({ label, hint, value, onChange, className = "" }: Im
       return;
     }
 
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error("Image file must be under 15MB");
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Image must be under 5 MB");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await uploadToImgbb(file, file.name);
-      if (res.success && res.url) {
+      const res = await upload(file);
+      if (res.ok && res.url) {
         onChange(res.url);
-        toast.success("Image uploaded via ImgBB");
+        toast.success("Image uploaded");
       } else {
         toast.error(res.error || "Upload failed");
       }
@@ -75,7 +83,7 @@ export function ImageUpload({ label, hint, value, onChange, className = "" }: Im
           {loading ? (
             <div className="flex items-center gap-2 text-xs font-medium text-accent">
               <Loader2 size={16} className="animate-spin" />
-              <span>Uploading to ImgBB…</span>
+              <span>Uploading…</span>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-1 text-center">
@@ -128,16 +136,20 @@ export function MultiImageUpload({
     setLoading(true);
     const newUrls: string[] = [];
     try {
+      let skipped = 0;
       for (const f of files) {
-        if (!f.type.startsWith("image/")) continue;
-        const res = await uploadToImgbb(f, f.name);
-        if (res.success && res.url) {
-          newUrls.push(res.url);
+        if (!f.type.startsWith("image/") || f.size > MAX_IMAGE_BYTES) {
+          skipped++;
+          continue;
         }
+        const res = await upload(f);
+        if (res.ok && res.url) newUrls.push(res.url);
+        else skipped++;
       }
+      if (skipped > 0) toast.error(`${skipped} file(s) skipped. Use PNG, JPG or WEBP under 5 MB.`);
       if (newUrls.length > 0) {
         onChange([...values, ...newUrls]);
-        toast.success(`Uploaded ${newUrls.length} image(s) to ImgBB`);
+        toast.success(`Uploaded ${newUrls.length} image(s)`);
       }
     } catch {
       toast.error("Upload failed");
