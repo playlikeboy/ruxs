@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export default function MarketingLayout({
   children,
@@ -31,8 +32,8 @@ export default function MarketingLayout({
             <Link href="/sign-in" className="rounded-[10px] px-2.5 py-2 text-xs font-semibold text-ink transition hover:bg-surface sm:px-3.5 sm:text-sm">
               Sign in
             </Link>
-            <Link href="/app" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[10px] bg-accent px-3.5 py-2 text-xs font-semibold text-white transition hover:opacity-90 active:scale-95 sm:gap-2 sm:px-4 sm:text-sm">
-              Explore <span aria-hidden="true">→</span>
+            <Link href="/app" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[10px] bg-ink px-3.5 py-2 text-xs font-semibold text-bg transition hover:bg-[#383D36] sm:gap-2 sm:px-4 sm:text-sm">
+              Open the app <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -67,8 +68,8 @@ export default function MarketingLayout({
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-ink">For local businesses</h2>
               <nav aria-label="Merchant links" className="flex flex-col items-start gap-2.5 text-sm text-muted">
-                <Link href="/merchant-panel" className="font-semibold text-ink hover:text-accent">
-                  Merchant workspace →
+                <Link href="/merchant-panel" className="inline-flex items-center gap-1 font-semibold text-ink hover:text-accent">
+                  Merchant workspace <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                 </Link>
                 <Link href="/onboarding" className="hover:text-ink">List your business</Link>
                 <Link href="/for/tiffin-services" className="hover:text-ink">For tiffin kitchens</Link>
