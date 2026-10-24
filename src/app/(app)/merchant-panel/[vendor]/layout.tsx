@@ -1,3 +1,4 @@
+import { AppIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { VendorBottomNav } from "@/components/nav/vendor-bottom-nav";
@@ -41,8 +42,8 @@ export default async function VendorLayout({
         <header className="sticky top-0 z-30 border-b border-line bg-surface/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:h-16">
             <div className="flex min-w-0 items-center gap-3 lg:hidden">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-bg text-lg ring-1 ring-line" aria-hidden="true">
-                {info.emoji}
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-bg text-accent ring-1 ring-line" aria-hidden="true">
+                <AppIcon name={vendorType} className="h-[18px] w-[18px]" />
               </span>
               <div className="min-w-0">
                 <Link href={"/merchant-panel/" + slug + "/today"} className="block truncate text-[15px] font-semibold leading-tight text-ink">
@@ -56,8 +57,8 @@ export default async function VendorLayout({
             </div>
 
             <div className="hidden items-center gap-3 lg:flex">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-bg text-base ring-1 ring-line" aria-hidden="true">
-                {info.emoji}
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-bg text-accent ring-1 ring-line" aria-hidden="true">
+                <AppIcon name={vendorType} className="h-4 w-4" />
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-ink">{access.vendor.name}</span>

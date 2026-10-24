@@ -1,5 +1,7 @@
 "use client";
 
+import { AppIcon } from "@/components/ui/app-icon";
+
 import { KIDS_AGE_BRACKETS, type KidsAgeBracketId } from "@/core/kids";
 
 interface KidsAgeFilterProps {
@@ -27,7 +29,7 @@ export function KidsAgeFilter({ selected, onChange }: KidsAgeFilterProps) {
                   : "border-2 border-slate-200 bg-white text-kids-ink/70 hover:border-slate-300"
               }`}
             >
-              <span className="text-sm" aria-hidden="true">{bracket.emoji}</span>
+              <AppIcon name={bracket.id} className="h-4 w-4" />
               <span>{bracket.label}</span>
             </button>
           );

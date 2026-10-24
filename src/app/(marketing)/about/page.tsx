@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import {
   breadcrumbsJsonLd,
@@ -100,9 +101,9 @@ export default function AboutPage() {
             </Link>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-xs font-medium text-muted">
-            <span className="inline-flex items-center gap-2"><span className="text-good">✓</span> Merchant-set prices</span>
-            <span className="inline-flex items-center gap-2"><span className="text-good">✓</span> Recurring services</span>
-            <span className="inline-flex items-center gap-2"><span className="text-good">✓</span> Local businesses</span>
+            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-6 w-6 text-accent" /> Merchant-set prices</span>
+            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-6 w-6 text-accent" /> Recurring services</span>
+            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-6 w-6 text-accent" /> Local businesses</span>
           </div>
         </div>
 
@@ -112,7 +113,7 @@ export default function AboutPage() {
             <div className="flex items-center justify-between border-b border-line pb-4">
               <div>
                 <p className="text-xs font-semibold text-muted">THE EVERYDAY LIST</p>
-                <p className="mt-1 text-lg font-semibold tracking-tight text-ink">Good morning ☀️</p>
+                <p className="mt-1 text-lg font-semibold tracking-tight text-ink">Good morning <UiIcon name="sun" /></p>
               </div>
               <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-peach text-sm font-extrabold text-accent">R</span>
             </div>

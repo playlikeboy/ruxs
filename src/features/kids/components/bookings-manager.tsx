@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { canGuardianCancel, guardianStatusLabel, isReviewEligible } from "@/core/kids/booking-status";
 import { useState } from "react";
 import Link from "next/link";
@@ -167,7 +169,7 @@ export function BookingsManager({
               : "bg-white text-kids-ink/80 hover:bg-slate-50"
           }`}
         >
-          🚀 Classes & Sessions ({initialBookings.length})
+          <UiIcon name="sparkle" /> Classes & Sessions ({initialBookings.length})
         </button>
 
         <button
@@ -179,7 +181,7 @@ export function BookingsManager({
               : "bg-white text-kids-ink/80 hover:bg-slate-50"
           }`}
         >
-          🏕️ Camps & Workshops ({initialEnrollments.length})
+          <UiIcon name="camp" /> Camps & Workshops ({initialEnrollments.length})
         </button>
       </div>
 
@@ -188,7 +190,7 @@ export function BookingsManager({
         <div className="space-y-3">
           {initialBookings.length === 0 ? (
             <div className="rounded-[26px] border-2 border-dashed border-slate-300 bg-white p-8 text-center">
-              <span className="text-3xl">🚀</span>
+              <UiIcon name="sparkle" className="h-6 w-6 text-accent" />
               <h3 className="mt-2 text-sm font-black text-kids-ink">
                 No class bookings yet
               </h3>
@@ -217,7 +219,7 @@ export function BookingsManager({
                     <div>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="rounded-full border border-kids-grape/20 bg-pink-100 px-2 py-0.5 text-[10px] font-black text-kids-ink">
-                          👶 {child.displayName}
+                          <UiIcon name="age" /> {child.displayName}
                         </span>
                         <span
                           className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${
@@ -312,7 +314,7 @@ export function BookingsManager({
         <div className="space-y-3">
           {initialEnrollments.length === 0 ? (
             <div className="rounded-[26px] border-2 border-dashed border-slate-300 bg-white p-8 text-center">
-              <span className="text-3xl">🏕️</span>
+              <UiIcon name="camp" className="h-6 w-6 text-accent" />
               <h3 className="mt-2 text-sm font-black text-kids-ink">
                 No workshop enrollments yet
               </h3>
@@ -339,7 +341,7 @@ export function BookingsManager({
                     <div>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="rounded-full border border-kids-grape/20 bg-pink-100 px-2 py-0.5 text-[10px] font-black text-kids-ink">
-                          👶 {child.displayName}
+                          <UiIcon name="age" /> {child.displayName}
                         </span>
                         <span
                           className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${

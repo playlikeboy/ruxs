@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { pauseDates } from "@/features/day-changes/actions";
@@ -46,7 +48,7 @@ export function PauseDatesSheet({
         onClick={() => setIsOpen(true)}
         className="w-full py-2.5 px-3 bg-surface border border-line text-xs font-semibold text-ink rounded-[10px] hover:border-accent active:scale-98 transition-all shadow-xs"
       >
-        🏖️ Pause for Holiday / Travel
+        <UiIcon name="holiday" /> Pause for Holiday / Travel
       </button>
 
       {isOpen && (
@@ -66,7 +68,7 @@ export function PauseDatesSheet({
                 onClick={() => setIsOpen(false)}
                 className="text-muted hover:text-ink text-sm p-1"
               >
-                ✕
+                <UiIcon name="close" />
               </button>
             </div>
 

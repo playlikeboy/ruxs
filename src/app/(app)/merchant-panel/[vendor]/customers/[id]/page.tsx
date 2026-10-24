@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import { requireVendorModule } from "@/lib/auth/session";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -52,7 +53,7 @@ export default async function CustomerDetailPage({
             href={`tel:${customer.phone}`}
             className="px-3 py-1.5 bg-[#FAFAF7] border border-line rounded-[8px] text-xs font-semibold text-ink hover:bg-white active:scale-95 transition-all"
           >
-            📞 {customer.phone}
+            <UiIcon name="phone" /> {customer.phone}
           </a>
         </div>
 

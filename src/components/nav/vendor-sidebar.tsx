@@ -1,5 +1,7 @@
 "use client";
 
+import { AppIcon } from "@/components/ui/app-icon";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
@@ -34,8 +36,8 @@ export function VendorSidebar({
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-surface lg:flex">
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-bg text-xl ring-1 ring-line" aria-hidden="true">
-          {info.emoji}
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-bg text-accent ring-1 ring-line" aria-hidden="true">
+          <AppIcon name={vendorType} />
         </span>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-ink">{storeName}</p>

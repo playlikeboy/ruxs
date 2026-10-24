@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { buildMetadata, breadcrumbsJsonLd } from "@/lib/seo";
 
@@ -35,17 +36,17 @@ export default function PricingPage() {
       </section>
       <section className="grid gap-4 sm:grid-cols-3">
         <article className="rounded-[16px] border border-line bg-surface p-5">
-          <span className="text-2xl" aria-hidden="true">🍱</span>
+          <UiIcon name="tiffin" className="h-6 w-6 text-accent" />
           <h2 className="mt-4 text-base font-semibold text-ink">Tiffin & meal plans</h2>
           <p className="mt-2 text-sm leading-6 text-muted">Each kitchen chooses its own menu, portion options, meal price and recurring plan.</p>
         </article>
         <article className="rounded-[16px] border border-line bg-surface p-5">
-          <span className="text-2xl" aria-hidden="true">💧</span>
+          <UiIcon name="water" className="h-6 w-6 text-accent" />
           <h2 className="mt-4 text-base font-semibold text-ink">Water-can delivery</h2>
           <p className="mt-2 text-sm leading-6 text-muted">Suppliers set their own can price, deposit, delivery schedule and coverage area.</p>
         </article>
         <article className="rounded-[16px] border border-line bg-surface p-5">
-          <span className="text-2xl" aria-hidden="true">🗓️</span>
+          <UiIcon name="date" className="h-6 w-6 text-accent" />
           <h2 className="mt-4 text-base font-semibold text-ink">Recurring subscriptions</h2>
           <p className="mt-2 text-sm leading-6 text-muted">Terms such as active days, skip cutoffs, billing periods and pauses depend on the provider.</p>
         </article>

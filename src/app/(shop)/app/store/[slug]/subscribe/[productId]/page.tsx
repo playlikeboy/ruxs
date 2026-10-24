@@ -20,7 +20,7 @@ export default async function SubscribePage({ params }: { params: Promise<{ slug
       <PageHeader title="Start a plan" subtitle={vendor.name} back={`/app/store/${slug}`} />
       <div className="px-4 pt-4">
         <div className="flex items-center gap-4">
-          <StoreCover cover={category(product.kind)} imageUrl={product.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-2xl" emojiClass="text-4xl" />
+          <StoreCover cover={category(product.kind)} imageUrl={product.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-2xl" emojiClass="h-9 w-9" />
           <div>
             <h2 className="text-lg font-semibold text-ink">{product.name}</h2>
             <p className="text-sm text-neutral-500">

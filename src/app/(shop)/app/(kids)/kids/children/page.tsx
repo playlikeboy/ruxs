@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import { getMyChildren } from "@/features/kids/queries";
 import { ChildrenManager } from "@/features/kids/components/children-manager";
@@ -15,7 +16,7 @@ export default async function KidsChildrenPage() {
     <div className="space-y-4">
       <div className="px-1">
         <h1 className="text-xl font-black tracking-tight text-kids-ink">
-          Child Profiles 👶
+          Child Profiles <UiIcon name="age" />
         </h1>
         <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
           Manage your children for 1-click booking into age-appropriate activities & camps

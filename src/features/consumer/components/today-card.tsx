@@ -1,5 +1,7 @@
 "use client";
 
+import { AppIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -8,7 +10,7 @@ import { setMyDay, skipAllToday } from "@/features/consumer/actions";
 
 export interface TodayItem {
   subscriptionId: string;
-  emoji: string;
+  kind: string;
   productName: string;
   vendorName: string;
   qty: number;
@@ -81,7 +83,7 @@ export function TodayCard({ items, today }: { items: TodayItem[]; today: string 
           const on = !item.skipped;
           return (
             <li key={item.subscriptionId} className="flex items-center gap-3 py-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-50 text-2xl" aria-hidden="true">{item.emoji}</span>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-50 text-accent" aria-hidden="true"><AppIcon name={item.kind} /></span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[15px] font-semibold text-ink">
                   {item.qty} × {item.productName}

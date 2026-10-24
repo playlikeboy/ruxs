@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Hint } from "@/components/ui/hint";
 import { getKidsActivities } from "@/features/kids/queries";
 import { KidsActivitiesView } from "@/features/kids/components/kids-activities-view";
 
@@ -14,14 +15,11 @@ export default async function KidsActivitiesPage() {
   return (
     <div className="space-y-4">
       <div className="px-1">
-        <h1 className="text-xl font-black tracking-tight text-kids-ink">
-          Kids Classes & Activities 🚀
-        </h1>
-        <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
-          Book 1:1 home sessions or studio batches with verified mentors
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-kids-ink">Classes for kids</h1>
+        <p className="mt-1 text-sm text-kids-ink/65">At home, at a studio or online, with providers reviewed by RUXs.</p>
       </div>
 
+      <Hint id="kids-activities">Booking sends a request. The teacher confirms it and you get an email; you pay at the session.</Hint>
       <KidsActivitiesView initialActivities={activities} />
     </div>
   );

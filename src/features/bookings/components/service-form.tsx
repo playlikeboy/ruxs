@@ -110,7 +110,7 @@ export function ServiceForm({
                 <div className="flex flex-wrap gap-2">
                   {categories.map((c) => (
                     <button key={c.id} type="button" onClick={() => setF({ ...f, categoryId: c.id })} aria-pressed={f.categoryId === c.id} className={"rounded-[10px] border px-3 py-2 text-xs font-semibold " + (f.categoryId === c.id ? "border-accent bg-peach text-accent" : "border-line text-muted")}>
-                      {c.emoji} {c.label}
+                      {c.label}
                     </button>
                   ))}
                 </div>

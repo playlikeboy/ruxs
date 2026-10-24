@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { eq, and, or, isNull, gte, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -122,7 +123,7 @@ export default async function CustomerLinkPage({
             href={`tel:${vendor.phone}`}
             className="px-2.5 py-1 bg-[#FAFAF7] border border-line rounded-[8px] text-xs font-semibold text-ink"
           >
-            📞 Kitchen
+            <UiIcon name="phone" /> Kitchen
           </a>
         </div>
 

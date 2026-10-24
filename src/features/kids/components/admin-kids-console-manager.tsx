@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -331,7 +333,7 @@ export function AdminKidsConsoleManager({
                 onClick={() => setEditingProvider(null)}
                 className="text-xs font-bold text-muted hover:text-ink"
               >
-                ✕ Close
+                <UiIcon name="close" /> Close
               </button>
             </div>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { AppIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -238,9 +240,7 @@ export function ProductFormDialog({
                           : "border-line text-muted")
                       }
                     >
-                      <span className="text-xl" aria-hidden="true">
-                        {k.emoji}
-                      </span>
+                      <AppIcon name={k.id} className="h-5 w-5" />
                       {k.shortLabel}
                     </button>
                   ))}

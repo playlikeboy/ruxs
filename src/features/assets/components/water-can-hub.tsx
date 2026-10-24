@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import { Droplet, RotateCcw, PackageCheck, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -125,7 +127,7 @@ export function WaterCanHub({
                 onClick={() => setShowLogModal(false)}
                 className="text-muted hover:text-ink text-sm font-bold"
               >
-                ✕
+                <UiIcon name="close" />
               </button>
             </div>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
@@ -126,7 +128,7 @@ export function ServiceBookingForm({
         </div>
         <div>
           <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-900">
-            Request sent 🎉
+            Request sent <UiIcon name="party" />
           </span>
           <h2 className="mt-2 text-xl font-black text-kids-ink">{service.title}</h2>
           <p className="mt-1 text-xs font-bold text-kids-ink/60">
@@ -216,7 +218,7 @@ export function ServiceBookingForm({
                   : "border-slate-200 bg-white text-kids-ink/70 hover:border-slate-300"
               }`}
             >
-              {mode === "home" ? "🏡 Home Visit" : mode === "studio" ? "🏫 Studio" : "💻 Online"}
+              {mode === "home" ? "Home Visit" : mode === "studio" ? "Studio" : "Online"}
             </button>
           ))}
         </div>

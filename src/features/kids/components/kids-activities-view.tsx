@@ -1,128 +1,149 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
+import { cn } from "@/components/ui/cn";
 import {
   filterKidsActivities,
+  KIDS_AGE_BRACKETS,
+  KIDS_FORMATS,
   type KidsAgeBracketId,
   type KidsCategoryId,
   type KidsFormat,
-  KIDS_FORMATS,
 } from "@/core/kids";
-import { KidsAgeFilter } from "./kids-age-filter";
 import { KidsCategoryStrip } from "./kids-category-strip";
 import { KidsActivityCard } from "./kids-activity-card";
 import type { KidsActivityItem } from "../types";
 
+const FORMATS: KidsFormat[] = ["studio", "home_visit", "online_live"];
+
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "inline-flex min-h-10 shrink-0 items-center rounded-full border px-3.5 text-sm font-medium transition-colors",
+        active ? "border-kids-ink bg-kids-ink text-white" : "border-kids-ink/15 bg-white text-kids-ink hover:border-kids-ink/40"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Search, one row of topics, and age/format tucked behind Filters. */
 export function KidsActivitiesView({ initialActivities }: { initialActivities: KidsActivityItem[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [ageBracket, setAgeBracket] = useState<KidsAgeBracketId>("all");
   const [category, setCategory] = useState<KidsCategoryId>("all");
   const [format, setFormat] = useState<KidsFormat>("all");
+  const [showFilters, setShowFilters] = useState(false);
 
-  const filtered = useMemo(() => {
-    return filterKidsActivities(
-      initialActivities.map((act) => ({
-        ...act,
-        minAge: act.ageMin,
-        maxAge: act.ageMax,
-      })),
-      {
-        ageBracket,
-        category,
-        format,
-        searchQuery,
-      }
-    );
-  }, [initialActivities, ageBracket, category, format, searchQuery]);
+  const filtered = useMemo(
+    () =>
+      filterKidsActivities(
+        initialActivities.map((act) => ({ ...act, minAge: act.ageMin, maxAge: act.ageMax })),
+        { ageBracket, category, format, searchQuery }
+      ),
+    [initialActivities, ageBracket, category, format, searchQuery]
+  );
+
+  const extraFilters = (ageBracket !== "all" ? 1 : 0) + (format !== "all" ? 1 : 0);
+  const anyFilter = extraFilters > 0 || category !== "all" || searchQuery !== "";
+  const reset = () => {
+    setAgeBracket("all");
+    setCategory("all");
+    setFormat("all");
+    setSearchQuery("");
+  };
+  const ageLabel = KIDS_AGE_BRACKETS.find((b) => b.id === ageBracket)?.label;
 
   return (
     <div className="space-y-4">
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search robotics, chess, pottery, karate…"
-          className="w-full rounded-[20px] border-2 border-kids-grape/15 bg-white py-2.5 pl-10 pr-4 text-xs font-bold text-kids-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 shadow-[0_3px_0_rgba(155,92,246,0.18)]"
-        />
+      <div className="flex gap-2">
+        <label className="relative flex-1">
+          <span className="sr-only">Search classes</span>
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-kids-ink/40" aria-hidden="true" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Dance, chess, robotics, art…"
+            className="min-h-12 w-full rounded-[12px] border border-kids-ink/15 bg-white pl-10 pr-3 text-base text-kids-ink placeholder:text-kids-ink/40 focus:border-kids-ink focus:outline-none"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => setShowFilters((v) => !v)}
+          aria-expanded={showFilters}
+          aria-controls="kids-filters"
+          className={cn(
+            "inline-flex min-h-12 items-center gap-2 rounded-[12px] border px-3.5 text-sm font-semibold",
+            showFilters || extraFilters ? "border-kids-ink bg-kids-ink text-white" : "border-kids-ink/15 bg-white text-kids-ink"
+          )}
+        >
+          <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+          Filters{extraFilters ? ` · ${extraFilters}` : ""}
+        </button>
       </div>
 
-      {/* Category Pills */}
       <KidsCategoryStrip selected={category} onChange={setCategory} />
 
-      {/* Age Group Pills */}
-      <KidsAgeFilter selected={ageBracket} onChange={setAgeBracket} />
+      {showFilters && (
+        <div id="kids-filters" className="space-y-3 rounded-[16px] border border-kids-ink/10 bg-white p-4">
+          <fieldset>
+            <legend className="mb-2 text-sm font-semibold text-kids-ink">Child&apos;s age</legend>
+            <div className="flex flex-wrap gap-2">
+              {KIDS_AGE_BRACKETS.map((b) => (
+                <Chip key={b.id} active={ageBracket === b.id} onClick={() => setAgeBracket(b.id)}>{b.id === "all" ? "Any age" : b.label}</Chip>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend className="mb-2 text-sm font-semibold text-kids-ink">Where</legend>
+            <div className="flex flex-wrap gap-2">
+              <Chip active={format === "all"} onClick={() => setFormat("all")}>Anywhere</Chip>
+              {FORMATS.map((f) => (
+                <Chip key={f} active={format === f} onClick={() => setFormat(f)}>{KIDS_FORMATS[f].label}</Chip>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+      )}
 
-      {/* Format Filter Bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-        {(["all", "studio", "home_visit", "online_live"] as KidsFormat[]).map((fmtKey) => {
-          const fmt = KIDS_FORMATS[fmtKey];
-          const isSelected = format === fmtKey;
-          return (
-            <button
-              key={fmtKey}
-              type="button"
-              onClick={() => setFormat(fmtKey)}
-              className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
-                isSelected
-                  ? "border border-kids-grape/20 bg-kids-grape text-white"
-                  : "border border-slate-200 bg-white text-kids-ink/70 hover:border-slate-400"
-              }`}
-            >
-              <span aria-hidden="true">{fmt.emoji}</span>
-              <span>{fmt.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Result Counter */}
-      <div className="flex items-center justify-between px-1 pt-1">
-        <span className="text-xs font-black text-kids-ink/80">
-          Showing {filtered.length} {filtered.length === 1 ? "activity" : "activities"}
+      <div className="flex flex-wrap items-center gap-2" aria-live="polite">
+        <span className="text-sm font-medium text-kids-ink/70">
+          {filtered.length} {filtered.length === 1 ? "class" : "classes"}
         </span>
-        {(ageBracket !== "all" || category !== "all" || format !== "all" || searchQuery) && (
-          <button
-            type="button"
-            onClick={() => {
-              setAgeBracket("all");
-              setCategory("all");
-              setFormat("all");
-              setSearchQuery("");
-            }}
-            className="text-[11px] font-bold text-kids-grape hover:underline"
-          >
-            Reset Filters
+        {ageBracket !== "all" && (
+          <button type="button" onClick={() => setAgeBracket("all")} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-kids-mint/50 px-3 text-xs font-medium text-kids-ink">
+            {ageLabel} <X className="h-3 w-3" aria-label="Remove" />
+          </button>
+        )}
+        {format !== "all" && (
+          <button type="button" onClick={() => setFormat("all")} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-kids-mint/50 px-3 text-xs font-medium text-kids-ink">
+            {KIDS_FORMATS[format].label} <X className="h-3 w-3" aria-label="Remove" />
+          </button>
+        )}
+        {anyFilter && (
+          <button type="button" onClick={reset} className="ml-auto text-sm font-semibold text-kids-ink underline underline-offset-4">
+            Clear all
           </button>
         )}
       </div>
 
-      {/* Activity Cards List */}
       {filtered.length === 0 ? (
-        <div className="rounded-[26px] border-2 border-dashed border-slate-300 bg-amber-50/60 p-8 text-center">
-          <span className="text-4xl" aria-hidden="true">🐣</span>
-          <p className="mt-2 text-sm font-black text-kids-ink">No activities match your filters</p>
-          <p className="mt-1 text-xs font-semibold text-kids-ink/60">
-            Try clearing filters or selecting another age group.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setAgeBracket("all");
-              setCategory("all");
-              setFormat("all");
-              setSearchQuery("");
-            }}
-            className="mt-3 rounded-full border-2 border-kids-grape/15 bg-kids-sunny/80 px-4 py-1.5 text-xs font-black shadow-[0_3px_0_rgba(155,92,246,0.18)]"
-          >
-            Show All Activities
+        <div className="rounded-[16px] border border-dashed border-kids-ink/20 bg-white p-8 text-center">
+          <p className="text-base font-semibold text-kids-ink">No classes match</p>
+          <p className="mt-1 text-sm text-kids-ink/60">Try another age or topic, or clear the filters.</p>
+          <button type="button" onClick={reset} className="mt-4 inline-flex min-h-10 items-center rounded-[12px] bg-kids-ink px-4 text-sm font-semibold text-white">
+            Show all classes
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           {filtered.map((item) => (
             <KidsActivityCard key={item.id} item={item} />
           ))}

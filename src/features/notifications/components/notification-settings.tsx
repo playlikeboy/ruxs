@@ -255,7 +255,7 @@ export function NotificationSettings({
               type="button"
               onClick={() => {
                 new window.Notification("RUXs Test Notification", {
-                  body: "Push notifications are working smoothly on your device! 🔔",
+                  body: "Push notifications are working smoothly on your device!",
                   icon: "/icon",
                 });
                 toast.success("Device notification sent!");

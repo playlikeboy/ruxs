@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { UserPlus } from "lucide-react";
@@ -24,7 +25,7 @@ export default async function KidsBookingsPage() {
       <div className="flex items-center justify-between px-1">
         <div>
           <h1 className="text-xl font-black tracking-tight text-kids-ink">
-            My Activities & Bookings 📅
+            My Activities & Bookings <UiIcon name="date" />
           </h1>
           <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
             Upcoming sessions and holiday camp enrollments for your family

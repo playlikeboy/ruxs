@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import { PriceBreakupList } from "@/features/consumer/components/price-breakup";
 import { storedBreakup } from "@/core/pricing";
 import Link from "next/link";
@@ -119,14 +120,14 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               href={`/app/store/${vendorSlug}#reviews`}
               className="flex h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-100/70"
             >
-              ★ You rated {vendorName} ({myReview.mine.rating}/5 stars)
+              <UiIcon name="star" /> You rated {vendorName} ({myReview.mine.rating}/5 stars)
             </Link>
           ) : (
             <Link
               href={`/app/store/${vendorSlug}#reviews`}
               className="flex h-12 items-center justify-center gap-2 rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink shadow-2xs hover:bg-neutral-50 active:scale-[0.98] transition-all"
             >
-              ★ Rate {vendorName}
+              <UiIcon name="star" /> Rate {vendorName}
             </Link>
           )
         )}

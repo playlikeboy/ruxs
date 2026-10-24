@@ -1,5 +1,7 @@
 "use client";
 
+import { AppIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -354,7 +356,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                       {vendor.name}
                     </Link>
                     <p className="truncate text-xs text-muted">
-                      {typeInfo.emoji} {typeInfo.label} · {vendor.area}, {vendor.city}
+                      {typeInfo.label} · {vendor.area}, {vendor.city}
                     </p>
                   </div>
                 </div>
@@ -525,7 +527,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                   {/* Category & Type */}
                   <td className="px-3 py-3.5 text-xs">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm">{typeInfo.emoji}</span>
+                      <AppIcon name={vendor.vendorType} className="h-4 w-4 text-muted" />
                       <span className="font-semibold text-ink">{typeInfo.label}</span>
                     </div>
                     <span className="text-[11px] text-muted capitalize">

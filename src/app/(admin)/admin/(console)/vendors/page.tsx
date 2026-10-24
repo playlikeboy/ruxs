@@ -15,14 +15,14 @@ const STATUS_FILTERS = [
 
 const CATEGORY_FILTERS = [
   { v: "", label: "All Categories" },
-  { v: "tiffin", label: "🍱 Tiffin" },
-  { v: "water", label: "💧 Water" },
-  { v: "milk", label: "🥛 Milk" },
-  { v: "fitness", label: "🏋️ Fitness" },
-  { v: "physio", label: "🩺 Physio" },
-  { v: "mehndi", label: "🌿 Mehndi" },
-  { v: "kids", label: "🚀 Kids" },
-  { v: "gifts", label: "🎁 Gifts" },
+  { v: "tiffin", label: "Tiffin" },
+  { v: "water", label: "Water" },
+  { v: "milk", label: "Milk" },
+  { v: "fitness", label: "Fitness" },
+  { v: "physio", label: "Physio" },
+  { v: "mehndi", label: "Mehndi" },
+  { v: "kids", label: "Kids" },
+  { v: "gifts", label: "Gifts" },
 ];
 
 export default async function AdminVendorsPage({

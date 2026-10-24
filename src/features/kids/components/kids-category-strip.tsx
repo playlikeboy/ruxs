@@ -1,33 +1,31 @@
 "use client";
 
+import { AppIcon } from "@/components/ui/app-icon";
+import { cn } from "@/components/ui/cn";
 import { KIDS_CATEGORIES, type KidsCategoryId } from "@/core/kids";
-
-interface KidsCategoryStripProps {
-  selected: KidsCategoryId;
-  onChange: (category: KidsCategoryId) => void;
-}
 
 const CATEGORY_KEYS: KidsCategoryId[] = ["all", "stem", "arts", "logic", "sports", "music", "kits"];
 
-export function KidsCategoryStrip({ selected, onChange }: KidsCategoryStripProps) {
+/** One scrollable row of topics. */
+export function KidsCategoryStrip({ selected, onChange }: { selected: KidsCategoryId; onChange: (id: KidsCategoryId) => void }) {
   return (
-    <div className="no-scrollbar flex items-center gap-2 overflow-x-auto py-1">
-      {CATEGORY_KEYS.map((key) => {
-        const cat = KIDS_CATEGORIES[key];
-        const isSelected = selected === key;
+    <div role="group" aria-label="Topics" className="no-scrollbar -mx-1 flex items-center gap-2 overflow-x-auto px-1 py-0.5">
+      {CATEGORY_KEYS.map((id) => {
+        const cat = KIDS_CATEGORIES[id];
+        const active = selected === cat.id;
         return (
           <button
-            key={key}
+            key={cat.id}
             type="button"
-            onClick={() => onChange(key)}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-black transition active:scale-95 ${
-              isSelected
-                ? "border-2 border-kids-grape/15 bg-emerald-300 text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
-                : "border-2 border-slate-200 bg-white text-kids-ink/80 hover:border-slate-300 hover:bg-slate-50"
-            }`}
+            onClick={() => onChange(cat.id)}
+            aria-pressed={active}
+            className={cn(
+              "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors",
+              active ? "border-kids-ink bg-kids-ink text-white" : "border-kids-ink/15 bg-white text-kids-ink hover:border-kids-ink/40"
+            )}
           >
-            <span className="text-sm" aria-hidden="true">{cat.emoji}</span>
-            <span>{cat.shortLabel}</span>
+            <AppIcon name={cat.id} className="h-4 w-4" />
+            {cat.label}
           </button>
         );
       })}

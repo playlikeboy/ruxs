@@ -14,7 +14,7 @@ export function StoreCard({ store }: { store: StoreCardData }) {
           imageUrl={store.coverUrl}
           alt=""
           className="aspect-[16/10] w-full transition-transform duration-300 group-hover:scale-[1.02]"
-          emojiClass="text-7xl"
+          emojiClass="h-16 w-16"
         />
         <div className="absolute left-3 top-3 flex gap-1.5">
           {store.hasSubscriptions && (

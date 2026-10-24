@@ -37,7 +37,7 @@ export function GenerateBillsButton({
       onClick={handleGenerate}
       className="px-3 py-2 bg-surface border border-line text-xs font-semibold text-ink rounded-[10px] hover:border-accent active:scale-95 transition-all shadow-xs disabled:opacity-50"
     >
-      {isPending ? "Generating..." : "⚡ Generate Bills"}
+      {isPending ? "Generating..." : "Generate Bills"}
     </button>
   );
 }

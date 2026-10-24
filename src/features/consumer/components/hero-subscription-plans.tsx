@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ChevronRight, Repeat, Sparkles } from "lucide-react";
 import { formatINR } from "@/core/money";
@@ -62,19 +63,19 @@ export function HeroSubscriptionPlans({
             href="/app/category/tiffin"
             className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white/90 px-3 py-1.5 text-xs font-medium text-ink shadow-2xs hover:bg-white"
           >
-            🍱 Lunch tiffins
+            <UiIcon name="tiffin" /> Lunch tiffins
           </Link>
           <Link
             href="/app/category/milk"
             className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white/90 px-3 py-1.5 text-xs font-medium text-ink shadow-2xs hover:bg-white"
           >
-            🥛 Morning milk
+            <UiIcon name="milk" /> Morning milk
           </Link>
           <Link
             href="/app/category/water"
             className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white/90 px-3 py-1.5 text-xs font-medium text-ink shadow-2xs hover:bg-white"
           >
-            💧 20L Water cans
+            <UiIcon name="water" /> 20L Water cans
           </Link>
         </div>
       </div>
@@ -120,7 +121,7 @@ export function HeroSubscriptionPlans({
                     imageUrl={p.imageUrl}
                     alt=""
                     className="h-10 w-10 shrink-0 rounded-xl"
-                    emojiClass="text-2xl"
+                    emojiClass="h-6 w-6"
                   />
                   {isScheduledToday ? (
                     p.isSkippedToday ? (

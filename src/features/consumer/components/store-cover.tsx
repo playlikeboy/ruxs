@@ -1,14 +1,15 @@
+import { AppIcon } from "@/components/ui/app-icon";
 import type { CoverStyle } from "@/config/service-kinds";
 
-/** Store or item artwork: the merchant's photo, or the category's gradient with its emoji. */
+/** Store or item artwork: the merchant's photo, or the category's gradient with its icon. */
 export function StoreCover({
   cover,
   imageUrl,
   alt,
   className = "",
-  emojiClass = "text-6xl",
+  emojiClass = "h-16 w-16",
 }: {
-  cover: CoverStyle;
+  cover: CoverStyle & { id?: string };
   imageUrl?: string | null;
   alt: string;
   className?: string;
@@ -27,9 +28,7 @@ export function StoreCover({
       className={"flex items-center justify-center " + className}
       style={{ backgroundImage: `linear-gradient(135deg, ${cover.coverFrom}, ${cover.coverTo})` }}
     >
-      <span className={"drop-shadow-sm " + emojiClass} aria-hidden="true">
-        {cover.emoji}
-      </span>
+      <AppIcon name={cover.id} className={"text-brand-deep/80 " + emojiClass} strokeWidth={1.6} />
     </div>
   );
 }

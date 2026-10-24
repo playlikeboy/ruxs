@@ -1,5 +1,7 @@
 "use client";
 
+import { AppIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -10,7 +12,7 @@ export interface ScheduledTodayPlan {
   subscriptionId: string;
   productName: string;
   vendorName: string;
-  emoji: string;
+  kind: string;
   qty: number;
   unit: string;
   cutoffAt: string;
@@ -134,7 +136,7 @@ export function TodayPlansOffControl({
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="text-2xl shrink-0" aria-hidden="true">
-                  {item.emoji}
+                  <AppIcon name={item.kind} />
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-ink">

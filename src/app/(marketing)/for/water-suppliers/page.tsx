@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { buildMetadata, breadcrumbsJsonLd } from "@/lib/seo";
 import { WaterCanIllustration } from "@/components/marketing/illustrations";
@@ -27,7 +28,7 @@ export default function ForWaterSuppliersPage() {
       <section className="mx-auto grid max-w-5xl items-center gap-8 md:grid-cols-[1fr_0.75fr] md:gap-14">
         <div className="space-y-5">
           <div className="inline-flex items-center gap-2 rounded-full bg-sky px-3 py-1.5 text-xs font-semibold text-ink">
-            💧 Water-can delivery for your home
+            <UiIcon name="water" /> Water-can delivery for your home
           </div>
           <h1 className="max-w-2xl text-4xl font-semibold leading-[1.08] tracking-tight text-ink sm:text-6xl">
             Water at home, <span className="text-accent">without the chase.</span>
@@ -56,17 +57,17 @@ export default function ForWaterSuppliersPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           <article className="rounded-[16px] border border-line bg-surface p-5">
-            <span className="text-2xl" aria-hidden="true">🏠</span>
+            <UiIcon name="home" className="h-6 w-6 text-accent" />
             <h3 className="mt-4 text-base font-semibold text-ink">For your household</h3>
             <p className="mt-2 text-sm leading-6 text-muted">Look for a supplier serving your street, apartment or neighbourhood.</p>
           </article>
           <article className="rounded-[16px] border border-line bg-surface p-5">
-            <span className="text-2xl" aria-hidden="true">🔁</span>
+            <UiIcon name="repeat" className="h-6 w-6 text-accent" />
             <h3 className="mt-4 text-base font-semibold text-ink">Repeat delivery</h3>
             <p className="mt-2 text-sm leading-6 text-muted">Ask about recurring schedules and the options available from your chosen supplier.</p>
           </article>
           <article className="rounded-[16px] border border-line bg-surface p-5">
-            <span className="text-2xl" aria-hidden="true">♻️</span>
+            <UiIcon name="recycle" className="h-6 w-6 text-accent" />
             <h3 className="mt-4 text-base font-semibold text-ink">Track empty cans</h3>
             <p className="mt-2 text-sm leading-6 text-muted">Where supported, the service account can help keep deliveries, returns and deposits clear.</p>
           </article>

@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { setDayChange } from "@/features/day-changes/actions";
@@ -150,7 +152,7 @@ export function CustomerDayCards({
                     : "bg-[#FAFAF7] text-muted border-line hover:bg-white"
                 }`}
               >
-                ✓ Deliver
+                <UiIcon name="check" /> Deliver
               </button>
 
               <button
@@ -163,7 +165,7 @@ export function CustomerDayCards({
                     : "bg-[#FAFAF7] text-muted border-line hover:bg-white"
                 }`}
               >
-                ✕ Skip
+                <UiIcon name="close" /> Skip
               </button>
 
               <button

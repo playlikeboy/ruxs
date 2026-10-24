@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import { Package, Truck, ShieldCheck } from "lucide-react";
 import { getKidsKits } from "@/features/kids/queries";
@@ -20,7 +21,7 @@ export default async function KidsKitsPage() {
           <span className="text-[11px] font-black uppercase tracking-wider">Doorstep Delivery</span>
         </div>
         <h1 className="mt-0.5 text-xl font-black tracking-tight text-kids-ink">
-          DIY Learning & Science Kits 🧩
+          DIY Learning & Science Kits <UiIcon name="kit" />
         </h1>
         <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
           Hands-on screen-free activity boxes delivered to your doorstep

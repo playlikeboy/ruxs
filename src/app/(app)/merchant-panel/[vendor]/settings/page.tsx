@@ -44,7 +44,7 @@ export default async function SettingsPage({
       </div>
 
       <CardSection
-        title={`${info.emoji} ${info.label} profile`}
+        title={`${info.label} profile`}
         description={`Details only a ${info.label.toLowerCase()} needs. Households see the highlights on your page.`}
       >
         <TypeFieldsForm slug={slug} type={typeProfile.type} initial={typeProfile.values} submitLabel="Save profile" />

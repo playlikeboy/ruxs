@@ -1,3 +1,4 @@
+import { Hint } from "@/components/ui/hint";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -90,6 +91,9 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
+      <Hint id="admin-overview">
+        New merchants apply at /apply and show up under Applications. Call them, add notes, then approve to create the store and its login.
+      </Hint>
       {/* Top Welcome & Quick Actions Bar */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

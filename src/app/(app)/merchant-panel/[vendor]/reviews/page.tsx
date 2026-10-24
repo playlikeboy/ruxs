@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import { requireVendorModule } from "@/lib/auth/session";
 import { summarizeRatings } from "@/core/ratings";
 import { getVendorPanelReviews } from "@/features/reviews/queries";
@@ -33,7 +34,7 @@ export default async function ReviewsPage({ params }: { params: Promise<{ vendor
         <ul className="space-y-2">
           {histogram.map((h) => (
             <li key={h.star} className="flex items-center gap-3 text-sm">
-              <span className="w-6 text-right tabular-nums text-muted">{h.star}★</span>
+              <span className="w-6 text-right tabular-nums text-muted">{h.star}<UiIcon name="star" /></span>
               <span className="h-2 flex-1 overflow-hidden rounded-full bg-bg">
                 <span className="block h-full rounded-full bg-[#E8A33D]" style={{ width: summary.count ? `${(h.n / summary.count) * 100}%` : "0%" }} />
               </span>

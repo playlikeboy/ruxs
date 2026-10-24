@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -118,7 +119,7 @@ export default async function KidsProviderProfilePage({
           <div className="mt-2 grid grid-cols-1 gap-2.5 sm:grid-cols-2 text-xs">
             <div className="rounded-xl border border-slate-200 bg-white p-3">
               <span className="block font-black text-emerald-800">
-                🛡️ Verified by RUXs Admin
+                <UiIcon name="shield" /> Verified by RUXs Admin
               </span>
               <p className="mt-1 text-[11px] font-medium text-kids-ink/70">
                 {profile?.safetyNotes || "Identity verified, premise inspected, child safety guidelines signed."}
@@ -127,7 +128,7 @@ export default async function KidsProviderProfilePage({
 
             <div className="rounded-xl border border-slate-200 bg-white p-3">
               <span className="block font-black text-kids-ink">
-                🎓 Claimed Credentials
+                <UiIcon name="cap" /> Claimed Credentials
               </span>
               <p className="mt-1 text-[11px] font-medium text-kids-ink/70">
                 {profile?.qualifications || "Certified educator in subject domain."}
@@ -273,7 +274,7 @@ export default async function KidsProviderProfilePage({
                           {category.name}
                         </span>
                         <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-kids-ink/80">
-                          👶 {ageLabel}
+                          <UiIcon name="age" /> {ageLabel}
                         </span>
                       </div>
                       <h3 className="mt-1.5 text-sm font-black text-kids-ink">

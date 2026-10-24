@@ -1,3 +1,4 @@
+import { AppIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { and, count, eq, isNull } from "drizzle-orm";
 import { Check } from "lucide-react";
@@ -67,7 +68,7 @@ export async function SetupChecklist({ slug }: { slug: string }) {
             {done} of {steps.length} done{v.status === "pending" ? " · RUXs approves new merchants within a day" : ""}
           </p>
         </div>
-        <span className="text-2xl" aria-hidden="true">{info.emoji}</span>
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-peach text-accent"><AppIcon name={type} /></span>
       </div>
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-bg" aria-hidden="true">
         <div className="h-full rounded-full bg-good transition-all" style={{ width: `${(done / steps.length) * 100}%` }} />

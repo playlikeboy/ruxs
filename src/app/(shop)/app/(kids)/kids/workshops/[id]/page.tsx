@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -65,7 +66,7 @@ export default async function KidsWorkshopDetailPage({
             {data.category.name}
           </span>
           <span className="rounded-full border border-kids-grape/20 bg-pink-100 px-2.5 py-0.5 text-[11px] font-black text-kids-ink">
-            👶 {ageText} ({classText})
+            <UiIcon name="age" /> {ageText} ({classText})
           </span>
           <span
             className={`rounded-full border border-kids-grape/20 px-2.5 py-0.5 text-[11px] font-black ${
@@ -74,7 +75,7 @@ export default async function KidsWorkshopDetailPage({
                 : "bg-amber-200 text-kids-ink"
             }`}
           >
-            🔥 {data.availability.remainingSeats} of {data.workshop.capacity} seats left
+            <UiIcon name="fire" /> {data.availability.remainingSeats} of {data.workshop.capacity} seats left
           </span>
         </div>
 
@@ -204,7 +205,7 @@ export default async function KidsWorkshopDetailPage({
         />
       ) : (
         <div className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-6 text-center shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)]">
-          <span className="text-3xl">🏕️</span>
+          <UiIcon name="camp" className="h-6 w-6 text-accent" />
           <h2 className="mt-2 text-base font-black text-kids-ink">
             Sign in to Reserve a Seat
           </h2>

@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import { getAvailableHolidayPasses, getMyKidsPasses } from "@/features/kids/queries";
 import { hexclave } from "@/lib/auth/hexclave";
@@ -21,7 +22,7 @@ export default async function KidsPassesPage() {
     <div className="mx-auto max-w-2xl space-y-4 pb-12">
       <div className="px-1">
         <h1 className="text-xl font-black tracking-tight text-kids-ink">
-          Holiday & Weekend Activity Passes 🎟️
+          Holiday & Weekend Activity Passes <UiIcon name="pass" />
         </h1>
         <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
           Save on classes and holiday workshops with flexible session credits

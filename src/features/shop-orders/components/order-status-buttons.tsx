@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -57,7 +59,7 @@ export function OrderStatusButtons({
   if (vendorAlreadyDelivered && (status === "out_for_delivery" || status === "accepted")) {
     return (
       <div className="rounded-[10px] border border-amber-200 bg-amber-50/80 px-3.5 py-2.5 text-center text-xs font-semibold text-amber-800">
-        ⏳ You marked delivered · Waiting for customer confirmation
+        <UiIcon name="hourglass" /> You marked delivered · Waiting for customer confirmation
       </div>
     );
   }
@@ -67,7 +69,7 @@ export function OrderStatusButtons({
     <div className="space-y-2">
       {customerConfirmed && (
         <p className="rounded-[8px] bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200">
-          ✓ Customer confirmed delivery! Tap below to finalize:
+          <UiIcon name="check" /> Customer confirmed delivery! Tap below to finalize:
         </p>
       )}
       <div className="flex gap-2">

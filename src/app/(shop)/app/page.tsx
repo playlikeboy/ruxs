@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, GraduationCap, House, MapPin } from "lucide-react";
+import { ArrowRight, House, MapPin } from "lucide-react";
 import { RuxsMark } from "@/components/marketing/ruxs-mark";
-import { ModeSwitch } from "@/features/consumer/components/mode-switch";
 import { getMyLocation, getMyPlans, getMyProfile, listStores } from "@/features/consumer/queries";
 import { getCategoryMap } from "@/features/platform/queries";
 import { TodayCard, type TodayItem } from "@/features/consumer/components/today-card";
@@ -13,6 +12,11 @@ import { LocationChip } from "@/features/consumer/components/location-chip";
 import { SearchBar } from "@/features/consumer/components/search-bar";
 import { StoreFilterList } from "@/features/consumer/components/store-filter-list";
 import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
+import { CategoryTile } from "@/components/ui/category-tile";
+import { getKidsActivities } from "@/features/kids/queries";
+import { formatINR } from "@/core/money";
+import { AppIcon } from "@/components/ui/app-icon";
+import { Hint } from "@/components/ui/hint";
 import { ViewCartBar } from "@/features/consumer/components/view-cart-bar";
 
 export const metadata = { title: "Explore" };
@@ -25,7 +29,7 @@ export default async function ExplorePage() {
   const radius = settings.discoveryRadiusKm;
 
   // Plans that deliver today, for the "receive today?" card.
-  const [{ today, plans }, category] = await Promise.all([getMyPlans(), getCategoryMap()]);
+  const [{ today, plans }, category, kidsActivities] = await Promise.all([getMyPlans(), getCategoryMap(), getKidsActivities()]);
   const weekday = weekdayIST(today);
   const now = new Date();
   const todayItems: TodayItem[] = plans
@@ -34,7 +38,7 @@ export default async function ExplorePage() {
       const change = p.changes.find((c) => c.serviceDate === today);
       return {
         subscriptionId: p.sub.id,
-        emoji: category(p.product.kind).emoji,
+        kind: p.product.kind,
         productName: p.product.name,
         vendorName: p.vendorName,
         qty: change?.kind === "extra" ? p.sub.qty + change.qty : change?.kind === "qty" ? change.qty : p.sub.qty,
@@ -67,52 +71,36 @@ export default async function ExplorePage() {
 
   const firstName = (profile?.name ?? user.displayName ?? "").split(" ")[0];
 
-  // Kids categories live behind the Daily ↔ Kids switch, not in the Daily grid.
-  const dailyCategories = categories.filter((k) => k.vendorType !== "kids" && k.id !== "kids-kits");
-  const serviceCategories = dailyCategories.length > 0 ? (
-    <section className="mt-6" aria-labelledby="service-categories-heading">
-      <h2 id="service-categories-heading" className="text-[17px] font-bold tracking-tight text-ink">What do you need?</h2>
-      <div className="mt-3 grid grid-cols-4 gap-x-2 gap-y-4">
-        {dailyCategories.map((k) => (
-          <Link key={k.id} href={"/app/category/" + k.id} className="group flex flex-col items-center gap-1.5 text-center active:scale-95">
-            <span
-              className="flex h-16 w-16 items-center justify-center rounded-[20px] text-[30px] border border-white/80 shadow-[0_2px_4px_rgba(32,36,31,0.035)] transition-transform group-hover:-translate-y-0.5"
-              style={{ backgroundColor: k.tint }}
-              aria-hidden="true"
-            >
-              {k.emoji}
-            </span>
-            <span className="line-clamp-2 text-[12px] font-medium leading-tight text-ink">{k.shortLabel}</span>
-          </Link>
-        ))}
-      </div>
-    </section>
-  ) : null;
+  // One grid for everything households can get, kids included.
+  const daily = categories.filter((k) => k.vendorType !== "kids" && k.id !== "kids-kits");
+  const tiles = [
+    ...daily.map((k) => ({ id: k.id, label: k.shortLabel, href: "/app/category/" + k.id, tint: k.tint })),
+    { id: "kids", label: "Kids classes", href: "/app/kids/activities", tint: "#E9F4E7" },
+    { id: "kids-kits", label: "Learning kits", href: "/app/kids/kits", tint: "#FFF4D8" },
+  ];
+  const kidsRail = kidsActivities.slice(0, 8);
 
   return (
     <div className="pb-24">
-      <div className="space-y-3 px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))]">
-        <header className="flex items-center justify-between gap-3 px-0.5 pb-1">
-          <Link href="/app" aria-label="RUXs home" className="inline-flex items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-            <RuxsMark className="h-10 w-10 shrink-0" aria-hidden="true" />
+      <div className="space-y-3 px-4 pb-2 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+        <header className="flex items-center justify-between gap-3">
+          <Link href="/app" aria-label="RUXs home" className="inline-flex items-center gap-2 rounded-xl">
+            <RuxsMark className="h-9 w-9 shrink-0" aria-hidden="true" />
             <span className="text-lg font-extrabold tracking-[-0.03em] text-brand-deep">RUXs</span>
           </Link>
-          <span className="text-right text-xs font-medium leading-4 text-muted">Good things, close by.</span>
+          <LocationChip label={location.label} source={location.source} />
         </header>
-        <ModeSwitch />
-        <LocationChip label={location.label} source={location.source} />
         <SearchBar />
-        <InstallAppPrompt variant="banner" />
       </div>
 
       <div className="px-4">
-        <h1 className="text-[26px] font-bold leading-tight tracking-tight text-ink">
-          {firstName ? `Hi ${firstName},` : "Hi there,"}
-          <br />
-          <span className="text-muted">what does home need today?</span>
+        <h1 className="mt-3 text-[24px] font-bold leading-tight tracking-tight text-ink">
+          {firstName ? `Hi ${firstName}, what does home need today?` : "What does home need today?"}
         </h1>
 
-        {plans.length === 0 && serviceCategories}
+        <div className="mt-4">
+          <Hint id="app-feed">Tap a category or search. Subscriptions let you skip or add an extra for any day before the store&apos;s cutoff.</Hint>
+        </div>
 
         <HeroSubscriptionPlans plans={heroPlans} today={today} category={category} />
 
@@ -122,43 +110,66 @@ export default async function ExplorePage() {
           </div>
         )}
 
-        {plans.length > 0 && serviceCategories}
+        <section className="mt-6" aria-labelledby="categories-heading">
+          <h2 id="categories-heading" className="sr-only">Categories</h2>
+          <div className="grid grid-cols-4 gap-x-2 gap-y-4">
+            {tiles.map((t) => (
+              <CategoryTile key={t.id} {...t} />
+            ))}
+          </div>
+        </section>
 
-        <Link
-          href="/app/kids"
-          className="mt-6 flex items-center gap-3 overflow-hidden rounded-2xl border border-brand-coral/10 bg-brand-peach p-4 transition active:scale-[0.99]"
-        >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-butter text-brand-deep" aria-hidden="true"><GraduationCap className="h-6 w-6" /></span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-bold leading-tight text-brand-deep">Switch to Kids</span>
-            <span className="mt-0.5 block text-xs leading-5 text-muted">Robotics, chess, art, dance and DIY kits near you.</span>
-          </span>
-          <ArrowRight className="h-5 w-5 shrink-0 text-brand-coral" aria-hidden="true" />
-        </Link>
+        {kidsRail.length > 0 && (
+          <section className="mt-8" aria-labelledby="kids-heading">
+            <div className="flex items-end justify-between gap-3">
+              <h2 id="kids-heading" className="text-xl font-bold tracking-tight text-ink">Kids classes near you</h2>
+              <Link href="/app/kids/activities" className="inline-flex items-center gap-1 text-sm font-semibold text-accent">
+                See all <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
+            <ul className="-mx-4 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
+              {kidsRail.map((a) => (
+                <li key={a.id} className="w-[220px] shrink-0 snap-start">
+                  <Link href={`/app/kids/services/${a.id}`} className="block h-full rounded-[16px] border border-line bg-surface p-3.5 transition-colors hover:border-ink/30">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-leaf text-brand-deep">
+                      <AppIcon name={a.category} />
+                    </span>
+                    <span className="mt-3 line-clamp-2 block text-[15px] font-semibold leading-snug text-ink">{a.name}</span>
+                    <span className="mt-1 block truncate text-sm text-muted">{a.vendor.name}</span>
+                    <span className="mt-2 flex items-center justify-between text-sm">
+                      <span className="text-muted">Ages {a.ageMin}–{a.ageMax}</span>
+                      <span className="font-semibold tabular-nums text-ink">{formatINR(a.pricePaise)}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {!profile && (
-          <Link href="/app/account" className="mt-5 flex items-center justify-between rounded-2xl border border-black/10 p-4">
+          <Link href="/app/account" className="mt-6 flex items-center justify-between gap-3 rounded-[16px] border border-line bg-surface p-4">
             <span>
               <span className="block text-[15px] font-semibold text-ink">Add your address</span>
               <span className="block text-sm text-muted">See stores that deliver to your building</span>
             </span>
-            <span className="text-sm font-bold text-accent">Add →</span>
+            <ArrowRight className="h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
           </Link>
         )}
 
-        <section className="mt-8">
+        <section className="mt-8" aria-labelledby="stores-heading">
           <div className="flex items-end justify-between">
-            <h2 className="text-xl font-bold tracking-tight text-ink">Within {radius} km of you</h2>
+            <h2 id="stores-heading" className="text-xl font-bold tracking-tight text-ink">Stores within {radius} km</h2>
             {location.source !== "none" && <span className="text-sm text-muted tabular-nums">{stores.length} stores</span>}
           </div>
           {location.source === "none" ? (
-            <div className="mt-4 rounded-2xl bg-neutral-50 p-6 text-center">
+            <div className="mt-4 rounded-[16px] bg-app-canvas p-6 text-center">
               <MapPin className="mx-auto h-8 w-8 text-accent" aria-hidden="true" />
               <p className="mt-2 font-semibold text-ink">Share your location to see stores</p>
-              <p className="mt-1 text-sm text-muted">We only show kitchens and suppliers within {radius} km of you. Tap “Use exact location” above, or add your address.</p>
+              <p className="mt-1 text-sm text-muted">We only show kitchens and suppliers within {radius} km of you. Tap your location above, or add your address.</p>
             </div>
           ) : stores.length === 0 ? (
-            <div className="mt-4 rounded-2xl bg-neutral-50 p-6 text-center">
+            <div className="mt-4 rounded-[16px] bg-app-canvas p-6 text-center">
               <House className="mx-auto h-8 w-8 text-brand-deep" aria-hidden="true" />
               <p className="mt-2 font-semibold text-ink">No stores within {radius} km yet</p>
               <p className="mt-1 text-sm text-muted">We&apos;re adding kitchens and suppliers every week. If this location looks wrong, update it above.</p>
@@ -169,6 +180,10 @@ export default async function ExplorePage() {
             </div>
           )}
         </section>
+
+        <div className="mt-8">
+          <InstallAppPrompt variant="banner" />
+        </div>
       </div>
       <ViewCartBar />
     </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useMemo, useState } from "react";
 import { ArrowUpDown, Check, Search, Sparkles, Star, MapPin, Tag, MessageSquare, Zap } from "lucide-react";
 import type { StoreCard as StoreCardData } from "@/features/consumer/queries";
@@ -258,7 +260,7 @@ export function StoreFilterList({
       {/* Stores List */}
       {filteredStores.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-black/10 bg-neutral-50/50 p-8 text-center">
-          <p className="text-3xl" aria-hidden="true">🔍</p>
+          <UiIcon name="search" className="mx-auto h-10 w-10 text-accent" />
           <p className="mt-2 text-sm font-semibold text-ink">No stores match your filters</p>
           <p className="mt-1 text-xs text-neutral-500">Try changing your search term or clearing active filters.</p>
           <button

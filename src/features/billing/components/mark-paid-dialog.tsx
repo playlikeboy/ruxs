@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { markPaid } from "@/features/ledger/actions";
@@ -73,7 +75,7 @@ export function MarkPaidDialog({
                 onClick={() => setIsOpen(false)}
                 className="text-muted hover:text-ink text-sm p-1"
               >
-                ✕
+                <UiIcon name="close" />
               </button>
             </div>
 

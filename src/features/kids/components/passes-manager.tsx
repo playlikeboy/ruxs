@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -109,7 +111,7 @@ export function PassesManager({
                   <div className="flex items-start justify-between">
                     <div>
                       <span className="rounded-full border border-kids-grape/20 bg-white px-2 py-0.5 text-[10px] font-black text-kids-ink">
-                        🎟️ ACTIVE WALLET
+                        <UiIcon name="pass" /> ACTIVE WALLET
                       </span>
                       <h3 className="mt-1.5 text-base font-black text-kids-ink">
                         {pass.name}
@@ -174,7 +176,7 @@ export function PassesManager({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <span className="rounded-full border border-kids-grape/20 bg-amber-200 px-2.5 py-0.5 text-[10px] font-black text-kids-ink">
-                    ⭐ {pass.creditsTotal} SESSIONS PASS
+                    <UiIcon name="star" /> {pass.creditsTotal} SESSIONS PASS
                   </span>
                   <h3 className="mt-2 text-lg font-black text-kids-ink">
                     {pass.name}

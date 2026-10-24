@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarClock, MapPin, Video, Home } from "lucide-react";
@@ -72,7 +73,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
           </div>
         )}
         {b.status === "done" && (
-          <Link href={`/app/store/${row.vendorSlug}#reviews`} className="flex h-12 items-center justify-center rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink">★ Rate {row.vendorName}</Link>
+          <Link href={`/app/store/${row.vendorSlug}#reviews`} className="flex h-12 items-center justify-center rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink"><UiIcon name="star" /> Rate {row.vendorName}</Link>
         )}
         {["done", "cancelled", "no_show"].includes(b.status) && (
           <Link href={`/app/store/${row.vendorSlug}`} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-ink text-sm font-semibold text-white">

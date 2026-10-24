@@ -1,5 +1,8 @@
 "use client";
 
+
+import { AppIcon, UiIcon } from "@/components/ui/app-icon";
+
 import { useState } from "react";
 import Link from "next/link";
 import { Calendar, Users, Play, X } from "lucide-react";
@@ -57,7 +60,7 @@ export function KidsWorkshopCard({ item }: { item: KidsWorkshopItem }) {
         <div className="mt-3 flex items-start gap-3">
           {!item.posterUrl && (
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[20px] border-2 border-kids-grape/15 bg-white text-2xl shadow-[0_3px_0_rgba(155,92,246,0.18)]">
-              {item.emoji}
+              <AppIcon name={item.category} className="h-6 w-6 text-kids-ink" />
             </span>
           )}
           <div>
@@ -67,7 +70,7 @@ export function KidsWorkshopCard({ item }: { item: KidsWorkshopItem }) {
               </h3>
             </Link>
             <span className="mt-1 inline-block text-[11px] font-bold text-kids-ink/60">
-              ⏰ {item.timeLabel} · 👶 {ageLabel}
+              <UiIcon name="time" /> {item.timeLabel} · <UiIcon name="age" /> {ageLabel}
             </span>
           </div>
         </div>

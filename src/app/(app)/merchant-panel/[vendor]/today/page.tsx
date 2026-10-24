@@ -5,6 +5,8 @@ import { todayIST } from "@/core/time";
 import { requireVendorModule } from "@/lib/auth/session";
 import { VENDOR_TYPE_INFO, canUseModule } from "@/core/vendor-types";
 import { SetupChecklist } from "@/features/vendor-types/components/setup-checklist";
+import { Hint } from "@/components/ui/hint";
+import { merchantHint } from "@/core/hints";
 import { getServerEnv } from "@/lib/env";
 import { MerchantAppCard } from "@/features/notifications/components/merchant-app-card";
 import { getVendorProducts } from "@/features/products/queries";
@@ -40,6 +42,7 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
       <>
         <div className="space-y-4 px-4 pt-4 sm:px-6 sm:pt-6">
           <SetupChecklist slug={slug} />
+          <Hint id={`merchant-${type}`}>{merchantHint(type)}</Hint>
           <MerchantAppCard variant="nudge" vapidPublicKey={getServerEnv().VAPID_PUBLIC_KEY ?? null} testPath={`/merchant-panel/${slug}/today`} />
         </div>
         <ProviderToday slug={slug} />
@@ -149,6 +152,7 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
       </div>
 
       <SetupChecklist slug={slug} />
+      <Hint id={`merchant-${type}`}>{merchantHint(type)}</Hint>
       <MerchantAppCard variant="nudge" vapidPublicKey={getServerEnv().VAPID_PUBLIC_KEY ?? null} testPath={`${base}/today`} />
 
       {newOrders > 0 && (

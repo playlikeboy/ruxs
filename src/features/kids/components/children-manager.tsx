@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState } from "react";
 import { Plus, User, Trash2, Edit2, ShieldAlert } from "lucide-react";
 import { saveChildAction, deleteChildAction } from "../actions";
@@ -128,7 +130,7 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
       <div className="space-y-2.5">
         {children.length === 0 && !isAdding && (
           <div className="rounded-[26px] border-2 border-dashed border-slate-300 bg-white p-6 text-center shadow-sm">
-            <span className="text-4xl" aria-hidden="true">👶</span>
+            <UiIcon name="age" className="h-6 w-6 text-accent" />
             <p className="mt-2 text-sm font-black text-kids-ink">No child profiles yet</p>
             <p className="mt-1 text-xs text-kids-ink/60">
               Add your child once to quickly book classes, workshops, and manage age-appropriate activities.

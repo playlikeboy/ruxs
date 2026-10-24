@@ -1,5 +1,8 @@
 "use client";
 
+
+import { AppIcon, UiIcon } from "@/components/ui/app-icon";
+
 import { useState } from "react";
 import Link from "next/link";
 import { Check, Plus, PackageCheck, ShieldCheck } from "lucide-react";
@@ -48,7 +51,7 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={item.posterUrl} alt={item.name} className="h-full w-full object-cover" />
           <div className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-black text-kids-ink backdrop-blur-xs shadow-xs">
-            👶 {ageLabel}
+            <UiIcon name="age" /> {ageLabel}
           </div>
         </div>
       )}
@@ -58,15 +61,15 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
         {!item.posterUrl && (
           <div className="flex items-start justify-between gap-2">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] border-2 border-kids-grape/15 bg-sky-100 text-2xl shadow-[0_3px_0_rgba(155,92,246,0.18)]">
-              {item.emoji}
+              <AppIcon name={item.category} className="h-6 w-6 text-kids-ink" />
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-1.5">
               <span className="inline-flex items-center rounded-full border border-kids-grape/20 bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-kids-ink">
-                👶 {ageLabel}
+                <UiIcon name="age" /> {ageLabel}
               </span>
               <span className="inline-flex items-center rounded-full border border-kids-grape/20 bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-950">
-                📦 DOORSTEP KIT
+                <UiIcon name="kit" /> DOORSTEP KIT
               </span>
             </div>
           </div>

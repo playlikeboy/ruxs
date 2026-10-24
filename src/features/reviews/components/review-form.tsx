@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -22,7 +24,7 @@ export function ReviewForm({ vendorSlug, initialRating, initialComment }: { vend
         <div className="flex items-center justify-between">
           <p className="text-[15px] font-semibold text-ink">Your Rating</p>
           <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-            ✓ Rated
+            <UiIcon name="check" /> Rated
           </span>
         </div>
         <div className="mt-2.5 flex items-center gap-1">

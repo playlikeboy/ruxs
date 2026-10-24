@@ -1,5 +1,8 @@
 "use client";
 
+
+import { AppIcon, UiIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -89,7 +92,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800">✓</span>
+          <UiIcon name="check" className="h-6 w-6 text-accent" />
           <h2 className="text-lg font-semibold text-ink">{f.name} is live &amp; Auto-Approved</h2>
         </div>
         {created.credentials ? (
@@ -132,7 +135,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
                 className="flex items-center gap-3 rounded-[14px] border border-line p-3 text-left transition hover:border-ink hover:scale-101"
                 style={{ backgroundColor: c.tint }}
               >
-                <span className="text-2xl" aria-hidden="true">{c.emoji}</span>
+                <AppIcon name={c.id} className="h-6 w-6 text-accent" />
                 <div>
                   <span className="block text-sm font-semibold text-ink">{c.label}</span>
                   <span className="block text-[11px] text-muted">{c.fulfilment === "booking" ? "Bookable sessions" : "Delivery store"}</span>
@@ -144,7 +147,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
 
         <div className="rounded-[18px] border-2 border-kids-grape/25 bg-kids-cream/50 p-4">
           <div className="mb-3 flex items-center gap-2">
-            <span className="text-2xl" aria-hidden="true">🧸</span>
+            <UiIcon name="sparkle" className="h-6 w-6 text-accent" />
             <div>
               <h3 className="text-sm font-black text-kids-ink">Ruxs Kids (10 Differentiated Vendor Types)</h3>
               <p className="text-[11px] font-medium text-kids-ink/70">Each type gets separate profile &amp; item database tables, certificates &amp; video preview.</p>
@@ -158,7 +161,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
                 onClick={() => setF({ ...f, categoryId: c.id, businessType: c.fulfilment === "booking" ? "booking" : "delivery" })}
                 className="flex items-start gap-2.5 rounded-[12px] border-2 border-kids-grape/15 bg-white p-3 text-left shadow-xs transition hover:border-kids-grape hover:scale-101"
               >
-                <span className="text-2xl leading-none mt-0.5" aria-hidden="true">{c.emoji}</span>
+                <AppIcon name={c.id} className="mt-0.5 h-6 w-6 text-accent" />
                 <div>
                   <span className="block text-xs font-black text-kids-ink leading-tight">{c.label}</span>
                   <span className="block text-[10px] text-kids-ink/70 mt-0.5">{c.blurb || (c.fulfilment === "delivery" ? "Doorstep DIY kits" : "Sessions & workshops")}</span>
@@ -217,7 +220,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
       {isNew && chosen && (
         <div className="flex items-center justify-between gap-3 rounded-[12px] border border-line p-3" style={{ backgroundColor: chosen.tint }}>
           <span className="flex items-center gap-2 text-sm font-semibold">
-            <span className="text-2xl" aria-hidden="true">{chosen.emoji}</span> Onboarding: {chosen.label}
+            <AppIcon name={chosen.id} className="h-6 w-6 text-accent" /> Onboarding: {chosen.label}
             <span className="font-normal text-muted">· {chosen.fulfilment === "booking" ? "booking provider" : "delivery store"}</span>
           </span>
           <button type="button" onClick={() => setF({ ...f, categoryId: "" })} className="text-xs font-semibold text-accent">Change</button>

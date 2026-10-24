@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import { TICKET_STATUS_LABELS, type TicketPriority, type TicketStatus } from "@/core/tickets";
 
 export function TicketStatusBadge({ status }: { status: TicketStatus | string }) {
@@ -19,7 +20,7 @@ export function TicketStatusBadge({ status }: { status: TicketStatus | string })
     case "resolved":
       return (
         <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-          ✓ {label}
+          <UiIcon name="check" /> {label}
         </span>
       );
     case "closed":

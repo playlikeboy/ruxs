@@ -1,3 +1,4 @@
+import { AppIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import type { Category } from "@/features/platform/queries";
 
@@ -17,7 +18,7 @@ export function CategoryBar({ categories, active }: { categories: Category[]; ac
               (isActive ? "border-ink text-ink" : "border-transparent text-neutral-500 hover:border-neutral-300 hover:text-ink")
             }
           >
-            <span className="text-2xl leading-none" aria-hidden="true">{k.emoji}</span>
+            <AppIcon name={k.id} className="h-6 w-6 text-accent" />
             {k.shortLabel}
           </Link>
         );

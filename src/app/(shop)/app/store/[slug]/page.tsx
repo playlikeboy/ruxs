@@ -83,7 +83,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
   return (
     <div className="pb-40">
       <div className="relative">
-        <StoreCover cover={category(primary)} imageUrl={vendor.coverUrl} alt={vendor.name} className="aspect-[4/3] w-full" emojiClass="text-[96px]" />
+        <StoreCover cover={category(primary)} imageUrl={vendor.coverUrl} alt={vendor.name} className="aspect-[4/3] w-full" emojiClass="h-24 w-24" />
         <Link
           href="/app"
           aria-label="Back to explore"
@@ -209,7 +209,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                       )}
                     </div>
                     <div className="relative flex w-28 shrink-0 flex-col items-center">
-                      <StoreCover cover={category(item.kind)} imageUrl={item.imageUrl} alt="" className="h-28 w-28 rounded-2xl" emojiClass="text-5xl" />
+                      <StoreCover cover={category(item.kind)} imageUrl={item.imageUrl} alt="" className="h-28 w-28 rounded-2xl" emojiClass="h-12 w-12" />
                       <div className="-mt-5">
                         <AddToCart
                           store={storeInfo}

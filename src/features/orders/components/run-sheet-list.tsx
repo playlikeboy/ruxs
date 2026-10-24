@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState, useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 import { markDelivered, markFailed } from "@/features/orders/actions";
@@ -197,7 +199,7 @@ export function RunSheetList({
                 <div className="flex items-center gap-2">
                   {isDone ? (
                     <span className="px-2.5 py-1 bg-[#E1F3E7] text-good text-xs font-semibold rounded-full flex items-center gap-1">
-                      ✓ Delivered
+                      <UiIcon name="check" /> Delivered
                     </span>
                   ) : isFailed ? (
                     <span className="px-2.5 py-1 bg-[#FCE4EC] text-[#B42318] text-xs font-semibold rounded-full">
@@ -219,7 +221,7 @@ export function RunSheetList({
                       href={`tel:${stop.customer.phone}`}
                       className="inline-flex items-center gap-1 text-accent font-medium hover:underline"
                     >
-                      📞 Call {stop.customer.phone}
+                      <UiIcon name="phone" /> Call {stop.customer.phone}
                     </a>
                     <a
                       href={stop.latitude && stop.longitude
@@ -229,7 +231,7 @@ export function RunSheetList({
                       rel="noreferrer"
                       className="inline-flex items-center gap-1 rounded-md bg-white border border-line px-2 py-0.5 text-[11px] font-semibold text-accent hover:border-accent shadow-2xs transition active:scale-95"
                     >
-                      🗺️ Open Maps ↗
+                      <UiIcon name="map" /> Open Maps ↗
                     </a>
                   </div>
 

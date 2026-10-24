@@ -1,3 +1,4 @@
+import { AppIcon, UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { KidsHeroBanner } from "@/features/kids/components/kids-hero-banner";
@@ -31,7 +32,7 @@ export default async function KidsHomePage() {
 
       {nothingNearby && (
         <div className="kids-card p-6 text-center">
-          <p className="animate-float text-5xl" aria-hidden="true">🗺️</p>
+          <UiIcon name="map" className="mx-auto h-10 w-10 text-accent" />
           <p className="mt-3 text-lg font-bold text-kids-ink">No kids classes near you yet</p>
           <p className="mt-1 text-sm text-kids-ink/70">We only show mentors within your area. Check your location on the Daily tab, or come back soon — new academies join every week.</p>
           <Link href="/app" className="mt-4 inline-flex min-h-10 items-center rounded-full bg-kids-grape px-4 text-sm font-bold text-white shadow-[0_4px_0_#7C3AED]">
@@ -62,7 +63,7 @@ export default async function KidsHomePage() {
               href={`/app/kids/activities`}
               className={`flex shrink-0 items-center gap-2 rounded-[20px] border-2 border-kids-grape/15 bg-white px-3.5 py-2 shadow-[0_3px_0_rgba(155,92,246,0.18)] transition active:translate-y-0.5`}
             >
-              <span className="text-xl" aria-hidden="true">{bracket.emoji}</span>
+              <AppIcon name={bracket.id} className="h-5 w-5" />
               <div>
                 <span className="block text-xs font-black leading-tight text-kids-ink">
                   {bracket.label}
@@ -111,7 +112,7 @@ export default async function KidsHomePage() {
           <div className="flex items-end justify-between px-1">
             <div>
               <span className="text-lg font-black tracking-tight text-kids-ink">
-                🏕️ Weekend Workshops
+                <UiIcon name="camp" /> Weekend Workshops
               </span>
               <p className="text-xs font-semibold text-kids-ink/60">
                 2-hour hands-on holiday & weekend creative camps
@@ -139,7 +140,7 @@ export default async function KidsHomePage() {
           <div className="flex items-end justify-between px-1">
             <div>
               <span className="text-lg font-black tracking-tight text-kids-ink">
-                🧩 DIY Kits & Activity Boxes
+                <UiIcon name="kit" /> DIY Kits & Activity Boxes
               </span>
               <p className="text-xs font-semibold text-kids-ink/60">
                 Delivered straight to your doorstep

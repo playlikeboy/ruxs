@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -77,7 +79,7 @@ export function WorkshopEnrollForm({
       <div className="rounded-[26px] border-2 border-kids-grape/15 bg-emerald-50 p-6 text-center shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)]">
         <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
         <h3 className="mt-2 text-lg font-black text-kids-ink">
-          Enrollment Confirmed! 🎉
+          Enrollment Confirmed! <UiIcon name="party" />
         </h3>
         <p className="mt-1 text-xs font-semibold text-kids-ink/70">
           Your child&apos;s seat has been reserved. Pay {formatINR(pricePaise)} at the venue on the first day. Schedule details are in your Bookings dashboard.

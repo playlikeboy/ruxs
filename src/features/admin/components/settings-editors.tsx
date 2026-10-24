@@ -74,7 +74,7 @@ function CategoryEditor({ row, isNew }: { row: CategoryRow; isNew?: boolean }) {
         >
           {VENDOR_TYPES.map((t) => (
             <option key={t} value={t}>
-              {VENDOR_TYPE_INFO[t].emoji} {VENDOR_TYPE_INFO[t].label}
+              {VENDOR_TYPE_INFO[t].label}
             </option>
           ))}
         </select>

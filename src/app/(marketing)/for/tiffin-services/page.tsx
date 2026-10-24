@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { buildMetadata, breadcrumbsJsonLd } from "@/lib/seo";
 import { TiffinDabbaIllustration } from "@/components/marketing/illustrations";
@@ -27,7 +28,7 @@ export default function ForTiffinServicesPage() {
       <section className="mx-auto grid max-w-5xl items-center gap-8 md:grid-cols-[1fr_0.75fr] md:gap-14">
         <div className="space-y-5">
           <div className="inline-flex items-center gap-2 rounded-full bg-peach px-3 py-1.5 text-xs font-semibold text-ink">
-            🍱 Tiffin plans for everyday life
+            <UiIcon name="tiffin" /> Tiffin plans for everyday life
           </div>
           <h1 className="max-w-2xl text-4xl font-semibold leading-[1.08] tracking-tight text-ink sm:text-6xl">
             Good meals, <span className="text-accent">on your schedule.</span>
@@ -56,17 +57,17 @@ export default function ForTiffinServicesPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           <article className="rounded-[16px] border border-line bg-surface p-5">
-            <span className="text-2xl" aria-hidden="true">☀️</span>
+            <UiIcon name="sun" className="h-6 w-6 text-accent" />
             <h3 className="mt-4 text-base font-semibold text-ink">Lunch plans</h3>
             <p className="mt-2 text-sm leading-6 text-muted">Find a regular midday meal for workdays, study days or home.</p>
           </article>
           <article className="rounded-[16px] border border-line bg-surface p-5">
-            <span className="text-2xl" aria-hidden="true">🌙</span>
+            <UiIcon name="moon" className="h-6 w-6 text-accent" />
             <h3 className="mt-4 text-base font-semibold text-ink">Dinner plans</h3>
             <p className="mt-2 text-sm leading-6 text-muted">Make evenings simpler with a meal schedule that suits your household.</p>
           </article>
           <article className="rounded-[16px] border border-line bg-surface p-5">
-            <span className="text-2xl" aria-hidden="true">🗓️</span>
+            <UiIcon name="date" className="h-6 w-6 text-accent" />
             <h3 className="mt-4 text-base font-semibold text-ink">Monthly subscriptions</h3>
             <p className="mt-2 text-sm leading-6 text-muted">Review a kitchen&apos;s recurring plan, service days, and conditions before you commit.</p>
           </article>

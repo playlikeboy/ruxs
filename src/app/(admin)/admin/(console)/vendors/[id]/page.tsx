@@ -35,7 +35,7 @@ export default async function AdminVendorPage({ params }: { params: Promise<{ id
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{vendor.name}</h1>
           <p className="mt-1 text-sm text-muted">
-            {VENDOR_TYPE_INFO[toVendorType(vendor.vendorType, vendor.businessType)].emoji} {VENDOR_TYPE_INFO[toVendorType(vendor.vendorType, vendor.businessType)].label} · {vendor.area}, {vendor.city} · <span className="capitalize">{vendor.status}</span>
+            {VENDOR_TYPE_INFO[toVendorType(vendor.vendorType, vendor.businessType)].label} · {vendor.area}, {vendor.city} · <span className="capitalize">{vendor.status}</span>
           </p>
           <div className="mt-2 flex flex-wrap gap-4 text-sm font-semibold">
             <Link href={`/merchant-panel/${vendor.slug}/today`} className="flex items-center gap-1 text-accent hover:underline">Open merchant panel <ExternalLink className="h-3.5 w-3.5" /></Link>
@@ -58,7 +58,7 @@ export default async function AdminVendorPage({ params }: { params: Promise<{ id
                 { l: "Customers", v: String(stats.customers) },
                 { l: "App orders", v: String(stats.orders) },
               ]),
-          { l: "Rating", v: rating.average == null ? "New" : `${rating.average.toFixed(1)} ★ (${rating.count})` },
+          { l: "Rating", v: rating.average == null ? "New" : `${rating.average.toFixed(1)} (${rating.count})` },
           { l: "Available payout", v: formatINR(balance.availablePaise) },
         ].map((s) => (
           <div key={s.l} className="rounded-[12px] border border-line bg-surface p-4">

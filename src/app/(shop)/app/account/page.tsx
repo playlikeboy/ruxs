@@ -7,6 +7,7 @@ import { SignOutButton } from "@/features/consumer/components/sign-out-button";
 import { NotificationSettings } from "@/features/notifications/components/notification-settings";
 import { getMyNotificationPreferences } from "@/features/notifications/actions";
 import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
+import { TapFeedbackSwitch } from "@/components/ui/tap-feedback";
 
 export const metadata = { title: "Account" };
 
@@ -58,6 +59,9 @@ export default async function AccountPage({
         </div>
 
         <InstallAppPrompt variant="card" className="mt-5" />
+        <div className="mt-5 rounded-[16px] border border-line bg-surface px-4">
+          <TapFeedbackSwitch />
+        </div>
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-ink">{profile ? "Delivery address" : "Where should we deliver?"}</h2>

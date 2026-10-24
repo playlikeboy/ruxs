@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import { Sparkles, Calendar } from "lucide-react";
 import { getKidsWorkshops } from "@/features/kids/queries";
@@ -20,7 +21,7 @@ export default async function KidsWorkshopsPage() {
           <span className="text-[11px] font-black uppercase tracking-wider">Holiday & Weekend</span>
         </div>
         <h1 className="mt-0.5 text-xl font-black tracking-tight text-kids-ink">
-          Weekend Bootcamps & Workshops 🏕️
+          Weekend Bootcamps & Workshops <UiIcon name="camp" />
         </h1>
         <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
           Intensive 2-hour holiday sessions with take-home projects and certificates

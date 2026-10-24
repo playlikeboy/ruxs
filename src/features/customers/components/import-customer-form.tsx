@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -91,7 +93,7 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
                 </div>
                 {row.error && (
                   <div className="text-[11px] text-[#B42318] font-medium mt-1">
-                    ⚠️ {row.error}
+                    <UiIcon name="warning" /> {row.error}
                   </div>
                 )}
               </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { UiIcon } from "@/components/ui/app-icon";
+
 import { providerStatusLabel, toCalendarStatus } from "@/core/kids/booking-status";
 import { KidsBookingActions } from "./provider-booking-actions";
 import { useState } from "react";
@@ -247,7 +249,7 @@ export function ProviderKidsManager({
             <div>
               <h3 className="text-sm font-black">
                 {isApproved
-                  ? "✓ Verified RUXs Kids Activity Provider"
+                  ? "Verified RUXs Kids Activity Provider"
                   : "Verification Review In Progress"}
               </h3>
               <p className="mt-0.5 text-xs font-medium opacity-90">
@@ -385,9 +387,9 @@ export function ProviderKidsManager({
                     )}
 
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-muted">
-                      <span>👶 Ages {service.minAge}–{service.maxAge}</span>
+                      <span><UiIcon name="age" /> Ages {service.minAge}–{service.maxAge}</span>
                       <span>·</span>
-                      <span>⏱️ {service.durationMinutes} min</span>
+                      <span><UiIcon name="time" /> {service.durationMinutes} min</span>
                       <span>·</span>
                       <span className="capitalize">{service.deliveryModes.join(", ")}</span>
                     </div>
@@ -450,8 +452,8 @@ export function ProviderKidsManager({
                   </p>
 
                   <div className="mt-3 text-[11px] font-semibold text-muted space-y-1">
-                    <div>📅 {workshop.startDate} to {workshop.endDate}</div>
-                    <div>📍 {workshop.venueOrMode} · Max {workshop.capacity} seats</div>
+                    <div><UiIcon name="date" /> {workshop.startDate} to {workshop.endDate}</div>
+                    <div><UiIcon name="place" /> {workshop.venueOrMode} · Max {workshop.capacity} seats</div>
                   </div>
                 </div>
               ))}
@@ -487,7 +489,7 @@ export function ProviderKidsManager({
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-black text-pink-900">
-                          👶 {child.displayName}
+                          <UiIcon name="age" /> {child.displayName}
                         </span>
                         {child.schoolClass && (
                           <span className="text-[11px] font-semibold text-muted">
@@ -504,13 +506,13 @@ export function ProviderKidsManager({
                       </h5>
 
                       <div className="mt-1 flex items-center gap-3 text-[11px] font-medium text-muted">
-                        <span>⏰ {new Date(booking.startsAt).toLocaleString()}</span>
+                        <span><UiIcon name="time" /> {new Date(booking.startsAt).toLocaleString()}</span>
                         <span>Mode: {booking.deliveryMode}</span>
                       </div>
 
                       {child.activityNotes && (
                         <div className="mt-2 rounded-xl bg-amber-50 p-2 text-[11px] font-semibold text-amber-900">
-                          ⚠️ Parent note: {child.activityNotes}
+                          <UiIcon name="warning" /> Parent note: {child.activityNotes}
                         </div>
                       )}
                     </div>
@@ -531,7 +533,7 @@ export function ProviderKidsManager({
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-[10px] font-black text-emerald-950">
-                          🏕️ CAMP · {child.displayName}
+                          <UiIcon name="camp" /> CAMP · {child.displayName}
                         </span>
                         {child.schoolClass && (
                           <span className="text-[11px] font-semibold text-muted">
@@ -546,7 +548,7 @@ export function ProviderKidsManager({
 
                       {child.activityNotes && (
                         <div className="mt-2 rounded-xl bg-amber-50 p-2 text-[11px] font-semibold text-amber-900">
-                          ⚠️ Parent note: {child.activityNotes}
+                          <UiIcon name="warning" /> Parent note: {child.activityNotes}
                         </div>
                       )}
                     </div>
@@ -572,7 +574,7 @@ export function ProviderKidsManager({
                 onClick={() => setShowServiceModal(false)}
                 className="text-xs font-bold text-muted hover:text-ink"
               >
-                ✕ Close
+                <UiIcon name="close" /> Close
               </button>
             </div>
 
@@ -729,7 +731,7 @@ export function ProviderKidsManager({
                 onClick={() => setShowWorkshopModal(false)}
                 className="text-xs font-bold text-muted hover:text-ink"
               >
-                ✕ Close
+                <UiIcon name="close" /> Close
               </button>
             </div>
 

@@ -1,3 +1,4 @@
+import { UiIcon } from "@/components/ui/app-icon";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SignIn } from "@hexclave/next";
@@ -13,7 +14,7 @@ export default async function SignInPage() {
     <div className="flex min-h-[90dvh] flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <span className="text-4xl" aria-hidden="true">🍱💧</span>
+          <span className="text-4xl" aria-hidden="true"><UiIcon name="tiffin" /><UiIcon name="water" /></span>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink">Home essentials, on repeat</h1>
           <p className="mt-1 text-sm text-muted">Tiffins, water cans and more from kitchens near you.</p>
         </div>

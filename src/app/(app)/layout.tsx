@@ -1,3 +1,4 @@
+import { TapFeedback } from "@/components/ui/tap-feedback";
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/auth/hexclave-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -22,6 +23,7 @@ export default function AppLayout({
           {children}
         </main>
         <Toaster />
+        <TapFeedback />
       </div>
     </AuthProvider>
   );
