@@ -47,6 +47,20 @@ export const vendorStatusSchema = z.object({
   status: z.enum(["pending", "active", "suspended"]),
 });
 
+export const bulkVendorIdsSchema = z.object({
+  vendorIds: z.array(z.string().min(1)).min(1, "Select at least one store"),
+});
+
+export const bulkVendorStatusSchema = z.object({
+  vendorIds: z.array(z.string().min(1)).min(1, "Select at least one store"),
+  status: z.enum(["pending", "active", "suspended"]),
+});
+
+export const toggleAcceptingOrdersSchema = z.object({
+  vendorId: z.string().min(1),
+  acceptingOrders: z.boolean(),
+});
+
 const hex = z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #FFE8DD");
 
 export const categorySchema = z.object({

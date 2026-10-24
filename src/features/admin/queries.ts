@@ -207,8 +207,16 @@ export async function getAdminVendorList(qOrOpts?: string | AdminVendorListOptio
   const totalPages = Math.ceil(total / limit) || 1;
   const paginated = filtered.slice((page - 1) * limit, page * limit);
 
+  const counts = {
+    total: rows.length,
+    active: rows.filter((r) => r.status === "active").length,
+    pending: rows.filter((r) => r.status === "pending").length,
+    suspended: rows.filter((r) => r.status === "suspended").length,
+  };
+
   return {
     rows: paginated.map((v) => ({ vendor: v, products: p.get(v.id) ?? 0, customers: c.get(v.id) ?? 0 })),
+    counts,
     total,
     totalPages,
     page,

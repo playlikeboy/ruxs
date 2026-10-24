@@ -2,9 +2,9 @@
 
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
-import { eq, ne } from "drizzle-orm";
+import { eq, inArray, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { categories, localities, platformAdmins, platformSettings, vendorMembers, vendors } from "@/db/schema";
+import { categories, ledgerEntries, localities, platformAdmins, platformSettings, vendorMembers, vendors } from "@/db/schema";
 import { VENDOR_TYPE_INFO, isVendorType, vendorTypeForCategory } from "@/core/vendor-types";
 import { provisionTypeProfile } from "@/features/vendor-types/tables";
 import { requireAdmin } from "@/lib/auth/session";
@@ -14,10 +14,13 @@ import { merchantLoginEmail } from "@/core/merchant-login";
 import {
   adminEmailSchema,
   adminIdSchema,
+  bulkVendorIdsSchema,
+  bulkVendorStatusSchema,
   categorySchema,
   createVendorSchema,
   discoverySchema,
   localitySchema,
+  toggleAcceptingOrdersSchema,
   updateVendorSchema,
   vendorIdSchema,
   vendorStatusSchema,
@@ -194,6 +197,143 @@ export async function adminSetVendorStatus(input: unknown) {
   if (!updated) return fail("Vendor not found");
   revalidatePath("/admin", "layout");
   return { ok: true as const };
+}
+
+export async function adminToggleAcceptingOrders(input: unknown) {
+  const parsed = toggleAcceptingOrdersSchema.safeParse(input);
+  if (!parsed.success) return fail(firstIssue(parsed.error));
+  await requireAdmin();
+  const db = getDb();
+  const [updated] = await db
+    .update(vendors)
+    .set({ acceptingOrders: parsed.data.acceptingOrders, updatedAt: new Date() })
+    .where(eq(vendors.id, parsed.data.vendorId))
+    .returning({ id: vendors.id, acceptingOrders: vendors.acceptingOrders });
+  if (!updated) return fail("Vendor not found");
+  revalidatePath("/admin", "layout");
+  return { ok: true as const, acceptingOrders: updated.acceptingOrders };
+}
+
+export async function adminDeleteVendor(input: unknown) {
+  const parsed = vendorIdSchema.safeParse(input);
+  if (!parsed.success) return fail("Invalid vendor ID");
+  await requireAdmin();
+  const db = getDb();
+
+  const [vendor] = await db
+    .select()
+    .from(vendors)
+    .where(eq(vendors.id, parsed.data.vendorId))
+    .limit(1);
+  if (!vendor) return fail("Vendor not found");
+
+  // Check if vendor has immutable financial ledger entries
+  const [hasLedger] = await db
+    .select({ id: ledgerEntries.id })
+    .from(ledgerEntries)
+    .where(eq(ledgerEntries.vendorId, vendor.id))
+    .limit(1);
+
+  if (hasLedger) {
+    // Due to ledger immutability trigger (0001_ledger_immutability.sql), financial records cannot be deleted.
+    // Deactivate & suspend the store instead so it cannot operate or appear in search/orders.
+    await db
+      .update(vendors)
+      .set({
+        status: "suspended",
+        acceptingOrders: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(vendors.id, vendor.id));
+
+    revalidatePath("/admin", "layout");
+    revalidatePath("/admin/vendors");
+    return {
+      ok: false as const,
+      protectedByLedger: true,
+      error: `Store "${vendor.name}" has permanent financial ledger records and cannot be permanently deleted. The store has been deactivated and suspended instead.`,
+    };
+  }
+
+  // Safe to delete! Postgres foreign key cascades remove products, type profiles, members, etc.
+  await db.delete(vendors).where(eq(vendors.id, vendor.id));
+
+  if (vendor.loginUserId) {
+    try {
+      const existingUser = await hexclave.getUser(vendor.loginUserId);
+      if (existingUser) await existingUser.delete();
+    } catch {
+      // ignore if already deleted
+    }
+  }
+
+  revalidatePath("/admin", "layout");
+  revalidatePath("/admin/vendors");
+  return { ok: true as const, message: `Store "${vendor.name}" was permanently deleted.` };
+}
+
+export async function adminBulkSetVendorStatus(input: unknown) {
+  const parsed = bulkVendorStatusSchema.safeParse(input);
+  if (!parsed.success) return fail(firstIssue(parsed.error));
+  await requireAdmin();
+  const db = getDb();
+
+  await db
+    .update(vendors)
+    .set({ status: parsed.data.status, updatedAt: new Date() })
+    .where(inArray(vendors.id, parsed.data.vendorIds));
+
+  revalidatePath("/admin", "layout");
+  revalidatePath("/admin/vendors");
+  return { ok: true as const, count: parsed.data.vendorIds.length };
+}
+
+export async function adminBulkDeleteVendors(input: unknown) {
+  const parsed = bulkVendorIdsSchema.safeParse(input);
+  if (!parsed.success) return fail(firstIssue(parsed.error));
+  await requireAdmin();
+  const db = getDb();
+
+  let deletedCount = 0;
+  let suspendedCount = 0;
+
+  for (const id of parsed.data.vendorIds) {
+    const [vendor] = await db.select().from(vendors).where(eq(vendors.id, id)).limit(1);
+    if (!vendor) continue;
+
+    const [hasLedger] = await db
+      .select({ id: ledgerEntries.id })
+      .from(ledgerEntries)
+      .where(eq(ledgerEntries.vendorId, vendor.id))
+      .limit(1);
+
+    if (hasLedger) {
+      await db
+        .update(vendors)
+        .set({ status: "suspended", acceptingOrders: false, updatedAt: new Date() })
+        .where(eq(vendors.id, vendor.id));
+      suspendedCount++;
+    } else {
+      await db.delete(vendors).where(eq(vendors.id, vendor.id));
+      if (vendor.loginUserId) {
+        try {
+          const existingUser = await hexclave.getUser(vendor.loginUserId);
+          if (existingUser) await existingUser.delete();
+        } catch {
+          // ignore
+        }
+      }
+      deletedCount++;
+    }
+  }
+
+  revalidatePath("/admin", "layout");
+  revalidatePath("/admin/vendors");
+  return {
+    ok: true as const,
+    deletedCount,
+    suspendedCount,
+  };
 }
 
 export async function adminSaveCategory(input: unknown) {

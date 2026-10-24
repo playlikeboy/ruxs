@@ -12,6 +12,7 @@ import { getAdminVendorReviews } from "@/features/reviews/queries";
 import { summarizeRatings } from "@/core/ratings";
 import { Stars } from "@/features/reviews/components/rating-badge";
 import { HideReviewButton } from "@/features/reviews/components/moderation-buttons";
+import { VendorDangerZone } from "@/features/admin/components/vendor-danger-zone";
 
 export const metadata = { title: "Vendor" };
 
@@ -140,6 +141,13 @@ export default async function AdminVendorPage({ params }: { params: Promise<{ id
           </section>
         </div>
       </div>
+
+      {/* Danger Zone */}
+      <VendorDangerZone
+        vendorId={vendor.id}
+        vendorName={vendor.name}
+        status={vendor.status}
+      />
     </div>
   );
 }
