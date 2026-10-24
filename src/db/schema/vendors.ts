@@ -37,6 +37,9 @@ export const vendors = pgTable(
     loginId: text("login_id").unique(), // merchant login id, e.g. "annapurna-tiffin"
     loginUserId: text("login_user_id").unique(), // Hexclave user behind that login
     commissionBps: integer("commission_bps").notNull().default(0), // RUXs fee on online payments, 100 = 1%
+    gstBps: integer("gst_bps").notNull().default(0), // 1800 = 18%; 0 when not GST registered
+    pricesIncludeGst: boolean("prices_include_gst").notNull().default(true),
+    discountBps: integer("discount_bps").notNull().default(0), // store-wide discount on app orders
     businessType: text("business_type").notNull().default("delivery"), // delivery (tiffin, water, milk) or booking (trainers, physio)
     categoryId: text("category_id"), // main category it was onboarded as (FK in SQL)
     vendorType: text("vendor_type").notNull(), // tiffin, water, milk, gifts, store, fitness, physio, mehndi, kids — see core/vendor-types

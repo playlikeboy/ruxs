@@ -1,3 +1,5 @@
+import { PriceBreakupList } from "@/features/consumer/components/price-breakup";
+import { storedBreakup } from "@/core/pricing";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check } from "lucide-react";
@@ -78,11 +80,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               </li>
             ))}
           </ul>
-          <dl className="mt-4 space-y-1.5 border-t border-dashed border-black/10 pt-3 text-sm">
-            <div className="flex justify-between text-neutral-600"><dt>Item total</dt><dd className="tabular-nums">{formatINR(order.subtotalPaise)}</dd></div>
-            <div className="flex justify-between text-neutral-600"><dt>Delivery</dt><dd className="tabular-nums">{order.deliveryFeePaise ? formatINR(order.deliveryFeePaise) : "Free"}</dd></div>
-            <div className="flex justify-between text-[15px] font-semibold text-ink"><dt>Total</dt><dd className="tabular-nums">{formatINR(order.totalPaise)}</dd></div>
-          </dl>
+          <div className="mt-4 border-t border-dashed border-black/10 pt-3">
+            <PriceBreakupList breakup={storedBreakup(order)} gstBps={0} gstIncluded={order.gstIncluded} totalLabel="Total" />
+          </div>
           <p className="mt-3 text-xs text-neutral-500">
             {order.paymentMode === "online"
               ? order.paymentStatus === "paid"

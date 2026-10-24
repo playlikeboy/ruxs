@@ -132,6 +132,9 @@ export async function saveStorefront(input: unknown) {
       deliveryFeePaise: rupeesToPaise(data.deliveryFeeRupees),
       minOrderPaise: rupeesToPaise(data.minOrderRupees),
       acceptingOrders: data.acceptingOrders,
+      gstBps: data.gstBps,
+      pricesIncludeGst: data.pricesIncludeGst,
+      discountBps: Math.round(data.discountPercent * 100),
       updatedAt: new Date(),
     })
     .where(eq(vendors.id, access.vendorId));

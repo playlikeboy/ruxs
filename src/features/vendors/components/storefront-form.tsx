@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { saveStorefront } from "@/features/vendors/actions";
+import { GST_RATES_BPS, percentLabel } from "@/core/pricing";
 import { LocationPicker } from "@/features/platform/components/location-picker";
 
 const input = "w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
@@ -24,6 +25,9 @@ export interface StorefrontValues {
   deliveryFeePaise: number;
   minOrderPaise: number;
   acceptingOrders: boolean;
+  gstBps: number;
+  pricesIncludeGst: boolean;
+  discountBps: number;
 }
 
 /** The vendor's own business details: who they are, where they are, how far they go, and what it costs. */
@@ -42,6 +46,9 @@ export function StorefrontForm({ slug, initial, provider = false }: { slug: stri
     fee: String(initial.deliveryFeePaise / 100),
     minOrder: String(initial.minOrderPaise / 100),
     accepting: initial.acceptingOrders,
+    gstBps: String(initial.gstBps),
+    gstIncluded: initial.pricesIncludeGst,
+    discount: String(initial.discountBps / 100),
   });
   const [loc, setLoc] = useState({ latitude: initial.latitude?.toString() ?? "", longitude: initial.longitude?.toString() ?? "", mapsUrl: initial.mapsUrl });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
@@ -71,6 +78,9 @@ export function StorefrontForm({ slug, initial, provider = false }: { slug: stri
             deliveryFeeRupees: Number(f.fee || 0),
             minOrderRupees: Number(f.minOrder || 0),
             acceptingOrders: f.accepting,
+            gstBps: Number(f.gstBps),
+            pricesIncludeGst: f.gstIncluded,
+            discountPercent: Number(f.discount || 0),
           });
           if (!res.ok) toast.error(res.error ?? "Could not save");
           else {
@@ -116,6 +126,28 @@ export function StorefrontForm({ slug, initial, provider = false }: { slug: stri
         <label className={label}>Radius (km)<input inputMode="numeric" value={f.radius} onChange={set("radius")} className={input + " mt-1 tabular-nums"} /></label>
         <label className={label}>{provider ? "Visit fee ₹" : "Delivery ₹"}<input inputMode="decimal" value={f.fee} onChange={set("fee")} className={input + " mt-1 tabular-nums"} /></label>
         {!provider && <label className={label}>Min order ₹<input inputMode="decimal" value={f.minOrder} onChange={set("minOrder")} className={input + " mt-1 tabular-nums"} /></label>}
+      </fieldset>
+
+      <fieldset className="space-y-3">
+        <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Pricing on the bill</legend>
+        <div className="grid grid-cols-2 gap-2">
+          <label className={label}>
+            GST rate
+            <select value={f.gstBps} onChange={(e) => setF({ ...f, gstBps: e.target.value })} className={input + " mt-1"}>
+              {GST_RATES_BPS.map((r) => (
+                <option key={r} value={r}>{r === 0 ? "No GST" : percentLabel(r)}</option>
+              ))}
+            </select>
+          </label>
+          <label className={label}>Store discount %<input inputMode="decimal" value={f.discount} onChange={set("discount")} className={input + " mt-1 tabular-nums"} /></label>
+        </div>
+        {f.gstBps !== "0" && (
+          <label className="flex items-center gap-2 text-sm text-ink">
+            <input type="checkbox" checked={f.gstIncluded} onChange={(e) => setF({ ...f, gstIncluded: e.target.checked })} className="h-4 w-4 accent-accent" />
+            My prices already include GST
+          </label>
+        )}
+        <p className="text-xs text-muted">Households see item total, discount, GST and delivery as separate lines before they pay.</p>
       </fieldset>
 
       <button type="submit" disabled={pending} className="h-11 w-full rounded-[12px] bg-accent text-sm font-bold text-white disabled:opacity-60 sm:w-auto sm:px-8">

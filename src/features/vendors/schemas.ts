@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GST_RATES_BPS } from "@/core/pricing";
 
 export const createVendorSchema = z.object({
   name: z.string().min(2, "Vendor name must be at least 2 characters"),
@@ -50,4 +51,7 @@ export const storefrontSchema = z.object({
   deliveryFeeRupees: z.number().min(0).max(1000),
   minOrderRupees: z.number().min(0).max(10000),
   acceptingOrders: z.boolean(),
+  gstBps: z.number().int().refine((v) => (GST_RATES_BPS as readonly number[]).includes(v), "Pick a GST slab").default(0),
+  pricesIncludeGst: z.boolean().default(true),
+  discountPercent: z.number().min(0, "Discount can't be negative").max(90, "Discount can be at most 90%").default(0),
 });

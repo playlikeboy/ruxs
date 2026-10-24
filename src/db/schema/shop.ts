@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   pgTable,
+  boolean,
   text,
   integer,
   date,
@@ -53,6 +54,9 @@ export const shopOrders = pgTable(
     paymentMode: text("payment_mode").notNull(), // cod, monthly_bill, online
     paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid, paid, refund_due, refunded
     subtotalPaise: integer("subtotal_paise").notNull(),
+    discountPaise: integer("discount_paise").notNull().default(0),
+    gstPaise: integer("gst_paise").notNull().default(0), // GST in the total (added or included)
+    gstIncluded: boolean("gst_included").notNull().default(true),
     deliveryFeePaise: integer("delivery_fee_paise").notNull().default(0),
     totalPaise: integer("total_paise").notNull(),
     deliverOn: date("deliver_on").notNull(),

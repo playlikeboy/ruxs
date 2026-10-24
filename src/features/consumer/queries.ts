@@ -112,6 +112,10 @@ const publicVendorFields = {
   deliveryFeePaise: vendors.deliveryFeePaise,
   minOrderPaise: vendors.minOrderPaise,
   acceptingOrders: vendors.acceptingOrders,
+  gstBps: vendors.gstBps,
+  pricesIncludeGst: vendors.pricesIncludeGst,
+  discountBps: vendors.discountBps,
+  commissionBps: vendors.commissionBps,
 };
 
 /** The vendor's pin, else its area's locality centre, else null (distance unknown). */

@@ -73,6 +73,9 @@ export default async function SettingsPage({
             deliveryFeePaise: access.vendor.deliveryFeePaise,
             minOrderPaise: access.vendor.minOrderPaise,
             acceptingOrders: access.vendor.acceptingOrders,
+            gstBps: access.vendor.gstBps,
+            pricesIncludeGst: access.vendor.pricesIncludeGst,
+            discountBps: access.vendor.discountBps,
           }}
         />
       </section>

@@ -20,6 +20,7 @@ import { requireUser } from "@/lib/auth/session";
 import { findNearestLocality } from "@/core/geo";
 import { getLocalities } from "@/features/platform/queries";
 import { cartTotals, canTransition, formatOrderNumber, type ShopOrderStatus } from "@/core/shop";
+import { priceBreakup, vendorPricing } from "@/core/pricing";
 import { depositKey } from "@/core/ledger";
 import { addDaysIST, todayIST, weekdayIST } from "@/core/time";
 import { isLate } from "@/core/cutoff";
@@ -174,6 +175,8 @@ export async function placeOrder(input: unknown) {
     lines.map((l) => ({ unitPricePaise: l.product.pricePaise, qty: l.qty })),
     vendor.deliveryFeePaise
   );
+  // Discount, GST and the store-paid RUXs fee come from the store's own settings.
+  const price = priceBreakup(totals.subtotalPaise, totals.deliveryFeePaise, vendorPricing(vendor));
   if (totals.subtotalPaise < vendor.minOrderPaise) {
     return fail("This store has a minimum order value. Add a few more items.");
   }
@@ -197,9 +200,12 @@ export async function placeOrder(input: unknown) {
           // Online orders reach the store only after Razorpay confirms payment.
           status: data.paymentMode === "online" ? "awaiting_payment" : "placed",
           paymentMode: data.paymentMode,
-          subtotalPaise: totals.subtotalPaise,
-          deliveryFeePaise: totals.deliveryFeePaise,
-          totalPaise: totals.totalPaise,
+          subtotalPaise: price.itemsPaise,
+          discountPaise: price.discountPaise,
+          gstPaise: price.gstPaise,
+          gstIncluded: vendor.pricesIncludeGst,
+          deliveryFeePaise: price.deliveryFeePaise,
+          totalPaise: price.totalPaise,
           deliverOn,
           slot: data.slot,
           address: addressLine(profile),
@@ -227,7 +233,7 @@ export async function placeOrder(input: unknown) {
     // Online orders are not placed until payment is captured; settlePayment notifies them.
     if (data.paymentMode !== "online") {
       notifyAfter([user.id], { kind: "customer.order.placed", number: orderNumber, vendorName: vendor.name, paymentMode: data.paymentMode, orderId });
-      notifyVendorAfter(vendor.id, { kind: "vendor.order.new", slug: vendor.slug, number: orderNumber, customerName: profile.name, totalPaise: totals.totalPaise, paymentMode: data.paymentMode });
+      notifyVendorAfter(vendor.id, { kind: "vendor.order.new", slug: vendor.slug, number: orderNumber, customerName: profile.name, totalPaise: price.totalPaise, paymentMode: data.paymentMode });
     }
 
     return { ok: true as const, orderId };

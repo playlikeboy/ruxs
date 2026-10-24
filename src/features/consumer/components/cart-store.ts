@@ -6,6 +6,8 @@ import { useSyncExternalStore } from "react";
  * The cart lives in the browser like any food app. It holds one store at a
  * time; prices here are for display only and are re-read on the server.
  */
+import type { PricingRules } from "@/core/pricing";
+
 export interface CartItem {
   productId: string;
   name: string;
@@ -19,6 +21,8 @@ export interface Cart {
   vendorName: string;
   deliveryFeePaise: number;
   minOrderPaise: number;
+  /** Store discount, GST and fee rules. Optional: carts saved before this existed have none. */
+  pricing?: PricingRules;
   items: CartItem[];
 }
 

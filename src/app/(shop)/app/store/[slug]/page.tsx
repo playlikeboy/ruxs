@@ -1,3 +1,4 @@
+import { vendorPricing } from "@/core/pricing";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getPublicTypeDetails } from "@/features/vendor-types/queries";
@@ -76,6 +77,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
     vendorName: vendor.name,
     deliveryFeePaise: vendor.deliveryFeePaise,
     minOrderPaise: vendor.minOrderPaise,
+    pricing: vendorPricing(vendor),
   };
 
   return (

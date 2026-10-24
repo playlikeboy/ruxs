@@ -11,6 +11,10 @@ import { placeOrder } from "@/features/consumer/actions";
 import { startOrderPayment } from "@/features/payments/actions";
 import { useRazorpay } from "@/features/payments/components/use-razorpay";
 import { cartActions, cartSubtotal, useCart } from "./cart-store";
+import { PriceBreakupList } from "./price-breakup";
+import { priceBreakup, type PricingRules } from "@/core/pricing";
+
+const NO_RULES: PricingRules = { gstBps: 0, pricesIncludeGst: true, discountBps: 0, commissionBps: 0 };
 import { VegMark } from "./veg-mark";
 
 const SLOTS = ["asap", "morning", "lunch", "evening", "dinner"] as const;
@@ -42,7 +46,9 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
   }
 
   const subtotal = cartSubtotal(cart);
-  const total = subtotal + cart.deliveryFeePaise;
+  const rules = cart.pricing ?? NO_RULES;
+  const bill = priceBreakup(subtotal, cart.deliveryFeePaise, rules);
+  const total = bill.totalPaise;
   const belowMin = subtotal < cart.minOrderPaise;
 
   function submit() {
@@ -189,11 +195,9 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
 
       <section className="rounded-2xl border border-black/5 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
         <h2 className="text-[15px] font-semibold text-ink">Bill details</h2>
-        <dl className="mt-3 space-y-2 text-sm">
-          <div className="flex justify-between text-neutral-600"><dt>Item total</dt><dd className="tabular-nums">{formatINR(subtotal)}</dd></div>
-          <div className="flex justify-between text-neutral-600"><dt>Delivery fee</dt><dd className="tabular-nums">{cart.deliveryFeePaise === 0 ? "Free" : formatINR(cart.deliveryFeePaise)}</dd></div>
-          <div className="flex justify-between border-t border-dashed border-black/10 pt-2 text-[15px] font-semibold text-ink"><dt>To pay</dt><dd className="tabular-nums">{formatINR(total)}</dd></div>
-        </dl>
+        <div className="mt-3">
+          <PriceBreakupList breakup={bill} gstBps={rules.gstBps} gstIncluded={rules.pricesIncludeGst} discountBps={rules.discountBps} showFee={paymentMode === "online"} />
+        </div>
         {belowMin && (
           <p className="mt-3 rounded-lg bg-butter px-3 py-2 text-xs font-medium text-warn">
             Minimum order is {formatINR(cart.minOrderPaise)}. Add {formatINR(cart.minOrderPaise - subtotal)} more.
