@@ -32,7 +32,7 @@ export function SegmentedLinks({
       <span
         aria-hidden="true"
         className={cn(
-          "absolute bottom-1 top-1 rounded-full transition-transform duration-300 ease-[cubic-bezier(.3,1.4,.6,1)]",
+          "absolute bottom-1 top-1 rounded-full transition-transform duration-200 ease-[cubic-bezier(.25,1,.5,1)] motion-reduce:transition-none",
           tone === "kids" ? "bg-gradient-to-r from-kids-bubblegum to-kids-grape shadow-[0_4px_12px_rgba(168,85,247,0.35)]" : "bg-white shadow-[0_2px_5px_rgba(32,36,31,0.08)] ring-1 ring-black/[0.035]"
         )}
         style={{ left: 4, width: `calc((100% - 8px) / ${items.length})`, transform: `translateX(${index * 100}%)` }}
