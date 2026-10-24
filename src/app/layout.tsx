@@ -45,13 +45,16 @@ export const metadata: Metadata = {
     siteName: "RUXs",
     locale: "en_IN",
     type: "website",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "RUXs — local services for everyday life, kids and home" }],
+    images: [
+      { url: "/opengraph-image", width: 1200, height: 630, alt: "RUXs — local services for everyday life, kids and home" },
+      { url: "/og.png", width: 1200, height: 630, alt: "RUXs — local services for everyday life, kids and home" },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "RUXs — Local Services for Everyday Life",
     description: "Discover neighbourhood essentials, kids' learning, gifts and local specialists with RUXs.",
-    images: ["/opengraph-image"],
+    images: ["/og.png"],
   },
 };
 

@@ -39,13 +39,19 @@ export function buildMetadata({
           height: 630,
           alt: "RUXs — Everyday essentials from your neighbourhood",
         },
+        {
+          url: `${BASE_URL}/og.png`,
+          width: 1200,
+          height: 630,
+          alt: "RUXs — Everyday essentials from your neighbourhood",
+        },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title: socialTitle,
       description,
-      images: [`${BASE_URL}/opengraph-image`],
+      images: [`${BASE_URL}/og.png`],
     },
     robots: noIndex
       ? { index: false, follow: false }
