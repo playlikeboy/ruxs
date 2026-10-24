@@ -1,5 +1,5 @@
 // RUXs Progressive Web App Service Worker
-const CACHE_NAME = 'ruxs-pwa-v1';
+const CACHE_NAME = 'ruxs-pwa-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',
@@ -100,5 +100,46 @@ self.addEventListener('fetch', (event) => {
           headers: { 'Content-Type': 'text/plain; charset=utf-8' },
         });
       })
+  );
+});
+
+// Push notifications: new orders, booking requests, reminders.
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: 'RUXs', body: event.data ? event.data.text() : '' };
+  }
+  const title = data.title || 'RUXs';
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(title, {
+        body: data.body || '',
+        icon: '/brand/ruxs-app-icon-192.png',
+        badge: '/brand/ruxs-app-icon-maskable-192.png',
+        tag: data.tag || undefined,
+        renotify: Boolean(data.tag),
+        data: { url: data.url || '/' },
+      }),
+      self.navigator && 'setAppBadge' in self.navigator ? self.navigator.setAppBadge().catch(() => {}) : null,
+      // Tell open panels to refresh their counts.
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => list.forEach((c) => c.postMessage({ type: 'ruxs-push' }))),
+    ])
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if (client.url === target && 'focus' in client) return client.focus();
+      }
+      const sameApp = list.find((c) => new URL(c.url).pathname.startsWith(new URL(target).pathname.split('/').slice(0, 3).join('/')));
+      if (sameApp && 'navigate' in sameApp) return sameApp.navigate(target).then((c) => c && c.focus());
+      return self.clients.openWindow(target);
+    })
   );
 });

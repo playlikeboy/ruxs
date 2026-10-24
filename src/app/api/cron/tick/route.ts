@@ -6,6 +6,8 @@ import { getServerEnv } from "@/lib/env";
 import { todayIST, istDateTime } from "@/core/time";
 import { lockCutoffForProduct } from "@/features/orders/cutoff-service";
 import { generateBillsForVendor } from "@/features/billing/generate-bills";
+import { sendTomorrowReminders } from "@/features/notifications/reminders";
+import { isEveningReminderWindow } from "@/core/reminders";
 
 export async function POST(req: Request) {
   const env = getServerEnv();
@@ -75,10 +77,14 @@ export async function POST(req: Request) {
     }
   }
 
+  // 3. Evening reminders for tomorrow's sessions (18:00 IST, deduped per booking)
+  const reminders = isEveningReminderWindow(now) ? await sendTomorrowReminders(now) : null;
+
   return Response.json({
     ok: true,
     serviceDate: today,
     lockedProducts: lockedProductsCount,
     billedVendors: billedVendorsCount,
+    reminders,
   });
 }

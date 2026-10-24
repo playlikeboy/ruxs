@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { VENDOR_TYPE_INFO, type VendorType } from "@/core/vendor-types";
+import { VENDOR_TYPE_INFO, type Module, type VendorType } from "@/core/vendor-types";
 import { vendorNav, type Role } from "./vendor-nav-items";
 import { MODULE_ICON } from "./vendor-icons";
 
@@ -14,7 +14,7 @@ export function VendorSidebar({
   area,
   role,
   acceptingOrders,
-  newOrders,
+  badges,
   vendorType,
 }: {
   slug: string;
@@ -22,7 +22,7 @@ export function VendorSidebar({
   area: string;
   role: Role;
   acceptingOrders: boolean;
-  newOrders: number;
+  badges: Partial<Record<Module, number>>;
   vendorType: VendorType;
 }) {
   const pathname = usePathname();
@@ -55,7 +55,7 @@ export function VendorSidebar({
                 const href = base + "/" + item.module;
                 const active = pathname.startsWith(href);
                 const Icon = MODULE_ICON[item.module];
-                const badge = item.module === "orders" ? newOrders : 0;
+                const badge = badges[item.module] ?? 0;
                 return (
                   <li key={item.module}>
                     <Link

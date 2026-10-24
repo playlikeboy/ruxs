@@ -4,7 +4,9 @@ import { VendorBottomNav } from "@/components/nav/vendor-bottom-nav";
 import { VendorSidebar } from "@/components/nav/vendor-sidebar";
 import { UserNav } from "@/components/auth/user-nav";
 import { countOpenShopOrders } from "@/features/shop-orders/queries";
-import { VENDOR_TYPE_INFO, canUseModule, toVendorType } from "@/core/vendor-types";
+import { countKidsRequests } from "@/features/kids/provider-calendar";
+import { MerchantPulse } from "@/features/notifications/components/merchant-pulse";
+import { VENDOR_TYPE_INFO, canUseModule, isKidsVendorType, toVendorType } from "@/core/vendor-types";
 
 export default async function VendorLayout({
   children,
@@ -16,7 +18,11 @@ export default async function VendorLayout({
   const { vendor: slug } = await params;
   const access = await requireVendorAccess(slug);
   const vendorType = toVendorType(access.vendor.vendorType, access.vendor.businessType);
-  const newOrders = canUseModule(vendorType, "orders") ? await countOpenShopOrders(access.vendorId) : 0;
+  const [newOrders, requests] = await Promise.all([
+    canUseModule(vendorType, "orders") ? countOpenShopOrders(access.vendorId) : 0,
+    isKidsVendorType(vendorType) ? countKidsRequests(access.vendorId) : 0,
+  ]);
+  const badges = { orders: newOrders, bookings: requests };
   const info = VENDOR_TYPE_INFO[vendorType];
 
   return (
@@ -27,7 +33,7 @@ export default async function VendorLayout({
         area={access.vendor.area}
         role={access.role}
         acceptingOrders={access.vendor.acceptingOrders}
-        newOrders={newOrders}
+        badges={badges}
         vendorType={vendorType}
       />
 
@@ -74,8 +80,9 @@ export default async function VendorLayout({
       </div>
 
       <div className="lg:hidden">
-        <VendorBottomNav slug={slug} newOrders={newOrders} vendorType={vendorType} />
+        <VendorBottomNav slug={slug} badges={badges} vendorType={vendorType} />
       </div>
+      <MerchantPulse slug={slug} initial={{ orders: newOrders, requests }} />
     </div>
   );
 }

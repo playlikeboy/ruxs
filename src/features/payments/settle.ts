@@ -1,7 +1,8 @@
 import "server-only";
 import { and, eq, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { bookings, ledgerEntries, payments, shopOrders } from "@/db/schema";
+import { bookings, customers, ledgerEntries, payments, services, shopOrders, vendors } from "@/db/schema";
+import { notifyAfter, notifyVendorAfter } from "@/features/notifications/dispatch";
 import { razorpayPaymentKey } from "@/core/ledger";
 
 /**
@@ -25,6 +26,7 @@ export async function settlePayment(input: {
     return { ok: false, shopOrderId: payment.shopOrderId, bookingId: payment.bookingId };
   }
 
+  let firstSettle = false;
   await db.transaction(async (tx) => {
     const [updated] = await tx
       .update(payments)
@@ -32,6 +34,7 @@ export async function settlePayment(input: {
       .where(and(eq(payments.id, payment.id), ne(payments.status, "paid")))
       .returning({ id: payments.id });
     if (!updated) return; // already settled
+    firstSettle = true;
 
     if (payment.purpose === "shop_order" && payment.shopOrderId) {
       // Paid: the order now reaches the store. A late payment for an order that
@@ -83,7 +86,39 @@ export async function settlePayment(input: {
     }
   });
 
+  if (firstSettle) await announcePaid(payment);
   return { ok: true, shopOrderId: payment.shopOrderId, bookingId: payment.bookingId };
+}
+
+/** A paid order or booking now reaches the store: tell both sides once. */
+async function announcePaid(payment: typeof payments.$inferSelect) {
+  const db = getDb();
+  if (payment.purpose === "shop_order" && payment.shopOrderId) {
+    const [row] = await db
+      .select({ order: shopOrders, vendorName: vendors.name, slug: vendors.slug, customerName: customers.name })
+      .from(shopOrders)
+      .innerJoin(vendors, eq(shopOrders.vendorId, vendors.id))
+      .innerJoin(customers, eq(shopOrders.customerId, customers.id))
+      .where(eq(shopOrders.id, payment.shopOrderId))
+      .limit(1);
+    if (!row || row.order.status !== "placed") return;
+    notifyAfter([row.order.userId], { kind: "customer.order.paid", number: row.order.number, vendorName: row.vendorName, orderId: row.order.id });
+    notifyVendorAfter(row.order.vendorId, { kind: "vendor.order.paid", slug: row.slug, number: row.order.number, customerName: row.customerName, totalPaise: row.order.totalPaise });
+  }
+  if (payment.purpose === "booking" && payment.bookingId) {
+    const [row] = await db
+      .select({ booking: bookings, vendorName: vendors.name, slug: vendors.slug, customerName: customers.name, serviceName: services.name })
+      .from(bookings)
+      .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
+      .innerJoin(customers, eq(bookings.customerId, customers.id))
+      .leftJoin(services, eq(bookings.serviceId, services.id))
+      .where(eq(bookings.id, payment.bookingId))
+      .limit(1);
+    if (!row || row.booking.status !== "confirmed") return;
+    const serviceName = row.serviceName ?? "Session";
+    notifyAfter([row.booking.userId], { kind: "customer.booking.confirmed", number: row.booking.number, serviceName, vendorName: row.vendorName, startsAt: row.booking.startsAt });
+    notifyVendorAfter(row.booking.vendorId, { kind: "vendor.booking.new", slug: row.slug, number: row.booking.number, customerName: row.customerName, serviceName, startsAt: row.booking.startsAt });
+  }
 }
 
 export async function failPayment(razorpayOrderId: string, reason: string) {

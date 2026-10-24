@@ -1,5 +1,6 @@
 "use server";
 
+import { notifyAfter, notifyVendorAfter } from "@/features/notifications/dispatch";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { and, eq, gt, isNull, lt, or, sql } from "drizzle-orm";
@@ -71,6 +72,7 @@ export async function bookSession(input: unknown) {
   const date = todayIST(startsAt);
   const now = new Date();
   const online = data.paymentMode === "online";
+  const number = bookingNumber(date);
 
   try {
     const bookingId = await db.transaction(async (tx) => {
@@ -109,7 +111,7 @@ export async function bookSession(input: unknown) {
       const [created] = await tx
         .insert(bookings)
         .values({
-          number: bookingNumber(date),
+          number,
           clientKey: data.clientKey,
           vendorId: vendor.id,
           customerId,
@@ -132,6 +134,11 @@ export async function bookSession(input: unknown) {
 
     revalidateProvider(vendor.slug);
     revalidatePath("/app/bookings");
+    // Online bookings are announced once payment settles (payments/settle.ts).
+    if (!online) {
+      notifyAfter([user.id], { kind: "customer.booking.confirmed", number, serviceName: service.name, vendorName: vendor.name, startsAt });
+      notifyVendorAfter(vendor.id, { kind: "vendor.booking.new", slug: vendor.slug, number, customerName: profile.name, serviceName: service.name, startsAt });
+    }
     return { ok: true as const, bookingId };
   } catch (err) {
     if (err instanceof Error && err.message === "SLOT_TAKEN") return fail("That time was just taken. Pick another slot.");
@@ -147,9 +154,10 @@ export async function cancelMyBooking(input: unknown) {
   const user = await requireUser();
   const db = getDb();
   const [row] = await db
-    .select({ booking: bookings, cutoff: vendors.cancelCutoffHours, slug: vendors.slug })
+    .select({ booking: bookings, cutoff: vendors.cancelCutoffHours, slug: vendors.slug, serviceName: services.name })
     .from(bookings)
     .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
+    .leftJoin(services, eq(bookings.serviceId, services.id))
     .where(and(eq(bookings.id, parsed.data.bookingId), eq(bookings.userId, user.id)))
     .limit(1);
   if (!row) return fail("Booking not found");
@@ -171,6 +179,16 @@ export async function cancelMyBooking(input: unknown) {
   revalidatePath("/app/bookings");
   revalidatePath(`/app/bookings/${row.booking.id}`);
   revalidateProvider(row.slug);
+  if (row.booking.status === "confirmed") {
+    notifyVendorAfter(row.booking.vendorId, {
+      kind: "vendor.booking.cancelled",
+      slug: row.slug,
+      number: row.booking.number,
+      customerName: "A client",
+      serviceName: row.serviceName ?? "Session",
+      startsAt: row.booking.startsAt,
+    });
+  }
   return { ok: true as const };
 }
 
@@ -213,6 +231,18 @@ export async function markBooking(input: unknown) {
 
   revalidateProvider(parsed.data.slug);
   revalidatePath(`/app/bookings/${booking.id}`);
+  if (outcome === "cancelled") {
+    const serviceName = booking.serviceId
+      ? (await db.select({ name: services.name }).from(services).where(eq(services.id, booking.serviceId)).limit(1))[0]?.name
+      : undefined;
+    notifyAfter([booking.userId], {
+      kind: "customer.booking.cancelled",
+      serviceName: serviceName ?? "Your session",
+      vendorName: access.vendor.name,
+      startsAt: booking.startsAt,
+      reason: parsed.data.reason,
+    });
+  }
   return { ok: true as const };
 }
 

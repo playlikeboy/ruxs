@@ -5,6 +5,8 @@ import { VENDOR_TYPE_INFO } from "@/core/vendor-types";
 import { vendorNav } from "@/components/nav/vendor-nav-items";
 import { MODULE_ICON } from "@/components/nav/vendor-icons";
 import { PageHeader } from "@/components/ui/card";
+import { getServerEnv } from "@/lib/env";
+import { MerchantAppCard } from "@/features/notifications/components/merchant-app-card";
 
 export default async function MorePage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
@@ -16,6 +18,7 @@ export default async function MorePage({ params }: { params: Promise<{ vendor: s
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <PageHeader eyebrow={`${info.emoji} ${info.label}`} title="All tools" description={`Everything for running ${access.vendor.name}.`} />
+      <MerchantAppCard vapidPublicKey={getServerEnv().VAPID_PUBLIC_KEY ?? null} testPath={`/merchant-panel/${slug}/today`} />
       {groups.map((g) => (
         <section key={g.title} aria-labelledby={`more-${g.title}`}>
           <h2 id={`more-${g.title}`} className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">

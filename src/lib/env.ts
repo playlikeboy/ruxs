@@ -12,6 +12,8 @@ const serverSchema = z.object({
   CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
   EMAIL_DOMAIN: z.string().optional(),
   IMGBB_API_KEY: z.string().min(1).optional(),
+  VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+  VAPID_PRIVATE_KEY: z.string().min(1).optional(),
 });
 
 import { getCloudflareContext } from "@opennextjs/cloudflare";

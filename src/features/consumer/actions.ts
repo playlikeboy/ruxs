@@ -24,6 +24,7 @@ import { depositKey } from "@/core/ledger";
 import { addDaysIST, todayIST, weekdayIST } from "@/core/time";
 import { isLate } from "@/core/cutoff";
 import { renderEmailHtml, sendUserEmailIfAllowed } from "@/features/notifications/service";
+import { notifyAfter, notifyVendorAfter } from "@/features/notifications/dispatch";
 import { applyHouseholdDayChange } from "@/features/day-changes/household";
 import { moveOrder } from "@/features/shop-orders/lifecycle";
 import { addressLine, deliveryCheck, ensureCustomer, loadProfile } from "./household";
@@ -223,27 +224,10 @@ export async function placeOrder(input: unknown) {
     revalidatePath("/app/orders");
     revalidatePath(`/merchant-panel/${vendor.slug}/orders`);
 
-    // Online orders are not placed until payment is captured; only email orders that are really placed.
-    if (user.primaryEmail && data.paymentMode !== "online") {
-      const emailHtml = renderEmailHtml({
-        heading: `Order placed: #${orderNumber}`,
-        lead: `Thanks for your order from ${vendor.name}. The store has been notified and will accept it shortly.`,
-        details: [
-          { label: "Order Number", value: `#${orderNumber}` },
-          { label: "Store", value: vendor.name },
-          { label: "Payment Mode", value: data.paymentMode === "cod" ? "Pay on delivery" : "Added to monthly bill" },
-        ],
-        actionText: "View Order Details",
-        actionUrl: `https://ruxs.in/app/orders/${orderId}`,
-      });
-      sendUserEmailIfAllowed({
-        userId: user.id,
-        to: user.primaryEmail,
-        category: "orders",
-        subject: `Order placed: #${orderNumber} from ${vendor.name}`,
-        html: emailHtml,
-        text: `Your order #${orderNumber} from ${vendor.name} has been placed. View details: https://ruxs.in/app/orders/${orderId}`,
-      }).catch((e) => console.error("Order placed email notify error:", e));
+    // Online orders are not placed until payment is captured; settlePayment notifies them.
+    if (data.paymentMode !== "online") {
+      notifyAfter([user.id], { kind: "customer.order.placed", number: orderNumber, vendorName: vendor.name, paymentMode: data.paymentMode, orderId });
+      notifyVendorAfter(vendor.id, { kind: "vendor.order.new", slug: vendor.slug, number: orderNumber, customerName: profile.name, totalPaise: totals.totalPaise, paymentMode: data.paymentMode });
     }
 
     return { ok: true as const, orderId };

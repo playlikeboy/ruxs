@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { VendorType } from "@/core/vendor-types";
+import type { Module, VendorType } from "@/core/vendor-types";
 import { vendorTabs } from "./vendor-nav-items";
 import { MODULE_ICON } from "./vendor-icons";
 
-export function VendorBottomNav({ slug, newOrders = 0, vendorType }: { slug: string; newOrders?: number; vendorType: VendorType }) {
+export function VendorBottomNav({ slug, badges = {}, vendorType }: { slug: string; badges?: Partial<Record<Module, number>>; vendorType: VendorType }) {
   const pathname = usePathname();
   const base = "/merchant-panel/" + slug;
   const tabs = [...vendorTabs(vendorType), { module: "more" as const, label: "More" }];
@@ -18,7 +18,7 @@ export function VendorBottomNav({ slug, newOrders = 0, vendorType }: { slug: str
           const href = base + "/" + tab.module;
           const isActive = pathname.startsWith(href);
           const Icon = MODULE_ICON[tab.module];
-          const badge = tab.module === "orders" ? newOrders : 0;
+          const badge = badges[tab.module] ?? 0;
           return (
             <li key={tab.module}>
               <Link

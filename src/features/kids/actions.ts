@@ -16,6 +16,7 @@ import { todayIST } from "@/core/time";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { rupeesToPaise } from "@/core/money";
 import { createKidsBooking, cancelKidsBooking, transitionKidsBookingForProvider } from "./booking-service";
+import { announceEnrollment, announceKidsGuardianCancel, announceKidsProviderAction, announceKidsRequest } from "./notify";
 import { enrollInWorkshop, cancelWorkshopEnrollment } from "./workshop-service";
 import { purchaseHolidayPass, redeemPassCredit } from "./holiday-pass-service";
 import { recordGuardianConsent, updateProviderVerification } from "./safety-service";
@@ -158,6 +159,7 @@ export async function bookKidsServiceAction(input: unknown) {
 
   revalidatePath("/app/kids/bookings");
   revalidatePath(`/app/kids/services/${data.serviceId}`);
+  await announceKidsRequest(result.bookingId);
   return result;
 }
 
@@ -173,6 +175,7 @@ export async function cancelKidsBookingAction(input: unknown) {
   });
 
   if (!result.ok) return fail(result.error);
+  if (!("message" in result)) await announceKidsGuardianCancel(parsed.data.bookingId);
 
   revalidatePath("/app/kids/bookings");
   return result;
@@ -196,6 +199,7 @@ export async function providerKidsBookingAction(input: unknown) {
   revalidatePath(`/merchant-panel/${parsed.data.slug}/kids`);
   revalidatePath(`/merchant-panel/${parsed.data.slug}`);
   revalidatePath("/app/kids/bookings");
+  await announceKidsProviderAction(parsed.data.bookingId, parsed.data.action, parsed.data.reason);
   return { ok: true as const };
 }
 
@@ -221,6 +225,7 @@ export async function enrollWorkshopAction(input: unknown) {
 
   revalidatePath(`/app/kids/workshops/${data.workshopId}`);
   revalidatePath("/app/kids/bookings");
+  await announceEnrollment(result.enrollmentId);
   return result;
 }
 

@@ -5,6 +5,8 @@ import { todayIST } from "@/core/time";
 import { requireVendorModule } from "@/lib/auth/session";
 import { VENDOR_TYPE_INFO, canUseModule } from "@/core/vendor-types";
 import { SetupChecklist } from "@/features/vendor-types/components/setup-checklist";
+import { getServerEnv } from "@/lib/env";
+import { MerchantAppCard } from "@/features/notifications/components/merchant-app-card";
 import { getVendorProducts } from "@/features/products/queries";
 import { getTodayOrders } from "@/features/orders/queries";
 import { getDayChangesForVendor } from "@/features/day-changes/queries";
@@ -36,8 +38,9 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
   if (VENDOR_TYPE_INFO[type].fulfilment === "booking") {
     return (
       <>
-        <div className="px-4 pt-4 sm:px-6 sm:pt-6">
+        <div className="space-y-4 px-4 pt-4 sm:px-6 sm:pt-6">
           <SetupChecklist slug={slug} />
+          <MerchantAppCard variant="nudge" vapidPublicKey={getServerEnv().VAPID_PUBLIC_KEY ?? null} testPath={`/merchant-panel/${slug}/today`} />
         </div>
         <ProviderToday slug={slug} />
       </>
@@ -146,6 +149,7 @@ export default async function TodayPage({ params }: { params: Promise<{ vendor: 
       </div>
 
       <SetupChecklist slug={slug} />
+      <MerchantAppCard variant="nudge" vapidPublicKey={getServerEnv().VAPID_PUBLIC_KEY ?? null} testPath={`${base}/today`} />
 
       {newOrders > 0 && (
         <Link href={`${base}/orders`} className="flex items-center gap-3 rounded-[16px] border border-accent/30 bg-peach p-4 transition hover:border-accent">

@@ -1,0 +1,19 @@
+{
+  "id": "/merchant-panel",
+  "name": "RUXs Merchant",
+  "short_name": "RUXs Shop",
+  "description": "Orders, bookings and alerts for your RUXs store.",
+  "start_url": "/merchant-panel",
+  "scope": "/merchant-panel",
+  "display": "standalone",
+  "background_color": "#FFFDF8",
+  "theme_color": "#FFFDF8",
+  "orientation": "portrait",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/brand/ruxs-app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/ruxs-app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/ruxs-app-icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/brand/ruxs-app-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
