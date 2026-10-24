@@ -49,6 +49,22 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "any",
       },
     ],
+    screenshots: [
+      {
+        src: "/brand/ruxs-pwa-wide.png",
+        sizes: "1024x576",
+        type: "image/png",
+        form_factor: "wide",
+        label: "RUXs — Daily essentials, delivered to your hostel",
+      },
+      {
+        src: "/brand/ruxs-pwa-wide.png",
+        sizes: "1024x576",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "RUXs — Everyday household essentials",
+      },
+    ],
     shortcuts: [
       {
         name: "Kids Zone & STEM",

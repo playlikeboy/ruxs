@@ -117,9 +117,7 @@ export function InstallAppPrompt({
       <div className={"rounded-2xl border border-black/10 bg-gradient-to-br from-peach/30 via-white to-butter/20 p-4.5 shadow-2xs " + className}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-white shadow-xs">
-              <Smartphone className="h-5 w-5" />
-            </div>
+            <img src="/brand/ruxs-app-icon-192.png" alt="RUXs App" className="h-11 w-11 rounded-2xl object-cover shadow-xs" />
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="text-[15px] font-bold text-ink">Install RUXs App</h3>
@@ -193,14 +191,13 @@ export function InstallAppPrompt({
       <div className={"relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-r from-peach/50 via-white to-butter/40 p-3.5 shadow-sm " + className}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-2xs">
-              <Sparkles className="h-4 w-4" />
-            </span>
+            <img src="/brand/ruxs-app-icon-192.png" alt="RUXs App" className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-2xs" />
             <div className="min-w-0">
               <p className="text-xs font-bold text-ink leading-tight truncate">Install RUXs App</p>
               <p className="text-[11px] text-neutral-600 leading-tight">Fast 1-tap ordering right from your home screen</p>
             </div>
           </div>
+
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
