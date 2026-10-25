@@ -2,12 +2,20 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { NewVendorScreen } from "@/features/admin/components/new-vendor-screen";
 import { getOnboardCategories } from "@/features/admin/queries";
+import { getCategories } from "@/features/platform/queries";
 import { getApplication } from "@/features/applications/queries";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ type: string }> }): Promise<Metadata> {
   const { type } = await params;
-  const chosen = (await getOnboardCategories()).find((c) => c.id === type);
-  return { title: chosen ? `New vendor · ${chosen.label}` : "New vendor" };
+  try {
+    const all = await getCategories();
+    const chosen = all.find((c) => c.id === type);
+    return { title: chosen ? `New vendor · ${chosen.label}` : "New vendor" };
+  } catch {
+    return { title: "New vendor" };
+  }
 }
 
 export default async function NewVendorOfTypePage({

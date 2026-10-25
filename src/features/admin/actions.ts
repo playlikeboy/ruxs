@@ -11,7 +11,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { hexclave } from "@/lib/auth/hexclave";
 import { rupeesToPaise } from "@/core/money";
 import { merchantLoginEmail } from "@/core/merchant-login";
-import { DEFAULT_KIDS_CATEGORIES } from "@/features/platform/queries";
+import { DEFAULT_CATEGORIES } from "@/features/platform/queries";
 import {
   adminEmailSchema,
   adminIdSchema,
@@ -139,8 +139,8 @@ export async function adminCreateVendor(input: unknown) {
     .where(eq(categories.id, parsed.data.categoryId))
     .limit(1);
 
-  // Kids categories ship as code defaults; create the row vendors.category_id points at.
-  const defaultCat = category ? undefined : DEFAULT_KIDS_CATEGORIES.find((c) => c.id === parsed.data.categoryId);
+  // Platform categories ship as code defaults; create the row vendors.category_id points at.
+  const defaultCat = category ? undefined : DEFAULT_CATEGORIES.find((c) => c.id === parsed.data.categoryId);
   if (defaultCat) category = { fulfilment: defaultCat.fulfilment, vendorType: defaultCat.vendorType };
   if (!category) return fail("That business type no longer exists. Pick another.");
 

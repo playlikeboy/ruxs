@@ -8,7 +8,157 @@ import type { LocalityCentroid } from "@/core/geo";
 
 export type Category = typeof categories.$inferSelect;
 
-export const DEFAULT_KIDS_CATEGORIES: Category[] = [
+export const DEFAULT_CATEGORIES: Category[] = [
+  {
+    id: "tiffin",
+    label: "Tiffin service",
+    shortLabel: "Tiffin",
+    emoji: "🍱",
+    blurb: "Home-style meals, daily or one-off",
+    tint: "#FFE8DD",
+    coverFrom: "#FFD9C7",
+    coverTo: "#FFF3C9",
+    sort: 1,
+    isActive: true,
+    fulfilment: "delivery",
+    vendorType: "tiffin",
+    createdAt: new Date(0),
+  },
+  {
+    id: "water",
+    label: "Water delivery",
+    shortLabel: "Water",
+    emoji: "💧",
+    blurb: "20L cans to your door",
+    tint: "#E2EEFA",
+    coverFrom: "#CFE3F7",
+    coverTo: "#E1F3E7",
+    sort: 2,
+    isActive: true,
+    fulfilment: "delivery",
+    vendorType: "water",
+    createdAt: new Date(0),
+  },
+  {
+    id: "milk",
+    label: "Milk & dairy",
+    shortLabel: "Milk",
+    emoji: "🥛",
+    blurb: "Fresh milk, curd and paneer",
+    tint: "#FFF3C9",
+    coverFrom: "#FFF3C9",
+    coverTo: "#E1F3E7",
+    sort: 3,
+    isActive: true,
+    fulfilment: "delivery",
+    vendorType: "milk",
+    createdAt: new Date(0),
+  },
+  {
+    id: "store",
+    label: "Other essentials",
+    shortLabel: "More",
+    emoji: "🧺",
+    blurb: "Everything else for the house",
+    tint: "#FCE4EC",
+    coverFrom: "#FCE4EC",
+    coverTo: "#E2EEFA",
+    sort: 4,
+    isActive: true,
+    fulfilment: "delivery",
+    vendorType: "store",
+    createdAt: new Date(0),
+  },
+  {
+    id: "fitness",
+    label: "Gym trainers",
+    shortLabel: "Trainers",
+    emoji: "🏋️",
+    blurb: "Personal training at home or gym",
+    tint: "#E2EEFA",
+    coverFrom: "#CFE3F7",
+    coverTo: "#FCE4EC",
+    sort: 5,
+    isActive: true,
+    fulfilment: "booking",
+    vendorType: "fitness",
+    createdAt: new Date(0),
+  },
+  {
+    id: "physio",
+    label: "Physiotherapy",
+    shortLabel: "Physio",
+    emoji: "🩺",
+    blurb: "Physiotherapists who visit you",
+    tint: "#E1F3E7",
+    coverFrom: "#E1F3E7",
+    coverTo: "#E2EEFA",
+    sort: 6,
+    isActive: true,
+    fulfilment: "booking",
+    vendorType: "physio",
+    createdAt: new Date(0),
+  },
+  {
+    id: "gifts",
+    label: "Custom Gifts & Hampers",
+    shortLabel: "Gifts",
+    emoji: "🎁",
+    blurb: "Personalised gifts, hampers and festive boxes",
+    tint: "#FFF0F5",
+    coverFrom: "#FFF0F5",
+    coverTo: "#FFFFFF",
+    sort: 7,
+    isActive: true,
+    fulfilment: "delivery",
+    vendorType: "gifts",
+    createdAt: new Date(0),
+  },
+  {
+    id: "mehndi",
+    label: "Mehndi Artists",
+    shortLabel: "Mehndi",
+    emoji: "🌿",
+    blurb: "Bridal, festival and party mehndi at home",
+    tint: "#F0FFF4",
+    coverFrom: "#F0FFF4",
+    coverTo: "#FFFFFF",
+    sort: 8,
+    isActive: true,
+    fulfilment: "booking",
+    vendorType: "mehndi",
+    createdAt: new Date(0),
+  },
+  {
+    id: "kids",
+    label: "Kids Activities & Classes",
+    shortLabel: "Kids",
+    emoji: "🧸",
+    blurb: "Classes, workshops, tutors and activities for children",
+    tint: "#FEF08A",
+    coverFrom: "#FEF08A",
+    coverTo: "#FFFFFF",
+    sort: 9,
+    isActive: true,
+    fulfilment: "booking",
+    vendorType: "kids",
+    createdAt: new Date(0),
+  },
+  {
+    id: "kids-kits",
+    label: "Kids Learning & DIY Kits",
+    shortLabel: "DIY Kits",
+    emoji: "🧩",
+    blurb: "Science experiment boxes, art supplies and educational kits",
+    tint: "#FEF08A",
+    coverFrom: "#FEF08A",
+    coverTo: "#FFFFFF",
+    sort: 10,
+    isActive: true,
+    fulfilment: "delivery",
+    vendorType: "store",
+    createdAt: new Date(0),
+  },
   {
     id: "kids_academics",
     label: "Home Tutors & Academics",
@@ -161,9 +311,13 @@ export const DEFAULT_KIDS_CATEGORIES: Category[] = [
   },
 ];
 
+export const DEFAULT_KIDS_CATEGORIES: Category[] = DEFAULT_CATEGORIES.filter(
+  (c) => c.id === "kids" || c.id === "kids-kits" || c.id.startsWith("kids_")
+);
+
 function mergeDefaultCategories(dbRows: Category[]): Category[] {
   const existingIds = new Set(dbRows.map((r) => r.id));
-  const missing = DEFAULT_KIDS_CATEGORIES.filter((d) => !existingIds.has(d.id));
+  const missing = DEFAULT_CATEGORIES.filter((d) => !existingIds.has(d.id));
   return [...dbRows, ...missing].sort((a, b) => a.sort - b.sort);
 }
 
@@ -174,7 +328,7 @@ export const getCategories = cache(async (): Promise<Category[]> => {
     const rows = await db.select().from(categories).where(eq(categories.isActive, true)).orderBy(asc(categories.sort), asc(categories.label));
     return mergeDefaultCategories(rows);
   } catch {
-    return DEFAULT_KIDS_CATEGORIES;
+    return DEFAULT_CATEGORIES.filter((c) => c.isActive);
   }
 });
 
@@ -184,7 +338,7 @@ export const getAllCategories = cache(async (): Promise<Category[]> => {
     const rows = await db.select().from(categories).orderBy(asc(categories.sort), asc(categories.label));
     return mergeDefaultCategories(rows);
   } catch {
-    return DEFAULT_KIDS_CATEGORIES;
+    return DEFAULT_CATEGORIES;
   }
 });
 

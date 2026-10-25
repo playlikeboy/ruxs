@@ -3,6 +3,7 @@ import { NewVendorScreen } from "@/features/admin/components/new-vendor-screen";
 import { getOnboardCategories } from "@/features/admin/queries";
 import { getApplication } from "@/features/applications/queries";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "New vendor" };
 
 export default async function NewVendorPage({ searchParams }: { searchParams: Promise<{ application?: string }> }) {
