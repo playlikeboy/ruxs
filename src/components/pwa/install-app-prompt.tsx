@@ -8,6 +8,10 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
+type WindowWithInstallPrompt = Window & {
+  __ruxsDeferredInstallPrompt?: BeforeInstallPromptEvent;
+};
+
 function subscribe() {
   return () => {};
 }
@@ -61,13 +65,36 @@ export function InstallAppPrompt({
   const isDismissed = dismissedOverride || initialDismissed;
 
   useEffect(() => {
+    const getStoredPrompt = () =>
+      (window as WindowWithInstallPrompt).__ruxsDeferredInstallPrompt ?? null;
+
+    const syncStoredPrompt = () => {
+      const promptEvent = getStoredPrompt();
+      if (promptEvent) setDeferredPrompt(promptEvent);
+    };
+
     const handler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      (window as WindowWithInstallPrompt).__ruxsDeferredInstallPrompt = promptEvent;
+      setDeferredPrompt(promptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      delete (window as WindowWithInstallPrompt).__ruxsDeferredInstallPrompt;
+      setDeferredPrompt(null);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    window.addEventListener("ruxs:install-prompt-available", syncStoredPrompt);
+    window.addEventListener("ruxs:app-installed", handleAppInstalled);
+    syncStoredPrompt();
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("ruxs:install-prompt-available", syncStoredPrompt);
+      window.removeEventListener("ruxs:app-installed", handleAppInstalled);
+    };
   }, []);
 
   if (!isMounted) return null;
@@ -75,12 +102,24 @@ export function InstallAppPrompt({
   if (isDismissed && variant === "banner") return null;
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
+    const promptEvent =
+      deferredPrompt ??
+      (typeof window !== "undefined"
+        ? (window as WindowWithInstallPrompt).__ruxsDeferredInstallPrompt ?? null
+        : null);
+
+    if (promptEvent) {
       navigator.vibrate?.([15]);
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      if (choice.outcome === "accepted") {
+      try {
+        await promptEvent.prompt();
+        await promptEvent.userChoice;
         setDeferredPrompt(null);
+        delete (window as WindowWithInstallPrompt).__ruxsDeferredInstallPrompt;
+      } catch (error) {
+        console.warn("RUXs native install prompt failed:", error);
+        setDeferredPrompt(null);
+        delete (window as WindowWithInstallPrompt).__ruxsDeferredInstallPrompt;
+        setShowIOSGuide(true);
       }
     } else if (isIOS) {
       navigator.vibrate?.([15]);
