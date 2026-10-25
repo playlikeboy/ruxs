@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { adminCreateVendor, adminUpdateVendor, type Credentials } from "@/features/admin/actions";
 import { CredentialsView } from "./credentials-panel";
 import { LocationPicker } from "@/features/platform/components/location-picker";
+import { VendorTypePicker } from "./vendor-type-picker";
 
 export interface VendorFormValues {
   vendorId?: string;
@@ -67,6 +68,12 @@ export const EMPTY_VENDOR: VendorFormValues = {
 const input = "mt-1 w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
 const labelCls = "block text-xs font-medium text-ink";
 
+/** Accepts 98765 43210, 098765 43210 or +91 98765 43210; the server wants +919876543210. */
+function normalizePhone(v: string) {
+  const digits = v.replace(/[^\d+]/g, "").replace(/^\+?91(?=\d{10}$)/, "").replace(/^0(?=\d{10}$)/, "");
+  return /^\d{10}$/.test(digits) ? "+91" + digits : v.trim();
+}
+
 function slugify(s: string) {
   return s
     .toLowerCase()
@@ -82,6 +89,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
   const [slugTouched, setSlugTouched] = useState(!isNew);
   const [pending, startTransition] = useTransition();
   const [created, setCreated] = useState<{ vendorId: string; credentials: Credentials | null; warning: string | null } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const set = (k: keyof VendorFormValues) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const value = e.target.value;
@@ -114,66 +122,15 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
 
   // Step 1 for a new vendor: what kind of business is joining?
   if (isNew && !f.categoryId) {
-    const dailyCats = categories.filter((c) => !c.id.startsWith("kids_") && c.id !== "kids");
-    const kidsCats = categories.filter((c) => c.id.startsWith("kids_") || c.id === "kids");
-
     return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold">What are you onboarding?</h2>
-          <p className="text-xs text-muted">Auto-approves the vendor and configures their dedicated database tables and workspace tools.</p>
-        </div>
-
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Daily Essentials &amp; Household Services</h3>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {dailyCats.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setF({ ...f, categoryId: c.id, businessType: c.fulfilment === "booking" ? "booking" : "delivery" })}
-                className="flex items-center gap-3 rounded-[14px] border border-line p-3 text-left transition hover:border-ink hover:scale-101"
-                style={{ backgroundColor: c.tint }}
-              >
-                <AppIcon name={c.id} className="h-6 w-6 text-accent" />
-                <div>
-                  <span className="block text-sm font-semibold text-ink">{c.label}</span>
-                  <span className="block text-[11px] text-muted">{c.fulfilment === "booking" ? "Bookable sessions" : "Delivery store"}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-[18px] border-2 border-kids-grape/25 bg-kids-cream/50 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <UiIcon name="sparkle" className="h-6 w-6 text-accent" />
-            <div>
-              <h3 className="text-sm font-black text-kids-ink">Ruxs Kids (10 Differentiated Vendor Types)</h3>
-              <p className="text-[11px] font-medium text-kids-ink/70">Each type gets separate profile &amp; item database tables, certificates &amp; video preview.</p>
-            </div>
-          </div>
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-            {kidsCats.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setF({ ...f, categoryId: c.id, businessType: c.fulfilment === "booking" ? "booking" : "delivery" })}
-                className="flex items-start gap-2.5 rounded-[12px] border-2 border-kids-grape/15 bg-white p-3 text-left shadow-xs transition hover:border-kids-grape hover:scale-101"
-              >
-                <AppIcon name={c.id} className="mt-0.5 h-6 w-6 text-accent" />
-                <div>
-                  <span className="block text-xs font-black text-kids-ink leading-tight">{c.label}</span>
-                  <span className="block text-[10px] text-kids-ink/70 mt-0.5">{c.blurb || (c.fulfilment === "delivery" ? "Doorstep DIY kits" : "Sessions & workshops")}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <VendorTypePicker
+        categories={categories}
+        onPick={(c) => setF({ ...f, categoryId: c.id, businessType: c.fulfilment === "booking" ? "booking" : "delivery" })}
+      />
     );
   }
   const chosen = categories.find((c) => c.id === f.categoryId);
+  const booking = f.businessType === "booking";
 
   return (
     <form
@@ -186,9 +143,10 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
           toast.error("Enter both latitude and longitude, or neither");
           return;
         }
+        setError(null);
         const details = {
           name: f.name,
-          phone: f.phone,
+          phone: normalizePhone(f.phone),
           upiVpa: f.upiVpa,
           city: f.city,
           area: f.area,
@@ -204,11 +162,11 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
         startTransition(async () => {
           if (isNew) {
             const res = await adminCreateVendor({ ...details, slug: f.slug, categoryId: f.categoryId, applicationId: f.applicationId });
-            if (!res.ok) toast.error(res.error);
+            if (!res.ok) setError(res.error);
             else setCreated(res);
           } else {
             const res = await adminUpdateVendor({ ...details, vendorId: f.vendorId, plan: f.plan, acceptingOrders: f.acceptingOrders });
-            if (!res.ok) toast.error(res.error);
+            if (!res.ok) setError(res.error);
             else {
               toast.success("Saved");
               router.refresh();

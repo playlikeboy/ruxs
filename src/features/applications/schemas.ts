@@ -12,7 +12,7 @@ export const applicationSchema = z.object({
   ownerName: z.string().trim().min(2, "Enter your name").max(60),
   phone: indianMobile,
   email: z.union([z.literal(""), z.string().trim().email("Enter a valid email or leave it empty").max(120)]).optional(),
-  categoryId: z.string().regex(/^[a-z0-9-]+$/, "Pick what you offer").max(40),
+  categoryId: z.string().regex(/^[a-z0-9_-]+$/, "Pick what you offer").max(40),
   area: z.string().trim().min(2, "Enter your area").max(60),
   city: z.string().trim().min(2, "Enter your city").max(40),
   details: z.string().trim().max(600).optional(),

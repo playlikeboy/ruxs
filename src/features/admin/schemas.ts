@@ -26,7 +26,8 @@ export const vendorDetailsSchema = z.object({
 
 export const createVendorSchema = vendorDetailsSchema.extend({
   applicationId: z.string().uuid().optional(),
-  categoryId: z.string().regex(/^[a-z0-9-]+$/, "Pick what you are onboarding"),
+  // Kids category ids use underscores (kids_dance, kids_stem…).
+  categoryId: z.string().regex(/^[a-z0-9_-]+$/, "Pick what you are onboarding"),
   slug: z
     .string()
     .trim()
@@ -65,7 +66,7 @@ export const toggleAcceptingOrdersSchema = z.object({
 const hex = z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #FFE8DD");
 
 export const categorySchema = z.object({
-  id: z.string().trim().min(2).max(30).regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers and hyphens"),
+  id: z.string().trim().min(2).max(30).regex(/^[a-z0-9_-]+$/, "Lowercase letters, numbers, hyphens and underscores"),
   label: z.string().trim().min(2).max(40),
   shortLabel: z.string().trim().min(2).max(14),
   emoji: z.string().trim().min(1).max(8),

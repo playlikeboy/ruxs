@@ -11,6 +11,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { hexclave } from "@/lib/auth/hexclave";
 import { rupeesToPaise } from "@/core/money";
 import { merchantLoginEmail } from "@/core/merchant-login";
+import { DEFAULT_KIDS_CATEGORIES } from "@/features/platform/queries";
 import {
   adminEmailSchema,
   adminIdSchema,
@@ -132,11 +133,36 @@ export async function adminCreateVendor(input: unknown) {
   if (taken) return fail("That store URL is already used. Pick another.");
 
   // The category decides the vendor type, which decides its tables and tools.
-  const [category] = await db
+  let [category] = await db
     .select({ fulfilment: categories.fulfilment, vendorType: categories.vendorType })
     .from(categories)
     .where(eq(categories.id, parsed.data.categoryId))
     .limit(1);
+
+  if (!category) {
+    const defaultCat = DEFAULT_KIDS_CATEGORIES.find((c) => c.id === parsed.data.categoryId);
+    if (defaultCat) {
+      await db
+        .insert(categories)
+        .values({
+          id: defaultCat.id,
+          label: defaultCat.label,
+          shortLabel: defaultCat.shortLabel,
+          emoji: defaultCat.emoji,
+          blurb: defaultCat.blurb,
+          tint: defaultCat.tint,
+          coverFrom: defaultCat.coverFrom,
+          coverTo: defaultCat.coverTo,
+          sort: defaultCat.sort,
+          isActive: defaultCat.isActive,
+          fulfilment: defaultCat.fulfilment,
+          vendorType: defaultCat.vendorType,
+        })
+        .onConflictDoNothing();
+      category = { fulfilment: defaultCat.fulfilment, vendorType: defaultCat.vendorType };
+    }
+  }
+
   const vendorType = category && isVendorType(category.vendorType)
     ? category.vendorType
     : vendorTypeForCategory(parsed.data.categoryId);
