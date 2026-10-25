@@ -21,6 +21,7 @@ import { formatINR } from "@/core/money";
 import { getHomeBanners } from "@/features/banners/queries";
 import { HeroCarousel } from "@/features/banners/components/hero-carousel";
 import { ViewCartBar } from "@/features/consumer/components/view-cart-bar";
+import { ModeSwitch } from "@/features/consumer/components/mode-switch";
 
 export const metadata = { title: "Explore" };
 
@@ -94,6 +95,7 @@ export default async function ExplorePage() {
           </Link>
           <LocationChip label={location.label} source={location.source} />
         </header>
+        <ModeSwitch />
         <SearchBar />
       </div>
 

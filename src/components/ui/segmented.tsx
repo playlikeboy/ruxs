@@ -24,7 +24,7 @@ export function SegmentedLinks({
       aria-label="Switch section"
       className={cn(
         "relative grid rounded-full p-1",
-        tone === "kids" ? "bg-white/80 shadow-[0_2px_0_rgba(124,58,237,0.12)] ring-1 ring-kids-grape/15" : "bg-app-canvas ring-1 ring-app-line",
+        tone === "kids" ? "bg-white/80 shadow-[0_2px_0_rgba(124,58,237,0.12)] ring-1 ring-kids-grape/15" : "bg-app-canvas ring-1 ring-line",
         className
       )}
       style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -46,7 +46,7 @@ export function SegmentedLinks({
             aria-current={on ? "page" : undefined}
             className={cn(
               "relative z-10 flex h-9 items-center justify-center gap-1.5 rounded-full text-[13px] font-bold tracking-tight transition-colors",
-              on ? (tone === "kids" ? "text-white" : "text-brand-deep") : "text-muted hover:text-ink"
+              on ? (tone === "kids" ? "text-white" : "text-brand-deep") : (tone === "kids" ? "text-kids-ink/65 hover:text-kids-ink" : "text-muted hover:text-ink")
             )}
           >
             {item.icon}

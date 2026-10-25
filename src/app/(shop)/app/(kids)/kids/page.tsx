@@ -7,6 +7,7 @@ import { KidsWorkshopCard } from "@/features/kids/components/kids-workshop-card"
 import { KidsKitCard } from "@/features/kids/components/kids-kit-card";
 import { KidsSafetyGuarantee } from "@/features/kids/components/kids-safety-guarantee";
 import { KidsSection, kidsCard, kidsPrimaryButton } from "@/features/kids/components/kids-ui";
+import { ModeSwitch } from "@/features/consumer/components/mode-switch";
 import { getKidsActivities, getKidsKits, getKidsWorkshops } from "@/features/kids/queries";
 import { KIDS_AGE_BRACKETS, KIDS_CATEGORIES, type KidsCategoryId } from "@/core/kids";
 
@@ -25,7 +26,8 @@ export default async function KidsHomePage() {
   const nothingNearby = activities.length === 0 && workshops.length === 0 && kits.length === 0;
 
   return (
-    <div className="space-y-9">
+    <div className="space-y-7">
+      <ModeSwitch className="mb-1" />
       <section className="group relative overflow-hidden rounded-[24px] bg-white ring-1 ring-kids-ink/10">
         <CoverArt theme="kids" live className="h-36 w-full sm:h-44" />
         <div className="p-5 pt-4">
@@ -60,7 +62,7 @@ export default async function KidsHomePage() {
         <>
           <section aria-labelledby="age-title" className="space-y-3">
             <h2 id="age-title" className="font-kids text-xl font-semibold tracking-tight">Child&apos;s age</h2>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5">
               {KIDS_AGE_BRACKETS.filter((b) => b.id !== "all").map((b) => (
                 <Link
                   key={b.id}
@@ -92,7 +94,7 @@ export default async function KidsHomePage() {
 
           {activities.length > 0 && (
             <KidsSection title="Popular classes" href="/app/kids/activities">
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3">
                 {activities.slice(0, 4).map((a) => <KidsActivityCard key={a.id} item={a} />)}
               </div>
             </KidsSection>
@@ -100,7 +102,7 @@ export default async function KidsHomePage() {
 
           {workshops.length > 0 && (
             <KidsSection title="Workshops and camps" href="/app/kids/workshops">
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3">
                 {workshops.slice(0, 2).map((w) => <KidsWorkshopCard key={w.id} item={w} />)}
               </div>
             </KidsSection>
@@ -108,7 +110,7 @@ export default async function KidsHomePage() {
 
           {kits.length > 0 && (
             <KidsSection title="Learning kits" href="/app/kids/kits" linkLabel="All kits">
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3">
                 {kits.slice(0, 2).map((k) => <KidsKitCard key={k.id} item={k} />)}
               </div>
             </KidsSection>

@@ -26,10 +26,10 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
   };
 
   return (
-    <article className="group flex gap-4 rounded-[20px] border border-kids-ink/10 bg-white p-3 transition-colors hover:border-kids-ink/25">
-      <CoverArt theme="kits" className="h-28 w-24 shrink-0 rounded-[14px] sm:h-32 sm:w-28" />
+    <article className="group flex gap-3.5 rounded-[20px] border border-kids-ink/10 bg-white p-3 transition-colors hover:border-kids-ink/25">
+      <CoverArt theme="kits" className="h-24 w-24 shrink-0 rounded-[14px]" />
       <div className="flex min-w-0 flex-1 flex-col py-0.5">
-        <h3 className="text-base font-semibold leading-snug">{item.name}</h3>
+        <h3 className="line-clamp-2 text-base font-semibold leading-snug">{item.name}</h3>
         <p className="mt-0.5 truncate text-sm text-kids-ink/60">{item.vendor.name} · {item.vendor.area}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           <KidsTag>{formatAgeBadge(item.minAge, item.maxAge)}</KidsTag>
@@ -39,12 +39,12 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
           <p className="mt-2 line-clamp-1 text-[13px] text-kids-ink/65">In the box: {item.features.join(", ")}</p>
         )}
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <span className="text-base font-bold tabular-nums">{formatINR(item.pricePaise)}</span>
+          <span className="whitespace-nowrap text-base font-bold tabular-nums">{formatINR(item.pricePaise)}</span>
           <button
             type="button"
             onClick={add}
             className={cn(
-              "inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors active:scale-[0.97]",
+              "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors active:scale-[0.97]",
               justAdded ? "bg-good text-white" : "bg-kids-ink text-white hover:bg-kids-ink/90"
             )}
           >

@@ -12,7 +12,7 @@ export function KidsSafetyGuarantee() {
   return (
     <section aria-labelledby="kids-trust-title" className="rounded-[20px] bg-kids-mint/40 p-5">
       <h2 id="kids-trust-title" className="font-kids text-xl font-semibold tracking-tight text-kids-ink">How RUXs looks after families</h2>
-      <ul className="mt-4 grid gap-4 sm:grid-cols-2">
+      <ul className="mt-4 grid gap-3.5">
         {POINTS.map(({ icon: Icon, title, description }) => (
           <li key={title} className="flex gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-kids-ink">

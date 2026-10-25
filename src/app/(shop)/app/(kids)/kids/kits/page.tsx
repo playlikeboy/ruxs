@@ -22,7 +22,7 @@ export default async function KidsKitsPage() {
           <p className="mt-1 text-sm text-kids-ink/65">Kits appear here when a store in your area lists them.</p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3">
           {kits.map((kit) => <KidsKitCard key={kit.id} item={kit} />)}
         </div>
       )}

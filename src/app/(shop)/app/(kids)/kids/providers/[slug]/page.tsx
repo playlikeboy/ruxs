@@ -75,7 +75,7 @@ export default async function KidsProviderProfilePage({ params }: { params: Prom
           </div>
 
           {(profile?.safetyNotes || profile?.qualifications) && (
-            <dl className="grid gap-3 rounded-[16px] bg-kids-cream p-4 text-sm sm:grid-cols-2">
+            <dl className="grid gap-3 rounded-[16px] bg-kids-cream p-4 text-sm">
               {profile?.safetyNotes && (
                 <div>
                   <dt className="font-semibold">RUXs review notes</dt>

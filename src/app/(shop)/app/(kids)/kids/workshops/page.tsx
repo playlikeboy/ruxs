@@ -22,7 +22,7 @@ export default async function KidsWorkshopsPage() {
           <p className="mt-1 text-sm text-kids-ink/65">New dates appear here as providers add them.</p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3">
           {workshops.map((ws) => <KidsWorkshopCard key={ws.id} item={ws} />)}
         </div>
       )}

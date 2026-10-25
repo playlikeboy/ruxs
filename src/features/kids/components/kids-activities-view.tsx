@@ -153,7 +153,7 @@ export function KidsActivitiesView({
           </button>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3">
           {filtered.map((item) => (
             <KidsActivityCard key={item.id} item={item} />
           ))}
