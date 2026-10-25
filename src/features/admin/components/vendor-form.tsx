@@ -101,7 +101,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <UiIcon name="check" className="h-6 w-6 text-accent" />
-          <h2 className="text-lg font-semibold text-ink">{f.name} is live &amp; Auto-Approved</h2>
+          <h2 className="text-lg font-semibold text-ink">{f.name} is live</h2>
         </div>
         {created.credentials ? (
           <CredentialsView credentials={created.credentials} />
@@ -130,7 +130,8 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
     );
   }
   const chosen = categories.find((c) => c.id === f.categoryId);
-  const booking = f.businessType === "booking";
+  // An application prefill sets only the category, so read fulfilment from it when known.
+  const booking = chosen ? chosen.fulfilment === "booking" : f.businessType === "booking";
 
   return (
     <form
@@ -175,19 +176,24 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
         });
       }}
     >
-      {isNew && chosen && (
-        <div className="flex items-center justify-between gap-3 rounded-[12px] border border-line p-3" style={{ backgroundColor: chosen.tint }}>
-          <span className="flex items-center gap-2 text-sm font-semibold">
-            <AppIcon name={chosen.id} className="h-6 w-6 text-accent" /> Onboarding: {chosen.label}
-            <span className="font-normal text-muted">· {chosen.fulfilment === "booking" ? "booking provider" : "delivery store"}</span>
+      {isNew && (
+        <div className="flex items-center gap-3 rounded-[12px] border border-line bg-bg p-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px]" style={{ backgroundColor: chosen?.tint }}>
+            <AppIcon name={f.categoryId} className="h-5 w-5 text-ink" />
           </span>
-          <button type="button" onClick={() => setF({ ...f, categoryId: "" })} className="text-xs font-semibold text-accent">Change</button>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-ink">{chosen?.label ?? f.categoryId}</span>
+            <span className="block text-xs text-muted">{booking ? "Bookable sessions" : "Delivery store"}</span>
+          </span>
+          <button type="button" onClick={() => setF({ ...f, categoryId: "" })} className="h-9 rounded-[8px] border border-line bg-surface px-3 text-xs font-semibold text-ink hover:border-ink/40">
+            Change type
+          </button>
         </div>
       )}
 
       <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Business</legend>
-        <label className={labelCls}>Business name<input required className={input} value={f.name} onChange={set("name")} /></label>
+        <legend className="mb-3 text-base font-semibold text-ink">Business</legend>
+        <label className={labelCls}>Business name<input required autoFocus={isNew} className={input} value={f.name} onChange={set("name")} /></label>
         <label className={labelCls}>
           Store URL / login ID
           <input
@@ -202,13 +208,17 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
           />
           <span className="mt-1 block text-[11px] text-muted">ruxs.in/app/store/{f.slug || "…"}</span>
         </label>
-        <label className={labelCls}>Phone (+91…)<input required className={input + " font-mono"} value={f.phone} onChange={set("phone")} /></label>
+        <label className={labelCls}>
+          Mobile number
+          <input required type="tel" inputMode="tel" autoComplete="off" className={input + " font-mono"} value={f.phone} onChange={set("phone")} placeholder="98765 43210" />
+          <span className="mt-1 block text-[11px] text-muted">10 digits; +91 is added for you. Households never see it.</span>
+        </label>
         <label className={labelCls}>Payout UPI ID<input required className={input + " font-mono"} value={f.upiVpa} onChange={set("upiVpa")} placeholder="name@upi" /></label>
-        <label className={labelCls + " sm:col-span-2"}>About the store<textarea rows={2} className={input} value={f.description} onChange={set("description")} maxLength={400} /></label>
+        <label className={labelCls + " sm:col-span-2"}>{booking ? "About the provider" : "About the store"}<textarea rows={2} className={input} value={f.description} onChange={set("description")} maxLength={400} /></label>
       </fieldset>
 
       <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Location &amp; delivery</legend>
+        <legend className="mb-3 text-base font-semibold text-ink">{booking ? "Location & home visits" : "Location & delivery"}</legend>
         <label className={labelCls}>Area<input required className={input} value={f.area} onChange={set("area")} placeholder="Lalpur" /></label>
         <label className={labelCls}>City<input required className={input} value={f.city} onChange={set("city")} placeholder="Ranchi" /></label>
         <div className="sm:col-span-2">
@@ -217,15 +227,15 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
             onChange={(v) => setF((prev) => ({ ...prev, latitude: v.latitude, longitude: v.longitude, mapsUrl: v.mapsUrl }))}
           />
         </div>
-        <label className={labelCls}>Delivery radius (km)<input className={input} inputMode="numeric" value={f.serviceRadiusKm} onChange={set("serviceRadiusKm")} /></label>
-        <label className={labelCls}>Delivery fee (₹)<input className={input} inputMode="decimal" value={f.deliveryFeeRupees} onChange={set("deliveryFeeRupees")} /></label>
-        <label className={labelCls}>Minimum order (₹)<input className={input} inputMode="decimal" value={f.minOrderRupees} onChange={set("minOrderRupees")} /></label>
-        <label className={labelCls}>RUXs fee on online payments (%)<input className={input} inputMode="decimal" value={f.commissionPercent} onChange={set("commissionPercent")} /></label>
+        <label className={labelCls}>{booking ? "Home-visit radius (km)" : "Delivery radius (km)"}<input className={input + " tabular-nums"} inputMode="numeric" value={f.serviceRadiusKm} onChange={set("serviceRadiusKm")} /></label>
+        <label className={labelCls}>{booking ? "Visit fee (₹)" : "Delivery fee (₹)"}<input className={input + " tabular-nums"} inputMode="decimal" value={f.deliveryFeeRupees} onChange={set("deliveryFeeRupees")} /></label>
+        {!booking && <label className={labelCls}>Minimum order (₹)<input className={input + " tabular-nums"} inputMode="decimal" value={f.minOrderRupees} onChange={set("minOrderRupees")} /></label>}
+        <label className={labelCls}>RUXs fee on online payments (%)<input className={input + " tabular-nums"} inputMode="decimal" value={f.commissionPercent} onChange={set("commissionPercent")} /></label>
       </fieldset>
 
       {!isNew && (
         <fieldset className="grid gap-4 sm:grid-cols-2">
-          <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Plan</legend>
+          <legend className="mb-3 text-base font-semibold text-ink">Plan</legend>
           <label className={labelCls}>
             Plan
             <select className={input} value={f.plan} onChange={set("plan")}>
@@ -241,9 +251,16 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
         </fieldset>
       )}
 
-      <button type="submit" disabled={pending} className="h-12 w-full rounded-[12px] bg-accent text-sm font-bold text-white disabled:opacity-60 sm:w-auto sm:px-8">
-        {pending ? "Saving…" : isNew ? "Create vendor & generate login" : "Save changes"}
-      </button>
+      <div className="sticky bottom-0 space-y-2 border-t border-line bg-surface py-3 sm:static sm:border-0 sm:p-0">
+        {error && (
+          <p role="alert" className="rounded-[10px] bg-blush px-3 py-2 text-sm font-medium text-bad">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={pending} className="h-12 w-full rounded-[12px] bg-accent text-sm font-bold text-white disabled:opacity-60 sm:w-auto sm:px-8">
+          {pending ? "Saving…" : isNew ? "Create vendor & generate login" : "Save changes"}
+        </button>
+      </div>
     </form>
   );
 }
