@@ -8,7 +8,6 @@ import { computeVendorBalance } from "@/features/payouts/queries";
 import { getRatingMap } from "@/features/platform/queries";
 import { SessionActions } from "./booking-buttons";
 import { KidsBookingActions } from "@/features/kids/components/provider-booking-actions";
-import { ProviderSessionSheet } from "./provider-session-sheet";
 
 /** Merchant Today for booking providers: today's sessions, what's next, and money. */
 export async function ProviderToday({ slug }: { slug: string }) {
@@ -108,17 +107,6 @@ export async function ProviderToday({ slug }: { slug: string }) {
         )}
       </section>
 
-      {/* Differentiated Intake & Coordination Log */}
-      <ProviderSessionSheet
-        sessions={todays.map((t) => ({
-          booking: t.booking,
-          customerName: t.customerName,
-          customerPhone: t.customerPhone,
-          serviceName: t.serviceName,
-          category: access.vendor.categoryId,
-        }))}
-        category={access.vendor.categoryId}
-      />
     </div>
   );
 }

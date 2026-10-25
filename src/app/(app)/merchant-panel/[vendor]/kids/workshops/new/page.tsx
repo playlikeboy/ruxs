@@ -13,7 +13,7 @@ export default async function NewKidsWorkshopPage({ params }: { params: Promise<
     <div className="space-y-5 px-4 py-5 sm:px-6">
       <Link href={`/merchant-panel/${slug}/kids/workshops`} className="text-sm font-semibold text-muted hover:text-ink">← Workshops</Link>
       <PageHeader title="New workshop" description="A camp on fixed dates with limited seats." />
-      <KidsWorkshopForm slug={slug} categories={w.categories} initial={newWorkshopValues(w.categories[0]?.id ?? "")} />
+      <KidsWorkshopForm slug={slug} categories={w.categories} initial={newWorkshopValues(w.defaultCategoryId)} />
     </div>
   );
 }

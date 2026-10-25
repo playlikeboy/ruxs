@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { reloadIfStaleDeploy } from "@/lib/stale-deploy";
 import Link from "next/link";
 
 /** Keeps admin errors inside the console shell instead of the full-page global error. */
 export default function AdminError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
+    if (reloadIfStaleDeploy(error)) return;
     console.error("Admin error boundary caught:", error);
   }, [error]);
 

@@ -13,7 +13,7 @@ export default async function NewKidsClassPage({ params }: { params: Promise<{ v
     <div className="space-y-5 px-4 py-5 sm:px-6">
       <Link href={`/merchant-panel/${slug}/kids`} className="text-sm font-semibold text-muted hover:text-ink">← Classes</Link>
       <PageHeader title="New class" description="A session parents book for one child at a time." />
-      <KidsClassForm slug={slug} categories={w.categories} initial={newClassValues(w.categories[0]?.id ?? "")} />
+      <KidsClassForm slug={slug} categories={w.categories} initial={newClassValues(w.defaultCategoryId)} />
     </div>
   );
 }

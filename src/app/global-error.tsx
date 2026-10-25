@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reloadIfStaleDeploy } from "@/lib/stale-deploy";
 import Link from "next/link";
 
 export default function GlobalError({
@@ -11,6 +12,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    if (reloadIfStaleDeploy(error)) return;
     console.error("Global application error:", error);
   }, [error]);
 

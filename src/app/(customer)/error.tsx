@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reloadIfStaleDeploy } from "@/lib/stale-deploy";
 
 export default function CustomerError({
   error,
@@ -10,6 +11,7 @@ export default function CustomerError({
   reset: () => void;
 }) {
   useEffect(() => {
+    if (reloadIfStaleDeploy(error)) return;
     console.error("Customer-link error:", error);
   }, [error]);
 

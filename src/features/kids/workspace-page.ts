@@ -1,17 +1,19 @@
 import "server-only";
 import { requireVendorModule } from "@/lib/auth/session";
 import { todayIST } from "@/core/time";
+import { defaultKidsCategory } from "@/core/kids/category-for-type";
 import { getKidsCategories, getProviderKidsWorkspace } from "./queries";
 import type { KidsClassValues } from "./components/kids-class-form";
 import type { KidsWorkshopValues } from "./components/kids-workshop-form";
 
 /** Everything a /merchant-panel/[vendor]/kids page needs, behind the kids module gate. */
 export async function loadKidsWorkspace(slug: string) {
-  await requireVendorModule(slug, "kids");
+  const access = await requireVendorModule(slug, "kids");
   const [workspace, categories] = await Promise.all([getProviderKidsWorkspace(slug), getKidsCategories()]);
   const pendingReview = !(workspace.profile?.verificationStatus === "approved" && workspace.profile.safetyReviewStatus === "passed");
   const counts = { classes: workspace.services.length, workshops: workspace.workshops.length, children: workspace.bookings.length + workspace.enrollments.length };
-  return { ...workspace, categories: categories.map((c) => ({ id: c.id, name: c.name })), pendingReview, counts };
+  const list = categories.map((c) => ({ id: c.id, name: c.name }));
+  return { ...workspace, categories: list, defaultCategoryId: defaultKidsCategory(access.vendorType, list), pendingReview, counts };
 }
 
 export function newClassValues(categoryId: string): KidsClassValues {
