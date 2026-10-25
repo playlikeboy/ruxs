@@ -9,8 +9,8 @@ import { VENDOR_TYPE_INFO, isVendorType, vendorTypeForCategory } from "@/core/ve
 import { provisionTypeProfile } from "@/features/vendor-types/tables";
 import { requireAdmin } from "@/lib/auth/session";
 import { hexclave } from "@/lib/auth/hexclave";
+import { renameMerchantAccount, syncMerchantAccount } from "@/features/admin/merchant-accounts";
 import { rupeesToPaise } from "@/core/money";
-import { merchantLoginEmail } from "@/core/merchant-login";
 import { DEFAULT_CATEGORIES } from "@/features/platform/queries";
 import {
   adminEmailSchema,
@@ -94,28 +94,17 @@ async function issueCredentials(vendorId: string): Promise<{ ok: true; credentia
 
   const loginId = vendor.loginId ?? vendor.slug;
   const password = generatePassword();
-  let userId = vendor.loginUserId;
-
+  let userId: string;
   try {
-    const existing = userId ? await hexclave.getUser(userId) : null;
-    if (existing) {
-      await existing.update({ password });
-    } else {
-      const created = await hexclave.createUser({
-        primaryEmail: merchantLoginEmail(loginId),
-        primaryEmailVerified: true,
-        primaryEmailAuthEnabled: true,
-        password,
-        displayName: vendor.name,
-      });
-      userId = created.id;
-    }
+    const synced = await syncMerchantAccount(vendor, loginId, password);
+    if (!synced.ok) return fail(synced.error);
+    userId = synced.userId;
   } catch (err) {
     return fail("Login service error: " + (err instanceof Error ? err.message : String(err)));
   }
 
   await db.update(vendors).set({ loginId, loginUserId: userId, updatedAt: new Date() }).where(eq(vendors.id, vendor.id));
-  await db.insert(vendorMembers).values({ vendorId: vendor.id, userId: userId!, role: "owner" }).onConflictDoNothing();
+  await db.insert(vendorMembers).values({ vendorId: vendor.id, userId, role: "owner" }).onConflictDoNothing();
 
   return {
     ok: true,
@@ -215,14 +204,13 @@ export async function adminSetLoginId(input: unknown) {
   await requireAdmin();
   const db = getDb();
   const { vendorId, loginId } = parsed.data;
-  const [vendor] = await db.select({ id: vendors.id, loginUserId: vendors.loginUserId }).from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+  const [vendor] = await db.select({ id: vendors.id, slug: vendors.slug, name: vendors.name, loginUserId: vendors.loginUserId }).from(vendors).where(eq(vendors.id, vendorId)).limit(1);
   if (!vendor?.loginUserId) return fail("Generate a login first.");
   const [taken] = await db.select({ id: vendors.id }).from(vendors).where(eq(vendors.loginId, loginId)).limit(1);
   if (taken && taken.id !== vendor.id) return fail("That login ID is already used by another store.");
   try {
-    const user = await hexclave.getUser(vendor.loginUserId);
-    if (!user) return fail("The login account is missing. Generate a new login.");
-    await user.setPrimaryEmail(merchantLoginEmail(loginId), { verified: true });
+    const renamed = await renameMerchantAccount({ ...vendor, loginUserId: vendor.loginUserId }, loginId);
+    if (!renamed.ok) return fail(renamed.error);
   } catch (err) {
     return fail("Login service error: " + (err instanceof Error ? err.message : String(err)));
   }
