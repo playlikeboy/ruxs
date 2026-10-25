@@ -134,6 +134,13 @@
       "when": 1793400000000,
       "tag": "0018_vendor_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793500000000,
+      "tag": "0019_kids_vendor_types_repair",
+      "breakpoints": true
     }
   ]
 }

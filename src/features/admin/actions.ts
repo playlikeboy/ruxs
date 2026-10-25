@@ -139,43 +139,34 @@ export async function adminCreateVendor(input: unknown) {
     .where(eq(categories.id, parsed.data.categoryId))
     .limit(1);
 
-  if (!category) {
-    const defaultCat = DEFAULT_KIDS_CATEGORIES.find((c) => c.id === parsed.data.categoryId);
-    if (defaultCat) {
-      await db
-        .insert(categories)
-        .values({
-          id: defaultCat.id,
-          label: defaultCat.label,
-          shortLabel: defaultCat.shortLabel,
-          emoji: defaultCat.emoji,
-          blurb: defaultCat.blurb,
-          tint: defaultCat.tint,
-          coverFrom: defaultCat.coverFrom,
-          coverTo: defaultCat.coverTo,
-          sort: defaultCat.sort,
-          isActive: defaultCat.isActive,
-          fulfilment: defaultCat.fulfilment,
-          vendorType: defaultCat.vendorType,
-        })
-        .onConflictDoNothing();
-      category = { fulfilment: defaultCat.fulfilment, vendorType: defaultCat.vendorType };
-    }
-  }
+  // Kids categories ship as code defaults; create the row vendors.category_id points at.
+  const defaultCat = category ? undefined : DEFAULT_KIDS_CATEGORIES.find((c) => c.id === parsed.data.categoryId);
+  if (defaultCat) category = { fulfilment: defaultCat.fulfilment, vendorType: defaultCat.vendorType };
+  if (!category) return fail("That business type no longer exists. Pick another.");
 
-  const vendorType = category && isVendorType(category.vendorType)
-    ? category.vendorType
-    : vendorTypeForCategory(parsed.data.categoryId);
+  const vendorType = isVendorType(category.vendorType) ? category.vendorType : vendorTypeForCategory(parsed.data.categoryId);
   const businessType = VENDOR_TYPE_INFO[vendorType].fulfilment;
 
-  const vendor = await db.transaction(async (tx) => {
-    const [row] = await tx
-      .insert(vendors)
-      .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType, vendorType, categoryId: parsed.data.categoryId, plan: "free", status: "active" })
-      .returning({ id: vendors.id });
-    await provisionTypeProfile(tx, row!.id, vendorType);
-    return row;
-  });
+  let vendor: { id: string } | undefined;
+  try {
+    vendor = await db.transaction(async (tx) => {
+      if (defaultCat) {
+        const { createdAt: _createdAt, ...values } = defaultCat;
+        await tx.insert(categories).values(values).onConflictDoNothing();
+      }
+      const [row] = await tx
+        .insert(vendors)
+        .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType, vendorType, categoryId: parsed.data.categoryId, plan: "free", status: "active" })
+        .returning({ id: vendors.id });
+      await provisionTypeProfile(tx, row!.id, vendorType);
+      return row;
+    });
+  } catch (err) {
+    // Surface the database reason to the admin instead of the crash page.
+    console.error("adminCreateVendor failed", err);
+    const cause = err instanceof Error ? ((err.cause as Error | undefined)?.message ?? err.message) : String(err);
+    return fail(`Could not create the ${VENDOR_TYPE_INFO[vendorType].label.toLowerCase()}: ${cause.slice(0, 200)}`);
+  }
 
   if (parsed.data.applicationId) {
     await db
