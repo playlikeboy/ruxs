@@ -4,8 +4,8 @@ import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { eq, inArray, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { categories, ledgerEntries, localities, platformAdmins, platformSettings, vendorApplications, vendorMembers, vendors } from "@/db/schema";
-import { VENDOR_TYPE_INFO, isVendorType, vendorTypeForCategory } from "@/core/vendor-types";
+import { categories, kidsProviderProfiles, ledgerEntries, localities, platformAdmins, platformSettings, vendorApplications, vendorMembers, vendors } from "@/db/schema";
+import { VENDOR_TYPE_INFO, canUseModule, isVendorType, vendorTypeForCategory } from "@/core/vendor-types";
 import { provisionTypeProfile } from "@/features/vendor-types/tables";
 import { requireAdmin } from "@/lib/auth/session";
 import { hexclave } from "@/lib/auth/hexclave";
@@ -115,7 +115,7 @@ async function issueCredentials(vendorId: string): Promise<{ ok: true; credentia
 export async function adminCreateVendor(input: unknown) {
   const parsed = createVendorSchema.safeParse(input);
   if (!parsed.success) return fail(firstIssue(parsed.error));
-  await requireAdmin();
+  const { user: admin } = await requireAdmin();
   const db = getDb();
 
   const [taken] = await db.select({ id: vendors.id }).from(vendors).where(eq(vendors.slug, parsed.data.slug)).limit(1);
@@ -148,6 +148,13 @@ export async function adminCreateVendor(input: unknown) {
         .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType, vendorType, categoryId: parsed.data.categoryId, plan: "free", status: "active" })
         .returning({ id: vendors.id });
       await provisionTypeProfile(tx, row!.id, vendorType);
+      // An admin onboards a kids provider only after vetting them, so it starts approved, matching "Active & live".
+      if (canUseModule(vendorType, "kids")) {
+        await tx
+          .insert(kidsProviderProfiles)
+          .values({ vendorId: row!.id, verificationStatus: "approved", safetyReviewStatus: "passed", verifiedByAdminId: admin.id, verifiedAt: new Date() })
+          .onConflictDoNothing();
+      }
       return row;
     });
   } catch (err) {

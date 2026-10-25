@@ -6,6 +6,7 @@ import { ChevronLeft, Clock, MapPin, Repeat, Truck } from "lucide-react";
 import { getProviderPublic } from "@/features/bookings/queries";
 import { ProviderPage } from "@/features/bookings/components/provider-page";
 import { formatINR } from "@/core/money";
+import { isKidsVendorType } from "@/core/vendor-types";
 import { getCategoryMap } from "@/features/platform/queries";
 import { getMyLocation, getStore } from "@/features/consumer/queries";
 import { AddToCart } from "@/features/consumer/components/add-to-cart";
@@ -28,7 +29,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
 
   const { vendor, items } = store;
   // Kids academies have their own playful profile page in Kids mode.
-  if (vendor.vendorType === "kids") redirect(`/app/kids/providers/${vendor.slug}`);
+  if (isKidsVendorType(vendor.vendorType) && vendor.vendorType !== "kids_products") redirect(`/app/kids/providers/${vendor.slug}`);
   const [reviewData, myReview, canReply] = await Promise.all([
     getStoreReviewsPaginated(vendor.id, 1, 10),
     getMyReviewState(vendor.id),

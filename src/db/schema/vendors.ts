@@ -62,7 +62,7 @@ export const vendors = pgTable(
     ),
     check(
       "vendors_vendor_type_check",
-      sql`${t.vendorType} in ('tiffin', 'water', 'milk', 'gifts', 'store', 'fitness', 'physio', 'mehndi', 'kids')`
+      sql`${t.vendorType} in ('tiffin', 'water', 'milk', 'gifts', 'store', 'fitness', 'physio', 'mehndi', 'kids', 'kids_academics', 'kids_stem', 'kids_performing_arts', 'kids_arts_crafts', 'kids_school_projects', 'kids_camps', 'kids_sports_fitness', 'kids_life_skills', 'kids_products', 'kids_institutions')`
     ),
     index("vendors_vendor_type_idx").on(t.vendorType, t.status),
   ]

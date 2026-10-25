@@ -305,7 +305,7 @@ export async function saveService(input: unknown) {
   const { slug, id, ...data } = parsed.data;
   const access = await requireVendorAccess(slug, ["owner"]);
   const type = toVendorType(access.vendor.vendorType, access.vendor.businessType);
-  if (!canUseModule(type, "services")) return fail(type === "kids" ? "Add classes from the Classes & workshops page" : "Only booking providers have services");
+  if (!canUseModule(type, "services")) return fail(canUseModule(type, "kids") ? "Add classes from the Classes & workshops page" : "Only booking providers have services");
   if (!allowedCategoryIds(type, access.vendor.categoryId).includes(data.categoryId)) return fail("You can only add services in your own category");
   const db = getDb();
   const [category] = await db

@@ -74,14 +74,16 @@ export function vendorNav(type: VendorType, role: Role): NavGroup[] {
 /** Four bottom tabs for phones; everything else lives under More. */
 export function vendorTabs(type: VendorType): { module: Module; label: string }[] {
   const n = VENDOR_TYPE_INFO[type].nouns;
+  // Every kids class type (kids, kids_stem, kids_performing_arts, ...) shares one tab set.
+  if (canUseModule(type, "kids")) {
+    return [
+      { module: "today", label: "Today" },
+      { module: "kids", label: n.catalogueShort },
+      { module: "bookings", label: "Calendar" },
+      { module: "availability", label: "Hours" },
+    ];
+  }
   switch (type) {
-    case "kids":
-      return [
-        { module: "today", label: "Today" },
-        { module: "kids", label: n.catalogueShort },
-        { module: "bookings", label: "Calendar" },
-        { module: "availability", label: "Hours" },
-      ];
     case "fitness":
     case "physio":
     case "mehndi":
@@ -92,6 +94,7 @@ export function vendorTabs(type: VendorType): { module: Module; label: string }[
         { module: "customers", label: n.customers },
       ];
     case "gifts":
+    case "kids_products":
       return [
         { module: "today", label: "Today" },
         { module: "orders", label: "Orders" },

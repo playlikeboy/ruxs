@@ -5,7 +5,7 @@ import { AppIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { VENDOR_TYPE_INFO, type Module, type VendorType } from "@/core/vendor-types";
+import { canUseModule, VENDOR_TYPE_INFO, type Module, type VendorType } from "@/core/vendor-types";
 import { vendorNav, type Role } from "./vendor-nav-items";
 import { MODULE_ICON } from "./vendor-icons";
 
@@ -31,7 +31,7 @@ export function VendorSidebar({
   const base = "/merchant-panel/" + slug;
   const info = VENDOR_TYPE_INFO[vendorType];
   const groups = vendorNav(vendorType, role);
-  const publicHref = vendorType === "kids" ? "/app/kids/providers/" + slug : "/app/store/" + slug;
+  const publicHref = canUseModule(vendorType, "kids") ? "/app/kids/providers/" + slug : "/app/store/" + slug;
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-surface lg:flex">

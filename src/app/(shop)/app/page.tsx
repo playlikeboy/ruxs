@@ -7,6 +7,7 @@ import { getCategoryMap } from "@/features/platform/queries";
 import { TodayCard, type TodayItem } from "@/features/consumer/components/today-card";
 import { HeroSubscriptionPlans, type HeroPlanItem } from "@/features/consumer/components/hero-subscription-plans";
 import { isLate } from "@/core/cutoff";
+import { isKidsVendorType } from "@/core/vendor-types";
 import { weekdayIST } from "@/core/time";
 import { getCategories } from "@/features/platform/queries";
 import { LocationChip } from "@/features/consumer/components/location-chip";
@@ -73,7 +74,7 @@ export default async function ExplorePage() {
   const firstName = (profile?.name ?? user.displayName ?? "").split(" ")[0];
 
   // One grid for everything households can get, kids included.
-  const daily = categories.filter((k) => k.vendorType !== "kids" && k.id !== "kids-kits");
+  const daily = categories.filter((k) => !isKidsVendorType(k.vendorType) && k.id !== "kids-kits");
   const tiles = [
     ...daily.map((k) => ({ id: k.id, label: k.shortLabel, href: "/app/category/" + k.id, tint: k.tint })),
     { id: "kids", label: "Kids classes", href: "/app/kids/activities", tint: "#E9F4E7" },

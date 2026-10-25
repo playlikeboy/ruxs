@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { requireVendorModule } from "@/lib/auth/session";
-import { VENDOR_TYPE_INFO } from "@/core/vendor-types";
+import { canUseModule, VENDOR_TYPE_INFO } from "@/core/vendor-types";
 import { vendorNav } from "@/components/nav/vendor-nav-items";
 import { MODULE_ICON } from "@/components/nav/vendor-icons";
 import { PageHeader } from "@/components/ui/card";
@@ -14,7 +14,7 @@ export default async function MorePage({ params }: { params: Promise<{ vendor: s
   const access = await requireVendorModule(slug, "more");
   const info = VENDOR_TYPE_INFO[access.vendorType];
   const groups = vendorNav(access.vendorType, access.role);
-  const publicHref = access.vendorType === "kids" ? "/app/kids/providers/" + slug : "/app/store/" + slug;
+  const publicHref = canUseModule(access.vendorType, "kids") ? "/app/kids/providers/" + slug : "/app/store/" + slug;
 
   return (
     <div className="space-y-6 p-4 sm:p-6">

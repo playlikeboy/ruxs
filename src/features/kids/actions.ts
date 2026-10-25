@@ -15,6 +15,7 @@ import { isReviewEligible } from "@/core/kids/booking-status";
 import { todayIST } from "@/core/time";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { rupeesToPaise } from "@/core/money";
+import { canUseModule, toVendorType } from "@/core/vendor-types";
 import { createKidsBooking, cancelKidsBooking, transitionKidsBookingForProvider } from "./booking-service";
 import { announceEnrollment, announceKidsGuardianCancel, announceKidsProviderAction, announceKidsRequest } from "./notify";
 import { enrollInWorkshop, cancelWorkshopEnrollment } from "./workshop-service";
@@ -392,7 +393,7 @@ export async function saveKidsServiceAction(input: unknown) {
 
   const data = parsed.data;
   const access = await requireVendorAccess(data.slug, ["owner"]);
-  if (access.vendor.vendorType !== "kids") return { ok: false as const, error: "Only kids academies can list kids classes" };
+  if (!canUseModule(toVendorType(access.vendor.vendorType, access.vendor.businessType), "kids")) return { ok: false as const, error: "Only kids class providers can list classes" };
   const db = getDb();
 
   const pricePaise = rupeesToPaise(data.priceRupees);
@@ -451,6 +452,7 @@ export async function saveKidsServiceAction(input: unknown) {
 
 export async function archiveKidsServiceAction(input: { slug: string; serviceId: string }) {
   const access = await requireVendorAccess(input.slug, ["owner"]);
+  if (!canUseModule(toVendorType(access.vendor.vendorType, access.vendor.businessType), "kids")) return { ok: false as const, error: "Only kids class providers can list classes" };
   const db = getDb();
 
   await db
@@ -472,7 +474,7 @@ export async function saveKidsWorkshopAction(input: unknown) {
 
   const data = parsed.data;
   const access = await requireVendorAccess(data.slug, ["owner"]);
-  if (access.vendor.vendorType !== "kids") return { ok: false as const, error: "Only kids academies can list kids classes" };
+  if (!canUseModule(toVendorType(access.vendor.vendorType, access.vendor.businessType), "kids")) return { ok: false as const, error: "Only kids class providers can list classes" };
   const db = getDb();
 
   const pricePaise = rupeesToPaise(data.priceRupees);

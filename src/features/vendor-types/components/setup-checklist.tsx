@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import { getDb } from "@/db";
 import { availabilityRules, kidsServices, products, services } from "@/db/schema";
 import { requireVendorModule } from "@/lib/auth/session";
-import { VENDOR_TYPE_INFO } from "@/core/vendor-types";
+import { canUseModule, VENDOR_TYPE_INFO } from "@/core/vendor-types";
 import { PROFILE_FIELDS } from "../fields";
 import { readTypeProfile } from "../tables";
 
@@ -21,9 +21,10 @@ export async function SetupChecklist({ slug }: { slug: string }) {
   const v = access.vendor;
   const db = getDb();
   const booking = info.fulfilment === "booking";
+  const kidsClasses = canUseModule(type, "kids");
 
   const catalogueQuery =
-    type === "kids"
+    kidsClasses
       ? db.select({ n: count() }).from(kidsServices).where(and(eq(kidsServices.vendorId, v.id), isNull(kidsServices.archivedAt)))
       : booking
         ? db.select({ n: count() }).from(services).where(and(eq(services.vendorId, v.id), isNull(services.archivedAt)))
@@ -49,7 +50,7 @@ export async function SetupChecklist({ slug }: { slug: string }) {
       done: (catalogue?.n ?? 0) > 0,
       label: `Add your first ${info.nouns.catalogueShort.toLowerCase().replace(/s$/, "")}`,
       hint: "Nothing shows in the app until you list something.",
-      href: `${base}/${type === "kids" ? "kids" : booking ? "services" : "products"}`,
+      href: `${base}/${kidsClasses ? "kids" : booking ? "services" : "products"}`,
     },
     ...(booking ? [{ done: (hours?.n ?? 0) > 0, label: "Set your weekly hours", hint: "Clients can only book open slots.", href: `${base}/availability` }] : []),
     { done: !!v.description && v.description.length >= 20, label: "Write a short description", hint: "One or two lines about what makes you good.", href: `${base}/settings` },

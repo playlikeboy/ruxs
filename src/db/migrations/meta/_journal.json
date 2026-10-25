@@ -148,6 +148,13 @@
       "when": 1793600000000,
       "tag": "0020_drop_provider_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793700000000,
+      "tag": "0021_kids_services_vendor_types",
+      "breakpoints": true
     }
   ]
 }
