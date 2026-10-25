@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { AppIcon } from "@/components/ui/app-icon";
-import type { OnboardCategory } from "./vendor-form";
+import type { OnboardCategory } from "./vendor-form-values";
 
 function isKids(c: OnboardCategory) {
   return c.id === "kids" || c.id.startsWith("kids_");

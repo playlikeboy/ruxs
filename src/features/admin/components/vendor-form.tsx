@@ -11,60 +11,7 @@ import { adminCreateVendor, adminUpdateVendor, type Credentials } from "@/featur
 import { CredentialsView } from "./credentials-panel";
 import { LocationPicker } from "@/features/platform/components/location-picker";
 import { VendorTypePicker } from "./vendor-type-picker";
-
-export interface VendorFormValues {
-  vendorId?: string;
-  applicationId?: string;
-  slug: string;
-  name: string;
-  phone: string;
-  upiVpa: string;
-  city: string;
-  area: string;
-  description: string;
-  latitude: string;
-  longitude: string;
-  serviceRadiusKm: string;
-  deliveryFeeRupees: string;
-  minOrderRupees: string;
-  commissionPercent: string;
-  plan: "free" | "starter" | "pro";
-  acceptingOrders: boolean;
-  businessType: "delivery" | "booking";
-  categoryId: string;
-  mapsUrl: string;
-}
-
-export interface OnboardCategory {
-  id: string;
-  label: string;
-  emoji: string;
-  blurb: string;
-  fulfilment: string;
-  tint: string;
-  vendorType: string;
-}
-
-export const EMPTY_VENDOR: VendorFormValues = {
-  slug: "",
-  name: "",
-  phone: "+91",
-  upiVpa: "",
-  city: "",
-  area: "",
-  description: "",
-  latitude: "",
-  longitude: "",
-  serviceRadiusKm: "8",
-  deliveryFeeRupees: "0",
-  minOrderRupees: "0",
-  commissionPercent: "0",
-  plan: "free",
-  acceptingOrders: true,
-  businessType: "delivery",
-  categoryId: "",
-  mapsUrl: "",
-};
+import type { OnboardCategory, VendorFormValues } from "./vendor-form-values";
 
 const input = "mt-1 w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
 const labelCls = "block text-xs font-medium text-ink";

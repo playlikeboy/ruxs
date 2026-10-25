@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { EMPTY_VENDOR, VendorForm, type OnboardCategory } from "@/features/admin/components/vendor-form";
+import { VendorForm } from "@/features/admin/components/vendor-form";
+import { EMPTY_VENDOR, type OnboardCategory } from "@/features/admin/components/vendor-form-values";
 import type { getApplication } from "@/features/applications/queries";
 
 type Application = NonNullable<Awaited<ReturnType<typeof getApplication>>>;
