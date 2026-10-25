@@ -30,3 +30,14 @@ export async function getMenuForVendor(slug: string) {
     .orderBy(asc(products.kind), asc(products.section), asc(products.name));
   return { rows, role: access.role };
 }
+
+/** One live menu item of this vendor, or null. */
+export async function getMenuItem(slug: string, id: string) {
+  const access = await requireVendorAccess(slug);
+  const [row] = await getDb()
+    .select()
+    .from(products)
+    .where(and(eq(products.id, id), eq(products.vendorId, access.vendorId), isNull(products.archivedAt)))
+    .limit(1);
+  return row ?? null;
+}
