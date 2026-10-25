@@ -75,7 +75,8 @@ export default async function ExplorePage() {
   const firstName = (profile?.name ?? user.displayName ?? "").split(" ")[0];
 
   // One grid for everything households can get, kids included.
-  const daily = categories.filter((k) => !isKidsVendorType(k.vendorType) && k.id !== "kids-kits");
+  // "store" (code default) and "other" (DB) are both labelled "More"; show one tile per label.
+  const daily = categories.filter((k, i, all) => !isKidsVendorType(k.vendorType) && k.id !== "kids-kits" && all.findIndex((x) => x.shortLabel === k.shortLabel) === i);
   const tiles = [
     ...daily.map((k) => ({ id: k.id, label: k.shortLabel, href: "/app/category/" + k.id, tint: k.tint })),
     { id: "kids", label: "Kids classes", href: "/app/kids/activities", tint: "#E9F4E7" },
