@@ -1,36 +1,16 @@
-import { requireVendorModule } from "@/lib/auth/session";
 import type { Metadata } from "next";
-import { getProviderKidsWorkspace, getKidsCategories } from "@/features/kids/queries";
-import { ProviderKidsManager } from "@/features/kids/components/provider-kids-manager";
+import { KidsWorkspace } from "@/features/kids/components/kids-workspace";
+import { KidsClassList } from "@/features/kids/components/kids-listings";
+import { loadKidsWorkspace } from "@/features/kids/workspace-page";
 
-export const metadata: Metadata = {
-  title: "Kids Zone Workspace · Merchant Panel",
-  description: "Manage kids classes, workshops, enrollments, and view child safety notes.",
-};
+export const metadata: Metadata = { title: "Classes · Merchant Panel" };
 
-export default async function ProviderKidsPage({
-  params,
-}: {
-  params: Promise<{ vendor: string }>;
-}) {
+export default async function KidsClassesPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
-  await requireVendorModule(slug, "kids");
-  const [workspace, categories] = await Promise.all([
-    getProviderKidsWorkspace(slug),
-    getKidsCategories(),
-  ]);
-
+  const w = await loadKidsWorkspace(slug);
   return (
-    <div>
-      <ProviderKidsManager
-        slug={slug}
-        profile={workspace.profile}
-        services={workspace.services}
-        workshops={workspace.workshops}
-        bookings={workspace.bookings}
-        enrollments={workspace.enrollments}
-        categories={categories}
-      />
-    </div>
+    <KidsWorkspace slug={slug} active="classes" counts={w.counts} pendingReview={w.pendingReview}>
+      <KidsClassList slug={slug} services={w.services} />
+    </KidsWorkspace>
   );
 }

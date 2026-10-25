@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { eq, inArray, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { categories, kidsProviderProfiles, ledgerEntries, localities, platformAdmins, platformSettings, vendorApplications, vendorMembers, vendors } from "@/db/schema";
+import { availabilityRules, categories, kidsProviderProfiles, ledgerEntries, localities, platformAdmins, platformSettings, vendorApplications, vendorMembers, vendors } from "@/db/schema";
 import { VENDOR_TYPE_INFO, canUseModule, isVendorType, vendorTypeForCategory } from "@/core/vendor-types";
 import { provisionTypeProfile } from "@/features/vendor-types/tables";
 import { requireAdmin } from "@/lib/auth/session";
@@ -27,6 +27,8 @@ import {
   vendorIdSchema,
   vendorStatusSchema,
 } from "./schemas";
+
+const DEFAULT_WEEK = ["mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 function fail(error: string) {
   return { ok: false as const, error };
@@ -148,6 +150,10 @@ export async function adminCreateVendor(input: unknown) {
         .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType, vendorType, categoryId: parsed.data.categoryId, plan: "free", status: "active" })
         .returning({ id: vendors.id });
       await provisionTypeProfile(tx, row!.id, vendorType);
+      // Bookable from day one: Mon–Sat 10:00–19:00. The owner adjusts it under Hours.
+      if (businessType === "booking") {
+        await tx.insert(availabilityRules).values(DEFAULT_WEEK.map((weekday) => ({ vendorId: row!.id, weekday, startTime: "10:00", endTime: "19:00" })));
+      }
       // An admin onboards a kids provider only after vetting them, so it starts approved, matching "Active & live".
       if (canUseModule(vendorType, "kids")) {
         await tx

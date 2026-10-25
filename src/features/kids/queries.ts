@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNull, lte, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   kidsCategories,
@@ -477,7 +477,7 @@ export async function getProviderKidsWorkspace(slug: string) {
       })
       .from(kidsWorkshops)
       .innerJoin(kidsCategories, eq(kidsWorkshops.categoryId, kidsCategories.id))
-      .where(eq(kidsWorkshops.vendorId, vendor.id))
+      .where(and(eq(kidsWorkshops.vendorId, vendor.id), ne(kidsWorkshops.publicationState, "archived")))
       .orderBy(desc(kidsWorkshops.startDate)),
     db
       .select({

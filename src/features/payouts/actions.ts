@@ -25,6 +25,7 @@ export async function requestWithdrawal(input: unknown) {
   if (!parsed.success) return fail("Invalid request");
 
   const access = await requireVendorAccess(parsed.data.slug, ["owner"]);
+  if (!access.vendor.upiVpa) return fail("Add your UPI ID in Settings first, so RUXs knows where to send the money");
   const db = getDb();
 
   const [open] = await db

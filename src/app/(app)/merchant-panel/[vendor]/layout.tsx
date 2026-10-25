@@ -77,6 +77,12 @@ export default async function VendorLayout({
           </div>
         </header>
 
+        {access.viaAdmin && (
+          <p role="status" className="border-b border-line bg-butter px-4 py-2 text-center text-xs font-medium text-warn">
+            Admin view of {access.vendor.name}. Anything you change here changes the live store.{" "}
+            <Link href={`/admin/vendors/${access.vendorId}`} className="font-semibold underline">Back to admin</Link>
+          </p>
+        )}
         <main className="mx-auto max-w-6xl pb-[calc(5rem+env(safe-area-inset-bottom))] lg:px-2 lg:pb-12">{children}</main>
       </div>
 

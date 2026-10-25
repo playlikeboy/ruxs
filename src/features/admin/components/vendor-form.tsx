@@ -163,7 +163,11 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
           <input required type="tel" inputMode="tel" autoComplete="off" className={input + " font-mono"} value={f.phone} onChange={set("phone")} placeholder="98765 43210" />
           <span className="mt-1 block text-[11px] text-muted">10 digits; +91 is added for you. Households never see it.</span>
         </label>
-        <label className={labelCls}>Payout UPI ID<input required className={input + " font-mono"} value={f.upiVpa} onChange={set("upiVpa")} placeholder="name@upi" /></label>
+        <label className={labelCls}>
+          Payout UPI ID <span className="font-normal text-muted">(optional)</span>
+          <input className={input + " font-mono"} value={f.upiVpa} onChange={set("upiVpa")} placeholder="name@upi" />
+          <span className="mt-1 block text-[11px] text-muted">The owner can add it later in Settings.</span>
+        </label>
         <label className={labelCls + " sm:col-span-2"}>{booking ? "About the provider" : "About the store"}<textarea rows={2} className={input} value={f.description} onChange={set("description")} maxLength={400} /></label>
       </fieldset>
 

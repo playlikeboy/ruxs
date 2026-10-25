@@ -53,6 +53,7 @@ export async function SetupChecklist({ slug }: { slug: string }) {
       href: `${base}/${kidsClasses ? "kids" : booking ? "services" : "products"}`,
     },
     ...(booking ? [{ done: (hours?.n ?? 0) > 0, label: "Set your weekly hours", hint: "Clients can only book open slots.", href: `${base}/availability` }] : []),
+    { done: !!v.upiVpa, label: "Add your UPI ID", hint: "Where RUXs sends your online earnings.", href: `${base}/settings` },
     { done: !!v.description && v.description.length >= 20, label: "Write a short description", hint: "One or two lines about what makes you good.", href: `${base}/settings` },
   ];
   const done = steps.filter((s) => s.done).length;

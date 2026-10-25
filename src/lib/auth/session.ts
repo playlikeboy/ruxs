@@ -81,6 +81,7 @@ export const requireVendorAccess = cache(
         vendor,
         vendorId: vendor.id,
         role: member.role as Role,
+        viaAdmin: false,
       };
     }
 
@@ -97,6 +98,8 @@ export const requireVendorAccess = cache(
           vendor,
           vendorId: vendor.id,
           role: "owner" as Role,
+          // Support access: the panel shows an "admin view" banner so it never passes for the owner's own session.
+          viaAdmin: true,
         };
       }
     }

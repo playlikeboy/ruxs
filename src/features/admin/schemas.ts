@@ -6,7 +6,8 @@ const optionalCoord = (min: number, max: number) => z.number().min(min).max(max)
 export const vendorDetailsSchema = z.object({
   name: z.string().trim().min(2, "Business name must be at least 2 characters").max(80),
   phone: z.string().trim().regex(/^\+91[6-9]\d{9}$/, "Use a valid Indian mobile number with +91"),
-  upiVpa: z.string().trim().min(3, "UPI ID is required").max(80),
+  // Optional at onboarding: the owner adds it in Settings before their first withdrawal.
+  upiVpa: z.string().trim().max(80).refine((v) => v === "" || /^[\w.-]{2,}@[a-z]{2,}$/i.test(v), "Use a UPI ID like name@upi"),
   city: z.string().trim().min(2, "City is required").max(60),
   area: z.string().trim().min(2, "Area is required").max(80),
   description: z.string().trim().max(400).optional(),
