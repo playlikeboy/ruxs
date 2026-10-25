@@ -43,24 +43,6 @@ export const availabilityBlocks = pgTable(
   (t) => [index("availability_blocks_vendor_idx").on(t.vendorId, t.startsAt)]
 );
 
-/** Who a booking provider is: shown on their profile page. Delivery stores have none. */
-export const providerProfiles = pgTable(
-  "provider_profiles",
-  {
-    vendorId: text("vendor_id")
-      .primaryKey()
-      .references(() => vendors.id, { onDelete: "cascade" }),
-    headline: text("headline"), // "Certified personal trainer · weight loss"
-    qualifications: text("qualifications"), // "BPT, MPT (Ortho)"
-    experienceYears: integer("experience_years"),
-    specialities: text("specialities").array().notNull().default(sql`'{}'::text[]`),
-    languages: text("languages").array().notNull().default(sql`'{}'::text[]`),
-    gender: text("gender"), // female, male, other
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-  },
-  (t) => [check("provider_profiles_gender_check", sql`${t.gender} is null or ${t.gender} in ('female', 'male', 'other')`)]
-);
-
 /** What a booking provider offers: a timed session at a price. Delivery stores use products instead. */
 export const services = pgTable(
   "services",

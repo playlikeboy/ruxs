@@ -9,7 +9,17 @@ function slugify(s: string) {
 }
 
 /** Shell for /admin/vendors/new (pick a type) and /admin/vendors/new/[type] (fill the form). */
-export function NewVendorScreen({ categories, categoryId = "", app }: { categories: OnboardCategory[]; categoryId?: string; app: Application | null }) {
+export function NewVendorScreen({
+  categories,
+  categoryId = "",
+  unknownType,
+  app,
+}: {
+  categories: OnboardCategory[];
+  categoryId?: string;
+  unknownType?: string;
+  app: Application | null;
+}) {
   const chosen = categories.find((c) => c.id === categoryId);
   const initial = {
     ...EMPTY_VENDOR,
@@ -27,6 +37,11 @@ export function NewVendorScreen({ categories, categoryId = "", app }: { categori
         <p className="mt-1 text-sm text-muted">Creates the store and a merchant login. The login ID is the store URL; the password is generated and shown once.</p>
       </div>
       <div className="rounded-[14px] border border-line bg-surface p-5">
+        {unknownType && (
+          <p role="alert" className="mb-4 rounded-[10px] bg-butter px-3 py-2 text-sm text-warn">
+            There is no business type called &ldquo;{unknownType}&rdquo;. Pick one below.
+          </p>
+        )}
         {app && (
           <p className="mb-4 rounded-[10px] bg-mint px-3 py-2 text-sm text-good">
             Prefilled from {app.ownerName}&apos;s application. Add their UPI ID and confirm the details you verified on the call.

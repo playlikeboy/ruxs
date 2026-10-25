@@ -25,9 +25,11 @@ import { addDaysIST, todayIST } from "@/core/time";
 import { getCategories } from "@/features/platform/queries";
 
 /** Business types an admin can onboard, for /admin/vendors/new and /admin/vendors/new/[type]. */
+export type OnboardCategoryRow = Awaited<ReturnType<typeof getOnboardCategories>>[number];
+
 export async function getOnboardCategories() {
   await requireAdmin();
-  return (await getCategories()).map((c) => ({ id: c.id, label: c.label, emoji: c.emoji, blurb: c.blurb, fulfilment: c.fulfilment, tint: c.tint }));
+  return (await getCategories()).map((c) => ({ id: c.id, label: c.label, emoji: c.emoji, blurb: c.blurb, fulfilment: c.fulfilment, tint: c.tint, vendorType: c.vendorType }));
 }
 
 export async function getAdminOverview() {

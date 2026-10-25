@@ -42,6 +42,7 @@ export interface OnboardCategory {
   blurb: string;
   fulfilment: string;
   tint: string;
+  vendorType: string;
 }
 
 export const EMPTY_VENDOR: VendorFormValues = {
