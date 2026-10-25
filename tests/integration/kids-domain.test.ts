@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { eq } from "drizzle-orm";
 import { scriptDb, scriptPool } from "@/db/script-client";
+import { addDaysIST, istDateTime, todayIST } from "@/core/time";
 import {
+  availabilityRules,
   vendors,
   kidsServices,
   kidsChildren,
@@ -59,6 +61,9 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
       })
       .returning();
     vendorId = v!.id;
+
+    // Open every day so test sessions fall inside the teacher's hours.
+    await scriptDb.insert(availabilityRules).values((["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const).map((weekday) => ({ vendorId, weekday, startTime: "08:00", endTime: "20:00" })));
 
     // 1b. Child-safety vetting: only approved + passed providers are bookable
     await scriptDb.insert(kidsProviderProfiles).values({ vendorId, verificationStatus: "approved", safetyReviewStatus: "passed" });
@@ -192,8 +197,7 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
   it("creates a valid service booking and prevents slot collision", async () => {
     if (!dbAvailable) return;
 
-    const startsAt = new Date(Date.now() + 86400000 * 3);
-    startsAt.setMinutes(0, 0, 0);
+    const startsAt = istDateTime(addDaysIST(todayIST(), 3), "11:00");
 
     // First booking by Guardian 1
     const res1 = await createKidsBooking({
@@ -241,7 +245,7 @@ describe("Kids Activities & Learning Domain Integration Tests", () => {
 
   it("refuses online payment and unvetted providers", async () => {
     if (!dbAvailable) return;
-    const startsAt = new Date(Date.now() + 86400000 * 4);
+    const startsAt = istDateTime(addDaysIST(todayIST(), 4), "11:00");
     const online = await createKidsBooking({
       guardianUserId: guardian1,
       childId: child1Id,

@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, or } from "drizzle-orm";
 import { getDb } from "@/db";
-import { availabilityBlocks, availabilityRules, bookings, categories, customers, services, vendors } from "@/db/schema";
+import { availabilityBlocks, availabilityRules, bookings, categories, customers, kidsServiceBookings, services, vendors } from "@/db/schema";
 import { getPublicTypeDetails } from "@/features/vendor-types/queries";
 import { requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { openSlots, type Busy } from "@/core/booking";
@@ -78,7 +78,7 @@ export async function getSlotCalendar(input: { vendorId: string; durationMinutes
   const now = new Date();
   const from = todayIST();
   const until = istDateTime(addDaysIST(from, input.days), "00:00");
-  const [rules, blocks, taken] = await Promise.all([
+  const [rules, blocks, taken, kidsTaken] = await Promise.all([
     db.select().from(availabilityRules).where(eq(availabilityRules.vendorId, input.vendorId)),
     db
       .select({ startsAt: availabilityBlocks.startsAt, endsAt: availabilityBlocks.endsAt })
@@ -88,8 +88,20 @@ export async function getSlotCalendar(input: { vendorId: string; durationMinutes
       .select({ startsAt: bookings.startsAt, endsAt: bookings.endsAt })
       .from(bookings)
       .where(and(eq(bookings.vendorId, input.vendorId), activeBooking(now), lt(bookings.startsAt, until), gt(bookings.endsAt, now))),
+    // Kids providers book into kids_service_bookings; a request (held) blocks the slot like a confirmed one.
+    db
+      .select({ startsAt: kidsServiceBookings.startsAt, endsAt: kidsServiceBookings.endsAt })
+      .from(kidsServiceBookings)
+      .where(
+        and(
+          eq(kidsServiceBookings.vendorId, input.vendorId),
+          inArray(kidsServiceBookings.bookingStatus, ["held", "confirmed"]),
+          lt(kidsServiceBookings.startsAt, until),
+          gt(kidsServiceBookings.endsAt, now)
+        )
+      ),
   ]);
-  const busy: Busy[] = [...blocks, ...taken];
+  const busy: Busy[] = [...blocks, ...taken, ...kidsTaken];
   return Array.from({ length: input.days }, (_, i) => {
     const date = addDaysIST(from, i);
     const slots = openSlots({ date, rules, busy, durationMinutes: input.durationMinutes, noticeMinutes: input.noticeMinutes, now });

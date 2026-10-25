@@ -7,6 +7,7 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { bookKidsServiceAction } from "../actions";
+import { SlotCalendar, slotTimeFmt, type SlotDay } from "@/features/bookings/components/slot-calendar";
 
 interface ChildOption {
   id: string;
@@ -45,20 +46,20 @@ interface ServiceData {
 export function ServiceBookingForm({
   service,
   childProfiles,
+  calendar,
 }: {
   service: ServiceData;
   childProfiles: ChildOption[];
+  calendar: SlotDay[];
 }) {
   const [selectedChildId, setSelectedChildId] = useState<string>(childProfiles[0]?.id || "");
   const [deliveryMode, setDeliveryMode] = useState<"home" | "studio" | "online">(
     (service.deliveryModes[0] as "home" | "studio" | "online") || "studio"
   );
-  const [sessionDate, setSessionDate] = useState<string>(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().slice(0, 10);
-  });
-  const [sessionTime, setSessionTime] = useState<string>("16:00");
+  const [sessionDate, setSessionDate] = useState<string>(
+    () => calendar.find((d) => d.slots.length > 0)?.date ?? calendar[0]?.date ?? ""
+  );
+  const [slot, setSlot] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   const [includeMaterials, setIncludeMaterials] = useState(
     service.materialFeePolicy === "required"
@@ -84,18 +85,21 @@ export function ServiceBookingForm({
       setError("Please select or add a child profile first.");
       return;
     }
+    if (!slot) {
+      setError("Pick a time for the session.");
+      return;
+    }
 
     setError(null);
     setIsPending(true);
 
     try {
-      const startsAt = new Date(`${sessionDate}T${sessionTime}:00`);
       const clientKey = `kbk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
       const res = await bookKidsServiceAction({
         serviceId: service.id,
         childId: selectedChildId,
-        startsAt: startsAt.toISOString(),
+        startsAt: slot,
         deliveryMode,
         address: deliveryMode === "home" ? address : undefined,
         includeMaterials,
@@ -135,7 +139,7 @@ export function ServiceBookingForm({
             Booking Ref: <span className="font-mono text-kids-ink">{confirmedNumber}</span>
           </p>
           <p className="mt-2 text-xs font-semibold text-kids-ink/70">
-            Requested for {sessionDate} at {sessionTime} ({deliveryMode.toUpperCase()}) with {service.vendor.name}. You will see it as confirmed once they accept.
+            Requested for {new Date(slot!).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Kolkata" })} at {slotTimeFmt.format(new Date(slot!)).toLowerCase()} with {service.vendor.name}. You will see it as confirmed once they accept.
           </p>
         </div>
 
@@ -238,37 +242,22 @@ export function ServiceBookingForm({
         )}
       </div>
 
-      {/* Date & Time selection */}
-      <div className="rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
-        <label className="block text-sm font-semibold text-kids-ink">
-          Session Slot
-        </label>
-        <div className="mt-2 grid grid-cols-2 gap-2.5">
-          <div>
-            <label className="block text-[11px] font-bold text-kids-ink/80">Date</label>
-            <input
-              type="date"
-              required
-              value={sessionDate}
-              onChange={(e) => setSessionDate(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold text-kids-ink/80">Time</label>
-            <select
-              value={sessionTime}
-              onChange={(e) => setSessionTime(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
-            >
-              {["10:00", "11:30", "14:00", "15:30", "17:00", "18:30"].map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+      {/* Only times the teacher has free are offered */}
+      <div className="space-y-4 rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
+        {calendar.every((d) => d.slots.length === 0) ? (
+          <p className="text-sm text-kids-ink/70">No free times in the next two weeks. Check back soon.</p>
+        ) : (
+          <SlotCalendar
+            calendar={calendar}
+            date={sessionDate}
+            slot={slot}
+            onDate={(d) => {
+              setSessionDate(d);
+              setSlot(null);
+            }}
+            onSlot={setSlot}
+          />
+        )}
       </div>
 
       {/* Material Add-on if extra */}
@@ -310,7 +299,7 @@ export function ServiceBookingForm({
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={isPending || childProfiles.length === 0}
+        disabled={isPending || childProfiles.length === 0 || !slot}
         className="w-full rounded-full border border-kids-ink/10 bg-kids-sunny py-3 text-sm font-semibold text-kids-ink transition active:scale-[0.98] disabled:opacity-50"
       >
         {isPending ? "Sending request..." : `Request Session (${formatINR(totalAmountPaise)}) →`}

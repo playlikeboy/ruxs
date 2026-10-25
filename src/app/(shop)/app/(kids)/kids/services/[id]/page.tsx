@@ -9,6 +9,7 @@ import { ServiceBookingForm } from "@/features/kids/components/service-booking-f
 import { KidsBackLink, KidsTag, kidsCard, kidsPrimaryButton } from "@/features/kids/components/kids-ui";
 import { formatAgeRange, formatClassesList } from "@/core/kids/age-eligibility";
 import { formatINR } from "@/core/money";
+import { getSlotCalendar } from "@/features/bookings/queries";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -28,7 +29,12 @@ export default async function KidsServiceDetailPage({ params }: { params: Promis
   if (!data) notFound();
 
   const user = await hexclave.getUser();
-  const children = user ? await getMyChildren() : [];
+  const [children, calendar] = user
+    ? await Promise.all([
+        getMyChildren(),
+        getSlotCalendar({ vendorId: data.vendor.id, durationMinutes: data.service.durationMinutes, noticeMinutes: data.vendor.bookingNoticeMinutes, days: 14 }),
+      ])
+    : [[], []];
   const ageText = formatAgeRange(data.service.minAge, data.service.maxAge);
   const classes = (data.service.suitableClasses as string[] | null) ?? [];
   const classText = classes.length > 0 ? formatClassesList(classes) : "";
@@ -84,6 +90,7 @@ export default async function KidsServiceDetailPage({ params }: { params: Promis
             materials: data.materials,
           }}
           childProfiles={children}
+          calendar={calendar}
         />
       ) : (
         <div className={`${kidsCard} p-6 text-center`}>

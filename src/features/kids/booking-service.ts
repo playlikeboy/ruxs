@@ -2,6 +2,8 @@ import "server-only";
 import { and, eq, gt, gte, inArray, isNull, lt, lte, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
+  availabilityBlocks,
+  availabilityRules,
   kidsChildren,
   kidsProviderProfiles,
   kidsServiceBookings,
@@ -25,6 +27,8 @@ import {
   canProviderComplete,
   canProviderRespond,
 } from "@/core/kids/booking-status";
+import { openSlots } from "@/core/booking";
+import { todayIST } from "@/core/time";
 
 export interface CreateBookingInput {
   guardianUserId: string;
@@ -175,6 +179,19 @@ export async function createKidsBooking(input: CreateBookingInput) {
         throw new Error("This timeslot was just taken by another parent. Please choose another time.");
       }
 
+      // The start must be one the teacher offers: inside their hours and outside time off.
+      const [rules, blocks] = await Promise.all([
+        tx.select().from(availabilityRules).where(eq(availabilityRules.vendorId, vendor.id)),
+        tx
+          .select({ startsAt: availabilityBlocks.startsAt, endsAt: availabilityBlocks.endsAt })
+          .from(availabilityBlocks)
+          .where(and(eq(availabilityBlocks.vendorId, vendor.id), lt(availabilityBlocks.startsAt, endsAt), gt(availabilityBlocks.endsAt, input.startsAt))),
+      ]);
+      const free = openSlots({ date: todayIST(input.startsAt), rules, busy: blocks, durationMinutes: service.durationMinutes, noticeMinutes: vendor.bookingNoticeMinutes, now });
+      if (!free.some((s) => s.getTime() === input.startsAt.getTime())) {
+        throw new Error("The teacher is not available at that time. Please choose another time.");
+      }
+
       const [newBooking] = await tx
         .insert(kidsServiceBookings)
         .values({
@@ -209,7 +226,7 @@ export async function createKidsBooking(input: CreateBookingInput) {
       .where(eq(kidsServiceBookings.clientKey, input.clientKey))
       .limit(1);
     if (dupe?.guardianUserId === input.guardianUserId) return { ok: true as const, bookingId: dupe.id, number: dupe.number };
-    if (err instanceof Error && err.message.includes("timeslot was just taken")) return { ok: false as const, error: err.message };
+    if (err instanceof Error && (err.message.includes("timeslot was just taken") || err.message.includes("teacher is not available"))) return { ok: false as const, error: err.message };
     return { ok: false as const, error: "This time is no longer available. Please choose another slot." };
   }
 }

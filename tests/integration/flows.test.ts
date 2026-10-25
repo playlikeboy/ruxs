@@ -41,7 +41,8 @@ const { eq } = await import("drizzle-orm");
 const { placeOrder, confirmMyOrderDelivered } = await import("@/features/consumer/actions");
 const { updateShopOrderStatus } = await import("@/features/shop-orders/actions");
 const { bookSession, markBooking } = await import("@/features/bookings/actions");
-const { bookKidsServiceAction, providerKidsBookingAction } = await import("@/features/kids/actions");
+const { bookKidsServiceAction, providerKidsBookingAction, saveKidsServiceAction } = await import("@/features/kids/actions");
+const { VENDOR_TYPES, canUseModule } = await import("@/core/vendor-types");
 const { priceBreakup } = await import("@/core/pricing");
 const { addDaysIST, istDateTime, todayIST, weekdayIST } = await import("@/core/time");
 
@@ -165,19 +166,22 @@ describe("bookings, every booking vendor type", () => {
   }
 });
 
-describe("kids classes", () => {
-  it("parent requests → provider sees it → accepts → parent told; past session completed and paid", async () => {
+describe("kids classes, every kids class type", () => {
+  for (const type of VENDOR_TYPES.filter((t) => canUseModule(t, "kids"))) it(`${type}: provider lists a class → parent requests → provider accepts → parent told; past session completed and paid`, async () => {
     if (!dbAvailable) return;
     sent.length = 0;
-    const vendor = await makeVendor("kids", "kids", "booking");
+    const vendor = await makeVendor(type, type, "booking");
     await scriptDb.insert(schema.kidsProviderProfiles).values({ vendorId: vendor.id, verificationStatus: "approved", safetyReviewStatus: "passed" });
-    const [service] = await scriptDb
-      .insert(schema.kidsServices)
-      .values({ vendorId: vendor.id, categoryId: "stem", title: "E2E Dance", slug: `e2e-dance-${ts}`, minAge: 4, maxAge: 12, durationMinutes: 60, pricePaise: 40000, materialFeePolicy: "included", materialFeePaise: 0, deliveryModes: ["studio"] })
-      .returning();
+    // Through the merchant's own action, so vendor-type gates and DB triggers are exercised.
+    const saved = await saveKidsServiceAction({ slug: vendor.slug, categoryId: "stem", title: "E2E Dance", minAge: 4, maxAge: 12, durationMinutes: 60, deliveryModes: ["studio"], priceRupees: 400 });
+    expect(saved).toMatchObject({ ok: true });
+    if (!saved.ok) return;
+    const [service] = await scriptDb.select().from(schema.kidsServices).where(eq(schema.kidsServices.id, saved.serviceId));
     const [child] = await scriptDb.insert(schema.kidsChildren).values({ guardianUserId: currentUser.id, displayName: "Aarav", birthYear: 2018 }).returning();
 
-    const startsAt = istDateTime(addDaysIST(todayIST(), 3), "16:30");
+    const day = addDaysIST(todayIST(), 3);
+    await scriptDb.insert(schema.availabilityRules).values({ vendorId: vendor.id, weekday: weekdayIST(day), startTime: "10:00", endTime: "19:00" });
+    const startsAt = istDateTime(day, "16:30");
     const res = await bookKidsServiceAction({ serviceId: service!.id, childId: child!.id, startsAt: startsAt.toISOString(), deliveryMode: "studio", paymentMode: "pay_at_session", clientKey: crypto.randomUUID() });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
