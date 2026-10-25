@@ -120,12 +120,14 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
     return v.trim() === "" ? 0 : Number(v);
   }
 
-  // Step 1 for a new vendor: what kind of business is joining?
+  const appQuery = f.applicationId ? `?application=${f.applicationId}` : "";
+
+  // Step 1 for a new vendor: what kind of business is joining? Each type has its own URL.
   if (isNew && !f.categoryId) {
     return (
       <VendorTypePicker
         categories={categories}
-        onPick={(c) => setF({ ...f, categoryId: c.id, businessType: c.fulfilment === "booking" ? "booking" : "delivery" })}
+        onPick={(c) => router.push(`/admin/vendors/new/${c.id}${appQuery}`)}
       />
     );
   }
@@ -185,9 +187,9 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
             <span className="block truncate text-sm font-semibold text-ink">{chosen?.label ?? f.categoryId}</span>
             <span className="block text-xs text-muted">{booking ? "Bookable sessions" : "Delivery store"}</span>
           </span>
-          <button type="button" onClick={() => setF({ ...f, categoryId: "" })} className="h-9 rounded-[8px] border border-line bg-surface px-3 text-xs font-semibold text-ink hover:border-ink/40">
+          <Link href={`/admin/vendors/new${appQuery}`} className="flex h-9 items-center rounded-[8px] border border-line bg-surface px-3 text-xs font-semibold text-ink hover:border-ink/40">
             Change type
-          </button>
+          </Link>
         </div>
       )}
 
