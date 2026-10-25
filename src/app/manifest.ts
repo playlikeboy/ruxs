@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/app",
     scope: "/",
     display: "standalone",
-    display_override: ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
+    display_override: ["standalone", "minimal-ui"],
     background_color: "#FAFAF7",
     theme_color: "#FFF3E9",
     orientation: "portrait",
@@ -42,12 +42,6 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
         purpose: "maskable",
       },
-      {
-        src: "/brand/ruxs-app-icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "any",
-      },
     ],
     screenshots: [
       {
@@ -58,8 +52,8 @@ export default function manifest(): MetadataRoute.Manifest {
         label: "RUXs — Daily essentials, delivered to your hostel",
       },
       {
-        src: "/brand/ruxs-pwa-wide.png",
-        sizes: "1024x576",
+        src: "/brand/ruxs-pwa-narrow.png",
+        sizes: "640x800",
         type: "image/png",
         form_factor: "narrow",
         label: "RUXs — Everyday household essentials",

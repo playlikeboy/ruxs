@@ -16,7 +16,6 @@ import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
 import { CategoryTile } from "@/components/ui/category-tile";
 import { getKidsActivities } from "@/features/kids/queries";
 import { formatINR } from "@/core/money";
-import { AppIcon } from "@/components/ui/app-icon";
 import { Hint } from "@/components/ui/hint";
 import { ViewCartBar } from "@/features/consumer/components/view-cart-bar";
 
@@ -103,6 +102,8 @@ export default async function ExplorePage() {
           <Hint id="app-feed">Tap a category or search. Subscriptions let you skip or add an extra for any day before the store&apos;s cutoff.</Hint>
         </div>
 
+        <InstallAppPrompt variant="banner" className="mt-3" />
+
         <HeroSubscriptionPlans plans={heroPlans} today={today} category={category} />
 
         {todayItems.length > 0 && (
@@ -182,9 +183,6 @@ export default async function ExplorePage() {
           )}
         </section>
 
-        <div className="mt-8">
-          <InstallAppPrompt variant="banner" />
-        </div>
       </div>
       <ViewCartBar />
     </div>
