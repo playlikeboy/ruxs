@@ -1,4 +1,4 @@
 {
-  "prompt": "Origin: pre-existing RUXs brand illustration public/brand/ruxs-neighbourhood-scene.jpg (commit 95cf5a4). Background field shifted from #FDF8EA to page cream #FFFDF8 with a soft colour-distance falloff (PIL), then encoded to WebP q80 with cwebp. Artwork otherwise unchanged.",
-  "createdAt": "2026-10-24T19:05:24.780Z"
+  "prompt": "User-supplied neighbourhood street scene illustration with houses, local stores (water, tiffin, milk dairy, classes), roadside greenery, and a bicycle rider. Encoded to WebP q90 via cwebp.",
+  "updatedAt": "2026-10-25T06:15:00.000Z"
 }
