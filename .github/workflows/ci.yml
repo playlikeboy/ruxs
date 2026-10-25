@@ -88,5 +88,5 @@ jobs:
           NEXT_PUBLIC_HEXCLAVE_API_URL: "https://api.hexclave.com"
           NEXT_PUBLIC_HEXCLAVE_PROJECT_ID: "afdff151-7a3c-49b3-830f-abfcc23d8d61"
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          HEXCLAVE_SECRET_SERVER_KEY: ${{ secrets.HEXCLAVE_SECRET_SERVER_KEY }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          HEXCLAVE_SECRET_SERVER_KEY: ${{ secrets.HEXCLAVE_SECRET_SERVER_KEY || 'ssk_placeholder' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || 'cron_placeholder' }}

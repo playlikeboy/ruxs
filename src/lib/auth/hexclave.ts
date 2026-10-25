@@ -4,16 +4,20 @@ import { hexclaveClient } from "./client";
 
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-function getSecretServerKey(): string | undefined {
-  if (process.env.HEXCLAVE_SECRET_SERVER_KEY) {
+function getSecretServerKey(): string {
+  if (process.env.HEXCLAVE_SECRET_SERVER_KEY && process.env.HEXCLAVE_SECRET_SERVER_KEY.trim() !== "") {
     return process.env.HEXCLAVE_SECRET_SERVER_KEY;
   }
   try {
     const { env } = getCloudflareContext();
-    return (env as CloudflareEnv).HEXCLAVE_SECRET_SERVER_KEY;
+    if ((env as CloudflareEnv).HEXCLAVE_SECRET_SERVER_KEY) {
+      return (env as CloudflareEnv).HEXCLAVE_SECRET_SERVER_KEY;
+    }
   } catch {
-    return undefined;
+    // not in cloudflare runtime (e.g. build step)
   }
+  // Fallback placeholder so Next.js static prerender doesn't crash during build
+  return "ssk_placeholder";
 }
 
 let serverAppInstance: HexclaveServerApp | null = null;
@@ -21,11 +25,11 @@ let lastUsedKey: string | undefined = undefined;
 
 export function getHexclave(): HexclaveServerApp {
   const secretKey = getSecretServerKey();
-  if (!serverAppInstance || (secretKey && secretKey !== lastUsedKey)) {
+  if (!serverAppInstance || secretKey !== lastUsedKey) {
     lastUsedKey = secretKey;
     serverAppInstance = new HexclaveServerApp({
       inheritsFrom: hexclaveClient,
-      ...(secretKey ? { secretServerKey: secretKey } : {}),
+      secretServerKey: secretKey,
     });
   }
   return serverAppInstance;
