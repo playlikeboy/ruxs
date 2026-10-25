@@ -155,6 +155,13 @@
       "when": 1793700000000,
       "tag": "0021_kids_services_vendor_types",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793800000000,
+      "tag": "0022_kids_class_types_strict",
+      "breakpoints": true
     }
   ]
 }
