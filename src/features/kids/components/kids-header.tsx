@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, ShoppingBag, UsersRound } from "lucide-react";
 import { cartCount, useCart } from "@/features/consumer/components/cart-store";
+import { AnimateTeddyIcon } from "@/components/ui/animate-icons";
 
 const iconLink =
   "relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-kids-ink transition-colors hover:bg-kids-ink/5 active:bg-kids-ink/10";
@@ -17,8 +18,9 @@ export function KidsHeader() {
         <Link href="/app" aria-label="Back to RUXs home" className={iconLink}>
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Link>
-        <Link href="/app/kids" className="mr-auto font-kids text-xl font-semibold tracking-tight">
-          RUXs Kids
+        <Link href="/app/kids" className="group mr-auto flex items-center gap-1.5 font-kids text-xl font-semibold tracking-tight text-kids-ink">
+          <AnimateTeddyIcon size={24} />
+          <span>RUXs Kids</span>
         </Link>
         <Link href="/app/kids/bookings" aria-label="My bookings" className={iconLink}>
           <CalendarDays className="h-5 w-5" aria-hidden="true" />
