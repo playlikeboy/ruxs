@@ -1,4 +1,4 @@
-name: CI
+name: CI & Deployment
 
 on:
   push:
@@ -55,6 +55,35 @@ jobs:
       - name: Next.js Production Build
         run: bun run build
         env:
+          NEXT_PUBLIC_APP_URL: "https://ruxs.in"
+          NEXT_PUBLIC_HEXCLAVE_API_URL: "https://api.hexclave.com"
+          NEXT_PUBLIC_HEXCLAVE_PROJECT_ID: "afdff151-7a3c-49b3-830f-abfcc23d8d61"
+          DATABASE_URL: ${{ secrets.DATABASE_URL || env.TEST_DATABASE_URL }}
+          HEXCLAVE_SECRET_SERVER_KEY: ${{ secrets.HEXCLAVE_SECRET_SERVER_KEY || 'ssk_placeholder' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || 'cron_placeholder' }}
+
+  deploy:
+    name: Deploy to Cloudflare Workers
+    needs: validate
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build & Deploy to Cloudflare
+        run: bun run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '091539408595ba99a0ef106d42391d5b' }}
           NEXT_PUBLIC_APP_URL: "https://ruxs.in"
           NEXT_PUBLIC_HEXCLAVE_API_URL: "https://api.hexclave.com"
           NEXT_PUBLIC_HEXCLAVE_PROJECT_ID: "afdff151-7a3c-49b3-830f-abfcc23d8d61"
