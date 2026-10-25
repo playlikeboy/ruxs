@@ -25,7 +25,14 @@ export async function getHomeBanners() {
   }
 }
 
+/** Every slide for the admin. `ready: false` when the table does not exist yet (migration 0023 not applied). */
 export async function getAllBanners() {
   await requireAdmin();
-  return getDb().select().from(homeBanners).orderBy(asc(homeBanners.sort), asc(homeBanners.createdAt));
+  try {
+    const rows = await getDb().select().from(homeBanners).orderBy(asc(homeBanners.sort), asc(homeBanners.createdAt));
+    return { ready: true as const, rows };
+  } catch (err) {
+    console.error("getAllBanners failed", err);
+    return { ready: false as const, rows: [] };
+  }
 }
