@@ -1,8 +1,18 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { RuxsMark } from "@/components/marketing/ruxs-mark";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Download, Share2, PlusSquare, CheckCircle, X, Smartphone } from "lucide-react";
+
+const PWA_STORY_PREVIEWS = [
+  { src: "/brand/ruxs-pwa-wide.png", label: "Daily Essentials" },
+  { src: "/brand/ruxs-pwa-order-narrow.png", label: "Easy Subscriptions" },
+  { src: "/brand/ruxs-pwa-delivery-narrow.png", label: "Morning Delivery" },
+  { src: "/brand/ruxs-pwa-tiffin-narrow.png", label: "Hot Tiffins" },
+  { src: "/brand/ruxs-pwa-kids-act-narrow.png", label: "Kids Zone" },
+  { src: "/brand/ruxs-pwa-kids-meals-narrow.png", label: "Kids Meals" },
+];
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -168,7 +178,28 @@ export function InstallAppPrompt({
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-3.5 -mx-1 flex gap-2.5 overflow-x-auto pb-1 px-1 scrollbar-none snap-x">
+          {PWA_STORY_PREVIEWS.map((p) => (
+            <div
+              key={p.src}
+              className="group relative shrink-0 snap-start overflow-hidden rounded-xl border border-black/8 bg-white shadow-2xs transition hover:shadow-xs"
+            >
+              <img
+                src={p.src}
+                alt={p.label}
+                className="h-28 w-auto object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-1.5 pt-3">
+                <span className="block text-[10px] font-medium text-white truncate max-w-[120px]">
+                  {p.label}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3.5 flex items-center gap-2">
           <button
             type="button"
             onClick={handleInstallClick}
@@ -281,6 +312,22 @@ export function InstallAppPrompt({
             <p className="mt-3 text-xs text-neutral-600">
               Install RUXs for a full-screen, native experience with zero download required.
             </p>
+
+            <div className="mt-3 -mx-1 flex gap-2 overflow-x-auto pb-1 px-1 scrollbar-none snap-x">
+              {PWA_STORY_PREVIEWS.map((p) => (
+                <div
+                  key={p.src}
+                  className="shrink-0 snap-start overflow-hidden rounded-xl border border-black/8 bg-neutral-100 shadow-2xs"
+                >
+                  <img
+                    src={p.src}
+                    alt={p.label}
+                    className="h-20 w-auto object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
 
             {isIOS ? (
               <ol className="mt-3.5 space-y-2.5 rounded-2xl bg-neutral-50 p-3.5 text-xs text-neutral-700">
