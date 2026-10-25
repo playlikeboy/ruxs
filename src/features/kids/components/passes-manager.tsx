@@ -77,13 +77,13 @@ export function PassesManager({
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-[20px] border-2 border-rose-500 bg-rose-50 p-3 text-xs font-bold text-rose-800">
+        <div className="rounded-[20px] border border-rose-500 bg-rose-50 p-3 text-xs font-bold text-rose-800">
           {error}
         </div>
       )}
 
       {successMsg && (
-        <div className="rounded-[20px] border-2 border-emerald-500 bg-emerald-50 p-3 text-xs font-bold text-emerald-800">
+        <div className="rounded-[20px] border border-emerald-500 bg-emerald-50 p-3 text-xs font-bold text-emerald-800">
           {successMsg}
         </div>
       )}
@@ -93,7 +93,7 @@ export function PassesManager({
         <section className="space-y-3">
           <div className="flex items-center gap-1.5 px-1">
             <Ticket className="h-4 w-4 text-amber-600" />
-            <h2 className="text-base font-black text-kids-ink">
+            <h2 className="text-base font-semibold text-kids-ink">
               My Active Pass Credits ({purchasedPasses.length})
             </h2>
           </div>
@@ -106,14 +106,14 @@ export function PassesManager({
               return (
                 <div
                   key={purchase.id}
-                  className="rounded-[26px] border-2 border-kids-grape/15 bg-gradient-to-r from-amber-100 via-amber-50 to-orange-100 p-4 shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)]"
+                  className="rounded-[20px] border border-kids-ink/10 bg-kids-sunny/40 p-4"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="rounded-full border border-kids-grape/20 bg-white px-2 py-0.5 text-[10px] font-black text-kids-ink">
+                      <span className="rounded-full border border-kids-ink/20 bg-white px-2 py-0.5 text-[10px] font-semibold text-kids-ink">
                         <UiIcon name="pass" /> ACTIVE WALLET
                       </span>
-                      <h3 className="mt-1.5 text-base font-black text-kids-ink">
+                      <h3 className="mt-1.5 text-base font-semibold text-kids-ink">
                         {pass.name}
                       </h3>
                       {pass.description && (
@@ -124,11 +124,11 @@ export function PassesManager({
                     </div>
 
                     <div className="text-right">
-                      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-white px-3 py-1.5 shadow-[0_2px_0_rgba(155,92,246,0.18)]">
-                        <span className="block text-xl font-black text-kids-ink">
+                      <div className="rounded-[20px] border border-kids-ink/10 bg-white px-3 py-1.5">
+                        <span className="block text-xl font-semibold text-kids-ink">
                           {purchase.remainingCredits}
                         </span>
-                        <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">
+                        <span className="block text-xs text-kids-ink/55">
                           Credits Left
                         </span>
                       </div>
@@ -144,7 +144,7 @@ export function PassesManager({
                     </span>
                     <Link
                       href="/app/kids/workshops"
-                      className="text-xs font-black text-kids-grape hover:underline"
+                      className="text-xs font-semibold text-accent hover:underline"
                     >
                       Redeem against camps →
                     </Link>
@@ -159,7 +159,7 @@ export function PassesManager({
       {/* Available Passes Catalog */}
       <section className="space-y-3">
         <div className="px-1">
-          <h2 className="text-base font-black text-kids-ink">
+          <h2 className="text-base font-semibold text-kids-ink">
             Available Holiday & Weekend Passes
           </h2>
           <p className="text-xs font-semibold text-kids-ink/60">
@@ -171,14 +171,14 @@ export function PassesManager({
           {availablePasses.map((pass) => (
             <div
               key={pass.id}
-              className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-5 shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)]"
+              className="rounded-[20px] border border-kids-ink/10 bg-white p-5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <span className="rounded-full border border-kids-grape/20 bg-amber-200 px-2.5 py-0.5 text-[10px] font-black text-kids-ink">
+                  <span className="rounded-full border border-kids-ink/20 bg-amber-200 px-2.5 py-0.5 text-[10px] font-semibold text-kids-ink">
                     <UiIcon name="star" /> {pass.creditsTotal} SESSIONS PASS
                   </span>
-                  <h3 className="mt-2 text-lg font-black text-kids-ink">
+                  <h3 className="mt-2 text-lg font-semibold text-kids-ink">
                     {pass.name}
                   </h3>
                   <p className="mt-1 text-xs font-medium text-kids-ink/70">
@@ -187,7 +187,7 @@ export function PassesManager({
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="block text-xl font-black text-kids-ink">
+                  <span className="block text-xl font-semibold text-kids-ink">
                     {formatINR(pass.pricePaise)}
                   </span>
                   <span className="block text-[10px] font-semibold text-slate-400">
@@ -212,7 +212,7 @@ export function PassesManager({
                   type="button"
                   disabled={purchasingId === pass.id}
                   onClick={() => handlePurchase(pass.id)}
-                  className="rounded-full border-2 border-kids-grape/15 bg-kids-sunny px-5 py-2 text-xs font-black text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)] transition active:translate-y-0.5 hover:bg-kids-sunny/80 disabled:opacity-50"
+                  className="rounded-full border border-kids-ink/10 bg-kids-sunny px-5 py-2 text-xs font-semibold text-kids-ink transition active:scale-[0.98] hover:bg-kids-sunny/80 disabled:opacity-50"
                 >
                   {purchasingId === pass.id ? "Checking..." : "Coming soon"}
                 </button>

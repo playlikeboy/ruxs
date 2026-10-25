@@ -56,7 +56,7 @@ export function ProviderPage(p: ProviderPageProps) {
   return (
     <div className="pb-24">
       <div className="relative">
-        <StoreCover cover={p.cover} imageUrl={vendor.coverUrl} alt={vendor.name} className="aspect-[16/9] w-full" emojiClass="h-20 w-20" />
+        <StoreCover cover={p.cover} alt={vendor.name} className="aspect-[16/9] w-full" />
         <Link href="/app" aria-label="Back to explore" className="absolute left-4 top-[calc(1rem+env(safe-area-inset-top))] flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md">
           <ChevronLeft className="h-5 w-5" />
         </Link>

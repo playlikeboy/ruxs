@@ -118,10 +118,8 @@ export function HeroSubscriptionPlans({
                 <div className="flex items-start justify-between gap-2">
                   <StoreCover
                     cover={cat}
-                    imageUrl={p.imageUrl}
                     alt=""
                     className="h-10 w-10 shrink-0 rounded-xl"
-                    emojiClass="h-6 w-6"
                   />
                   {isScheduledToday ? (
                     p.isSkippedToday ? (

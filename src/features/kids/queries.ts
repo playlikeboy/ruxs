@@ -639,7 +639,6 @@ async function allActivities(): Promise<KidsActivityItem[]> {
           "Verified background-checked mentor",
           "Take-home project & certificate",
         ],
-        posterUrl: service.imageUrl ?? undefined,
         homeSupervisionRequired: service.deliveryModes.includes("home"),
         verifiedTutor: true,
       };
@@ -742,7 +741,6 @@ async function allWorkshops(): Promise<KidsWorkshopItem[]> {
         enrolledCount,
         emoji: category.emoji || "🏕️",
         badge: availability.isAlmostFull ? "🔥 FILLING FAST" : "WEEKEND CAMP",
-        posterUrl: undefined,
       };
     });
   }
@@ -865,7 +863,6 @@ async function allKits(): Promise<KidsKitItem[]> {
       ],
       emoji: "🧩",
       badge: "DOORSTEP KIT",
-      posterUrl: product.imageUrl ?? undefined,
       nonToxicCertified: true,
     };
   });

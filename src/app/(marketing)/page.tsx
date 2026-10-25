@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { NeighbourhoodScene } from "@/components/marketing/neighbourhood-scene";
 import { ArrowRight, ArrowUpRight, Check, Plus } from "lucide-react";
 import { buildMetadata, organizationJsonLd, faqJsonLd } from "@/lib/seo";
 import { formatINR } from "@/core/money";
@@ -192,15 +192,7 @@ export default function HomePage() {
 
       {/* The neighbourhood, and the people who run it */}
       <section aria-labelledby="merchant-title" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
-        <Image
-          src="/brand/ruxs-neighbourhood-scene.webp"
-          alt="A sunny neighbourhood street with houses, gardens and bicycles"
-          width={1376}
-          height={768}
-          unoptimized
-          loading="lazy"
-          className="h-auto w-full rounded-[24px]"
-        />
+        <NeighbourhoodScene className="h-auto w-full rounded-[24px]" />
         <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:gap-20">
           <h2 id="merchant-title" className="text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
             Run by people in your neighbourhood.

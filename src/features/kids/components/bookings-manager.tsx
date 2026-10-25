@@ -153,7 +153,7 @@ export function BookingsManager({
   return (
     <div className="space-y-4">
       {actionError && (
-        <div className="rounded-[20px] border-2 border-rose-500 bg-rose-50 p-3 text-xs font-bold text-rose-800">
+        <div className="rounded-[20px] border border-rose-500 bg-rose-50 p-3 text-xs font-bold text-rose-800">
           {actionError}
         </div>
       )}
@@ -163,9 +163,9 @@ export function BookingsManager({
         <button
           type="button"
           onClick={() => setActiveTab("classes")}
-          className={`rounded-full border-2 border-kids-grape/15 px-4 py-1.5 text-xs font-black transition ${
+          className={`rounded-full border border-kids-ink/10 px-4 py-1.5 text-xs font-semibold transition ${
             activeTab === "classes"
-              ? "bg-kids-sunny/80 text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+              ? "bg-kids-sunny/80 text-kids-ink"
               : "bg-white text-kids-ink/80 hover:bg-slate-50"
           }`}
         >
@@ -175,9 +175,9 @@ export function BookingsManager({
         <button
           type="button"
           onClick={() => setActiveTab("workshops")}
-          className={`rounded-full border-2 border-kids-grape/15 px-4 py-1.5 text-xs font-black transition ${
+          className={`rounded-full border border-kids-ink/10 px-4 py-1.5 text-xs font-semibold transition ${
             activeTab === "workshops"
-              ? "bg-emerald-300 text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+              ? "bg-emerald-300 text-kids-ink"
               : "bg-white text-kids-ink/80 hover:bg-slate-50"
           }`}
         >
@@ -189,9 +189,9 @@ export function BookingsManager({
       {activeTab === "classes" && (
         <div className="space-y-3">
           {initialBookings.length === 0 ? (
-            <div className="rounded-[26px] border-2 border-dashed border-slate-300 bg-white p-8 text-center">
+            <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-8 text-center">
               <UiIcon name="sparkle" className="h-6 w-6 text-accent" />
-              <h3 className="mt-2 text-sm font-black text-kids-ink">
+              <h3 className="mt-2 text-sm font-semibold text-kids-ink">
                 No class bookings yet
               </h3>
               <p className="mt-1 text-xs font-semibold text-kids-ink/60">
@@ -199,7 +199,7 @@ export function BookingsManager({
               </p>
               <Link
                 href="/app/kids/activities"
-                className="mt-4 inline-block rounded-full border-2 border-kids-grape/15 bg-kids-sunny px-5 py-2 text-xs font-black text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+                className="mt-4 inline-block rounded-full border border-kids-ink/10 bg-kids-sunny px-5 py-2 text-xs font-semibold text-kids-ink"
               >
                 Explore Classes →
               </Link>
@@ -213,16 +213,16 @@ export function BookingsManager({
               return (
                 <div
                   key={booking.id}
-                  className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-4 shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+                  className="rounded-[20px] border border-kids-ink/10 bg-white p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-full border border-kids-grape/20 bg-pink-100 px-2 py-0.5 text-[10px] font-black text-kids-ink">
+                        <span className="rounded-full border border-kids-ink/20 bg-kids-peach/60 px-2 py-0.5 text-[10px] font-semibold text-kids-ink">
                           <UiIcon name="age" /> {child.displayName}
                         </span>
                         <span
-                          className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
                             booking.bookingStatus === "confirmed"
                               ? "border-emerald-600 bg-emerald-100 text-emerald-900"
                               : booking.bookingStatus === "cancelled"
@@ -234,7 +234,7 @@ export function BookingsManager({
                         </span>
                       </div>
 
-                      <h3 className="mt-1.5 text-base font-black text-kids-ink">
+                      <h3 className="mt-1.5 text-base font-semibold text-kids-ink">
                         {service?.title ?? "Activity Session"}
                       </h3>
                       <Link
@@ -246,7 +246,7 @@ export function BookingsManager({
                     </div>
 
                     <div className="text-right">
-                      <span className="text-base font-black text-kids-ink">
+                      <span className="text-base font-semibold text-kids-ink">
                         {formatINR(booking.priceSnapshotPaise + (booking.materialFeeSnapshotPaise || 0))}
                       </span>
                       <span className="block text-[10px] font-bold text-slate-400">
@@ -282,7 +282,7 @@ export function BookingsManager({
                       <button
                         type="button"
                         onClick={() => setReviewingBooking({ booking, service, child, vendor })}
-                        className="inline-flex items-center gap-1 rounded-full border border-kids-grape/20 bg-amber-100 px-3 py-1 text-xs font-black text-kids-ink hover:bg-amber-200"
+                        className="inline-flex items-center gap-1 rounded-full border border-kids-ink/20 bg-amber-100 px-3 py-1 text-xs font-semibold text-kids-ink hover:bg-amber-200"
                       >
                         <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
                         <span>Leave Review</span>
@@ -313,9 +313,9 @@ export function BookingsManager({
       {activeTab === "workshops" && (
         <div className="space-y-3">
           {initialEnrollments.length === 0 ? (
-            <div className="rounded-[26px] border-2 border-dashed border-slate-300 bg-white p-8 text-center">
+            <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-8 text-center">
               <UiIcon name="camp" className="h-6 w-6 text-accent" />
-              <h3 className="mt-2 text-sm font-black text-kids-ink">
+              <h3 className="mt-2 text-sm font-semibold text-kids-ink">
                 No workshop enrollments yet
               </h3>
               <p className="mt-1 text-xs font-semibold text-kids-ink/60">
@@ -323,7 +323,7 @@ export function BookingsManager({
               </p>
               <Link
                 href="/app/kids/workshops"
-                className="mt-4 inline-block rounded-full border-2 border-kids-grape/15 bg-emerald-400 px-5 py-2 text-xs font-black text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+                className="mt-4 inline-block rounded-full border border-kids-ink/10 bg-emerald-400 px-5 py-2 text-xs font-semibold text-kids-ink"
               >
                 Browse Workshops →
               </Link>
@@ -335,16 +335,16 @@ export function BookingsManager({
               return (
                 <div
                   key={enrollment.id}
-                  className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-4 shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+                  className="rounded-[20px] border border-kids-ink/10 bg-white p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-full border border-kids-grape/20 bg-pink-100 px-2 py-0.5 text-[10px] font-black text-kids-ink">
+                        <span className="rounded-full border border-kids-ink/20 bg-kids-peach/60 px-2 py-0.5 text-[10px] font-semibold text-kids-ink">
                           <UiIcon name="age" /> {child.displayName}
                         </span>
                         <span
-                          className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
                             isConfirmed
                               ? "border-emerald-600 bg-emerald-100 text-emerald-900"
                               : enrollment.status === "cancelled"
@@ -356,7 +356,7 @@ export function BookingsManager({
                         </span>
                       </div>
 
-                      <h3 className="mt-1.5 text-base font-black text-kids-ink">
+                      <h3 className="mt-1.5 text-base font-semibold text-kids-ink">
                         {workshop.title}
                       </h3>
                       <Link
@@ -368,7 +368,7 @@ export function BookingsManager({
                     </div>
 
                     <div className="text-right">
-                      <span className="text-base font-black text-kids-ink">
+                      <span className="text-base font-semibold text-kids-ink">
                         {formatINR(enrollment.priceSnapshotPaise)}
                       </span>
                       <span className="block text-[10px] font-bold text-slate-400">
@@ -409,9 +409,9 @@ export function BookingsManager({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <form
             onSubmit={handleSubmitReview}
-            className="w-full max-w-sm rounded-[26px] border-2 border-kids-grape/15 bg-white p-5 shadow-[0_7px_0_rgba(155,92,246,0.16),0_16px_28px_-14px_rgba(59,31,92,0.4)]"
+            className="w-full max-w-sm rounded-[20px] border border-kids-ink/10 bg-white p-5"
           >
-            <h3 className="text-base font-black text-kids-ink">
+            <h3 className="text-base font-semibold text-kids-ink">
               Review Session Experience
             </h3>
             <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
@@ -447,7 +447,7 @@ export function BookingsManager({
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
                 placeholder="Share how your child enjoyed the session, mentor pacing, project outcome..."
-                className="mt-1 w-full rounded-[20px] border-2 border-kids-grape/15 p-2.5 text-xs font-medium text-kids-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="mt-1 w-full rounded-[20px] border border-kids-ink/10 p-2.5 text-xs font-medium text-kids-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
                 rows={3}
               />
             </div>
@@ -456,14 +456,14 @@ export function BookingsManager({
               <button
                 type="button"
                 onClick={() => setReviewingBooking(null)}
-                className="w-1/2 rounded-[20px] border-2 border-slate-200 py-2 text-xs font-black text-kids-ink/80 hover:bg-slate-50"
+                className="w-1/2 rounded-[20px] border border-slate-200 py-2 text-xs font-semibold text-kids-ink/80 hover:bg-slate-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-1/2 rounded-[20px] border-2 border-kids-grape/15 bg-kids-sunny py-2 text-xs font-black text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)] hover:bg-kids-sunny/80 disabled:opacity-50"
+                className="w-1/2 rounded-[20px] border border-kids-ink/10 bg-kids-sunny py-2 text-xs font-semibold text-kids-ink hover:bg-kids-sunny/80 disabled:opacity-50"
               >
                 {isSubmitting ? "Posting..." : "Submit Review"}
               </button>

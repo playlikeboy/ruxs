@@ -122,15 +122,15 @@ export function ServiceBookingForm({
 
   if (confirmedNumber) {
     return (
-      <div className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-6 text-center shadow-[0_7px_0_rgba(155,92,246,0.16),0_16px_28px_-14px_rgba(59,31,92,0.4)] space-y-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[20px] border-2 border-kids-grape/15 bg-emerald-300 text-3xl shadow-sm">
+      <div className="rounded-[20px] border border-kids-ink/10 bg-white p-6 text-center space-y-4">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[20px] border border-kids-ink/10 bg-emerald-300 text-3xl shadow-sm">
           <CheckCircle2 className="h-8 w-8 text-kids-ink" />
         </div>
         <div>
-          <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-900">
+          <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
             Request sent <UiIcon name="party" />
           </span>
-          <h2 className="mt-2 text-xl font-black text-kids-ink">{service.title}</h2>
+          <h2 className="mt-2 text-xl font-semibold text-kids-ink">{service.title}</h2>
           <p className="mt-1 text-xs font-bold text-kids-ink/60">
             Booking Ref: <span className="font-mono text-kids-ink">{confirmedNumber}</span>
           </p>
@@ -142,7 +142,7 @@ export function ServiceBookingForm({
         <div className="flex flex-col gap-2 pt-2">
           <Link
             href="/app/kids/bookings"
-            className="rounded-full border-2 border-kids-grape/15 bg-kids-sunny py-2.5 text-xs font-black text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+            className="rounded-full border border-kids-ink/10 bg-kids-sunny py-2.5 text-xs font-semibold text-kids-ink"
           >
             View My Bookings →
           </Link>
@@ -160,18 +160,18 @@ export function ServiceBookingForm({
   return (
     <form onSubmit={handleBooking} className="space-y-4">
       {error && (
-        <div className="rounded-[20px] border-2 border-red-500 bg-red-50 p-3 text-xs font-bold text-red-900 shadow-sm">
+        <div className="rounded-[20px] border border-red-500 bg-red-50 p-3 text-xs font-bold text-red-900 shadow-sm">
           {error}
         </div>
       )}
 
       {/* Select Child */}
-      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-white p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
+      <div className="rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-black uppercase tracking-wider text-kids-ink/60">
+          <label className="text-sm font-semibold text-kids-ink">
             Participating Child
           </label>
-          <Link href="/app/kids/children" className="text-xs font-bold text-kids-grape hover:underline">
+          <Link href="/app/kids/children" className="text-xs font-bold text-accent hover:underline">
             + Manage profiles
           </Link>
         </div>
@@ -181,7 +181,7 @@ export function ServiceBookingForm({
             <p className="text-xs font-semibold text-kids-ink/70">No child profiles found.</p>
             <Link
               href="/app/kids/children"
-              className="mt-2 inline-block rounded-full border-2 border-kids-grape/15 bg-kids-sunny/80 px-3 py-1 text-xs font-black"
+              className="mt-2 inline-block rounded-full border border-kids-ink/10 bg-kids-sunny/80 px-3 py-1 text-xs font-semibold"
             >
               Add Child Profile First
             </Link>
@@ -190,7 +190,7 @@ export function ServiceBookingForm({
           <select
             value={selectedChildId}
             onChange={(e) => setSelectedChildId(e.target.value)}
-            className="mt-2 w-full rounded-xl border-2 border-kids-grape/15 bg-amber-50 px-3 py-2 text-xs font-black text-kids-ink focus:outline-none"
+            className="mt-2 w-full rounded-xl border border-kids-ink/10 bg-amber-50 px-3 py-2 text-xs font-semibold text-kids-ink focus:outline-none"
           >
             {childProfiles.map((child) => (
               <option key={child.id} value={child.id}>
@@ -202,8 +202,8 @@ export function ServiceBookingForm({
       </div>
 
       {/* Mode selection */}
-      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-white p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
-        <label className="block text-xs font-black uppercase tracking-wider text-kids-ink/60">
+      <div className="rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
+        <label className="block text-sm font-semibold text-kids-ink">
           Delivery Mode
         </label>
         <div className="mt-2 grid grid-cols-3 gap-2">
@@ -212,9 +212,9 @@ export function ServiceBookingForm({
               key={mode}
               type="button"
               onClick={() => setDeliveryMode(mode as "home" | "studio" | "online")}
-              className={`rounded-xl border-2 p-2 text-center text-xs font-black capitalize transition ${
+              className={`rounded-xl border p-2 text-center text-xs font-semibold capitalize transition ${
                 deliveryMode === mode
-                  ? "border-kids-grape/20 bg-kids-sunny/80 text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)]"
+                  ? "border-kids-ink/20 bg-kids-sunny/80 text-kids-ink"
                   : "border-slate-200 bg-white text-kids-ink/70 hover:border-slate-300"
               }`}
             >
@@ -232,15 +232,15 @@ export function ServiceBookingForm({
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Society, Flat / House No., Landmark"
-              className="mt-1 w-full rounded-xl border-2 border-kids-grape/15 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
             />
           </div>
         )}
       </div>
 
       {/* Date & Time selection */}
-      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-white p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
-        <label className="block text-xs font-black uppercase tracking-wider text-kids-ink/60">
+      <div className="rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
+        <label className="block text-sm font-semibold text-kids-ink">
           Session Slot
         </label>
         <div className="mt-2 grid grid-cols-2 gap-2.5">
@@ -251,7 +251,7 @@ export function ServiceBookingForm({
               required
               value={sessionDate}
               onChange={(e) => setSessionDate(e.target.value)}
-              className="mt-1 w-full rounded-xl border-2 border-kids-grape/15 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
             />
           </div>
           <div>
@@ -259,7 +259,7 @@ export function ServiceBookingForm({
             <select
               value={sessionTime}
               onChange={(e) => setSessionTime(e.target.value)}
-              className="mt-1 w-full rounded-xl border-2 border-kids-grape/15 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
             >
               {["10:00", "11:30", "14:00", "15:30", "17:00", "18:30"].map((t) => (
                 <option key={t} value={t}>
@@ -273,9 +273,9 @@ export function ServiceBookingForm({
 
       {/* Material Add-on if extra */}
       {service.materialFeePolicy === "extra" && service.materialFeePaise > 0 && (
-        <div className="flex items-center justify-between rounded-[20px] border-2 border-kids-grape/15 bg-sky-50 p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
+        <div className="flex items-center justify-between rounded-[20px] border border-kids-ink/10 bg-sky-50 p-3.5">
           <div>
-            <span className="block text-xs font-black text-kids-ink">Include Project Material Kit</span>
+            <span className="block text-xs font-semibold text-kids-ink">Include Project Material Kit</span>
             <span className="block text-[11px] font-medium text-kids-ink/70">
               Take-home hardware parts & workbox (+{formatINR(service.materialFeePaise)})
             </span>
@@ -284,13 +284,13 @@ export function ServiceBookingForm({
             type="checkbox"
             checked={includeMaterials}
             onChange={(e) => setIncludeMaterials(e.target.checked)}
-            className="h-5 w-5 rounded border-2 border-kids-grape/15 text-amber-500"
+            className="h-5 w-5 rounded border border-kids-ink/10 text-amber-500"
           />
         </div>
       )}
 
       {/* Price Summary */}
-      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-amber-50 p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
+      <div className="rounded-[20px] border border-kids-ink/10 bg-amber-50 p-3.5">
         <div className="flex items-center justify-between text-xs font-bold text-kids-ink/80">
           <span>Session Fee</span>
           <span>{formatINR(service.pricePaise)}</span>
@@ -301,7 +301,7 @@ export function ServiceBookingForm({
             <span>+{formatINR(materialFee)}</span>
           </div>
         )}
-        <div className="mt-2 flex items-center justify-between border-t border-slate-300 pt-2 text-sm font-black text-kids-ink">
+        <div className="mt-2 flex items-center justify-between border-t border-slate-300 pt-2 text-sm font-semibold text-kids-ink">
           <span>Total Payable</span>
           <span>{formatINR(totalAmountPaise)}</span>
         </div>
@@ -311,7 +311,7 @@ export function ServiceBookingForm({
       <button
         type="submit"
         disabled={isPending || childProfiles.length === 0}
-        className="w-full rounded-full border-2 border-kids-grape/15 bg-kids-sunny py-3 text-sm font-black text-kids-ink shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)] transition active:translate-y-0.5 active:shadow-none disabled:opacity-50"
+        className="w-full rounded-full border border-kids-ink/10 bg-kids-sunny py-3 text-sm font-semibold text-kids-ink transition active:scale-[0.98] disabled:opacity-50"
       >
         {isPending ? "Sending request..." : `Request Session (${formatINR(totalAmountPaise)}) →`}
       </button>

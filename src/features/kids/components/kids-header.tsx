@@ -1,26 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
+import { ArrowLeft, CalendarDays, ShoppingBag, UsersRound } from "lucide-react";
 import { cartCount, useCart } from "@/features/consumer/components/cart-store";
-import { ModeSwitch } from "@/features/consumer/components/mode-switch";
 
+const iconLink =
+  "relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-kids-ink transition-colors hover:bg-kids-ink/5 active:bg-kids-ink/10";
+
+/** Back to the main app, the Kids title, and the family shortcuts. */
 export function KidsHeader() {
-  const cart = useCart();
-  const count = cartCount(cart);
+  const count = cartCount(useCart());
 
   return (
-    <header className="sticky top-0 z-30 bg-kids-cream/90 px-4 pb-2 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-md">
-      <div className="flex items-center gap-3">
-        <ModeSwitch className="flex-1" />
-        <Link
-          href="/app/cart"
-          aria-label="View cart"
-          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)] ring-1 ring-kids-grape/15 transition active:translate-y-0.5 active:shadow-none"
-        >
-          <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2.2} />
+    <header className="sticky top-0 z-30 border-b border-kids-ink/10 bg-kids-cream/95 px-2 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-3xl items-center gap-1">
+        <Link href="/app" aria-label="Back to RUXs home" className={iconLink}>
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+        </Link>
+        <Link href="/app/kids" className="mr-auto font-kids text-xl font-semibold tracking-tight">
+          RUXs Kids
+        </Link>
+        <Link href="/app/kids/bookings" aria-label="My bookings" className={iconLink}>
+          <CalendarDays className="h-5 w-5" aria-hidden="true" />
+        </Link>
+        <Link href="/app/kids/children" aria-label="My children" className={iconLink}>
+          <UsersRound className="h-5 w-5" aria-hidden="true" />
+        </Link>
+        <Link href="/app/cart" aria-label={count ? `Cart, ${count} items` : "Cart"} className={iconLink}>
+          <ShoppingBag className="h-5 w-5" aria-hidden="true" />
           {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-kids-bubblegum px-1 text-[10px] font-bold text-white tabular-nums">
+            <span className="absolute right-1 top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold tabular-nums text-white">
               {count}
             </span>
           )}

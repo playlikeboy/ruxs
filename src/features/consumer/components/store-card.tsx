@@ -11,10 +11,8 @@ export function StoreCard({ store }: { store: StoreCardData }) {
       <div className="relative overflow-hidden rounded-2xl">
         <StoreCover
           cover={store.cover}
-          imageUrl={store.coverUrl}
           alt=""
           className="aspect-[16/10] w-full transition-transform duration-300 group-hover:scale-[1.02]"
-          emojiClass="h-16 w-16"
         />
         <div className="absolute left-3 top-3 flex gap-1.5">
           {store.hasSubscriptions && (

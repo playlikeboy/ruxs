@@ -108,7 +108,7 @@ export default async function PlansPage() {
             return (
               <section key={p.sub.id} className="rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-3">
-                  <StoreCover cover={category(p.product.kind)} imageUrl={p.product.imageUrl} alt="" className="h-14 w-14 shrink-0 rounded-xl" emojiClass="h-7 w-7" />
+                  <StoreCover cover={category(p.product.kind)} alt="" className="h-14 w-14 shrink-0 rounded-xl" />
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate font-semibold text-ink">{p.product.name}</h2>
                     <p className="truncate text-sm text-neutral-500">

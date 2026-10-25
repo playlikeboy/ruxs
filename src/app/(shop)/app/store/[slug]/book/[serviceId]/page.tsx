@@ -23,7 +23,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
       <PageHeader title="Book a session" subtitle={vendor.name} back={`/app/store/${slug}`} />
       <div className="px-4 pt-4">
         <div className="flex items-center gap-4">
-          <StoreCover cover={category(service.categoryId)} imageUrl={service.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-2xl" emojiClass="h-9 w-9" />
+          <StoreCover cover={category(service.categoryId)} alt="" className="h-20 w-20 shrink-0 rounded-2xl" />
           <div className="min-w-0">
             <h2 className="text-lg font-semibold text-ink">{service.name}</h2>
             <p className="flex items-center gap-1.5 text-sm text-neutral-500">

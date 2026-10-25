@@ -1,160 +1,58 @@
 "use client";
 
-
-import { AppIcon, UiIcon } from "@/components/ui/app-icon";
-
 import { useState } from "react";
-import Link from "next/link";
-import { Check, Plus, PackageCheck, ShieldCheck } from "lucide-react";
+import { Check, Plus } from "lucide-react";
+import { CoverArt } from "@/components/ui/cover-art";
+import { cn } from "@/components/ui/cn";
 import { formatINR } from "@/core/money";
 import { formatAgeBadge } from "@/core/kids";
 import { cartActions, useCart } from "@/features/consumer/components/cart-store";
+import { KidsTag } from "./kids-ui";
 import type { KidsKitItem } from "../types";
 
+/** A learning kit delivered home, added straight to the cart. */
 export function KidsKitCard({ item }: { item: KidsKitItem }) {
   const [justAdded, setJustAdded] = useState(false);
-  const cart = useCart();
-  const ageLabel = formatAgeBadge(item.minAge, item.maxAge);
+  const inCart = useCart()?.items.find((i) => i.productId === item.productId);
 
-  const existingInCart = cart?.items.find((i) => i.productId === item.productId);
-
-  const handleAddToCart = () => {
-    const storeInfo = {
-      vendorSlug: item.vendor.slug,
-      vendorName: item.vendor.name,
-      deliveryFeePaise: 0,
-      minOrderPaise: 0,
-    };
-
-    const cartItem = {
-      productId: item.productId,
-      name: item.name,
-      unitPricePaise: item.pricePaise,
-      isVeg: null,
-    };
-
-    // If another store is already in cart, force replace or add
-    cartActions.add(storeInfo, cartItem, true);
-
+  const add = () => {
+    cartActions.add(
+      { vendorSlug: item.vendor.slug, vendorName: item.vendor.name, deliveryFeePaise: 0, minOrderPaise: 0 },
+      { productId: item.productId, name: item.name, unitPricePaise: item.pricePaise, isVeg: null },
+      true
+    );
     setJustAdded(true);
-    try {
-      navigator.vibrate?.(20);
-    } catch {}
-    setTimeout(() => setJustAdded(false), 2000);
+    setTimeout(() => setJustAdded(false), 1800);
   };
 
   return (
-    <div className="relative flex flex-col justify-between overflow-hidden rounded-[26px] border-2 border-kids-grape/15 bg-white shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)] transition hover:translate-y-[-2px]">
-      {/* Poster image if provided */}
-      {item.posterUrl && (
-        <div className="relative h-36 w-full overflow-hidden bg-sky-50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={item.posterUrl} alt={item.name} className="h-full w-full object-cover" />
-          <div className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-black text-kids-ink backdrop-blur-xs shadow-xs">
-            <UiIcon name="age" /> {ageLabel}
-          </div>
+    <article className="group flex gap-4 rounded-[20px] border border-kids-ink/10 bg-white p-3 transition-colors hover:border-kids-ink/25">
+      <CoverArt theme="kits" className="h-28 w-24 shrink-0 rounded-[14px] sm:h-32 sm:w-28" />
+      <div className="flex min-w-0 flex-1 flex-col py-0.5">
+        <h3 className="text-base font-semibold leading-snug">{item.name}</h3>
+        <p className="mt-0.5 truncate text-sm text-kids-ink/60">{item.vendor.name} · {item.vendor.area}</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <KidsTag>{formatAgeBadge(item.minAge, item.maxAge)}</KidsTag>
+          {item.nonToxicCertified && <KidsTag tone="good">Non-toxic (maker&apos;s label)</KidsTag>}
         </div>
-      )}
-
-      <div className="p-4">
-        {/* Top Badges (if no poster) */}
-        {!item.posterUrl && (
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] border-2 border-kids-grape/15 bg-sky-100 text-2xl shadow-[0_3px_0_rgba(155,92,246,0.18)]">
-              <AppIcon name={item.category} className="h-6 w-6 text-kids-ink" />
-            </div>
-
-            <div className="flex flex-wrap items-center justify-end gap-1.5">
-              <span className="inline-flex items-center rounded-full border border-kids-grape/20 bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-kids-ink">
-                <UiIcon name="age" /> {ageLabel}
-              </span>
-              <span className="inline-flex items-center rounded-full border border-kids-grape/20 bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-950">
-                <UiIcon name="kit" /> DOORSTEP KIT
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Title & Description */}
-        <div className={item.posterUrl ? "mt-1" : "mt-3"}>
-          <h3 className="text-base font-black leading-snug tracking-tight text-kids-ink">
-            {item.name}
-          </h3>
-          <p className="mt-1 line-clamp-2 text-xs font-medium leading-relaxed text-kids-ink/70">
-            {item.description}
-          </p>
-        </div>
-
-        {/* Child-Safe Badge */}
-        <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-bold text-emerald-800">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-          <span>Non-Toxic & Tested Safe for Children</span>
-        </div>
-
-        {/* Features / Kit contents checklist */}
         {item.features.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {item.features.map((feat, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-kids-ink/80"
-              >
-                <PackageCheck className="h-3 w-3 text-slate-500" />
-                <span>{feat}</span>
-              </span>
-            ))}
-          </div>
+          <p className="mt-2 line-clamp-1 text-[13px] text-kids-ink/65">In the box: {item.features.join(", ")}</p>
         )}
-
-        <div className="mt-3 flex items-center gap-1 text-xs font-bold text-kids-ink/80 border-t border-slate-100 pt-2">
-          <Link href={`/app/kids/providers/${item.vendor.slug}`} className="hover:text-kids-bubblegum">
-            By {item.vendor.name}
-          </Link>
-          <span className="text-slate-400">·</span>
-          <span className="text-[11px] text-kids-ink/60">{item.vendor.area}</span>
-        </div>
-
-        {/* Price & Add to Cart action */}
-        <div className="mt-4 flex items-center justify-between border-t-2 border-dashed border-slate-200 pt-3">
-          <div>
-            <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400">
-              Kit Price
-            </span>
-            <span className="text-lg font-black text-kids-ink">
-              {formatINR(item.pricePaise)}
-            </span>
-          </div>
-
+        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+          <span className="text-base font-bold tabular-nums">{formatINR(item.pricePaise)}</span>
           <button
             type="button"
-            onClick={handleAddToCart}
-            className={`inline-flex items-center gap-1.5 rounded-full border-2 border-kids-grape/15 px-4 py-2 text-xs font-black shadow-[0_3px_0_rgba(155,92,246,0.18)] transition active:translate-y-0.5 active:shadow-none ${
-              justAdded
-                ? "bg-emerald-400 text-slate-950"
-                : existingInCart
-                ? "bg-amber-300 text-kids-ink"
-                : "bg-kids-bubblegum text-white hover:bg-pink-600"
-            }`}
-          >
-            {justAdded ? (
-              <>
-                <Check className="h-3.5 w-3.5" />
-                <span>Added!</span>
-              </>
-            ) : existingInCart ? (
-              <>
-                <Plus className="h-3.5 w-3.5" />
-                <span>Add More ({existingInCart.qty})</span>
-              </>
-            ) : (
-              <>
-                <Plus className="h-3.5 w-3.5" />
-                <span>Add Kit</span>
-              </>
+            onClick={add}
+            className={cn(
+              "inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors active:scale-[0.97]",
+              justAdded ? "bg-good text-white" : "bg-kids-ink text-white hover:bg-kids-ink/90"
             )}
+          >
+            {justAdded ? <Check className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
+            {justAdded ? "Added" : inCart ? `Add another (${inCart.qty})` : "Add"}
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

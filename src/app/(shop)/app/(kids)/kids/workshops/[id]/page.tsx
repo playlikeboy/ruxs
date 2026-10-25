@@ -1,199 +1,107 @@
-import { UiIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowLeft,
-  Calendar,
-  MapPin,
-  ShieldCheck,
-} from "lucide-react";
+import { CalendarDays, ChevronRight, MapPin, UsersRound } from "lucide-react";
+import { CoverArt } from "@/components/ui/cover-art";
 import { getKidsWorkshopById, getMyChildren } from "@/features/kids/queries";
 import { hexclave } from "@/lib/auth/hexclave";
 import { WorkshopEnrollForm } from "@/features/kids/components/workshop-enroll-form";
+import { KidsBackLink, KidsSection, KidsTag, kidsCard, kidsPrimaryButton } from "@/features/kids/components/kids-ui";
 import { formatAgeRange, formatClassesList } from "@/core/kids/age-eligibility";
+import { formatINR } from "@/core/money";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const data = await getKidsWorkshopById(id);
-  if (!data) return { title: "Workshop Not Found" };
-
+  if (!data) return { title: "Workshop not found" };
   return {
-    title: `${data.workshop.title} · Kids Camps`,
-    description:
-      data.workshop.description ??
-      `Reserve spot for ${data.workshop.title} organized by ${data.vendor.name} on RUXs Kids Zone.`,
+    title: `${data.workshop.title} · RUXs Kids`,
+    description: data.workshop.description ?? `Reserve a seat for ${data.workshop.title} by ${data.vendor.name} on RUXs Kids.`,
   };
 }
 
-export default async function KidsWorkshopDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function KidsWorkshopDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await getKidsWorkshopById(id);
-
   if (!data) notFound();
 
   const user = await hexclave.getUser();
   const children = user ? await getMyChildren() : [];
-
-  const ageText = formatAgeRange(data.workshop.minAge, data.workshop.maxAge);
-  const classText = formatClassesList(data.workshop.eligibleClasses as any);
+  const classes = (data.workshop.eligibleClasses as string[] | null) ?? [];
+  const ageText = formatAgeRange(data.workshop.minAge, data.workshop.maxAge) + (classes.length ? ` · ${formatClassesList(classes)}` : "");
+  const { remainingSeats, isAlmostFull } = data.availability;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5 pb-12">
-      {/* Back link */}
-      <div>
-        <Link
-          href="/app/kids/workshops"
-          className="inline-flex items-center gap-1.5 rounded-full border-2 border-kids-grape/15 bg-white px-3 py-1 text-xs font-black text-slate-800 shadow-[0_3px_0_rgba(155,92,246,0.18)] transition hover:bg-slate-50"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Back to Workshops</span>
-        </Link>
-      </div>
+    <div className="space-y-6">
+      <KidsBackLink href="/app/kids/workshops" label="Workshops" />
 
-      {/* Workshop Header Card */}
-      <div className="rounded-[26px] border-2 border-kids-grape/15 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)]">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-kids-grape/20 bg-emerald-200 px-2.5 py-0.5 text-[11px] font-black text-emerald-950">
-            {data.category.name}
-          </span>
-          <span className="rounded-full border border-kids-grape/20 bg-pink-100 px-2.5 py-0.5 text-[11px] font-black text-kids-ink">
-            <UiIcon name="age" /> {ageText} ({classText})
-          </span>
-          <span
-            className={`rounded-full border border-kids-grape/20 px-2.5 py-0.5 text-[11px] font-black ${
-              data.availability.isAlmostFull
-                ? "bg-rose-200 text-rose-950 animate-pulse"
-                : "bg-amber-200 text-kids-ink"
-            }`}
-          >
-            <UiIcon name="fire" /> {data.availability.remainingSeats} of {data.workshop.capacity} seats left
-          </span>
-        </div>
-
-        <h1 className="mt-3 text-2xl font-black tracking-tight text-kids-ink">
-          {data.workshop.title}
-        </h1>
-
-        {data.workshop.description && (
-          <p className="mt-2 text-xs font-medium leading-relaxed text-kids-ink/80">
-            {data.workshop.description}
+      <section className={`${kidsCard} group overflow-hidden`}>
+        <CoverArt theme={`${data.category.id} ${data.category.name}`} label={data.category.name} className="h-36 w-full" />
+        <div className="p-5">
+          <p className="text-sm font-medium text-kids-ink/60">{data.category.name}</p>
+          <h1 className="mt-0.5 font-kids text-[28px] font-semibold leading-tight tracking-tight">{data.workshop.title}</h1>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <KidsTag><UsersRound className="h-3.5 w-3.5" aria-hidden="true" />{ageText}</KidsTag>
+            <KidsTag tone={isAlmostFull ? "warn" : "good"}>{remainingSeats} of {data.workshop.capacity} seats left</KidsTag>
+          </div>
+          {data.workshop.description && <p className="mt-4 text-[15px] leading-relaxed text-kids-ink/75">{data.workshop.description}</p>}
+          <dl className="mt-4 grid gap-2 border-t border-kids-ink/10 pt-4 text-sm">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-kids-ink/50" aria-hidden="true" />
+              <dt className="sr-only">Dates</dt>
+              <dd>{data.workshop.startDate === data.workshop.endDate ? data.workshop.startDate : `${data.workshop.startDate} to ${data.workshop.endDate}`}</dd>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-kids-ink/50" aria-hidden="true" />
+              <dt className="sr-only">Where</dt>
+              <dd>{data.workshop.venueOrMode}{data.workshop.address ? ` · ${data.workshop.address}` : ""}</dd>
+            </div>
+          </dl>
+          <p className="mt-4">
+            <span className="text-2xl font-bold tabular-nums">{formatINR(data.workshop.pricePaise)}</span>
+            <span className="ml-1.5 text-sm text-kids-ink/60">per child</span>
           </p>
-        )}
-
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-bold text-kids-ink/80 border-t border-slate-200 pt-3">
-          <span className="inline-flex items-center gap-1">
-            <Calendar className="h-3.5 w-3.5 text-amber-600" />
-            <span>
-              {data.workshop.startDate} to {data.workshop.endDate}
-            </span>
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5 text-kids-ink/60" />
-            <span>{data.workshop.venueOrMode}</span>
-          </span>
-          {data.workshop.address && (
-            <span className="text-kids-ink/60">({data.workshop.address})</span>
-          )}
         </div>
-      </div>
-
-      {/* Multi-session Schedule */}
-      <section className="space-y-3">
-        <h2 className="px-1 text-base font-black text-kids-ink">
-          Camp Schedule ({data.sessions.length} Sessions)
-        </h2>
-
-        {data.sessions.length === 0 ? (
-          <div className="rounded-[20px] border-2 border-dashed border-slate-300 bg-white p-4 text-xs font-semibold text-kids-ink/60">
-            Session dates will be announced before camp kick-off.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {data.sessions.map((sess, idx) => (
-              <div
-                key={sess.id}
-                className="flex items-center justify-between rounded-[20px] border-2 border-kids-grape/15 bg-white p-3.5 shadow-[0_3px_0_rgba(155,92,246,0.18)]"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full border border-kids-grape/20 bg-kids-sunny/80 text-xs font-black text-kids-ink">
-                    {idx + 1}
-                  </span>
-                  <div>
-                    <span className="block text-xs font-black text-kids-ink">
-                      {sess.sessionDate}
-                    </span>
-                    <span className="block text-[11px] font-semibold text-kids-ink/60">
-                      {sess.startTime} – {sess.endTime}
-                    </span>
-                  </div>
-                </div>
-
-                <span className="text-[11px] font-bold text-kids-ink/70">
-                  {sess.venueOrMode}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
-      {/* Materials and Policies */}
-      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-white p-4 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
-        <h3 className="text-xs font-black uppercase tracking-wider text-kids-ink/60">
-          Materials & Take-Homes
-        </h3>
-        <p className="mt-1 text-xs font-semibold text-kids-ink/80">
-          {data.workshop.materialsDescription ||
-            "All project kits, tools, non-toxic art supplies and completion certificates are provided at the workshop."}
-        </p>
+      <KidsSection title={`Schedule (${data.sessions.length} ${data.sessions.length === 1 ? "session" : "sessions"})`}>
+        {data.sessions.length === 0 ? (
+          <p className={`${kidsCard} p-4 text-sm text-kids-ink/60`}>Session times will be shared before the first day.</p>
+        ) : (
+          <ol className={`${kidsCard} divide-y divide-kids-ink/10`}>
+            {data.sessions.map((sess, idx) => (
+              <li key={sess.id} className="flex items-center gap-3 px-4 py-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kids-sunny text-sm font-semibold tabular-nums">{idx + 1}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">{sess.sessionDate}</span>
+                  <span className="block text-[13px] text-kids-ink/60">{sess.startTime} – {sess.endTime}</span>
+                </span>
+                <span className="text-[13px] text-kids-ink/60">{sess.venueOrMode}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </KidsSection>
 
-        <div className="mt-3 border-t border-slate-100 pt-2.5">
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-            Cancellation Policy
-          </span>
-          <p className="text-[11px] font-medium text-kids-ink/70">
-            {data.workshop.cancellationPolicy}
-          </p>
+      <section className={`${kidsCard} space-y-3 p-4 text-sm`}>
+        <div>
+          <h2 className="font-semibold">What&apos;s included</h2>
+          <p className="mt-0.5 text-kids-ink/70">{data.workshop.materialsDescription || "Ask the host what to bring; materials are listed here when they add them."}</p>
         </div>
-      </div>
-
-      {/* Provider trust card */}
-      <div className="rounded-[20px] border-2 border-kids-grape/15 bg-amber-100/70 p-4 shadow-[0_3px_0_rgba(155,92,246,0.18)]">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-emerald-700" />
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800">
-                Verified Workshop Host
-              </span>
-            </div>
-            <Link
-              href={`/app/kids/providers/${data.vendor.slug}`}
-              className="mt-0.5 block text-sm font-black text-kids-ink hover:underline"
-            >
-              {data.vendor.name}
-            </Link>
-          </div>
-
-          <Link
-            href={`/app/kids/providers/${data.vendor.slug}`}
-            className="rounded-full border-2 border-kids-grape/15 bg-white px-3 py-1 text-[11px] font-black text-kids-ink shadow-[0_2px_0_rgba(155,92,246,0.18)] hover:bg-slate-50"
-          >
-            Profile →
-          </Link>
+        <div className="border-t border-kids-ink/10 pt-3">
+          <h2 className="font-semibold">Cancellation</h2>
+          <p className="mt-0.5 text-kids-ink/70">{data.workshop.cancellationPolicy}</p>
         </div>
-      </div>
+      </section>
 
-      {/* Interactive Enrollment Form */}
+      <Link href={`/app/kids/providers/${data.vendor.slug}`} className={`${kidsCard} flex items-center gap-3 p-4 hover:border-kids-ink/25`}>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[13px] text-kids-ink/60">Hosted by</span>
+          <span className="block font-semibold">{data.vendor.name}</span>
+        </span>
+        <ChevronRight className="h-5 w-5 text-kids-ink/40" aria-hidden="true" />
+      </Link>
+
       {user ? (
         <WorkshopEnrollForm
           workshopId={data.workshop.id}
@@ -204,22 +112,10 @@ export default async function KidsWorkshopDetailPage({
           childProfiles={children}
         />
       ) : (
-        <div className="rounded-[26px] border-2 border-kids-grape/15 bg-white p-6 text-center shadow-[0_5px_0_rgba(155,92,246,0.14),0_12px_24px_-14px_rgba(59,31,92,0.35)]">
-          <UiIcon name="camp" className="h-6 w-6 text-accent" />
-          <h2 className="mt-2 text-base font-black text-kids-ink">
-            Sign in to Reserve a Seat
-          </h2>
-          <p className="mt-1 text-xs font-semibold text-kids-ink/70">
-            Sign in to your RUXs account to choose your child and enroll into this bootcamp.
-          </p>
-          <div className="mt-4">
-            <Link
-              href={`/sign-in?next=/app/kids/workshops/${data.workshop.id}`}
-              className="inline-flex items-center gap-1.5 rounded-full border-2 border-kids-grape/15 bg-emerald-400 px-6 py-2.5 text-xs font-black text-kids-ink shadow-[0_3px_0_rgba(155,92,246,0.18)] transition active:translate-y-0.5"
-            >
-              Sign In to Continue →
-            </Link>
-          </div>
+        <div className={`${kidsCard} p-6 text-center`}>
+          <h2 className="text-lg font-semibold">Sign in to reserve a seat</h2>
+          <p className="mt-1 text-sm text-kids-ink/65">Choose your child and hold their seat.</p>
+          <Link href={`/sign-in?next=/app/kids/workshops/${data.workshop.id}`} className={`${kidsPrimaryButton} mt-4`}>Sign in</Link>
         </div>
       )}
     </div>

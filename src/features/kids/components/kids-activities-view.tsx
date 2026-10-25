@@ -34,12 +34,22 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 }
 
 /** Search, one row of topics, and age/format tucked behind Filters. */
-export function KidsActivitiesView({ initialActivities }: { initialActivities: KidsActivityItem[] }) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [ageBracket, setAgeBracket] = useState<KidsAgeBracketId>("all");
-  const [category, setCategory] = useState<KidsCategoryId>("all");
+export function KidsActivitiesView({
+  initialActivities,
+  initialQuery = "",
+  initialAge = "all",
+  initialTopic = "all",
+}: {
+  initialActivities: KidsActivityItem[];
+  initialQuery?: string;
+  initialAge?: KidsAgeBracketId;
+  initialTopic?: KidsCategoryId;
+}) {
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [ageBracket, setAgeBracket] = useState<KidsAgeBracketId>(initialAge);
+  const [category, setCategory] = useState<KidsCategoryId>(initialTopic);
   const [format, setFormat] = useState<KidsFormat>("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(initialAge !== "all");
 
   const filtered = useMemo(
     () =>
@@ -71,7 +81,7 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Dance, chess, robotics, art…"
-            className="min-h-12 w-full rounded-[12px] border border-kids-ink/15 bg-white pl-10 pr-3 text-base text-kids-ink placeholder:text-kids-ink/40 focus:border-kids-ink focus:outline-none"
+            className="min-h-12 w-full rounded-full border border-kids-ink/15 bg-white pl-10 pr-3 text-base text-kids-ink placeholder:text-kids-ink/40 focus:border-kids-ink focus:outline-none"
           />
         </label>
         <button
@@ -80,7 +90,7 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
           aria-expanded={showFilters}
           aria-controls="kids-filters"
           className={cn(
-            "inline-flex min-h-12 items-center gap-2 rounded-[12px] border px-3.5 text-sm font-semibold",
+            "inline-flex min-h-12 items-center gap-2 rounded-full border px-4 text-sm font-semibold",
             showFilters || extraFilters ? "border-kids-ink bg-kids-ink text-white" : "border-kids-ink/15 bg-white text-kids-ink"
           )}
         >
@@ -92,7 +102,7 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
       <KidsCategoryStrip selected={category} onChange={setCategory} />
 
       {showFilters && (
-        <div id="kids-filters" className="space-y-3 rounded-[16px] border border-kids-ink/10 bg-white p-4">
+        <div id="kids-filters" className="space-y-4 rounded-[20px] border border-kids-ink/10 bg-white p-4">
           <fieldset>
             <legend className="mb-2 text-sm font-semibold text-kids-ink">Child&apos;s age</legend>
             <div className="flex flex-wrap gap-2">
@@ -135,15 +145,15 @@ export function KidsActivitiesView({ initialActivities }: { initialActivities: K
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-[16px] border border-dashed border-kids-ink/20 bg-white p-8 text-center">
+        <div className="rounded-[20px] border border-kids-ink/10 bg-white p-8 text-center">
           <p className="text-base font-semibold text-kids-ink">No classes match</p>
           <p className="mt-1 text-sm text-kids-ink/60">Try another age or topic, or clear the filters.</p>
-          <button type="button" onClick={reset} className="mt-4 inline-flex min-h-10 items-center rounded-[12px] bg-kids-ink px-4 text-sm font-semibold text-white">
+          <button type="button" onClick={reset} className="mt-4 inline-flex min-h-11 items-center rounded-full bg-kids-ink px-5 text-sm font-semibold text-white">
             Show all classes
           </button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {filtered.map((item) => (
             <KidsActivityCard key={item.id} item={item} />
           ))}

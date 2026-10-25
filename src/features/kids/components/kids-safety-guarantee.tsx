@@ -10,12 +10,12 @@ const POINTS: { icon: LucideIcon; title: string; description: string }[] = [
 /** What RUXs actually does for families, in four true lines. */
 export function KidsSafetyGuarantee() {
   return (
-    <section aria-labelledby="kids-trust-title" className="rounded-[20px] border border-kids-ink/10 bg-white p-5">
-      <h3 id="kids-trust-title" className="text-base font-bold tracking-tight text-kids-ink">How RUXs looks after families</h3>
+    <section aria-labelledby="kids-trust-title" className="rounded-[20px] bg-kids-mint/40 p-5">
+      <h2 id="kids-trust-title" className="font-kids text-xl font-semibold tracking-tight text-kids-ink">How RUXs looks after families</h2>
       <ul className="mt-4 grid gap-4 sm:grid-cols-2">
         {POINTS.map(({ icon: Icon, title, description }) => (
           <li key={title} className="flex gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-kids-mint/60 text-kids-ink">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-kids-ink">
               <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
             </span>
             <span>

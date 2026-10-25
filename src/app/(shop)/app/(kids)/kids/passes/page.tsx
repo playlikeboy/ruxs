@@ -1,39 +1,22 @@
-import { UiIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import { getAvailableHolidayPasses, getMyKidsPasses } from "@/features/kids/queries";
 import { hexclave } from "@/lib/auth/hexclave";
 import { PassesManager } from "@/features/kids/components/passes-manager";
+import { KidsPageHeader } from "@/features/kids/components/kids-ui";
 
 export const metadata: Metadata = {
-  title: "Holiday Camp Passes · RUXs Kids Zone",
-  description:
-    "Multi-session holiday passes for kids STEM, robotics, chess, pottery and creative workshops with verified neighbourhood mentors.",
+  title: "Passes · RUXs Kids",
+  description: "Holiday and weekend session passes for kids classes and workshops.",
 };
 
 export default async function KidsPassesPage() {
   const user = await hexclave.getUser();
-
-  const [availablePasses, purchasedPasses] = await Promise.all([
-    getAvailableHolidayPasses(),
-    user ? getMyKidsPasses() : [],
-  ]);
+  const [availablePasses, purchasedPasses] = await Promise.all([getAvailableHolidayPasses(), user ? getMyKidsPasses() : []]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 pb-12">
-      <div className="px-1">
-        <h1 className="text-xl font-black tracking-tight text-kids-ink">
-          Holiday & Weekend Activity Passes <UiIcon name="pass" />
-        </h1>
-        <p className="mt-0.5 text-xs font-semibold text-kids-ink/60">
-          Save on classes and holiday workshops with flexible session credits
-        </p>
-      </div>
-
-      <PassesManager
-        availablePasses={availablePasses}
-        purchasedPasses={purchasedPasses}
-        isLoggedIn={!!user}
-      />
+    <div className="space-y-5">
+      <KidsPageHeader title="Passes" lead="Session credits for holiday and weekend classes." />
+      <PassesManager availablePasses={availablePasses} purchasedPasses={purchasedPasses} isLoggedIn={!!user} />
     </div>
   );
 }

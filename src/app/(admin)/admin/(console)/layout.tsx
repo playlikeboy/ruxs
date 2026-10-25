@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { RuxsMark } from "@/components/marketing/ruxs-mark";
 import { ExternalLink, Plus, Store, Home } from "lucide-react";
 import { UserNav } from "@/components/auth/user-nav";
 import { requireAdmin } from "@/lib/auth/session";
@@ -9,15 +9,7 @@ import { AdminSidebarNav, AdminTabs } from "@/features/admin/components/admin-ta
 function Brand() {
   return (
     <Link href="/admin" className="flex items-center gap-2.5 group">
-      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-ink shadow-xs overflow-hidden">
-        <Image
-          src="/brand/ruxs-app-icon-192.png"
-          alt="RUXs"
-          width={36}
-          height={36}
-          className="object-cover"
-        />
-      </div>
+      <RuxsMark className="h-9 w-9 shrink-0" aria-hidden="true" />
       <div className="leading-tight">
         <div className="flex items-center gap-1.5">
           <span className="font-bold text-sm tracking-tight text-ink group-hover:text-accent transition">

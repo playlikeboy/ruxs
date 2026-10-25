@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, House, MapPin } from "lucide-react";
 import { RuxsMark } from "@/components/marketing/ruxs-mark";
+import { CoverArt } from "@/components/ui/cover-art";
 import { getMyLocation, getMyPlans, getMyProfile, listStores } from "@/features/consumer/queries";
 import { getCategoryMap } from "@/features/platform/queries";
 import { TodayCard, type TodayItem } from "@/features/consumer/components/today-card";
@@ -130,15 +131,15 @@ export default async function ExplorePage() {
             <ul className="-mx-4 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
               {kidsRail.map((a) => (
                 <li key={a.id} className="w-[220px] shrink-0 snap-start">
-                  <Link href={`/app/kids/services/${a.id}`} className="block h-full rounded-[16px] border border-line bg-surface p-3.5 transition-colors hover:border-ink/30">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-leaf text-brand-deep">
-                      <AppIcon name={a.category} />
-                    </span>
-                    <span className="mt-3 line-clamp-2 block text-[15px] font-semibold leading-snug text-ink">{a.name}</span>
+                  <Link href={`/app/kids/services/${a.id}`} className="group block h-full overflow-hidden rounded-[16px] border border-line bg-surface transition-colors hover:border-ink/30">
+                    <CoverArt theme={a.category} className="h-24 w-full" />
+                    <span className="block p-3.5 pt-3">
+                    <span className="line-clamp-2 block text-[15px] font-semibold leading-snug text-ink">{a.name}</span>
                     <span className="mt-1 block truncate text-sm text-muted">{a.vendor.name}</span>
                     <span className="mt-2 flex items-center justify-between text-sm">
                       <span className="text-muted">Ages {a.ageMin}–{a.ageMax}</span>
                       <span className="font-semibold tabular-nums text-ink">{formatINR(a.pricePaise)}</span>
+                    </span>
                     </span>
                   </Link>
                 </li>
