@@ -112,16 +112,35 @@ export function isWithinGeofence(
   };
 }
 
+/** Search radius choices a household can pick in the app (km). */
+export const SEARCH_RADIUS_OPTIONS_KM = [2, 5, 10, 15, 25, 50] as const;
+export const MAX_SEARCH_RADIUS_KM = 50;
+
+function validRadius(km: number | null | undefined): km is number {
+  return km != null && Number.isInteger(km) && km >= 1 && km <= MAX_SEARCH_RADIUS_KM;
+}
+
+/** The household's own radius when it is valid, else the platform default (clamped to 1-50 km). */
+export function searchRadiusKm(chosenKm: number | null | undefined, platformDefaultKm: number): number {
+  if (validRadius(chosenKm)) return chosenKm;
+  return Math.min(MAX_SEARCH_RADIUS_KM, Math.max(1, Math.round(platformDefaultKm)));
+}
+
+/** The picker's options: the fixed steps plus the current value, sorted. */
+export function searchRadiusOptions(currentKm: number): number[] {
+  return Array.from(new Set<number>([...SEARCH_RADIUS_OPTIONS_KM, currentKm])).sort((a, b) => a - b);
+}
+
 /**
- * Geofence: a household only sees stores within the platform discovery radius,
- * and can only order from a store that also covers them with its own radius.
+ * Geofence: a household only sees stores within its search radius. It can
+ * order from a store whose own delivery radius covers it, whether or not the
+ * store is inside the search radius (a shared link still works).
  */
 export function storeReach(
   distanceKm: number | null,
   vendorRadiusKm: number,
-  discoveryRadiusKm: number
+  searchRadiusKm: number
 ): { visible: boolean; deliverable: boolean } {
   if (distanceKm == null) return { visible: false, deliverable: false };
-  const visible = distanceKm <= discoveryRadiusKm;
-  return { visible, deliverable: visible && distanceKm <= vendorRadiusKm };
+  return { visible: distanceKm <= searchRadiusKm, deliverable: distanceKm <= vendorRadiusKm };
 }

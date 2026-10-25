@@ -47,7 +47,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
         distanceKm={store.distanceKm}
         visible={store.visible}
         homeVisitsReach={store.inRange}
-        discoveryRadiusKm={store.discoveryRadiusKm}
+        searchRadiusKm={store.searchRadiusKm}
         rating={store.rating}
         profile={provider.profile}
         highlights={provider.highlights}
@@ -133,7 +133,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
 
         {!store.visible ? (
           <p className="mt-4 rounded-xl bg-blush px-4 py-3 text-sm font-medium text-bad">
-            This store is more than {store.discoveryRadiusKm} km from you, so it isn&apos;t available in your area.
+            This store is outside your {store.searchRadiusKm} km search radius and doesn&apos;t deliver to you.
           </p>
         ) : (
           !store.inRange && (

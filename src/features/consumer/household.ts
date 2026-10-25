@@ -5,8 +5,8 @@ import { getDb } from "@/db";
 import { consumers, customers } from "@/db/schema";
 import { hashToken } from "@/lib/auth/session";
 import { readGpsCookie } from "@/lib/location";
-import { haversineDistanceKm, resolveCoordinates, storeReach } from "@/core/geo";
-import { getLocalities, getPlatformSettings } from "@/features/platform/queries";
+import { haversineDistanceKm, resolveCoordinates } from "@/core/geo";
+import { getLocalities } from "@/features/platform/queries";
 
 export type Db = ReturnType<typeof getDb>;
 export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -82,14 +82,14 @@ export async function ensureCustomer(tx: Tx, vendorId: string, profile: Profile)
 
 /**
  * Geofence check on the server: the delivery address must be inside the
- * platform discovery radius and the store's own delivery radius.
+ * store's own delivery radius. The household's search radius only filters lists.
  * Address pin first, then the last GPS fix, then the address's locality centre.
  */
 export async function deliveryCheck(
   vendor: { latitude: number | null; longitude: number | null; city: string; area: string; serviceRadiusKm: number },
   profile: Profile
 ): Promise<string | null> {
-  const [localities, settings, gps] = await Promise.all([getLocalities(), getPlatformSettings(), readGpsCookie()]);
+  const [localities, gps] = await Promise.all([getLocalities(), readGpsCookie()]);
   const home =
     profile.latitude != null && profile.longitude != null
       ? { latitude: profile.latitude, longitude: profile.longitude }
@@ -100,7 +100,6 @@ export async function deliveryCheck(
       ? { latitude: vendor.latitude, longitude: vendor.longitude }
       : resolveCoordinates(vendor.city, vendor.area, localities);
   const distance = shop ? haversineDistanceKm(home.latitude, home.longitude, shop.latitude, shop.longitude) : null;
-  const reach = storeReach(distance, vendor.serviceRadiusKm, settings.discoveryRadiusKm);
-  return reach.deliverable ? null : "This store doesn't deliver to your address";
+  return distance != null && distance <= vendor.serviceRadiusKm ? null : "This store doesn't deliver to your address";
 }
 

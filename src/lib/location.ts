@@ -5,6 +5,9 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 /** Cookie holding the household's last GPS point ("lat,lng") before they save an address. */
 export const LOCATION_COOKIE = "ruxs-loc";
 
+/** Cookie holding the household's chosen search radius in km. */
+export const SEARCH_RADIUS_COOKIE = "ruxs-radius";
+
 export interface Point {
   latitude: number;
   longitude: number;
@@ -19,6 +22,13 @@ export async function readGpsCookie(): Promise<Point | null> {
   if (!raw) return null;
   const [lat, lng] = raw.split(",").map(Number);
   return lat !== undefined && lng !== undefined && valid(lat, lng) ? { latitude: lat, longitude: lng } : null;
+}
+
+/** The household's chosen search radius, or null when unset or unreadable. */
+export async function readSearchRadiusCookie(): Promise<number | null> {
+  const raw = (await cookies()).get(SEARCH_RADIUS_COOKIE)?.value;
+  const km = Number(raw);
+  return raw && Number.isInteger(km) ? km : null;
 }
 
 /**

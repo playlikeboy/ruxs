@@ -2,14 +2,15 @@ import Link from "next/link";
 import { ArrowRight, House, MapPin } from "lucide-react";
 import { RuxsMark } from "@/components/marketing/ruxs-mark";
 import { CoverArt } from "@/components/ui/cover-art";
-import { getMyLocation, getMyPlans, getMyProfile, listStores } from "@/features/consumer/queries";
+import { getMyLocation, getMyPlans, getMyProfile, getSearchRadius, listStores } from "@/features/consumer/queries";
 import { getCategoryMap } from "@/features/platform/queries";
 import { TodayCard, type TodayItem } from "@/features/consumer/components/today-card";
 import { HeroSubscriptionPlans, type HeroPlanItem } from "@/features/consumer/components/hero-subscription-plans";
 import { isLate } from "@/core/cutoff";
 import { weekdayIST } from "@/core/time";
-import { getCategories, getPlatformSettings } from "@/features/platform/queries";
+import { getCategories } from "@/features/platform/queries";
 import { LocationChip } from "@/features/consumer/components/location-chip";
+import { SearchRadiusPicker } from "@/features/consumer/components/search-radius-picker";
 import { SearchBar } from "@/features/consumer/components/search-bar";
 import { StoreFilterList } from "@/features/consumer/components/store-filter-list";
 import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
@@ -23,10 +24,10 @@ export const metadata = { title: "Explore" };
 
 export default async function ExplorePage() {
   const { user, profile } = await getMyProfile();
-  const [location, categories, settings] = await Promise.all([getMyLocation(), getCategories(), getPlatformSettings()]);
-  // listStores already applies the geofence: only stores within the discovery radius come back.
+  const [location, categories, searchRadius] = await Promise.all([getMyLocation(), getCategories(), getSearchRadius()]);
+  // listStores already applies the geofence: only stores within the household's search radius come back.
   const stores = await listStores({ latitude: location.latitude, longitude: location.longitude });
-  const radius = settings.discoveryRadiusKm;
+  const radius = searchRadius.km;
 
   // Plans that deliver today, for the "receive today?" card.
   const [{ today, plans }, category, kidsActivities] = await Promise.all([getMyPlans(), getCategoryMap(), getKidsActivities()]);
@@ -160,9 +161,16 @@ export default async function ExplorePage() {
         )}
 
         <section className="mt-8" aria-labelledby="stores-heading">
-          <div className="flex items-end justify-between">
-            <h2 id="stores-heading" className="text-xl font-bold tracking-tight text-ink">Stores within {radius} km</h2>
-            {location.source !== "none" && <span className="text-sm text-muted tabular-nums">{stores.length} stores</span>}
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 id="stores-heading" className="text-xl font-bold tracking-tight text-ink">Stores near you</h2>
+              {location.source !== "none" && (
+                <p className="text-sm text-muted tabular-nums">
+                  {stores.length} {stores.length === 1 ? "store" : "stores"} within {radius} km
+                </p>
+              )}
+            </div>
+            <SearchRadiusPicker km={radius} />
           </div>
           {location.source === "none" ? (
             <div className="mt-4 rounded-[16px] bg-app-canvas p-6 text-center">
@@ -174,7 +182,7 @@ export default async function ExplorePage() {
             <div className="mt-4 rounded-[16px] bg-app-canvas p-6 text-center">
               <House className="mx-auto h-8 w-8 text-brand-deep" aria-hidden="true" />
               <p className="mt-2 font-semibold text-ink">No stores within {radius} km yet</p>
-              <p className="mt-1 text-sm text-muted">We&apos;re adding kitchens and suppliers every week. If this location looks wrong, update it above.</p>
+              <p className="mt-1 text-sm text-muted">Try a wider radius, or check your location above. We&apos;re adding kitchens and suppliers every week.</p>
             </div>
           ) : (
             <div className="mt-4">

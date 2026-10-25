@@ -219,7 +219,7 @@ export function DiscoveryRadiusEditor({ value }: { value: number }) {
       }}
     >
       <label className="text-sm font-medium">
-        Show stores within (km)
+        Default search radius (km)
         <input inputMode="numeric" value={km} onChange={(e) => setKm(e.target.value)} className="mt-1 block h-10 w-28 rounded-[10px] border border-line bg-surface px-3 text-sm tabular-nums" />
       </label>
       <button type="submit" disabled={pending} className="h-10 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60">Save</button>

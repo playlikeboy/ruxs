@@ -9,6 +9,7 @@ import { LocationPicker } from "@/features/platform/components/location-picker";
 
 const input = "w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
 const label = "mb-1 block text-xs font-medium text-ink";
+const RADIUS_PRESETS_KM = [2, 5, 8, 12, 20] as const;
 
 export interface StorefrontValues {
   name: string;
@@ -121,11 +122,56 @@ export function StorefrontForm({ slug, initial, provider = false }: { slug: stri
         <LocationPicker value={loc} onChange={setLoc} />
       </fieldset>
 
-      <fieldset className="grid grid-cols-3 gap-2">
+      <fieldset className="space-y-3">
         <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">{provider ? "Home visits" : "Delivery"}</legend>
-        <label className={label}>Radius (km)<input inputMode="numeric" value={f.radius} onChange={set("radius")} className={input + " mt-1 tabular-nums"} /></label>
-        <label className={label}>{provider ? "Visit fee ₹" : "Delivery ₹"}<input inputMode="decimal" value={f.fee} onChange={set("fee")} className={input + " mt-1 tabular-nums"} /></label>
-        {!provider && <label className={label}>Min order ₹<input inputMode="decimal" value={f.minOrder} onChange={set("minOrder")} className={input + " mt-1 tabular-nums"} /></label>}
+        <div>
+          <label htmlFor="service-radius" className={label}>{provider ? "Home-visit radius" : "Delivery radius"}</label>
+          <div className="mt-1 flex items-center gap-3">
+            <input
+              id="service-radius"
+              type="range"
+              min={1}
+              max={50}
+              step={1}
+              value={Number(f.radius) || 1}
+              onChange={set("radius")}
+              aria-valuetext={`${f.radius} km`}
+              className="h-10 min-w-0 flex-1 accent-brand-coral"
+            />
+            <span className="flex shrink-0 items-center gap-1">
+              <input
+                inputMode="numeric"
+                aria-label={provider ? "Home-visit radius in km" : "Delivery radius in km"}
+                value={f.radius}
+                onChange={set("radius")}
+                className={input + " w-16 text-center tabular-nums"}
+              />
+              <span className="text-sm text-muted">km</span>
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {RADIUS_PRESETS_KM.map((km) => (
+              <button
+                key={km}
+                type="button"
+                onClick={() => setF({ ...f, radius: String(km) })}
+                aria-pressed={Number(f.radius) === km}
+                className="h-8 rounded-full border border-line px-3 text-xs font-semibold tabular-nums text-ink transition-colors hover:border-ink/25 aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-white"
+              >
+                {km} km
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[11px] text-muted">
+            {provider
+              ? "Households farther than this can still book studio or online sessions, but not home visits."
+              : "Households farther than this can see your store if it's in their search, but can't order."}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <label className={label}>{provider ? "Visit fee ₹" : "Delivery ₹"}<input inputMode="decimal" value={f.fee} onChange={set("fee")} className={input + " mt-1 tabular-nums"} /></label>
+          {!provider && <label className={label}>Min order ₹<input inputMode="decimal" value={f.minOrder} onChange={set("minOrder")} className={input + " mt-1 tabular-nums"} /></label>}
+        </div>
       </fieldset>
 
       <fieldset className="space-y-3">

@@ -13,7 +13,7 @@ export default async function AdminSettingsPage() {
       </div>
       <section className="max-w-xl space-y-3">
         <h2 className="text-base font-semibold">Geofence</h2>
-        <p className="text-sm text-muted">Households only see stores within this distance. Orders are also checked against each store&apos;s own delivery radius.</p>
+        <p className="text-sm text-muted">The search radius a household starts with. Each household can change it in the app, up to 50 km. Orders are checked against each store&apos;s own delivery radius.</p>
         <DiscoveryRadiusEditor value={discoveryRadiusKm} />
       </section>
       <section className="space-y-3">

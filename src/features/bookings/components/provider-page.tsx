@@ -32,7 +32,7 @@ export interface ProviderPageProps {
   distanceKm: number | null;
   visible: boolean;
   homeVisitsReach: boolean;
-  discoveryRadiusKm: number;
+  searchRadiusKm: number;
   rating: RatingSummary;
   profile: { headline: string | null; qualifications: string | null; experienceYears: number | null; specialities: string[]; languages: string[]; gender: string | null } | null;
   highlights: string[];
@@ -110,7 +110,7 @@ export function ProviderPage(p: ProviderPageProps) {
         )}
 
         {!p.visible && (
-          <p className="mt-4 rounded-xl bg-blush px-4 py-3 text-sm font-medium text-bad">This provider is more than {p.discoveryRadiusKm} km from you, so they can&apos;t be booked in your area.</p>
+          <p className="mt-4 rounded-xl bg-blush px-4 py-3 text-sm font-medium text-bad">This provider is outside your {p.searchRadiusKm} km search radius and doesn&apos;t cover your area.</p>
         )}
         {p.visible && !vendor.acceptingOrders && (
           <p className="mt-4 rounded-xl bg-butter px-4 py-3 text-sm font-medium text-warn">Not taking bookings right now.</p>

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { WEEKDAYS } from "@/config/service-kinds";
+import { MAX_SEARCH_RADIUS_KM } from "@/core/geo";
 
 const phone = z
   .string()
@@ -20,6 +21,10 @@ export const saveProfileSchema = z.object({
   city: z.string().trim().min(2, "Enter your city").max(60),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
+});
+
+export const saveSearchRadiusSchema = z.object({
+  km: z.number().int().min(1).max(MAX_SEARCH_RADIUS_KM),
 });
 
 export const saveLocationSchema = z.object({

@@ -1,6 +1,8 @@
 import { describe, it, expect } from "bun:test";
 import {
   storeReach,
+  searchRadiusKm,
+  searchRadiusOptions,
   haversineDistanceKm,
   resolveCoordinates,
   findNearestLocality,
@@ -65,8 +67,8 @@ describe("geo spatial rules", () => {
 });
 
 describe("geofence", () => {
-  it("hides stores beyond the discovery radius", () => {
-    expect(storeReach(10.1, 15, 10)).toEqual({ visible: false, deliverable: false });
+  it("hides stores beyond the search radius but still lets them deliver", () => {
+    expect(storeReach(10.1, 15, 10)).toEqual({ visible: false, deliverable: true });
     expect(storeReach(10, 15, 10)).toEqual({ visible: true, deliverable: true });
   });
 
@@ -76,5 +78,29 @@ describe("geofence", () => {
 
   it("never shows a store when the distance is unknown", () => {
     expect(storeReach(null, 8, 10)).toEqual({ visible: false, deliverable: false });
+  });
+});
+
+describe("search radius", () => {
+  it("uses the household's choice when it is a whole number from 1 to 50 km", () => {
+    expect(searchRadiusKm(5, 10)).toBe(5);
+    expect(searchRadiusKm(50, 10)).toBe(50);
+  });
+
+  it("falls back to the platform default for missing or invalid choices", () => {
+    expect(searchRadiusKm(null, 10)).toBe(10);
+    expect(searchRadiusKm(0, 10)).toBe(10);
+    expect(searchRadiusKm(51, 10)).toBe(10);
+    expect(searchRadiusKm(2.5, 10)).toBe(10);
+  });
+
+  it("clamps the platform default to 1-50 km", () => {
+    expect(searchRadiusKm(null, 80)).toBe(50);
+    expect(searchRadiusKm(null, 0)).toBe(1);
+  });
+
+  it("lists the fixed steps plus the current value, sorted and unique", () => {
+    expect(searchRadiusOptions(10)).toEqual([2, 5, 10, 15, 25, 50]);
+    expect(searchRadiusOptions(8)).toEqual([2, 5, 8, 10, 15, 25, 50]);
   });
 });

@@ -146,7 +146,7 @@ export const vendorReviews = pgTable(
 /** Single-row platform knobs, edited at /admin/settings. */
 export const platformSettings = pgTable("platform_settings", {
   id: integer("id").primaryKey().default(1),
-  discoveryRadiusKm: integer("discovery_radius_km").notNull().default(10), // households only see stores this close
+  discoveryRadiusKm: integer("discovery_radius_km").notNull().default(10), // default household search radius; each household can pick its own
   updatedBy: text("updated_by"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

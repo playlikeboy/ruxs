@@ -15,8 +15,8 @@ import {
   vendors,
 } from "@/db/schema";
 import { requireUser } from "@/lib/auth/session";
-import { findNearestLocality, haversineDistanceKm, resolveCoordinates } from "@/core/geo";
-import { readApproxPoint, readGpsCookie } from "@/lib/location";
+import { findNearestLocality, haversineDistanceKm, resolveCoordinates, searchRadiusKm } from "@/core/geo";
+import { readApproxPoint, readGpsCookie, readSearchRadiusCookie } from "@/lib/location";
 import { balance } from "@/core/ledger";
 import { addDaysIST, todayIST } from "@/core/time";
 import type { CoverStyle, ServiceKind } from "@/config/service-kinds";
@@ -68,6 +68,17 @@ export const getMyLocation = cache(async (): Promise<MyLocation> => {
     return { latitude: approx.latitude, longitude: approx.longitude, source: "approx", label: place };
   }
   return { latitude: null, longitude: null, source: "none", label: profile ? `${profile.society}, ${profile.area}` : null };
+});
+
+export interface SearchRadius {
+  km: number;
+  defaultKm: number;
+}
+
+/** How far the household looks for stores: its own choice, else the platform default. */
+export const getSearchRadius = cache(async (): Promise<SearchRadius> => {
+  const [settings, chosen] = await Promise.all([getPlatformSettings(), readSearchRadiusCookie()]);
+  return { km: searchRadiusKm(chosen, settings.discoveryRadiusKm), defaultKm: settings.discoveryRadiusKm };
 });
 
 export interface StoreCard {
@@ -155,10 +166,10 @@ export async function listStores(opts: {
     ...serviceRows.map((r) => ({ vendor: r.vendor, item: { kind: r.service.categoryId, name: r.service.name, pricePaise: r.service.pricePaise, allowSubscription: false } })),
   ];
 
-  const [localities, category, settings, rating] = await Promise.all([
+  const [localities, category, radius, rating] = await Promise.all([
     getLocalities(),
     getCategoryMap(),
-    getPlatformSettings(),
+    getSearchRadius(),
     getRatingMap(),
   ]);
   const q = opts.q?.trim().toLowerCase() ?? "";
@@ -187,11 +198,11 @@ export async function listStores(opts: {
       continue;
     }
 
-    // Geofence: without a location, or beyond the discovery radius, the store is not shown at all.
+    // Geofence: without a location, or beyond the household's search radius, the store is not shown at all.
     if (!hasPoint) continue;
     const p = vendorPoint(vendor, localities);
     const distanceKm = p ? haversineDistanceKm(opts.latitude!, opts.longitude!, p.latitude, p.longitude) : null;
-    const reach = storeReach(distanceKm, vendor.serviceRadiusKm, settings.discoveryRadiusKm);
+    const reach = storeReach(distanceKm, vendor.serviceRadiusKm, radius.km);
     if (!reach.visible) continue;
     const inRange = reach.deliverable;
     const primary = category(kinds[0] ?? "other");
@@ -240,21 +251,22 @@ export async function getStore(slug: string, point?: { latitude: number | null; 
     .where(and(eq(products.vendorId, vendor.id), isNull(products.archivedAt)))
     .orderBy(asc(products.section), asc(products.pricePaise));
 
-  const [localities, settings, rating] = await Promise.all([getLocalities(), getPlatformSettings(), getRatingMap()]);
+  const [localities, radius, rating] = await Promise.all([getLocalities(), getSearchRadius(), getRatingMap()]);
   let distanceKm: number | null = null;
   if (point?.latitude != null && point.longitude != null) {
     const p = vendorPoint(vendor, localities);
     if (p) distanceKm = haversineDistanceKm(point.latitude, point.longitude, p.latitude, p.longitude);
   }
-  const reach = storeReach(distanceKm, vendor.serviceRadiusKm, settings.discoveryRadiusKm);
+  const reach = storeReach(distanceKm, vendor.serviceRadiusKm, radius.km);
   const inRange = reach.deliverable;
 
   return {
     vendor,
     distanceKm,
     inRange,
-    visible: reach.visible,
-    discoveryRadiusKm: settings.discoveryRadiusKm,
+    // A store that delivers to the household stays reachable from a link even outside the search radius.
+    visible: reach.visible || reach.deliverable,
+    searchRadiusKm: radius.km,
     rating: rating(vendor.id),
     items: items.map((p) => ({
       id: p.id,
@@ -393,27 +405,27 @@ export async function getMyPlans() {
 
 /**
  * Geofence for lists that aren't store cards (kids classes, workshops, kits):
- * the ids of active vendors within the platform discovery radius of the
- * household, with their distance. Empty when we don't know where they are.
+ * the ids of active vendors within the household's search radius, with
+ * their distance. Empty when we don't know where they are.
  */
 export const getNearbyVendorDistances = cache(async (): Promise<Map<string, number>> => {
   const location = await getMyLocation();
   const out = new Map<string, number>();
   if (location.latitude == null || location.longitude == null) return out;
   const db = getDb();
-  const [rows, localities, settings] = await Promise.all([
+  const [rows, localities, radius] = await Promise.all([
     db
       .select({ id: vendors.id, latitude: vendors.latitude, longitude: vendors.longitude, city: vendors.city, area: vendors.area })
       .from(vendors)
       .where(eq(vendors.status, "active")),
     getLocalities(),
-    getPlatformSettings(),
+    getSearchRadius(),
   ]);
   for (const v of rows) {
     const p = vendorPoint(v, localities);
     if (!p) continue;
     const d = haversineDistanceKm(location.latitude, location.longitude, p.latitude, p.longitude);
-    if (d <= settings.discoveryRadiusKm) out.set(v.id, d);
+    if (d <= radius.km) out.set(v.id, d);
   }
   return out;
 });

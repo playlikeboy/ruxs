@@ -3,7 +3,7 @@
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { LOCATION_COOKIE } from "@/lib/location";
+import { LOCATION_COOKIE, SEARCH_RADIUS_COOKIE } from "@/lib/location";
 import { and, eq, inArray, isNull, or, gte } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
@@ -36,6 +36,7 @@ import {
   placeOrderSchema,
   saveLocationSchema,
   saveProfileSchema,
+  saveSearchRadiusSchema,
   subscribeSchema,
 } from "./schemas";
 
@@ -110,6 +111,24 @@ export async function saveLocation(input: unknown) {
     area: near && near.distanceKm <= 25 ? near.locality.name : "",
     city: near && near.distanceKm <= 25 ? near.locality.city : "",
   };
+}
+
+/** Remembers how far the household wants to look for stores and classes. */
+export async function saveSearchRadius(input: unknown) {
+  const parsed = saveSearchRadiusSchema.safeParse(input);
+  if (!parsed.success) return fail("Pick a distance from 1 to 50 km");
+
+  await requireUser();
+  (await cookies()).set(SEARCH_RADIUS_COOKIE, String(parsed.data.km), {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/app",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+
+  revalidatePath("/app", "layout");
+  return { ok: true as const };
 }
 
 export async function placeOrder(input: unknown) {
