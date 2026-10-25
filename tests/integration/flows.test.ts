@@ -207,3 +207,26 @@ describe("kids classes, every kids class type", () => {
     await scriptDb.delete(schema.kidsChildren).where(eq(schema.kidsChildren.id, child!.id));
   }, 30000);
 });
+
+describe("new vendors start with a menu and are listed nearby", () => {
+  it("every vendor type: starter catalogue passes the type triggers and the store shows in Stores near you", async () => {
+    if (!dbAvailable) return;
+    const { seedStarterCatalog } = await import("@/features/vendor-types/starter");
+    const { listStores } = await import("@/features/consumer/queries");
+    const slugs: string[] = [];
+    for (const type of VENDOR_TYPES) {
+      const fulfilment = canUseModule(type, "products") ? "delivery" : "booking";
+      const category = type === "store" ? "other" : type;
+      const vendor = await makeVendor(type, category, fulfilment, { slug: `e2e-starter-${type}-${ts}` });
+      if (canUseModule(type, "kids")) await scriptDb.insert(schema.kidsProviderProfiles).values({ vendorId: vendor.id, verificationStatus: "approved", safetyReviewStatus: "passed" });
+      const added = await scriptDb.transaction((tx) => seedStarterCatalog(tx, { id: vendor.id, vendorType: type, categoryId: category }));
+      expect(added, type).toBeGreaterThan(0);
+      slugs.push(vendor.slug);
+    }
+    const listed = new Set((await listStores({ latitude: LAT, longitude: LNG })).map((s) => s.slug));
+    for (const slug of slugs) expect(listed.has(slug), slug).toBe(true);
+
+    const found = await listStores({ q: "veg thali", latitude: LAT, longitude: LNG });
+    expect(found.some((s) => s.slug === `e2e-starter-tiffin-${ts}`)).toBe(true);
+  }, 60000);
+});

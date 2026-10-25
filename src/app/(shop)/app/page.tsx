@@ -18,7 +18,8 @@ import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
 import { CategoryTile } from "@/components/ui/category-tile";
 import { getKidsActivities } from "@/features/kids/queries";
 import { formatINR } from "@/core/money";
-import { Hint } from "@/components/ui/hint";
+import { getHomeBanners } from "@/features/banners/queries";
+import { HeroCarousel } from "@/features/banners/components/hero-carousel";
 import { ViewCartBar } from "@/features/consumer/components/view-cart-bar";
 
 export const metadata = { title: "Explore" };
@@ -31,7 +32,7 @@ export default async function ExplorePage() {
   const radius = searchRadius.km;
 
   // Plans that deliver today, for the "receive today?" card.
-  const [{ today, plans }, category, kidsActivities] = await Promise.all([getMyPlans(), getCategoryMap(), getKidsActivities()]);
+  const [{ today, plans }, category, kidsActivities, banners] = await Promise.all([getMyPlans(), getCategoryMap(), getKidsActivities(), getHomeBanners()]);
   const weekday = weekdayIST(today);
   const now = new Date();
   const todayItems: TodayItem[] = plans
@@ -96,13 +97,11 @@ export default async function ExplorePage() {
       </div>
 
       <div className="px-4">
-        <h1 className="mt-3 text-[24px] font-bold leading-tight tracking-tight text-ink">
+        <h1 className="mt-3 text-[22px] font-bold leading-tight tracking-tight text-ink">
           {firstName ? `Hi ${firstName}, what does home need today?` : "What does home need today?"}
         </h1>
 
-        <div className="mt-4">
-          <Hint id="app-feed">Tap a category or search. Subscriptions let you skip or add an extra for any day before the store&apos;s cutoff.</Hint>
-        </div>
+        <HeroCarousel slides={banners} />
 
         <InstallAppPrompt variant="banner" className="mt-3" />
 
@@ -151,16 +150,6 @@ export default async function ExplorePage() {
           </section>
         )}
 
-        {!profile && (
-          <Link href="/app/account" className="mt-6 flex items-center justify-between gap-3 rounded-[16px] border border-line bg-surface p-4">
-            <span>
-              <span className="block text-[15px] font-semibold text-ink">Add your address</span>
-              <span className="block text-sm text-muted">See stores that deliver to your building</span>
-            </span>
-            <ArrowRight className="h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
-          </Link>
-        )}
-
         <section className="mt-8" aria-labelledby="stores-heading">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -187,7 +176,7 @@ export default async function ExplorePage() {
             </div>
           ) : (
             <div className="mt-4">
-              <StoreFilterList stores={stores} radius={radius} />
+              <StoreFilterList stores={stores} />
             </div>
           )}
         </section>

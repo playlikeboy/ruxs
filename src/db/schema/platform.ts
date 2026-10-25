@@ -162,3 +162,29 @@ export const notificationPreferences = pgTable("notification_preferences", {
   pushSubscription: text("push_subscription"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+/** Hero slides on the household home screen: offers, announcements, features. Managed in /admin/banners. */
+export const homeBanners = pgTable(
+  "home_banners",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    title: text("title").notNull(),
+    subtitle: text("subtitle"),
+    imageUrl: text("image_url"),
+    href: text("href").notNull().default("/app"),
+    ctaLabel: text("cta_label"),
+    tone: text("tone").notNull().default("peach"), // peach, mint, butter, blush
+    sort: integer("sort").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("home_banners_sort_idx").on(t.sort),
+    check("home_banners_tone_check", sql`${t.tone} in ('peach', 'mint', 'butter', 'blush')`),
+  ]
+);

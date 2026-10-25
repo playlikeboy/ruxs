@@ -7,6 +7,7 @@ import { getDb } from "@/db";
 import { availabilityRules, categories, kidsProviderProfiles, ledgerEntries, localities, platformAdmins, platformSettings, vendorApplications, vendorMembers, vendors } from "@/db/schema";
 import { VENDOR_TYPE_INFO, canUseModule, isVendorType, vendorTypeForCategory } from "@/core/vendor-types";
 import { provisionTypeProfile } from "@/features/vendor-types/tables";
+import { seedStarterCatalog } from "@/features/vendor-types/starter";
 import { requireAdmin } from "@/lib/auth/session";
 import { hexclave } from "@/lib/auth/hexclave";
 import { renameMerchantAccount, syncMerchantAccount } from "@/features/admin/merchant-accounts";
@@ -150,6 +151,8 @@ export async function adminCreateVendor(input: unknown) {
         .values({ ...detailsToColumns(parsed.data), slug: parsed.data.slug, businessType, vendorType, categoryId: parsed.data.categoryId, plan: "free", status: "active" })
         .returning({ id: vendors.id });
       await provisionTypeProfile(tx, row!.id, vendorType);
+      // A conventional first menu, so the store is live and listed straight away. The owner edits or archives it.
+      await seedStarterCatalog(tx, { id: row!.id, vendorType, categoryId: parsed.data.categoryId });
       // Bookable from day one: Mon–Sat 10:00–19:00. The owner adjusts it under Hours.
       if (businessType === "booking") {
         await tx.insert(availabilityRules).values(DEFAULT_WEEK.map((weekday) => ({ vendorId: row!.id, weekday, startTime: "10:00", endTime: "19:00" })));

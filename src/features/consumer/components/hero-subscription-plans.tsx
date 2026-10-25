@@ -1,6 +1,5 @@
-import { UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, ChevronRight, Repeat, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Repeat } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { weekdayIST } from "@/core/time";
 import { StoreCover } from "./store-cover";
@@ -33,54 +32,8 @@ export function HeroSubscriptionPlans({
 }) {
   const currentWeekday = weekdayIST(today);
 
-  if (plans.length === 0) {
-    return (
-      <div className="mt-4 overflow-hidden rounded-3xl border border-black/5 bg-gradient-to-br from-peach/40 via-white to-butter/30 p-4.5 shadow-xs">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-accent">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <span className="text-[13px] font-bold uppercase tracking-wider text-accent">Subscribe &amp; Save</span>
-          </div>
-          <Link
-            href="/app/plans"
-            className="flex items-center gap-0.5 text-xs font-semibold text-neutral-600 hover:text-ink"
-          >
-            How it works <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <p className="mt-2 text-[15px] font-semibold text-ink">
-          Daily essentials delivered automatically
-        </p>
-        <p className="mt-0.5 text-xs text-neutral-600 leading-relaxed">
-          Fresh cow milk before 7 am, hot lunch tiffins, and 20L water cans. Skip any day in 1 tap, pay monthly.
-        </p>
-
-        <div className="mt-3.5 flex flex-wrap gap-2">
-          <Link
-            href="/app/category/tiffin"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white/90 px-3 py-1.5 text-xs font-medium text-ink shadow-2xs hover:bg-white"
-          >
-            <UiIcon name="tiffin" /> Lunch tiffins
-          </Link>
-          <Link
-            href="/app/category/milk"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white/90 px-3 py-1.5 text-xs font-medium text-ink shadow-2xs hover:bg-white"
-          >
-            <UiIcon name="milk" /> Morning milk
-          </Link>
-          <Link
-            href="/app/category/water"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white/90 px-3 py-1.5 text-xs font-medium text-ink shadow-2xs hover:bg-white"
-          >
-            <UiIcon name="water" /> 20L Water cans
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // New households see the home slides instead of a promo card.
+  if (plans.length === 0) return null;
 
   return (
     <section className="mt-4 rounded-3xl border border-black/5 bg-white p-4 shadow-xs">

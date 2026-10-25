@@ -6,6 +6,7 @@ import {
   CalendarClock,
   ClipboardList,
   Inbox,
+  GalleryHorizontal,
   LayoutDashboard,
   Receipt,
   Settings,
@@ -51,6 +52,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Platform & Safety",
     items: [
+      { href: "/admin/banners", label: "Home slides", icon: GalleryHorizontal },
       { href: "/admin/kids", label: "Kids Zone", icon: Sparkles },
       { href: "/admin/tickets", label: "Tickets & Disputes", icon: ShieldAlert },
       { href: "/admin/settings", label: "Platform Settings", icon: Settings },

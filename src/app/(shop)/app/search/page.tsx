@@ -3,7 +3,7 @@ import { SearchRadiusPicker } from "@/features/consumer/components/search-radius
 import { CategoryBar } from "@/features/consumer/components/category-bar";
 import { getCategories } from "@/features/platform/queries";
 import { SearchBar } from "@/features/consumer/components/search-bar";
-import { StoreCard } from "@/features/consumer/components/store-card";
+import { StoreFilterList } from "@/features/consumer/components/store-filter-list";
 
 export const metadata = { title: "Search" };
 
@@ -33,10 +33,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             {stores.length === 0 ? (
               <p className="mt-2 text-sm text-neutral-500">Try “thali”, “20L”, “Jain”, a store name, or a wider radius.</p>
             ) : (
-              <div className="mt-5 space-y-7">
-                {stores.map((store) => (
-                  <StoreCard key={store.id} store={store} />
-                ))}
+              <div className="mt-5">
+                <StoreFilterList stores={stores} />
               </div>
             )}
           </>

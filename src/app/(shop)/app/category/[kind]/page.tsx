@@ -75,7 +75,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ kind:
           </div>
         ) : (
           <div className="mt-5">
-            <StoreFilterList stores={stores} radius={searchRadius.km} />
+            <StoreFilterList stores={stores} />
           </div>
         )}
       </div>

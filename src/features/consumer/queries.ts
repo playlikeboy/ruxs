@@ -7,6 +7,8 @@ import {
   consumers,
   customers,
   dayChanges,
+  kidsProviderProfiles,
+  kidsServices,
   ledgerEntries,
   products,
   shopOrderItems,
@@ -91,7 +93,7 @@ export interface StoreCard {
   coverUrl: string | null;
   kinds: ServiceKind[];
   kindLabels: string[];
-  cover: CoverStyle;
+  cover: CoverStyle & { id: string };
   minPricePaise: number;
   deliveryFeePaise: number;
   acceptingOrders: boolean;
@@ -148,7 +150,7 @@ export async function listStores(opts: {
 }): Promise<StoreCard[]> {
   const db = getDb();
   // Delivery stores list their products; booking providers list their services.
-  const [productRows, serviceRows] = await Promise.all([
+  const [productRows, serviceRows, kidsRows] = await Promise.all([
     db
       .select({ vendor: publicVendorFields, product: products })
       .from(vendors)
@@ -159,11 +161,27 @@ export async function listStores(opts: {
       .from(vendors)
       .innerJoin(services, eq(services.vendorId, vendors.id))
       .where(and(eq(vendors.status, "active"), eq(vendors.businessType, "booking"), isNull(services.archivedAt), eq(services.isActive, true))),
+    // Kids class providers list classes, and only once their child-safety review has passed.
+    db
+      .select({ vendor: publicVendorFields, categoryId: vendors.categoryId, service: kidsServices })
+      .from(vendors)
+      .innerJoin(kidsServices, eq(kidsServices.vendorId, vendors.id))
+      .innerJoin(kidsProviderProfiles, eq(kidsProviderProfiles.vendorId, vendors.id))
+      .where(
+        and(
+          eq(vendors.status, "active"),
+          isNull(kidsServices.archivedAt),
+          eq(kidsServices.isActive, true),
+          eq(kidsProviderProfiles.verificationStatus, "approved"),
+          eq(kidsProviderProfiles.safetyReviewStatus, "passed")
+        )
+      ),
   ]);
   type Item = { kind: string; name: string; pricePaise: number; allowSubscription: boolean };
   const rows: { vendor: (typeof productRows)[number]["vendor"]; item: Item }[] = [
     ...productRows.map((r) => ({ vendor: r.vendor, item: { kind: r.product.kind, name: r.product.name, pricePaise: r.product.pricePaise, allowSubscription: r.product.allowSubscription } })),
     ...serviceRows.map((r) => ({ vendor: r.vendor, item: { kind: r.service.categoryId, name: r.service.name, pricePaise: r.service.pricePaise, allowSubscription: false } })),
+    ...kidsRows.map((r) => ({ vendor: r.vendor, item: { kind: r.categoryId ?? "kids", name: r.service.title, pricePaise: r.service.pricePaise, allowSubscription: false } })),
   ];
 
   const [localities, category, radius, rating] = await Promise.all([
@@ -172,7 +190,7 @@ export async function listStores(opts: {
     getSearchRadius(),
     getRatingMap(),
   ]);
-  const q = opts.q?.trim().toLowerCase() ?? "";
+  const words = (opts.q ?? "").toLowerCase().split(/\s+/).filter((w) => w.length > 0);
   const byVendor = new Map<string, { vendor: (typeof rows)[number]["vendor"]; items: Item[] }>();
   for (const row of rows) {
     const entry = byVendor.get(row.vendor.id) ?? { vendor: row.vendor, items: [] };
@@ -186,16 +204,12 @@ export async function listStores(opts: {
     const kinds = Array.from(new Set(items.map((p) => p.kind as ServiceKind)));
     if (opts.kind && !kinds.includes(opts.kind)) continue;
 
-    const matchedItems = q
-      ? items.filter((p) => p.name.toLowerCase().includes(q)).map((p) => p.name)
-      : [];
-    if (
-      q &&
-      matchedItems.length === 0 &&
-      !vendor.name.toLowerCase().includes(q) &&
-      !vendor.area.toLowerCase().includes(q)
-    ) {
-      continue;
+    // Every word must appear somewhere: store name, area, about text, category or an item.
+    const labels = kinds.map((k) => category(k).shortLabel.toLowerCase());
+    const matchedItems = words.length ? items.filter((p) => words.some((w) => p.name.toLowerCase().includes(w))).map((p) => p.name) : [];
+    if (words.length) {
+      const haystack = [vendor.name, vendor.area, vendor.city, vendor.description ?? "", ...labels, ...items.map((p) => p.name)].join(" ").toLowerCase();
+      if (!words.every((w) => haystack.includes(w))) continue;
     }
 
     // Geofence: without a location, or beyond the household's search radius, the store is not shown at all.
@@ -217,7 +231,7 @@ export async function listStores(opts: {
       coverUrl: vendor.coverUrl,
       kinds,
       kindLabels: kinds.map((k) => category(k).shortLabel),
-      cover: { emoji: primary.emoji, coverFrom: primary.coverFrom, coverTo: primary.coverTo },
+      cover: { id: primary.id, emoji: primary.emoji, coverFrom: primary.coverFrom, coverTo: primary.coverTo },
       minPricePaise: Math.min(...items.map((p) => p.pricePaise)),
       deliveryFeePaise: vendor.deliveryFeePaise,
       acceptingOrders: vendor.acceptingOrders,
