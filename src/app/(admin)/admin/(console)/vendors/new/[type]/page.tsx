@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
 import { NewVendorScreen } from "@/features/admin/components/new-vendor-screen";
-import { getOnboardCategories, type OnboardCategoryRow } from "@/features/admin/queries";
+import { getOnboardCategories } from "@/features/admin/queries";
+import { getCategories } from "@/features/platform/queries";
 import { getApplication } from "@/features/applications/queries";
 
+export const dynamic = "force-dynamic";
+
 /** Accepts a category id (/new/kids_stem, /new/other) or a vendor type (/new/store opens its first category). */
-function resolve(categories: OnboardCategoryRow[], type: string) {
+function resolve(categories: { id: string; vendorType?: string | null; label: string }[], type: string) {
   return categories.find((c) => c.id === type) ?? categories.find((c) => c.vendorType === type);
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ type: string }> }): Promise<Metadata> {
   const { type } = await params;
-  const chosen = resolve(await getOnboardCategories(), type);
-  return { title: chosen ? `New vendor · ${chosen.label}` : "New vendor" };
+  try {
+    const categories = await getCategories();
+    const chosen = resolve(categories, type);
+    return { title: chosen ? `New vendor · ${chosen.label}` : "New vendor" };
+  } catch {
+    return { title: "New vendor" };
+  }
 }
 
 export default async function NewVendorOfTypePage({
