@@ -19,7 +19,7 @@ export default function KidsLayout({ children }: { children: React.ReactNode }) 
     <div className={`${fredoka.variable} min-h-dvh bg-kids-cream pb-24 text-kids-ink`}>
       <KidsHeader />
       <KidsSubNav />
-      <main className="mx-auto max-w-3xl px-4 py-5">{children}</main>
+      <main className="mx-auto max-w-3xl px-4 pt-3 pb-4">{children}</main>
     </div>
   );
 }

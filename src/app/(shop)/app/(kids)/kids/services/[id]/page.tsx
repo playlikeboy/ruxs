@@ -40,7 +40,7 @@ export default async function KidsServiceDetailPage({ params }: { params: Promis
   const classText = classes.length > 0 ? formatClassesList(classes) : "";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <KidsBackLink href="/app/kids/activities" label="Classes" />
 
       <section className={`${kidsCard} group overflow-hidden`}>
