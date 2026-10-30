@@ -42,6 +42,11 @@ export const merchantTools = [
 
 export const faqs = [
   {
+    question: "What does RUXs stand for?",
+    answer:
+      "RUXs stands for Recurring Utility eXperience. It connects your home with trusted neighbourhood services—from daily tiffin, fresh milk and water cans to kids' classes and local stores—with simple daily scheduling and one monthly bill.",
+  },
+  {
     question: "Is RUXs available where I live?",
     answer:
       "RUXs works neighbourhood by neighbourhood. Open the app and share your location to see the stores and providers that deliver to you. If nothing shows yet, we are not in your area yet.",

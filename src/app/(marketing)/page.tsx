@@ -61,6 +61,16 @@ export default function HomePage() {
       {/* A day at home: the headline over one timetable of the household day */}
       <section aria-labelledby="hero-title">
         <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6 sm:pt-16 lg:pb-14 lg:pt-20">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink shadow-2xs sm:mb-6 sm:text-sm">
+            <span className="inline-block h-2 w-2 rounded-full bg-brand-coral" aria-hidden="true" />
+            <span className="font-bold tracking-tight text-ink">
+              RU<span className="text-brand-coral font-extrabold">X</span>s
+            </span>
+            <span className="text-muted/60" aria-hidden="true">·</span>
+            <span className="font-medium text-muted">
+              Recurring Utility e<span className="font-bold text-brand-coral">X</span>perience
+            </span>
+          </div>
           <h1 id="hero-title" className="text-[44px] font-bold leading-[1.02] tracking-[-0.035em] text-ink sm:text-6xl lg:text-[72px]">
             <span className="block text-balance">Your home runs on a routine.</span>
             <span className="block text-balance text-brand-deep">Run it from one place.</span>
