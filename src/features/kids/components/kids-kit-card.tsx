@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, Star } from "lucide-react";
 import { CoverArt } from "@/components/ui/cover-art";
 import { cn } from "@/components/ui/cn";
 import { formatINR } from "@/core/money";
@@ -30,9 +30,13 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
       <div className="flex min-w-0 flex-1 flex-col py-0.5">
         <h3 className="line-clamp-2 font-kids text-base font-semibold leading-snug text-kids-ink">{item.name}</h3>
         <p className="mt-0.5 truncate text-sm text-kids-ink/60">{item.vendor.name} · {item.vendor.area}</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span className="inline-flex items-center gap-1 rounded-full bg-kids-peach/40 px-2.5 py-0.5 text-xs font-semibold text-kids-ink">
             🐣 {formatAgeBadge(item.minAge, item.maxAge)}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-900 ring-1 ring-amber-200/60">
+            <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden="true" />
+            {item.vendor.rating > 0 ? item.vendor.rating.toFixed(1) : "5.0"}
           </span>
           {item.nonToxicCertified && (
             <span className="inline-flex items-center gap-1 rounded-full bg-kids-mint/70 px-2.5 py-0.5 text-xs font-semibold text-good">

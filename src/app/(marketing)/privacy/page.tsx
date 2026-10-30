@@ -70,7 +70,7 @@ export default function PrivacyPage() {
         <section className="space-y-2">
           <h2 className="text-sm font-bold text-ink">5. Data Retention & Deletion</h2>
           <p>
-            If a vendor closes their business or requests data deletion, their vendor records and associated customer delivery profiles will be permanently erased. To request data deletion, contact your vendor directly or email us at support@ruxs.in.
+            If a vendor closes their business or requests data deletion, their vendor records and associated customer delivery profiles will be permanently erased. To request data deletion, contact your vendor directly or email us at adminruxs@gmail.com or WhatsApp 9610201507 (WhatsApp only).
           </p>
         </section>
       </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Clock } from "lucide-react";
+import { CalendarDays, Clock, Star } from "lucide-react";
 import { CoverArt } from "@/components/ui/cover-art";
 import { formatINR } from "@/core/money";
 import { formatAgeBadge, formatBatchUrgency } from "@/core/kids";
@@ -32,6 +32,13 @@ export function KidsWorkshopCard({ item }: { item: KidsWorkshopItem }) {
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-kids-peach/40 px-2.5 py-0.5 font-semibold text-kids-ink">
             🐣 {formatAgeBadge(item.minAge, item.maxAge)}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 font-bold text-amber-900 ring-1 ring-amber-200/60">
+            <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden="true" />
+            {item.vendor.rating > 0 ? item.vendor.rating.toFixed(1) : "5.0"}
+            {item.vendor.reviewCount > 0 && (
+              <span className="font-normal text-amber-700/80">({item.vendor.reviewCount})</span>
+            )}
           </span>
         </p>
         <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-kids-ink/10 pt-3">

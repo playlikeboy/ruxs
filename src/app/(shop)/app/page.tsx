@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, House, MapPin } from "lucide-react";
+import { ArrowRight, House, MapPin, Star } from "lucide-react";
 import { RuxsMark } from "@/components/marketing/ruxs-mark";
 import { CoverArt } from "@/components/ui/cover-art";
 import { getMyLocation, getMyPlans, getMyProfile, getSearchRadius, listStores } from "@/features/consumer/queries";
@@ -139,12 +139,19 @@ export default async function ExplorePage() {
                   <Link href={`/app/kids/services/${a.id}`} className="group block h-full overflow-hidden rounded-[16px] border border-line bg-surface transition-colors hover:border-ink/30">
                     <CoverArt theme={a.category} className="h-24 w-full" />
                     <span className="block p-3.5 pt-3">
-                    <span className="line-clamp-2 block text-[15px] font-semibold leading-snug text-ink">{a.name}</span>
-                    <span className="mt-1 block truncate text-sm text-muted">{a.vendor.name}</span>
-                    <span className="mt-2 flex items-center justify-between text-sm">
-                      <span className="text-muted">Ages {a.ageMin}–{a.ageMax}</span>
-                      <span className="font-semibold tabular-nums text-ink">{formatINR(a.pricePaise)}</span>
-                    </span>
+                      <span className="line-clamp-2 block text-[15px] font-semibold leading-snug text-ink">{a.name}</span>
+                      <span className="mt-1 flex items-center justify-between gap-1 text-sm text-muted">
+                        <span className="truncate">{a.vendor.name}</span>
+                        <span className="flex shrink-0 items-center gap-0.5 text-xs font-semibold tabular-nums text-ink">
+                          <Star className="h-3 w-3 fill-[#E8A33D] text-[#E8A33D]" aria-hidden="true" />
+                          {a.vendor.rating > 0 ? a.vendor.rating.toFixed(1) : "5.0"}
+                          {a.vendor.reviewCount > 0 && <span className="font-normal text-muted">({a.vendor.reviewCount})</span>}
+                        </span>
+                      </span>
+                      <span className="mt-2 flex items-center justify-between text-sm">
+                        <span className="text-muted">Ages {a.ageMin}–{a.ageMax}</span>
+                        <span className="font-semibold tabular-nums text-ink">{formatINR(a.pricePaise)}</span>
+                      </span>
                     </span>
                   </Link>
                 </li>

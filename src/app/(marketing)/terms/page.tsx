@@ -64,7 +64,7 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-sm font-bold text-ink">5. Contact</h2>
           <p>
-            For questions about these terms or software billing, contact us at support@ruxs.in.
+            For questions about these terms or software billing, contact us at adminruxs@gmail.com or WhatsApp 9610201507 (Contact Only on WhatsApp).
           </p>
         </section>
       </div>

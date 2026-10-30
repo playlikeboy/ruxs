@@ -144,7 +144,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-rose-600 transition-colors"
           />
         </div>
-        <p className="text-center text-xs text-neutral-500">Need direct escalation? Write to support@ruxs.in with {order.number}.</p>
+        <p className="text-center text-xs text-neutral-500">Need direct escalation? Write to adminruxs@gmail.com or WhatsApp 9610201507 (WhatsApp only) with {order.number}.</p>
       </div>
     </div>
   );

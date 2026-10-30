@@ -19,7 +19,11 @@ export function StoreCard({ store }: { store: StoreCardData }) {
               <span className="font-normal text-muted">({store.rating.count})</span>
             </span>
           ) : (
-            <span className="shrink-0 rounded-full bg-mint px-2 py-0.5 text-[11px] font-semibold text-good">New</span>
+            <span className="flex shrink-0 items-center gap-1 text-xs font-semibold tabular-nums text-ink">
+              <Star className="h-3 w-3 fill-[#E8A33D] text-[#E8A33D]" aria-hidden="true" />
+              <span>5.0</span>
+              <span className="rounded-full bg-mint px-1.5 py-0.2 text-[10px] font-semibold text-good">New</span>
+            </span>
           )}
         </div>
         <p className="truncate text-sm text-muted">

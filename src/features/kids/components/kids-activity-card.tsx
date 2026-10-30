@@ -38,10 +38,13 @@ export function KidsActivityCard({ item }: { item: KidsActivityItem }) {
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 font-bold text-amber-900 ring-1 ring-amber-200/60">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden="true" />
               {item.vendor.rating.toFixed(1)}
+              <span className="font-normal text-amber-700/80">({item.vendor.reviewCount})</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-kids-mint/70 px-2 py-0.5 font-bold text-good">
-              ✨ New
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 font-bold text-amber-900 ring-1 ring-amber-200/60">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden="true" />
+              {item.vendor.rating > 0 ? item.vendor.rating.toFixed(1) : "5.0"}
+              <span className="text-[10px] font-semibold text-good">· New</span>
             </span>
           )}
         </p>

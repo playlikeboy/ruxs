@@ -148,7 +148,7 @@ export default async function TicketsPage() {
           <LifeBuoy className="mx-auto h-5 w-5 text-neutral-400 mb-1.5" />
           <p className="font-semibold text-neutral-700">Urgent delivery or hygiene escalation?</p>
           <p className="mt-1">
-            You can also write directly to <a href="mailto:support@ruxs.in" className="font-semibold text-accent hover:underline">support@ruxs.in</a> or mention your ticket reference.
+            You can also write directly to <a href="mailto:adminruxs@gmail.com" className="font-semibold text-accent hover:underline">adminruxs@gmail.com</a> or WhatsApp <a href="https://wa.me/919610201507" target="_blank" rel="noopener noreferrer" className="font-semibold text-good hover:underline">9610201507 (WhatsApp only)</a>.
           </p>
         </div>
       </div>
