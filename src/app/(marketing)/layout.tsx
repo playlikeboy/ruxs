@@ -1,6 +1,6 @@
 import { RuxsMark } from "@/components/marketing/ruxs-mark";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Mail, MessageCircle } from "lucide-react";
 
 export default function MarketingLayout({
   children,
@@ -44,7 +44,7 @@ export default function MarketingLayout({
 
       <footer className="mt-20 border-t border-line bg-surface py-12">
         <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6">
-          <div className="grid gap-8 sm:grid-cols-[1.2fr_1fr_1fr]">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-3">
               <Link href="/" className="flex items-center gap-2.5" aria-label="RUXs home">
                 <RuxsMark className="h-8 w-8 shrink-0" aria-hidden="true" />
@@ -59,7 +59,7 @@ export default function MarketingLayout({
               <h2 className="text-sm font-semibold text-ink">Explore RUXs</h2>
               <nav aria-label="Customer links" className="flex flex-col items-start gap-2.5 text-sm text-muted">
                 <Link href="/app" className="hover:text-ink">All local services</Link>
-                <Link href="/app/kids" className="hover:text-ink">Kids Zone &amp; learning</Link>
+                <Link href="/app/kids" className="hover:text-ink">Kids Zone &amp; classes</Link>
                 <Link href="/app/category/gifts" className="hover:text-ink">Gifts &amp; hampers</Link>
                 <Link href="/app/category/mehndi" className="hover:text-ink">Mehndi &amp; henna</Link>
                 <Link href="/pricing" className="hover:text-ink">How pricing works</Link>
@@ -81,6 +81,31 @@ export default function MarketingLayout({
                 <Link href="/privacy" className="hover:text-ink">Privacy</Link>
                 <Link href="/terms" className="hover:text-ink">Terms</Link>
               </nav>
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold text-ink">Support &amp; Contact</h2>
+              <div className="flex flex-col items-start gap-2.5 text-sm text-muted">
+                <a
+                  href="mailto:adminruxs@gmail.com"
+                  className="inline-flex items-center gap-2 hover:text-ink"
+                >
+                  <Mail className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+                  <span>adminruxs@gmail.com</span>
+                </a>
+                <a
+                  href="https://wa.me/919610201507"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-start gap-2 hover:text-ink"
+                >
+                  <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-good" aria-hidden="true" />
+                  <span>
+                    <strong className="block text-ink font-semibold">9610201507</strong>
+                    <span className="text-xs text-muted">Contact Only on WhatsApp</span>
+                  </span>
+                </a>
+              </div>
             </div>
           </div>
 

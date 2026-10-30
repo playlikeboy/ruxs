@@ -25,12 +25,12 @@ export const everyday = [
 ];
 
 export const family = [
-  { name: "Kids classes and camps", detail: "Dance, art, tutors, STEM, chess and more", href: "/app/kids" },
-  { name: "Learning kits", detail: "Activity and craft kits delivered home", href: "/app/kids/kits" },
-  { name: "Gifts", detail: "Hampers and gifts from local makers", href: "/app/category/gifts" },
-  { name: "Mehndi", detail: "Artists for weddings and festivals", href: "/app/category/mehndi" },
-  { name: "Fitness trainers", detail: "Sessions at home or at the studio", href: "/app/category/fitness" },
-  { name: "Physiotherapy", detail: "Home visits and clinic sessions", href: "/app/category/physio" },
+  { name: "Dance & music classes", detail: "Kathak, western, hip-hop, guitar and vocals", href: "/app/kids" },
+  { name: "STEM, robotics & coding", detail: "Hands-on robotics, programming and science", href: "/app/kids" },
+  { name: "Art, pottery & craft", detail: "Clay modeling, sketching and creative workshops", href: "/app/kids" },
+  { name: "Chess & academic tutors", detail: "Strategy, abacus, math and subject mentors", href: "/app/kids" },
+  { name: "Holiday camps & DIY kits", detail: "Weekend bootcamps and learning kits delivered home", href: "/app/kids/kits" },
+  { name: "Local specialists", detail: "Gifts, mehndi artists, fitness trainers and physio", href: "/app" },
 ];
 
 export const merchantTools = [
@@ -45,6 +45,16 @@ export const faqs = [
     question: "What does RUXs stand for?",
     answer:
       "RUXs stands for Recurring Utility eXperience. It connects your home with trusted neighbourhood services—from daily tiffin, fresh milk and water cans to kids' classes and local stores—with simple daily scheduling and one monthly bill.",
+  },
+  {
+    question: "What classes and activities are available for children on RUXs?",
+    answer:
+      "RUXs Kids Zone includes dance classes (Kathak, Bharatnatyam, Western, Hip-Hop), robotics and STEM coding, pottery and painting workshops, chess coaching, academic tutors, musical instrument lessons, holiday camps, and DIY activity kits delivered to your doorstep.",
+  },
+  {
+    question: "How can I contact RUXs support?",
+    answer:
+      "You can email us directly at adminruxs@gmail.com or message us on WhatsApp at 9610201507 (Contact Only on WhatsApp). We are available to help households and merchants with orders, bookings, plans and questions.",
   },
   {
     question: "Is RUXs available where I live?",
