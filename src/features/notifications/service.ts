@@ -6,7 +6,7 @@ import { getServerEnv } from "@/lib/env";
 import { escapeHtml, safeHttpUrl } from "@/core/html";
 import type { NotificationCategory } from "./types";
 
-const DEFAULT_CF_ACCOUNT_ID = "091539408595ba99a0ef106d42391d5b";
+const DEFAULT_CF_ACCOUNT_ID = "02e7b7636139de49a9b2ae68293d8f89";
 const EMAIL_DOMAIN = "notifications.ruxs.in";
 
 export const CATEGORY_SENDERS: Record<NotificationCategory, string> = {

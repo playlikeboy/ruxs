@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ruxs",
   // Pinned so a stale wrangler account cache can never deploy to another account.
-  "account_id": "091539408595ba99a0ef106d42391d5b",
+  "account_id": "02e7b7636139de49a9b2ae68293d8f89",
   "main": "custom-worker.ts",
   "compatibility_date": "2024-09-23",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -19,6 +19,7 @@
   "triggers": {
     "crons": ["* * * * *"]
   },
+  "workers_dev": true,
   "routes": [
     { "pattern": "ruxs.in", "custom_domain": true },
     { "pattern": "www.ruxs.in", "custom_domain": true }
@@ -26,13 +27,13 @@
   "vars": {
     "NEXT_PUBLIC_APP_URL": "https://ruxs.in",
     "NEXT_PUBLIC_HEXCLAVE_PROJECT_ID": "afdff151-7a3c-49b3-830f-abfcc23d8d61",
-    "CLOUDFLARE_ACCOUNT_ID": "091539408595ba99a0ef106d42391d5b",
+    "CLOUDFLARE_ACCOUNT_ID": "02e7b7636139de49a9b2ae68293d8f89",
     "EMAIL_DOMAIN": "notifications.ruxs.in"
   },
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "2ed48c1c341442cf8a1d1a52b10b1c62"
+      "id": "36278d4f889347189e873053c876ea62"
     }
   ]
 }

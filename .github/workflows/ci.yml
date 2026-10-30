@@ -83,7 +83,7 @@ jobs:
         run: bun run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '091539408595ba99a0ef106d42391d5b' }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '02e7b7636139de49a9b2ae68293d8f89' }}
           NEXT_PUBLIC_APP_URL: "https://ruxs.in"
           NEXT_PUBLIC_HEXCLAVE_API_URL: "https://api.hexclave.com"
           NEXT_PUBLIC_HEXCLAVE_PROJECT_ID: "afdff151-7a3c-49b3-830f-abfcc23d8d61"
