@@ -6,7 +6,7 @@
 | --- | --- |
 | **Brand** | RUXS (pronounced "Rux", rhymes with *luxe*). Do not expand it into an acronym. |
 | **Domain** | [ruxs.in](https://ruxs.in) (also `www.ruxs.in`). Customer app at `ruxs.in/app` |
-| **GitHub** | https://github.com/SH20RAJ/ruxs |
+| **GitHub** | https://github.com/playlikeboy/ruxs |
 | **Founder / builder** | Shaswat Raj (GitHub: SH20RAJ) — 380 commits, 2026-09-11 → 2026-10-09 |
 | **Category** | Customer-first discovery and recurring local-services platform, supported by merchant operations software |
 | **Tagline (proposed)** | *"Your everyday life, on autopilot."* Alternatives: "The operating system for your household." / "Zero-friction daily essentials for modern homes." |

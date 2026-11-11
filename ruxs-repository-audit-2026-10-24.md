@@ -1,8 +1,8 @@
 # RUXs Repository Audit, Feature Roadmap, and UI/UX Redesign Plan
 
-**Repository:** [SH20RAJ/ruxs](https://github.com/SH20RAJ/ruxs)  
+**Repository:** [playlikeboy/ruxs](https://github.com/playlikeboy/ruxs)  
 **Branch reviewed:** `main`  
-**Reviewed revision:** [`8e4f72930e3eb94890179b7169b29e261c06ad86`](https://github.com/SH20RAJ/ruxs/commit/8e4f72930e3eb94890179b7169b29e261c06ad86)  
+**Reviewed revision:** [`8e4f72930e3eb94890179b7169b29e261c06ad86`](https://github.com/playlikeboy/ruxs/commit/8e4f72930e3eb94890179b7169b29e261c06ad86)  
 **Audit date:** 24 October 2026  
 **Review type:** Read-only static code/configuration audit of repository files. Production data was not modified.
 
@@ -59,9 +59,9 @@ Severity definitions: **P0** means fix before exposing the affected workflow to 
 
 **Severity: P0 — Critical**  
 **Evidence:**
-- [`src/features/orders/actions.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/orders/actions.ts#L159) exports `lockCutoffForProduct(productId, serviceDate, database?)`. The module begins with `"use server"`. The helper inserts daily `orders` rows for subscriptions associated with a supplied product and date, without calling `requireUser`, `requireVendorAccess`, or `requireAdmin`.
-- [`src/features/billing/actions.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/billing/actions.ts#L12) exports `generateBillsForVendor(vendorId, period, database?)` from another `"use server"` module. It creates monthly invoice records for a supplied vendor and period without its own authorization check.
-- The cron endpoint at [`src/app/api/cron/tick/route.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/app/api/cron/tick/route.ts) imports these helpers, explaining why they may have been exported for internal reuse.
+- [`src/features/orders/actions.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/orders/actions.ts#L159) exports `lockCutoffForProduct(productId, serviceDate, database?)`. The module begins with `"use server"`. The helper inserts daily `orders` rows for subscriptions associated with a supplied product and date, without calling `requireUser`, `requireVendorAccess`, or `requireAdmin`.
+- [`src/features/billing/actions.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/billing/actions.ts#L12) exports `generateBillsForVendor(vendorId, period, database?)` from another `"use server"` module. It creates monthly invoice records for a supplied vendor and period without its own authorization check.
+- The cron endpoint at [`src/app/api/cron/tick/route.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/app/api/cron/tick/route.ts) imports these helpers, explaining why they may have been exported for internal reuse.
 
 **Why it matters:** In Next.js, exported async functions in a `"use server"` module should be treated as remotely invocable Server Actions, not just private utility functions. The guarded user-facing actions in these modules do not protect a separate exposed helper. Depending on the framework-generated action exposure and deployment, an untrusted caller may be able to trigger order generation or invoice generation for arbitrary IDs/dates/periods. The extra `database` argument is also an implementation detail that should not be part of a public action contract.
 
@@ -77,9 +77,9 @@ Severity definitions: **P0** means fix before exposing the affected workflow to 
 
 **Severity: P0 — Critical (child-safety/trust)**  
 **Evidence:**
-- [`src/features/kids/queries.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/kids/queries.ts#L55) filters services for active status and non-archived records, but does not require `kidsProviderProfiles.verificationStatus === "approved"` and `safetyReviewStatus === "passed"`.
-- [`getKidsProviderBySlug`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/kids/queries.ts#L267) retrieves an active vendor without a vetting-state filter. It then defaults missing profile fields to `verificationStatus: "approved"` and `safetyReviewStatus: "passed"` near lines 328–329.
-- [`createKidsBooking`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/kids/booking-service.ts#L34) and [`enrollInWorkshop`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/kids/workshop-service.ts#L20) validate activity/vendor availability but do not require successful provider verification.
+- [`src/features/kids/queries.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/kids/queries.ts#L55) filters services for active status and non-archived records, but does not require `kidsProviderProfiles.verificationStatus === "approved"` and `safetyReviewStatus === "passed"`.
+- [`getKidsProviderBySlug`](https://github.com/playlikeboy/ruxs/blob/main/src/features/kids/queries.ts#L267) retrieves an active vendor without a vetting-state filter. It then defaults missing profile fields to `verificationStatus: "approved"` and `safetyReviewStatus: "passed"` near lines 328–329.
+- [`createKidsBooking`](https://github.com/playlikeboy/ruxs/blob/main/src/features/kids/booking-service.ts#L34) and [`enrollInWorkshop`](https://github.com/playlikeboy/ruxs/blob/main/src/features/kids/workshop-service.ts#L20) validate activity/vendor availability but do not require successful provider verification.
 
 **Why it matters:** A missing provider profile can be represented to users as vetted, and an active vendor with pending or flagged safety status may remain discoverable/bookable. That makes the safety badge/status unreliable and creates a particularly serious trust issue for a kids marketplace.
 
@@ -95,7 +95,7 @@ Severity definitions: **P0** means fix before exposing the affected workflow to 
 ### RUX-03 — Image uploads lack visible access control and a third-party API key is committed
 
 **Severity: P1 — High**  
-**Evidence:** [`src/features/assets/actions.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/assets/actions.ts#L11) exports `uploadImageAction(formData)` from a `"use server"` file. The function accepts a `Blob` or string image value and calls the uploader without an authentication or role check. [`src/lib/imgbb.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/lib/imgbb.ts#L6) defines the ImgBB API key as a hardcoded source constant, then sends it to the ImgBB upload endpoint.
+**Evidence:** [`src/features/assets/actions.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/assets/actions.ts#L11) exports `uploadImageAction(formData)` from a `"use server"` file. The function accepts a `Blob` or string image value and calls the uploader without an authentication or role check. [`src/lib/imgbb.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/lib/imgbb.ts#L6) defines the ImgBB API key as a hardcoded source constant, then sends it to the ImgBB upload endpoint.
 
 **Why it matters:** An unauthenticated upload path can be abused for storage/quota exhaustion or unwanted content uploads. A key committed to Git should be considered exposed even if the repository is private; it can be copied from source history. This report intentionally does not reproduce the key value.
 
@@ -111,7 +111,7 @@ Severity definitions: **P0** means fix before exposing the affected workflow to 
 ### RUX-04 — Kids online service bookings can be confirmed before payment
 
 **Severity: P1 — High**  
-**Evidence:** [`src/features/kids/booking-service.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/kids/booking-service.ts#L179) inserts a kids service booking with `paymentStatus: input.paymentMode === "online" ? "unpaid" : "unpaid"`, `bookingStatus: "confirmed"`, and a `heldUntil` timestamp only for online payments. The status is confirmed regardless of payment mode. The kids booking schema in [`src/db/schema/kids.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/db/schema/kids.ts) does not persist a payment-mode field. The generic [payment actions](https://github.com/SH20RAJ/ruxs/blob/main/src/features/payments/actions.ts) work with the generic `bookings` and `shopOrders` tables, not `kidsServiceBookings`.
+**Evidence:** [`src/features/kids/booking-service.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/kids/booking-service.ts#L179) inserts a kids service booking with `paymentStatus: input.paymentMode === "online" ? "unpaid" : "unpaid"`, `bookingStatus: "confirmed"`, and a `heldUntil` timestamp only for online payments. The status is confirmed regardless of payment mode. The kids booking schema in [`src/db/schema/kids.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/db/schema/kids.ts) does not persist a payment-mode field. The generic [payment actions](https://github.com/playlikeboy/ruxs/blob/main/src/features/payments/actions.ts) work with the generic `bookings` and `shopOrders` tables, not `kidsServiceBookings`.
 
 **Why it matters:** The UI can appear to confirm an online-paid session without a working connection to checkout/capture, and the hold timestamp does not itself expire or transition this booking. Unpaid reservations may occupy slots, and the provider/guardian can see a confirmation without the expected payment having occurred.
 
@@ -126,7 +126,7 @@ Use a single transition service and database transaction for payment + booking u
 ### RUX-05 — Holiday passes are marked paid without a payment record or verification
 
 **Severity: P1 — High**  
-**Evidence:** [`src/features/kids/holiday-pass-service.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/kids/holiday-pass-service.ts#L15) creates a pass purchase and sets `paymentStatus: "paid"` near line 45, with the inline comment `// Demo / test mode confirms`. The service input includes `clientKey`, and the action passes one, but the service does not persist or check it as an idempotency key. The pass schema contains purchase and remaining-credit fields, but this path does not integrate with the generic Razorpay payment lifecycle.
+**Evidence:** [`src/features/kids/holiday-pass-service.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/kids/holiday-pass-service.ts#L15) creates a pass purchase and sets `paymentStatus: "paid"` near line 45, with the inline comment `// Demo / test mode confirms`. The service input includes `clientKey`, and the action passes one, but the service does not persist or check it as an idempotency key. The pass schema contains purchase and remaining-credit fields, but this path does not integrate with the generic Razorpay payment lifecycle.
 
 **Why it matters:** If reachable in the deployed customer flow, anyone who can call this action may acquire paid credits without a successful payment; retries can also create multiple purchases because the client key is ignored.
 
@@ -137,7 +137,7 @@ Use a single transition service and database transaction for payment + booking u
 ### RUX-06 — Workshop enrollments are confirmed despite an unpaid status
 
 **Severity: P1 — High**  
-**Evidence:** [`src/features/kids/workshop-service.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/kids/workshop-service.ts#L122) inserts workshop enrollment with `status: "confirmed"` and `paymentStatus: "unpaid"`. It reserves capacity through an active-enrollment count, but this service does not link the enrollment to payment capture or define expiry of a pending payment reservation.
+**Evidence:** [`src/features/kids/workshop-service.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/kids/workshop-service.ts#L122) inserts workshop enrollment with `status: "confirmed"` and `paymentStatus: "unpaid"`. It reserves capacity through an active-enrollment count, but this service does not link the enrollment to payment capture or define expiry of a pending payment reservation.
 
 **Why it matters:** Users can be told they are enrolled before paying, while unpaid registrations may consume workshop capacity. This also makes the displayed business state misleading for guardians and providers.
 
@@ -148,7 +148,7 @@ Use a single transition service and database transaction for payment + booking u
 ### RUX-07 — Kids reviews do not prove completion or verify vendor consistency
 
 **Severity: P1 — High**  
-**Evidence:** [`submitKidsReviewAction`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/kids/actions.ts#L277) optionally receives a `bookingId`. If supplied, it checks that a booking belongs to the current guardian, but it rejects only when the booking is missing; it does not require the fetched status to equal `completed`. It also does not compare the booking’s vendor ID to the submitted `vendorId`. Both booking and enrollment IDs are optional in the schema, and new reviews are inserted with `moderationStatus: "published"` around line 310.
+**Evidence:** [`submitKidsReviewAction`](https://github.com/playlikeboy/ruxs/blob/main/src/features/kids/actions.ts#L277) optionally receives a `bookingId`. If supplied, it checks that a booking belongs to the current guardian, but it rejects only when the booking is missing; it does not require the fetched status to equal `completed`. It also does not compare the booking’s vendor ID to the submitted `vendorId`. Both booking and enrollment IDs are optional in the schema, and new reviews are inserted with `moderationStatus: "published"` around line 310.
 
 **Why it matters:** A signed-in user may be able to publish a review without having completed the activity, use a booking associated with another vendor, or submit a review without an eligible booking/enrollment reference.
 
@@ -159,7 +159,7 @@ Use a single transition service and database transaction for payment + booking u
 ### RUX-08 — Order email claims online orders are confirmed before payment
 
 **Severity: P1 — High (customer trust)**  
-**Evidence:** In [`src/features/consumer/actions.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/consumer/actions.ts#L113), online orders are initially stored with status `awaiting_payment`. Later in the same action, the email template is called with the heading `Order Confirmed` around line 228 and a message saying the kitchen has been notified. The email's payment-mode detail around line 233 maps only `cod` to “Pay on delivery” and labels every other mode “Monthly bill”, so `online` is misrepresented.
+**Evidence:** In [`src/features/consumer/actions.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/consumer/actions.ts#L113), online orders are initially stored with status `awaiting_payment`. Later in the same action, the email template is called with the heading `Order Confirmed` around line 228 and a message saying the kitchen has been notified. The email's payment-mode detail around line 233 maps only `cod` to “Pay on delivery” and labels every other mode “Monthly bill”, so `online` is misrepresented.
 
 **Why it matters:** The customer may believe an order is placed and being prepared even when the order still awaits payment, and the payment method in email may be wrong.
 
@@ -170,7 +170,7 @@ Use a single transition service and database transaction for payment + booking u
 ### RUX-09 — Dues payment can create duplicate payment orders for the same balance
 
 **Severity: P1 — High (financial integrity)**  
-**Evidence:** [`startDuesPayment`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/payments/actions.ts#L156) computes a current customer ledger balance around line 177 and creates a new Razorpay order with a time-derived receipt. Unlike the order/booking payment flows in the same file, it does not look for and reuse an existing payment with status `created` for the customer’s dues. [`src/features/payments/settle.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/payments/settle.ts) makes each captured payment add its own idempotent ledger entry keyed by Razorpay payment ID.
+**Evidence:** [`startDuesPayment`](https://github.com/playlikeboy/ruxs/blob/main/src/features/payments/actions.ts#L156) computes a current customer ledger balance around line 177 and creates a new Razorpay order with a time-derived receipt. Unlike the order/booking payment flows in the same file, it does not look for and reuse an existing payment with status `created` for the customer’s dues. [`src/features/payments/settle.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/payments/settle.ts) makes each captured payment add its own idempotent ledger entry keyed by Razorpay payment ID.
 
 **Why it matters:** repeated or concurrent requests can create more than one payable Razorpay order for the same outstanding balance. If both are captured, the ledger may receive more than one payment credit, creating overpayment/reconciliation work. Payment settlement can be idempotent per payment, while still allowing two different payments for one intended balance.
 
@@ -181,7 +181,7 @@ Use a single transition service and database transaction for payment + booking u
 ### RUX-10 — Dynamic values are inserted into transactional email HTML without escaping
 
 **Severity: P2 — Medium**  
-**Evidence:** [`src/features/notifications/service.ts`](https://github.com/SH20RAJ/ruxs/blob/main/src/features/notifications/service.ts) builds HTML using template-string interpolation for the heading, lead, details labels/values, action text, and action URL. These are not consistently escaped as HTML text or attribute values. Some values can originate from merchant-provided names or customer/vendor review replies.
+**Evidence:** [`src/features/notifications/service.ts`](https://github.com/playlikeboy/ruxs/blob/main/src/features/notifications/service.ts) builds HTML using template-string interpolation for the heading, lead, details labels/values, action text, and action URL. These are not consistently escaped as HTML text or attribute values. Some values can originate from merchant-provided names or customer/vendor review replies.
 
 **Why it matters:** A user-controlled string containing markup may alter email rendering or spoof the message. The risk is increased where review text/replies or vendor profile information appears in transactional messages.
 
@@ -190,7 +190,7 @@ Use a single transition service and database transaction for payment + booking u
 ### RUX-11 — CI omits integration tests and the configured E2E suite appears empty
 
 **Severity: P1 — High (release assurance)**  
-**Evidence:** [` .github/workflows/ci.yml`](https://github.com/SH20RAJ/ruxs/blob/main/.github/workflows/ci.yml#L34) runs `bun test src/core`, then typecheck, lint, and a production build. The repository includes `tests/integration/features.test.ts` and `tests/integration/kids-domain.test.ts`, but CI does not run `bun test src tests`. [`playwright.config.ts`](https://github.com/SH20RAJ/ruxs/blob/main/playwright.config.ts#L4) points to `testDir: "./e2e"`; no tracked `e2e` files were present in the inspected recursive tree.
+**Evidence:** [` .github/workflows/ci.yml`](https://github.com/playlikeboy/ruxs/blob/main/.github/workflows/ci.yml#L34) runs `bun test src/core`, then typecheck, lint, and a production build. The repository includes `tests/integration/features.test.ts` and `tests/integration/kids-domain.test.ts`, but CI does not run `bun test src tests`. [`playwright.config.ts`](https://github.com/playlikeboy/ruxs/blob/main/playwright.config.ts#L4) points to `testDir: "./e2e"`; no tracked `e2e` files were present in the inspected recursive tree.
 
 **Why it matters:** Typechecking and a production build cannot prove authorization boundaries, database constraints, payment transitions, or customer journeys work. A configured E2E command without test files gives little release confidence. The workflow also uses `bun-version: latest`, which can make future builds change when the toolchain updates.
 
@@ -206,7 +206,7 @@ Use a single transition service and database transaction for payment + booking u
 ### RUX-12 — Local discovery URL redirect may discard its location slug
 
 **Severity: P2 — Medium**  
-**Evidence:** [`next.config.ts`](https://github.com/SH20RAJ/ruxs/blob/main/next.config.ts) redirects `/in/:path*` to `/app` without preserving the captured path. The README advertises `/in/bengaluru` as a local discovery landing page.
+**Evidence:** [`next.config.ts`](https://github.com/playlikeboy/ruxs/blob/main/next.config.ts) redirects `/in/:path*` to `/app` without preserving the captured path. The README advertises `/in/bengaluru` as a local discovery landing page.
 
 **Why it matters:** If `/in/bengaluru` is intended to be a location-specific public landing page, redirecting all such paths to `/app` discards the city slug and may undermine locality-aware discovery and search indexing. This needs product confirmation; it may be deliberate if `/in/*` is only a temporary funnel.
 
@@ -484,7 +484,7 @@ Every redesigned page must define:
 Use the following prompt in your coding agent after the P0 authorization/security and payment-state fixes are underway. It is intentionally written to require repository inspection and staged execution rather than an unbounded rewrite.
 
 ```text
-You are the senior product designer, design-systems architect, accessibility specialist, and staff frontend engineer for RUXs (https://ruxs.in; repository SH20RAJ/ruxs).
+You are the senior product designer, design-systems architect, accessibility specialist, and staff frontend engineer for RUXs (https://ruxs.in; repository playlikeboy/ruxs).
 
 MISSION
 Centralize and modernize RUXs UI/UX across the public marketing site, household marketplace, merchant panel, and admin panel. Build a coherent, premium, trustworthy, mobile-first design system while making each role's workflows faster and clearer. Preserve existing product behavior, business rules, routes, permissions, schemas, payment logic, and tenant boundaries unless an independently verified defect requires a separate fix.

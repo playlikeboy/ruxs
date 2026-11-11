@@ -82,7 +82,7 @@ const jsonLd = {
     },
     {
       "@type": "Organization", "@id": "https://ruxs.in/#organization", name: "RUXs", url: "https://ruxs.in",
-      logo: "https://ruxs.in/brand/ruxs-app-logo.svg", sameAs: ["https://twitter.com/ruxs_in", "https://github.com/SH20RAJ/ruxs"],
+      logo: "https://ruxs.in/brand/ruxs-app-logo.svg", sameAs: ["https://twitter.com/ruxs_in", "https://github.com/playlikeboy/ruxs"],
     },
   ],
 };

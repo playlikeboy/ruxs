@@ -76,7 +76,7 @@ export function organizationJsonLd() {
     name: "RUXs",
     url: BASE_URL,
     logo: `${BASE_URL}/icon`,
-    sameAs: ["https://github.com/SH20RAJ/ruxs"],
+    sameAs: ["https://github.com/playlikeboy/ruxs"],
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",

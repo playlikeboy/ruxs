@@ -1,6 +1,6 @@
 # RUXS Source-Level Audit
 
-**Target:** `SH20RAJ/ruxs`, default branch `main`  
+**Target:** `playlikeboy/ruxs`, default branch `main`  
 **Reviewed:** 2026-10-13  
 **Method:** Static source inspection through the connected GitHub repository API. No local clone, code execution, database access, deployment inspection, or dynamic penetration testing was available in this pass.
 

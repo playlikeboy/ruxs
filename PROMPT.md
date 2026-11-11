@@ -82,7 +82,7 @@ Continue Phase 2 only after the user answers.
 
 ## 3. What already exists (do not redo)
 
-- Git repo on `main`, remote `https://github.com/SH20RAJ/ruxs.git`. Commit identity is **Shaswat Raj <shaswatraj3@gmail.com>** (set by `~/.gitconfig-sh20raj` via `includeIf` for `~/sop/`). Run `git config user.email` once to confirm before your first commit.
+- Git repo on `main`, remote `https://github.com/playlikeboy/ruxs.git`. Commit identity is **Shaswat Raj <shaswatraj3@gmail.com>** (set by `~/.gitconfig-sh20raj` via `includeIf` for `~/sop/`). Run `git config user.email` once to confirm before your first commit.
 - `package.json` (scripts), `tsconfig.json` (strict, `noUncheckedIndexedAccess`, `@/*` → `src/*`), `next.config.ts` (security headers, `/c/*` noindex + no-referrer, www→apex redirect), `open-next.config.ts`, `drizzle.config.ts`, `postcss.config.mjs`, `.gitignore`, `.env.example`.
 - Dependencies installed (Next 16.4, React 19.3, `@opennextjs/cloudflare` 1.20, `@hexclave/next` 1.0.125, drizzle-orm 0.45, pg, zod 4, sonner, Tailwind 4.3, wrangler 4.149, Playwright, ESLint, Prettier). `bun pm untrusted` shows one blocked postinstall; trust it only if a build needs it.
 - `.env` and `.dev.vars` (gitignored) with **verified-working** values:

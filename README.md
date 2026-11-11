@@ -41,7 +41,7 @@
   <a href="https://ruxs.in/app"><strong>Household App</strong></a> ·
   <a href="https://ruxs.in/merchant-panel"><strong>Merchant Operations</strong></a> ·
   <a href="https://ruxs.in/admin"><strong>Admin Console</strong></a> ·
-  <a href="https://github.com/SH20RAJ/ruxs"><strong>GitHub</strong></a>
+  <a href="https://github.com/playlikeboy/ruxs"><strong>GitHub</strong></a>
 </p>
 
 ---
@@ -148,7 +148,7 @@ Styling & Design     │ Tailwind CSS · Impeccable Design System
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/SH20RAJ/ruxs.git
+git clone https://github.com/playlikeboy/ruxs.git
 cd ruxs
 bun install --frozen-lockfile
 ```
