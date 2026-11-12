@@ -33,15 +33,15 @@ export default async function AdminPayoutsPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-[14px] bg-ink p-5 text-white">
-          <p className="text-xs uppercase tracking-wider opacity-70">Owed to vendors now</p>
+        <div className="rounded-card bg-ink p-5 text-white">
+          <p className="text-xs uppercase tracking-wider text-white/75">Owed to vendors now</p>
           <p className="mt-1 font-mono text-3xl font-bold tabular-nums">{formatINR(owed)}</p>
         </div>
-        <div className="rounded-[14px] border border-line bg-surface p-5">
+        <div className="rounded-card border border-line bg-surface p-5">
           <p className="text-xs uppercase tracking-wider text-muted">Paid, awaiting delivery</p>
           <p className="mt-1 font-mono text-3xl font-bold tabular-nums">{formatINR(pending)}</p>
         </div>
-        <div className="rounded-[14px] border border-line bg-surface p-5">
+        <div className="rounded-card border border-line bg-surface p-5">
           <p className="text-xs uppercase tracking-wider text-muted">RUXs fees earned</p>
           <p className="mt-1 font-mono text-3xl font-bold tabular-nums">{formatINR(fees)}</p>
         </div>
@@ -50,9 +50,9 @@ export default async function AdminPayoutsPage() {
       <section className="space-y-3">
         <h2 className="text-base font-semibold">Withdrawal requests ({open.length})</h2>
         {open.length === 0 ? (
-          <p className="rounded-[12px] border border-line bg-surface p-4 text-sm text-muted">No open requests.</p>
+          <p className="rounded-card border border-line bg-surface p-4 text-sm text-muted">No open requests.</p>
         ) : (
-          <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-line bg-surface">
+          <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
             {open.map(({ payout, vendorName, upiVpa }) => (
               <li key={payout.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div>
@@ -72,7 +72,7 @@ export default async function AdminPayoutsPage() {
       {bookingRefunds.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-base font-semibold text-bad">Booking refunds due ({bookingRefunds.length})</h2>
-          <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-bad/30 bg-surface">
+          <ul className="divide-y divide-line overflow-hidden rounded-card border border-bad/30 bg-surface">
             {bookingRefunds.map(({ booking, vendorName, payment }) => (
               <li key={booking.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div>
@@ -89,12 +89,12 @@ export default async function AdminPayoutsPage() {
       {refunds.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-base font-semibold text-bad">Refunds due ({refunds.length})</h2>
-          <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-bad/30 bg-surface">
+          <ul className="divide-y divide-line overflow-hidden rounded-card border border-bad/30 bg-surface">
             {refunds.map(({ order, vendorName, payment }) => (
               <li key={order.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div>
                   <p className="font-semibold">{order.number} · {vendorName}</p>
-                  <p className="text-xs text-muted">{order.status} · {order.cancelReason ?? ""}</p>
+                  <p className="text-xs capitalize text-muted">{[order.status.replaceAll("_", " "), order.cancelReason].filter(Boolean).join(" · ")}</p>
                 </div>
                 <RefundOrderButton orderId={order.id} amountLabel={formatINR(payment.amountPaise)} />
               </li>
@@ -107,9 +107,9 @@ export default async function AdminPayoutsPage() {
         <h2 className="text-base font-semibold">Vendor balances</h2>
         <ul className="space-y-2 md:hidden">
           {balances.map(({ vendor, balance }) => (
-            <li key={vendor.id} className="rounded-[14px] border border-line bg-surface p-4 text-sm">
+            <li key={vendor.id} className="rounded-card border border-line bg-surface p-4 text-sm">
               <div className="flex items-start justify-between gap-3">
-                <Link href={`/admin/vendors/${vendor.id}`} className="font-semibold">{vendor.name}</Link>
+                <Link href={`/admin/vendors/${vendor.id}`} className="font-semibold hover:underline">{vendor.name}</Link>
                 <span className="font-mono font-bold tabular-nums">{formatINR(balance.availablePaise)}</span>
               </div>
               <p className="mt-1 text-xs text-muted">
@@ -121,7 +121,7 @@ export default async function AdminPayoutsPage() {
             </li>
           ))}
         </ul>
-        <div className="hidden overflow-x-auto rounded-[12px] border border-line bg-surface md:block">
+        <div className="hidden overflow-x-auto rounded-card border border-line bg-surface md:block">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
               <tr>
@@ -131,7 +131,7 @@ export default async function AdminPayoutsPage() {
                 <th className="px-4 py-3 text-right font-semibold">Pending</th>
                 <th className="px-4 py-3 text-right font-semibold">Withdrawn</th>
                 <th className="px-4 py-3 text-right font-semibold">Available</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -161,11 +161,11 @@ export default async function AdminPayoutsPage() {
       {done.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-base font-semibold">History</h2>
-          <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-line bg-surface text-sm">
+          <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface text-sm">
             {done.map(({ payout, vendorName }) => (
-              <li key={payout.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <li key={payout.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <span>{vendorName} · <span className="font-mono">{formatINR(payout.amountPaise)}</span></span>
-                <span className="text-xs text-muted capitalize">{payout.status}{payout.reference ? ` · ${payout.reference}` : ""}{payout.processedAt ? ` · ${dateFmt.format(payout.processedAt)}` : ""}</span>
+                <span className="text-xs text-muted capitalize">{payout.status.replaceAll("_", " ")}{payout.reference ? ` · ${payout.reference}` : ""}{payout.processedAt ? ` · ${dateFmt.format(payout.processedAt)}` : ""}</span>
               </li>
             ))}
           </ul>

@@ -4,9 +4,13 @@ import { useState, useTransition } from "react";
 import { VENDOR_TYPES, VENDOR_TYPE_INFO, type VendorType } from "@/core/vendor-types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { buttonClass } from "@/components/ui/button";
+import { inputClass } from "@/components/ui/field";
 import { adminAddAdmin, adminRemoveAdmin, adminSaveCategory, adminSaveDiscoveryRadius, adminSaveLocality } from "@/features/admin/actions";
 
-const input = "w-full rounded-[8px] border border-line bg-surface px-2 py-1.5 text-sm";
+const input = "w-full rounded-[8px] border border-line bg-surface px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:bg-bg disabled:text-muted";
+const saveButton = "h-8 rounded-[8px] bg-ink px-3 text-xs font-semibold text-white transition hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60";
+const COLOUR_LABELS = { tint: "Tile colour", coverFrom: "Cover start colour", coverTo: "Cover end colour" } as const;
 
 function useSave() {
   const router = useRouter();
@@ -56,7 +60,7 @@ function CategoryEditor({ row, isNew }: { row: CategoryRow; isNew?: boolean }) {
       <td className="p-2">
         <div className="flex gap-1">
           {(["tint", "coverFrom", "coverTo"] as const).map((k) => (
-            <input key={k} type="color" value={f[k]} onChange={set(k)} aria-label={k} className="h-8 w-8 cursor-pointer rounded border border-line" />
+            <input key={k} type="color" value={f[k]} onChange={set(k)} aria-label={COLOUR_LABELS[k]} title={COLOUR_LABELS[k]} className="h-8 w-8 cursor-pointer rounded border border-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" />
           ))}
         </div>
       </td>
@@ -80,13 +84,13 @@ function CategoryEditor({ row, isNew }: { row: CategoryRow; isNew?: boolean }) {
         </select>
       </td>
       <td className="p-2"><input className={input + " w-16"} type="number" value={f.sort} onChange={set("sort")} aria-label="Sort" /></td>
-      <td className="p-2 text-center"><input type="checkbox" checked={f.isActive} onChange={set("isActive")} aria-label="Active" className="mt-2 h-4 w-4" /></td>
+      <td className="p-2 text-center"><input type="checkbox" checked={f.isActive} onChange={set("isActive")} aria-label="Active" className="mt-2 h-4 w-4 accent-accent" /></td>
       <td className="p-2">
         <button
           type="button"
           disabled={pending}
           onClick={() => run(() => adminSaveCategory(f), isNew ? "Category added" : "Saved", () => isNew && setF(BLANK_CATEGORY))}
-          className="h-8 rounded-[8px] bg-ink px-3 text-xs font-semibold text-white disabled:opacity-60"
+          className={saveButton}
         >
           {isNew ? "Add" : "Save"}
         </button>
@@ -100,7 +104,7 @@ export function CategoriesEditor({ rows }: { rows: CategoryRow[] }) {
     <div className="overflow-x-auto rounded-[12px] border border-line bg-surface">
       <table className="w-full min-w-[1080px] text-left text-sm">
         <thead className="border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
-          <tr>{["", "Id", "Label", "Short", "Blurb", "Colours", "Vendor type", "Order", "On", ""].map((h, i) => <th key={i} className="p-2 font-semibold">{h}</th>)}</tr>
+          <tr>{["Emoji", "Id", "Label", "Short", "Blurb", "Colours", "Vendor type", "Order", "On", "Action"].map((h, i) => <th key={i} scope="col" className="p-2 font-semibold"><span className={i === 0 || i === 9 ? "sr-only" : undefined}>{h}</span></th>)}</tr>
         </thead>
         <tbody className="divide-y divide-line">
           {rows.map((r) => <CategoryEditor key={r.id} row={r} />)}
@@ -135,7 +139,7 @@ function LocalityEditor({ row, isNew }: { row: LocalityRow | null; isNew?: boole
       <td className="p-2"><input className={input} value={f.state} onChange={set("state")} aria-label="State" /></td>
       <td className="p-2"><input className={input + " font-mono"} value={f.latitude} onChange={set("latitude")} aria-label="Latitude" /></td>
       <td className="p-2"><input className={input + " font-mono"} value={f.longitude} onChange={set("longitude")} aria-label="Longitude" /></td>
-      <td className="p-2 text-center"><input type="checkbox" checked={f.isActive} onChange={set("isActive")} aria-label="Active" className="h-4 w-4" /></td>
+      <td className="p-2 text-center"><input type="checkbox" checked={f.isActive} onChange={set("isActive")} aria-label="Active" className="h-4 w-4 accent-accent" /></td>
       <td className="p-2">
         <button
           type="button"
@@ -147,7 +151,7 @@ function LocalityEditor({ row, isNew }: { row: LocalityRow | null; isNew?: boole
               () => isNew && setF(BLANK_LOCALITY)
             )
           }
-          className="h-8 rounded-[8px] bg-ink px-3 text-xs font-semibold text-white disabled:opacity-60"
+          className={saveButton}
         >
           {isNew ? "Add" : "Save"}
         </button>
@@ -161,7 +165,7 @@ export function LocalitiesEditor({ rows }: { rows: LocalityRow[] }) {
     <div className="max-h-[520px] overflow-auto rounded-[12px] border border-line bg-surface">
       <table className="w-full min-w-[860px] text-left text-sm">
         <thead className="sticky top-0 border-b border-line bg-bg text-xs uppercase tracking-wide text-muted">
-          <tr>{["Id", "Name", "City", "State", "Lat", "Lng", "On", ""].map((h, i) => <th key={i} className="p-2 font-semibold">{h}</th>)}</tr>
+          <tr>{["Id", "Name", "City", "State", "Lat", "Lng", "On", "Action"].map((h, i) => <th key={i} scope="col" className="p-2 font-semibold"><span className={i === 7 ? "sr-only" : undefined}>{h}</span></th>)}</tr>
         </thead>
         <tbody className="divide-y divide-line">
           <LocalityEditor row={null} isNew />
@@ -180,12 +184,13 @@ export function AdminsEditor({ rows }: { rows: { id: string; email: string | nul
       <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-line bg-surface text-sm">
         {rows.map((r) => (
           <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
-            <span className="font-mono text-xs">{r.email ?? `user ${r.userId}`}</span>
+            <span className="min-w-0 break-all font-mono text-xs">{r.email ?? `user ${r.userId}`}</span>
             <button
               type="button"
               disabled={pending}
-              onClick={() => window.confirm("Remove this admin?") && run(() => adminRemoveAdmin({ id: r.id }), "Admin removed")}
-              className="text-xs font-semibold text-bad disabled:opacity-60"
+              onClick={() => window.confirm(`Remove ${r.email ?? "this admin"}? They lose access to the admin console.`) && run(() => adminRemoveAdmin({ id: r.id }), "Admin removed")}
+              aria-label={`Remove admin ${r.email ?? r.userId ?? ""}`.trim()}
+              className="min-h-9 shrink-0 rounded-[8px] px-2 text-xs font-semibold text-bad hover:bg-bad/5 focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
             >
               Remove
             </button>
@@ -199,8 +204,8 @@ export function AdminsEditor({ rows }: { rows: { id: string; email: string | nul
           run(() => adminAddAdmin({ email }), "Admin added", () => setEmail(""));
         }}
       >
-        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="new-admin@example.com" className="h-10 flex-1 rounded-[10px] border border-line bg-surface px-3 text-sm" />
-        <button type="submit" disabled={pending} className="h-10 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60">Add admin</button>
+        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="new-admin@example.com" aria-label="New admin email" autoComplete="off" className={inputClass + " min-w-0 flex-1"} />
+        <button type="submit" disabled={pending} className={buttonClass("dark", "md")}>Add admin</button>
       </form>
       <p className="text-xs text-muted">Admins sign in at /admin/sign-in (email and password, or Google). Email admins need a verified email.</p>
     </div>
@@ -220,9 +225,9 @@ export function DiscoveryRadiusEditor({ value }: { value: number }) {
     >
       <label className="text-sm font-medium">
         Default search radius (km)
-        <input inputMode="numeric" value={km} onChange={(e) => setKm(e.target.value)} className="mt-1 block h-10 w-28 rounded-[10px] border border-line bg-surface px-3 text-sm tabular-nums" />
+        <input inputMode="numeric" value={km} onChange={(e) => setKm(e.target.value)} className={inputClass + " mt-1 block w-28 tabular-nums"} />
       </label>
-      <button type="submit" disabled={pending} className="h-10 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60">Save</button>
+      <button type="submit" disabled={pending} className={buttonClass("dark", "md")}>Save</button>
     </form>
   );
 }

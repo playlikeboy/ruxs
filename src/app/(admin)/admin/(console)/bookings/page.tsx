@@ -4,7 +4,7 @@ import { getAdminBookings } from "@/features/admin/queries";
 import { AdminBookingsList } from "@/features/bookings/components/admin-bookings-list";
 import { AdminPagination } from "@/features/admin/components/admin-pagination";
 
-export const metadata = { title: "Bookings · Admin" };
+export const metadata = { title: "Bookings" };
 
 const FILTERS = [
   { v: "", t: "All" },
@@ -51,13 +51,13 @@ export default async function AdminBookingsPage({
             defaultValue={q}
             placeholder="Search booking #, provider, customer, service…"
             aria-label="Search bookings"
-            className="h-10 w-full rounded-[10px] border border-line bg-surface pl-9 pr-3 text-xs placeholder:text-muted focus:border-ink focus:outline-none"
+            className="h-10 w-full rounded-control border border-line bg-surface pl-9 pr-3 text-xs placeholder:text-muted focus:border-ink"
           />
           {status && <input type="hidden" name="status" value={status} />}
         </form>
 
         {/* Filter pills */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
+        <nav aria-label="Filter by status" className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
           {FILTERS.map((f) => {
             const params = new URLSearchParams();
             if (f.v) params.set("status", f.v);
@@ -68,22 +68,23 @@ export default async function AdminBookingsPage({
               <Link
                 key={f.t}
                 href={href}
+                aria-current={status === f.v ? "page" : undefined}
                 className={
                   "shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition " +
                   (status === f.v
                     ? "border-ink bg-ink text-white"
-                    : "border-line bg-surface text-muted hover:border-ink/40")
+                    : "border-line bg-surface text-muted hover:border-ink/40 hover:text-ink")
                 }
               >
                 {f.t}
               </Link>
             );
           })}
-        </div>
+        </nav>
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-[14px] border border-line bg-surface p-12 text-center text-sm text-muted">
+        <div className="rounded-card border border-line bg-surface p-12 text-center text-sm text-muted">
           No bookings match the current criteria.
         </div>
       ) : (

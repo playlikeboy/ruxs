@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { saveStorefront } from "@/features/vendors/actions";
 import { GST_RATES_BPS, percentLabel } from "@/core/pricing";
+import { buttonClass } from "@/components/ui/button";
 import { LocationPicker } from "@/features/platform/components/location-picker";
 
-const input = "w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+const input = "w-full rounded-[12px] border border-line bg-surface px-3 py-2.5 text-[15px] text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15";
 const label = "mb-1 block text-xs font-medium text-ink";
 const RADIUS_PRESETS_KM = [2, 5, 8, 12, 20] as const;
 
@@ -97,7 +98,7 @@ export function StorefrontForm({ slug, initial, provider = false }: { slug: stri
           <span className="block text-xs text-muted">{provider ? "Pause when you're away. Existing sessions stay." : "Pause when the kitchen is closed. Plans keep running."}</span>
         </span>
         <input type="checkbox" className="peer sr-only" checked={f.accepting} onChange={(e) => setF({ ...f, accepting: e.target.checked })} />
-        <span className="relative h-6 w-11 shrink-0 rounded-full bg-line transition peer-checked:bg-good after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5" aria-hidden="true" />
+        <span className="relative h-6 w-11 shrink-0 rounded-full bg-line transition peer-checked:bg-good peer-focus-visible:ring-2 peer-focus-visible:ring-accent/30 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5" aria-hidden="true" />
       </label>
 
       <fieldset className="grid gap-3 sm:grid-cols-2">
@@ -156,7 +157,7 @@ export function StorefrontForm({ slug, initial, provider = false }: { slug: stri
                 type="button"
                 onClick={() => setF({ ...f, radius: String(km) })}
                 aria-pressed={Number(f.radius) === km}
-                className="h-8 rounded-full border border-line px-3 text-xs font-semibold tabular-nums text-ink transition-colors hover:border-ink/25 aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-white"
+                className="h-9 rounded-full border border-line px-3 text-xs font-semibold tabular-nums text-ink transition-colors hover:border-ink/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-white"
               >
                 {km} km
               </button>
@@ -196,7 +197,7 @@ export function StorefrontForm({ slug, initial, provider = false }: { slug: stri
         <p className="text-xs text-muted">Households see item total, discount, GST and delivery as separate lines before they pay.</p>
       </fieldset>
 
-      <button type="submit" disabled={pending} className="h-11 w-full rounded-[12px] bg-accent text-sm font-bold text-white disabled:opacity-60 sm:w-auto sm:px-8">
+      <button type="submit" disabled={pending} className={buttonClass("primary", "md", "w-full sm:w-auto sm:px-8")}>
         {pending ? "Saving…" : "Save business details"}
       </button>
     </form>

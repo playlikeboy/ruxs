@@ -7,7 +7,7 @@ import { StoreCover } from "./store-cover";
 export function StoreCard({ store }: { store: StoreCardData }) {
   const status = !store.acceptingOrders ? "Closed now" : !store.inRange ? "Outside delivery area" : null;
   return (
-    <Link href={`/app/store/${store.slug}`} className="group flex gap-3.5" aria-label={store.name}>
+    <Link href={`/app/store/${store.slug}`} className="group flex gap-3.5">
       <StoreCover cover={store.cover} alt="" className="h-[84px] w-[84px] shrink-0 overflow-hidden rounded-[14px]" />
       <div className="min-w-0 flex-1 py-0.5">
         <div className="flex items-start justify-between gap-2">
@@ -15,15 +15,16 @@ export function StoreCard({ store }: { store: StoreCardData }) {
           {store.rating.average != null ? (
             <span className="flex shrink-0 items-center gap-0.5 text-sm font-semibold tabular-nums text-ink">
               <Star className="h-3.5 w-3.5 fill-[#E8A33D] text-[#E8A33D]" aria-hidden="true" />
+              <span className="sr-only">Rated </span>
               {store.rating.average.toFixed(1)}
-              <span className="font-normal text-muted">({store.rating.count})</span>
+              <span className="font-normal text-muted">
+                ({store.rating.count}
+                <span className="sr-only"> reviews</span>)
+              </span>
             </span>
           ) : (
-            <span className="flex shrink-0 items-center gap-1 text-xs font-semibold tabular-nums text-ink">
-              <Star className="h-3 w-3 fill-[#E8A33D] text-[#E8A33D]" aria-hidden="true" />
-              <span>5.0</span>
-              <span className="rounded-full bg-mint px-1.5 py-0.2 text-[10px] font-semibold text-good">New</span>
-            </span>
+            // No ratings yet: say so plainly rather than showing a score nobody gave.
+            <span className="shrink-0 rounded-full bg-mint px-2 py-0.5 text-xs font-semibold text-good">New</span>
           )}
         </div>
         <p className="truncate text-sm text-muted">
@@ -34,7 +35,7 @@ export function StoreCard({ store }: { store: StoreCardData }) {
         <p className="mt-1 text-sm">
           <span className="text-muted">from </span>
           <span className="font-semibold tabular-nums text-ink">{formatINR(store.minPricePaise)}</span>
-          {status ? <span className="text-warn"> · {status}</span> : store.hasSubscriptions && <span className="text-muted"> · Subscribe &amp; save</span>}
+          {status ? <span className="text-warn"> · {status}</span> : store.hasSubscriptions && <span className="text-muted"> · Daily plans</span>}
         </p>
       </div>
     </Link>

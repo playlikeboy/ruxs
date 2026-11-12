@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { and, count, desc, eq, gte, inArray, isNull, or, sql, sum, ilike } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -23,6 +24,11 @@ import {
 import { requireAdmin } from "@/lib/auth/session";
 import { addDaysIST, todayIST } from "@/core/time";
 import { getCategories } from "@/features/platform/queries";
+
+/** ILIKE pattern for a free-text search; escapes %, _ and \ so they match literally. */
+function containsPattern(q: string) {
+  return `%${q.replace(/[\\%_]/g, (m) => "\\" + m)}%`;
+}
 
 /** Business types an admin can onboard, for /admin/vendors/new and /admin/vendors/new/[type]. */
 export type OnboardCategoryRow = Awaited<ReturnType<typeof getOnboardCategories>>[number];
@@ -142,33 +148,47 @@ export async function getAdminHouseholds(optsOrQ?: string | AdminHouseholdsOptio
   const page = Math.max(1, opts.page ?? 1);
   const limit = Math.max(1, Math.min(100, opts.limit ?? 25));
 
-  const [people, orderCounts, storeCounts] = await Promise.all([
-    db.select().from(consumers).orderBy(desc(consumers.createdAt)),
-    db.select({ userId: shopOrders.userId, n: count() }).from(shopOrders).groupBy(shopOrders.userId),
+  // Search, count and paginate in SQL instead of loading every household.
+  const needle = opts.q?.trim();
+  const pattern = needle ? containsPattern(needle) : null;
+  const where = pattern
+    ? or(
+        ilike(consumers.name, pattern),
+        ilike(consumers.phone, pattern),
+        ilike(consumers.email, pattern),
+        ilike(consumers.flat, pattern),
+        ilike(consumers.society, pattern),
+        ilike(consumers.area, pattern),
+        ilike(consumers.city, pattern)
+      )
+    : undefined;
+
+  const [[totalRow], people] = await Promise.all([
+    db.select({ n: count() }).from(consumers).where(where),
     db
-      .select({ userId: customers.userId, n: count() })
-      .from(customers)
-      .where(sql`${customers.userId} is not null`)
-      .groupBy(customers.userId),
+      .select()
+      .from(consumers)
+      .where(where)
+      .orderBy(desc(consumers.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit),
   ]);
+
+  const userIds = people.map((p) => p.userId);
+  const [orderCounts, storeCounts] = userIds.length
+    ? await Promise.all([
+        db.select({ userId: shopOrders.userId, n: count() }).from(shopOrders).where(inArray(shopOrders.userId, userIds)).groupBy(shopOrders.userId),
+        db.select({ userId: customers.userId, n: count() }).from(customers).where(inArray(customers.userId, userIds)).groupBy(customers.userId),
+      ])
+    : [[], []];
   const orders = new Map(orderCounts.map((r) => [r.userId, r.n]));
   const stores = new Map(storeCounts.map((r) => [r.userId, r.n]));
-  const needle = opts.q?.trim().toLowerCase();
 
-  const filtered = people
-    .filter((p) => {
-      if (!needle) return true;
-      return [p.name, p.phone, p.email ?? "", p.flat, p.society, p.area, p.city]
-        .some((s) => s.toLowerCase().includes(needle));
-    })
-    .map((p) => ({ ...p, orders: orders.get(p.userId) ?? 0, stores: stores.get(p.userId) ?? 0 }));
-
-  const total = filtered.length;
+  const total = totalRow?.n ?? 0;
   const totalPages = Math.ceil(total / limit) || 1;
-  const paginated = filtered.slice((page - 1) * limit, page * limit);
 
   return {
-    people: paginated,
+    people: people.map((p) => ({ ...p, orders: orders.get(p.userId) ?? 0, stores: stores.get(p.userId) ?? 0 })),
     total,
     totalPages,
     page,
@@ -194,37 +214,63 @@ export async function getAdminVendorList(qOrOpts?: string | AdminVendorListOptio
   const page = Math.max(1, opts.page ?? 1);
   const limit = Math.max(1, Math.min(100, opts.limit ?? 25));
 
-  const [rows, productCounts, customerCounts] = await Promise.all([
-    db.select().from(vendors).orderBy(desc(vendors.createdAt)),
-    db.select({ vendorId: products.vendorId, n: count() }).from(products).where(isNull(products.archivedAt)).groupBy(products.vendorId),
-    db.select({ vendorId: customers.vendorId, n: count() }).from(customers).groupBy(customers.vendorId),
+  // Filter, count and paginate in SQL; per-vendor counts only for the page shown.
+  const needle = opts.q?.trim();
+  const pattern = needle ? containsPattern(needle) : null;
+  const where = and(
+    opts.status ? eq(vendors.status, opts.status as (typeof vendors.$inferSelect)["status"]) : undefined,
+    opts.categoryId ? eq(vendors.categoryId, opts.categoryId) : undefined,
+    pattern
+      ? or(
+          ilike(vendors.name, pattern),
+          ilike(vendors.slug, pattern),
+          ilike(vendors.city, pattern),
+          ilike(vendors.area, pattern),
+          ilike(vendors.phone, pattern),
+          ilike(vendors.loginId, pattern)
+        )
+      : undefined
+  );
+
+  const [statusRows, [filteredRow], pageRows] = await Promise.all([
+    db.select({ status: vendors.status, n: count() }).from(vendors).groupBy(vendors.status),
+    db.select({ n: count() }).from(vendors).where(where),
+    db
+      .select()
+      .from(vendors)
+      .where(where)
+      .orderBy(desc(vendors.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit),
   ]);
+
+  const ids = pageRows.map((v) => v.id);
+  const [productCounts, customerCounts] = ids.length
+    ? await Promise.all([
+        db
+          .select({ vendorId: products.vendorId, n: count() })
+          .from(products)
+          .where(and(inArray(products.vendorId, ids), isNull(products.archivedAt)))
+          .groupBy(products.vendorId),
+        db.select({ vendorId: customers.vendorId, n: count() }).from(customers).where(inArray(customers.vendorId, ids)).groupBy(customers.vendorId),
+      ])
+    : [[], []];
   const p = new Map(productCounts.map((r) => [r.vendorId, r.n]));
   const c = new Map(customerCounts.map((r) => [r.vendorId, r.n]));
-  const needle = opts.q?.trim().toLowerCase();
 
-  const filtered = rows.filter((v) => {
-    if (opts.status && v.status !== opts.status) return false;
-    if (opts.categoryId && v.categoryId !== opts.categoryId) return false;
-    if (needle && ![v.name, v.slug, v.city, v.area, v.phone, v.loginId ?? ""].some((s) => s.toLowerCase().includes(needle))) {
-      return false;
-    }
-    return true;
-  });
-
-  const total = filtered.length;
+  const byStatus = new Map(statusRows.map((r) => [r.status, r.n]));
+  const total = filteredRow?.n ?? 0;
   const totalPages = Math.ceil(total / limit) || 1;
-  const paginated = filtered.slice((page - 1) * limit, page * limit);
 
   const counts = {
-    total: rows.length,
-    active: rows.filter((r) => r.status === "active").length,
-    pending: rows.filter((r) => r.status === "pending").length,
-    suspended: rows.filter((r) => r.status === "suspended").length,
+    total: statusRows.reduce((acc, r) => acc + r.n, 0),
+    active: byStatus.get("active") ?? 0,
+    pending: byStatus.get("pending") ?? 0,
+    suspended: byStatus.get("suspended") ?? 0,
   };
 
   return {
-    rows: paginated.map((v) => ({ vendor: v, products: p.get(v.id) ?? 0, customers: c.get(v.id) ?? 0 })),
+    rows: pageRows.map((v) => ({ vendor: v, products: p.get(v.id) ?? 0, customers: c.get(v.id) ?? 0 })),
     counts,
     total,
     totalPages,
@@ -271,8 +317,8 @@ export async function getAdminSettings() {
   return { categories: cats, localities: locs, admins, discoveryRadiusKm: settings?.discoveryRadiusKm ?? 10 };
 }
 
-/** Counts that need an admin's attention, shown as nav badges. */
-export async function getAdminBadges() {
+/** Counts that need an admin's attention, shown as nav badges. Cached per request: layout and overview both call it. */
+export const getAdminBadges = cache(async () => {
   await requireAdmin();
   const db = getDb();
   const [[pendingVendors], [openPayouts], [refunds]] = await Promise.all([
@@ -285,7 +331,7 @@ export async function getAdminBadges() {
     openPayouts: openPayouts?.n ?? 0,
     refunds: refunds?.n ?? 0,
   };
-}
+});
 
 export interface AdminBookingsOptions {
   status?: string;
@@ -310,7 +356,7 @@ export async function getAdminBookings(statusOrOpts?: string | AdminBookingsOpti
     conditions.push(eq(bookings.status, opts.status));
   }
   if (opts.q?.trim()) {
-    const term = `%${opts.q.trim()}%`;
+    const term = containsPattern(opts.q.trim());
     conditions.push(
       or(
         ilike(bookings.number, term),

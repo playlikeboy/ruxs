@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 const serverSchema = z.object({
   DATABASE_URL: z.string().min(1).optional(),
@@ -15,8 +16,6 @@ const serverSchema = z.object({
   VAPID_PUBLIC_KEY: z.string().min(1).optional(),
   VAPID_PRIVATE_KEY: z.string().min(1).optional(),
 });
-
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export function getServerEnv() {
   let sourceEnv: Record<string, unknown> = { ...process.env };

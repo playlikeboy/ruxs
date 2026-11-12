@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Minus, Plus } from "lucide-react";
 import {
@@ -21,6 +21,23 @@ export function AddToCart({
 }) {
   const cart = useCart();
   const [askReplace, setAskReplace] = useState(false);
+  const keepRef = useRef<HTMLButtonElement>(null);
+  const dialogId = useId();
+
+  // The replace-cart sheet takes focus and closes on Escape, like any dialog.
+  useEffect(() => {
+    if (!askReplace) return;
+    const previous = document.activeElement as HTMLElement | null;
+    keepRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAskReplace(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      previous?.focus();
+    };
+  }, [askReplace]);
   const qty =
     cart?.vendorSlug === store.vendorSlug
       ? (cart.items.find((i) => i.productId === item.productId)?.qty ?? 0)
@@ -28,7 +45,7 @@ export function AddToCart({
 
   if (disabled) {
     return (
-      <span className="inline-flex h-9 w-24 items-center justify-center rounded-lg border border-black/10 bg-neutral-100 text-xs font-semibold text-neutral-400">
+      <span className="inline-flex h-9 w-24 items-center justify-center rounded-lg border border-line bg-app-canvas text-xs font-semibold text-muted">
         Unavailable
       </span>
     );
@@ -42,7 +59,8 @@ export function AddToCart({
           onClick={() => {
             if (!cartActions.add(store, item)) setAskReplace(true);
           }}
-          className="border-accent/30 text-accent h-9 w-24 rounded-lg border bg-white text-sm font-bold tracking-wide uppercase shadow-sm transition active:scale-95"
+          aria-label={`Add ${item.name} to cart`}
+          className="border-accent/30 text-accent hover:bg-brand-peach/40 h-9 w-24 rounded-lg border bg-white text-sm font-bold tracking-wide uppercase shadow-sm transition active:scale-95"
         >
           Add
         </button>
@@ -74,27 +92,33 @@ export function AddToCart({
       {askReplace &&
         createPortal(
           <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="replace-cart-title"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setAskReplace(false);
+            }}
           >
-            <div className="w-full max-w-md rounded-t-3xl bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`${dialogId}-title`}
+              aria-describedby={`${dialogId}-text`}
+              className="w-full max-w-md rounded-t-3xl bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
               <h2
-                id="replace-cart-title"
+                id={`${dialogId}-title`}
                 className="text-ink text-lg font-semibold"
               >
                 Start a new cart?
               </h2>
-              <p className="mt-1.5 text-sm text-neutral-500">
+              <p id={`${dialogId}-text`} className="mt-1.5 text-sm text-muted">
                 Your cart has items from {cart?.vendorName}. Adding this will
                 clear them, since each order comes from one store.
               </p>
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <button
+                  ref={keepRef}
                   type="button"
                   onClick={() => setAskReplace(false)}
-                  className="text-ink h-12 rounded-xl border border-black/10 font-semibold"
+                  className="text-ink hover:bg-app-canvas h-12 rounded-xl border border-line font-semibold"
                 >
                   Keep cart
                 </button>
@@ -104,7 +128,7 @@ export function AddToCart({
                     cartActions.add(store, item, true);
                     setAskReplace(false);
                   }}
-                  className="bg-accent h-12 rounded-xl font-semibold text-white"
+                  className="bg-accent hover:bg-accent/90 h-12 rounded-xl font-semibold text-white"
                 >
                   Start new
                 </button>

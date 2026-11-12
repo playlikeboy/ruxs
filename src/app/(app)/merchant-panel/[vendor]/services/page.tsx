@@ -11,6 +11,8 @@ import { getProviderServices } from "@/features/bookings/queries";
 import { getCategories } from "@/features/platform/queries";
 import { ArchiveServiceButton, ServiceForm } from "@/features/bookings/components/service-form";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Services" };
 
@@ -27,41 +29,38 @@ export default async function ServicesPage({ params }: { params: Promise<{ vendo
 
   return (
     <div className="space-y-5 p-4 sm:p-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent">{info.label}</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">{info.nouns.catalogue}</h1>
-          <p className="mt-0.5 text-sm text-muted">The sessions clients can book with you. Times come from your Availability.</p>
-        </div>
-        {isOwner && <ServiceForm slug={slug} categories={categories} />}
-      </div>
+      <PageHeader
+        title={info.nouns.catalogue}
+        description="The sessions clients can book with you. Times come from your Availability."
+        action={isOwner ? <ServiceForm slug={slug} categories={categories} /> : undefined}
+      />
 
       {rows.length === 0 ? (
         <EmptyState title="No services yet" description={`Add your first ${info.nouns.catalogueShort.toLowerCase().replace(/s$/, "")}. Clients book it in open slots from your hours.`} action={isOwner ? <ServiceForm slug={slug} categories={categories} triggerLabel="Add first service" /> : undefined} />
       ) : (
         <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {rows.map(({ service: s, category: c }) => (
-            <li key={s.id} className={"flex flex-col justify-between rounded-[14px] border border-line p-4 " + (s.isActive ? "bg-surface" : "bg-bg opacity-80")}>
+            <li key={s.id} className={"flex flex-col justify-between rounded-card border border-line p-4 " + (s.isActive ? "bg-surface" : "bg-bg")}>
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-muted"><AppIcon name={c.id} className="h-3.5 w-3.5" /> {c.label}</p>
                     <p className="mt-0.5 font-semibold text-ink">{s.name}</p>
                   </div>
-                  <p className="shrink-0 font-mono text-base font-bold tabular-nums">{formatINR(s.pricePaise)}</p>
+                  <p className="shrink-0 text-base font-bold tabular-nums text-ink">{formatINR(s.pricePaise)}</p>
                 </div>
                 <p className="mt-1 flex items-center gap-1 text-xs text-muted"><CalendarClock className="h-3.5 w-3.5" aria-hidden="true" /> {s.durationMinutes} min</p>
                 {s.description && <p className="mt-2 line-clamp-2 text-xs text-muted">{s.description}</p>}
-                <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-medium">
-                  {s.modes.map((m) => <span key={m} className="rounded-full bg-bg px-2 py-0.5 text-muted">{MODE_LABEL[m] ?? m}</span>)}
-                  {!s.isActive && <span className="rounded-full bg-blush px-2 py-0.5 text-bad">Paused</span>}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {s.modes.map((m) => <Badge key={m}>{MODE_LABEL[m] ?? m}</Badge>)}
+                  {!s.isActive && <Badge tone="bad">Paused</Badge>}
                   {itemFields && chipsFor(itemFields, details.get(s.id)).map((chip) => (
-                    <span key={chip} className="rounded-full bg-butter/70 px-2 py-0.5 text-warn">{chip}</span>
+                    <Badge key={chip} tone="warn">{chip}</Badge>
                   ))}
                 </div>
                 {isOwner && itemFields && (
                   <details className="group mt-3 rounded-control border border-line bg-bg/60 px-3 py-2">
-                    <summary className="cursor-pointer list-none text-xs font-semibold text-ink">
+                    <summary className="cursor-pointer list-none text-xs font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                       {info.label} details <span className="text-muted group-open:hidden">· edit</span>
                     </summary>
                     <div className="pt-3">

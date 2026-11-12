@@ -50,7 +50,7 @@ export default async function VendorLayout({
                   {access.vendor.name}
                 </Link>
                 <p className="flex items-center gap-1.5 text-xs text-muted">
-                  <span className={"h-2 w-2 rounded-full " + (access.vendor.acceptingOrders ? "bg-good shadow-[0_0_8px_rgba(47,125,79,0.4)]" : "bg-bad")} aria-hidden="true" />
+                  <span className={"h-2 w-2 rounded-full " + (access.vendor.acceptingOrders ? "bg-good" : "bg-bad")} aria-hidden="true" />
                   {access.vendor.acceptingOrders ? "Taking orders" : "Paused"} · <span className="capitalize">{access.role}</span>
                 </p>
               </div>
@@ -62,11 +62,11 @@ export default async function VendorLayout({
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-ink">{access.vendor.name}</span>
-                <span className="flex items-center gap-1.5 rounded-full border border-black/5 bg-bg px-2.5 py-0.5 text-xs text-muted">
-                  <span className={"h-2 w-2 rounded-full " + (access.vendor.acceptingOrders ? "bg-good shadow-[0_0_8px_rgba(47,125,79,0.4)]" : "bg-bad")} />
+                <span className="flex items-center gap-1.5 rounded-full border border-line bg-bg px-2.5 py-0.5 text-xs text-muted">
+                  <span className={"h-2 w-2 rounded-full " + (access.vendor.acceptingOrders ? "bg-good" : "bg-bad")} aria-hidden="true" />
                   {access.vendor.acceptingOrders ? "Taking orders" : "Paused"}
                 </span>
-                <span className="rounded-full bg-peach/80 px-2 py-0.5 text-xs font-semibold capitalize text-accent">
+                <span className="rounded-full bg-peach px-2 py-0.5 text-xs font-semibold capitalize text-accent">
                   {access.role}
                 </span>
                 <span className="rounded-full border border-line px-2 py-0.5 text-xs text-muted">{info.label}</span>
@@ -83,7 +83,8 @@ export default async function VendorLayout({
             <Link href={`/admin/vendors/${access.vendorId}`} className="font-semibold underline">Back to admin</Link>
           </p>
         )}
-        <main className="mx-auto max-w-6xl pb-[calc(5rem+env(safe-area-inset-bottom))] lg:px-2 lg:pb-12">{children}</main>
+        {/* The (app) layout already provides the <main> landmark; this is its content column. */}
+        <div className="mx-auto max-w-6xl pb-[calc(5rem+env(safe-area-inset-bottom))] lg:px-2 lg:pb-12">{children}</div>
       </div>
 
       <div className="lg:hidden">

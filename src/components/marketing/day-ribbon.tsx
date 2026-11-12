@@ -71,7 +71,7 @@ export function DayRibbon() {
   return (
     <div className="relative xl:mx-[18px]">
       <p className="mb-5 text-sm font-semibold tabular-nums text-ink xl:hidden">
-        Now {clock(minutes)} <span className="font-normal text-[#4F5A4B]">· next: {nextSlot.name.toLowerCase()} at {nextSlot.time}</span>
+        Now {clock(minutes)} <span className="font-normal text-ink/80">· next: {nextSlot.name.toLowerCase()} at {nextSlot.time}</span>
       </p>
 
       {/* Hour scale (desktop): ticks every hour, labels every three hours */}
@@ -81,7 +81,7 @@ export function DayRibbon() {
           const major = (h - 6) % 3 === 0;
           return (
             <span key={h} style={{ left: x }} className="absolute top-0 h-full">
-              {major && <span className="absolute -translate-x-1/2 text-xs font-semibold tabular-nums text-[#4F5A4B]">{h}:00</span>}
+              {major && <span className="absolute -translate-x-1/2 text-xs font-semibold tabular-nums text-ink/80">{h}:00</span>}
               <span className={cn("absolute top-[72px] w-px -translate-x-1/2 bg-ink", major ? "h-3 -mt-1.5" : "h-2 -mt-1")} />
             </span>
           );
@@ -132,7 +132,7 @@ export function DayRibbon() {
                   {slot.name}
                   <ArrowUpRight className="h-4 w-4 shrink-0 text-accent transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                 </span>
-                <span className="mt-1 block text-sm leading-snug text-[#4F5A4B]">{slot.detail}</span>
+                <span className="mt-1 block text-sm leading-snug text-ink/80">{slot.detail}</span>
                 {isNext && <span className="sr-only"> (coming up next)</span>}
               </Link>
             </li>

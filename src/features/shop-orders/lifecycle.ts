@@ -1,6 +1,6 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, type SQL } from "drizzle-orm";
 import { getDb } from "@/db";
 import { ledgerEntries, shopOrders, vendors } from "@/db/schema";
 import { canTransition, deliveredLedgerLines, type ShopActor, type ShopOrderStatus } from "@/core/shop";
@@ -91,6 +91,15 @@ export async function moveOrder(opts: {
     }
   }
 
+  // Both sides confirming at once must not each miss the other's tap and leave
+  // the order undelivered: also compare-and-set on the counterpart's confirmation.
+  const counterpartGuard: SQL[] = [];
+  if (isMarkingDelivered && opts.actor === "vendor") {
+    counterpartGuard.push(order.consumerDeliveredAt ? isNotNull(shopOrders.consumerDeliveredAt) : isNull(shopOrders.consumerDeliveredAt));
+  } else if (isMarkingDelivered && opts.actor === "consumer") {
+    counterpartGuard.push(order.vendorDeliveredAt ? isNotNull(shopOrders.vendorDeliveredAt) : isNull(shopOrders.vendorDeliveredAt));
+  }
+
   const result = await db.transaction(async (tx) => {
     // Compare-and-set on the old status so two taps can't both win.
     const [updated] = await tx
@@ -114,7 +123,7 @@ export async function moveOrder(opts: {
             }
           : {}),
       })
-      .where(and(eq(shopOrders.id, order.id), eq(shopOrders.status, from)))
+      .where(and(eq(shopOrders.id, order.id), eq(shopOrders.status, from), ...counterpartGuard))
       .returning({ id: shopOrders.id });
     if (!updated) return false;
 

@@ -19,7 +19,7 @@ export async function generateMonthlyBillsAction(input: unknown) {
     revalidatePath(`/merchant-panel/${slug}/bills`);
     return { ok: true, data: result };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to generate monthly bills";
-    return { ok: false, error: msg };
+    console.error("[billing] generate bills failed", { vendorId: access.vendorId, period, err });
+    return { ok: false, error: "Failed to generate monthly bills" };
   }
 }

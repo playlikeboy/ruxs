@@ -20,7 +20,7 @@ export function PriceBreakupList({
   showFee?: boolean;
   totalLabel?: string;
 }) {
-  const row = "flex justify-between gap-4 text-neutral-600";
+  const row = "flex justify-between gap-4 text-muted";
   return (
     <dl className="space-y-2 text-sm">
       <div className={row}>
@@ -37,7 +37,7 @@ export function PriceBreakupList({
         <div className={row}>
           <dt>
             GST {gstBps ? percentLabel(gstBps) : ""}
-            {gstIncluded && <span className="text-neutral-500"> (included in prices)</span>}
+            {gstIncluded && <span className="text-muted"> (included in prices)</span>}
           </dt>
           <dd className="tabular-nums">{gstIncluded ? formatINR(breakup.gstPaise) : `+${formatINR(breakup.gstPaise)}`}</dd>
         </div>
@@ -46,12 +46,12 @@ export function PriceBreakupList({
         <dt>Delivery fee</dt>
         <dd className="tabular-nums">{breakup.deliveryFeePaise === 0 ? "Free" : formatINR(breakup.deliveryFeePaise)}</dd>
       </div>
-      <div className="flex justify-between border-t border-dashed border-black/10 pt-2 text-[15px] font-semibold text-ink">
+      <div className="flex justify-between border-t border-dashed border-line pt-2 text-[15px] font-semibold text-ink">
         <dt>{totalLabel}</dt>
         <dd className="tabular-nums">{formatINR(breakup.totalPaise)}</dd>
       </div>
       {showFee && breakup.commissionPaise > 0 && (
-        <p className="pt-1 text-xs text-neutral-500">
+        <p className="pt-1 text-xs text-muted">
           Includes a RUXs fee of {formatINR(breakup.commissionPaise)}, paid by the store. You don&apos;t pay extra.
         </p>
       )}

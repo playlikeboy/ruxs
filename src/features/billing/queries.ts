@@ -1,11 +1,13 @@
 import "server-only";
 
-import { eq, and, desc, lte, gte } from "drizzle-orm";
+import { eq, and, desc, lt, gte } from "drizzle-orm";
 import { getDb } from "@/db";
 import { invoices, customers, ledgerEntries } from "@/db/schema";
 import { requireVendorAccess, requireCustomerByToken } from "@/lib/auth/session";
 import { buildUpiUrl } from "@/core/upi";
-import { istDateTime } from "@/core/time";
+import { periodBounds } from "./period";
+
+const PERIOD_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 export async function getVendorBills(slug: string, period?: string) {
   const access = await requireVendorAccess(slug, ["owner", "staff"]);
@@ -29,6 +31,10 @@ export async function getVendorBills(slug: string, period?: string) {
 
 export async function getCustomerBillByToken(token: string, period: string) {
   const { customer, vendor } = await requireCustomerByToken(token);
+  // The period comes from the URL: reject anything that is not a real YYYY-MM month.
+  if (!PERIOD_RE.test(period)) {
+    return null;
+  }
   const db = getDb();
 
   const [invoice] = await db
@@ -59,14 +65,7 @@ export async function getCustomerBillByToken(token: string, period: string) {
       : null;
 
   // Fetch itemized ledger entries for this month
-  const [yearStr, monthStr] = period.split("-");
-  const year = parseInt(yearStr!, 10);
-  const month = parseInt(monthStr!, 10);
-  const nextYear = month === 12 ? year + 1 : year;
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const nextMonthStr = nextMonth.toString().padStart(2, "0");
-  const monthStart = istDateTime(`${yearStr}-${monthStr}-01`, "00:00:00");
-  const monthEnd = istDateTime(`${nextYear}-${nextMonthStr}-01`, "00:00:00");
+  const { start: monthStart, end: monthEnd } = periodBounds(period);
 
   const entries = await db
     .select()
@@ -76,7 +75,7 @@ export async function getCustomerBillByToken(token: string, period: string) {
         eq(ledgerEntries.vendorId, customer.vendorId),
         eq(ledgerEntries.customerId, customer.id),
         gte(ledgerEntries.createdAt, monthStart),
-        lte(ledgerEntries.createdAt, monthEnd)
+        lt(ledgerEntries.createdAt, monthEnd)
       )
     )
     .orderBy(desc(ledgerEntries.createdAt));

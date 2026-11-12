@@ -21,6 +21,8 @@ describe("calendar", () => {
     expect(parseDateParam("2026-01-05")).toBe("2026-01-05");
     expect(parseDateParam("nope", istDateTime("2026-10-22", "10:00"))).toBe("2026-10-22");
     expect(parseDateParam(undefined, istDateTime("2026-10-22", "10:00"))).toBe("2026-10-22");
+    expect(parseDateParam("2026-02-31", istDateTime("2026-10-22", "10:00"))).toBe("2026-10-22");
+    expect(parseDateParam("2028-02-29")).toBe("2028-02-29");
   });
 
   it("sizes the grid to hours and events", () => {

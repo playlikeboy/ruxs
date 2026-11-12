@@ -19,7 +19,7 @@ export function Hint({ id, children }: { id: string; children: React.ReactNode }
   const [closed, setClosed] = useState(false);
   if (stored || closed) return null;
   return (
-    <div role="note" className="flex items-start gap-3 rounded-[16px] border border-line bg-brand-butter/70 px-4 py-3 text-sm text-ink">
+    <div role="note" className="flex items-start gap-3 rounded-card border border-line bg-brand-butter/70 px-4 py-3 text-sm text-ink">
       <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warn" aria-hidden="true" />
       <p className="flex-1 leading-relaxed">{children}</p>
       <button
@@ -35,7 +35,7 @@ export function Hint({ id, children }: { id: string; children: React.ReactNode }
         }}
         className="-mr-1 -mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-white/60 hover:text-ink"
       >
-        <X className="h-4 w-4" />
+        <X className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );

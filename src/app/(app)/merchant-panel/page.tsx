@@ -4,6 +4,7 @@ import { eq, and, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendors, vendorMembers, vendorInvites } from "@/db/schema";
 import { hexclave } from "@/lib/auth/hexclave";
+import { ButtonLink } from "@/components/ui/button";
 import { NotMerchantCard } from "@/features/vendors/components/not-merchant-card";
 
 export default async function MerchantEntryPage() {
@@ -24,22 +25,26 @@ export default async function MerchantEntryPage() {
       .where(and(eq(vendorInvites.email, userEmail), isNull(vendorInvites.acceptedAt)));
 
     for (const invitation of pendingInvites) {
-      await db
-        .insert(vendorMembers)
-        .values({
-          vendorId: invitation.vendorId,
-          userId: user.id,
-          role: invitation.role,
-        })
-        .onConflictDoNothing();
+      // Membership and the accepted mark land together, so a failure never
+      // leaves an invite consumed without access (or access with a live invite).
+      await db.transaction(async (tx) => {
+        await tx
+          .insert(vendorMembers)
+          .values({
+            vendorId: invitation.vendorId,
+            userId: user.id,
+            role: invitation.role,
+          })
+          .onConflictDoNothing();
 
-      await db
-        .update(vendorInvites)
-        .set({
-          acceptedAt: new Date(),
-          acceptedUserId: user.id,
-        })
-        .where(eq(vendorInvites.id, invitation.id));
+        await tx
+          .update(vendorInvites)
+          .set({
+            acceptedAt: new Date(),
+            acceptedUserId: user.id,
+          })
+          .where(and(eq(vendorInvites.id, invitation.id), isNull(vendorInvites.acceptedAt)));
+      });
     }
   }
 
@@ -62,19 +67,14 @@ export default async function MerchantEntryPage() {
 
       if (pendingInvite) {
         return (
-          <div className="mx-auto mt-10 max-w-md space-y-4 rounded-[14px] border border-line bg-surface p-6 text-center">
-            <h2 className="text-xl font-semibold text-ink">Verify your email</h2>
+          <div className="mx-auto mt-10 max-w-md space-y-4 rounded-card border border-line bg-surface p-6 text-center">
+            <h1 className="text-xl font-semibold text-ink">Verify your email</h1>
             <p className="text-sm text-muted">
               Your merchant portal has been provisioned for <strong>{userEmail}</strong>.
               Please verify your email address to link and access your business dashboard.
             </p>
             <div className="pt-2">
-              <Link
-                href="/handler/email-verification"
-                className="inline-flex min-h-11 items-center justify-center rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
-              >
-                Verify Email →
-              </Link>
+              <ButtonLink href="/handler/email-verification">Verify email</ButtonLink>
             </div>
           </div>
         );
@@ -105,14 +105,14 @@ export default async function MerchantEntryPage() {
           <Link
             key={vendor.id}
             href={"/merchant-panel/" + vendor.slug + "/today"}
-            className="block rounded-[12px] border border-line bg-surface p-4 transition-colors hover:border-accent"
+            className="block rounded-card border border-line bg-surface p-4 transition-colors hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="font-medium text-ink">{vendor.name}</h2>
+              <div className="min-w-0">
+                <h2 className="truncate font-medium text-ink">{vendor.name}</h2>
                 <p className="text-sm text-muted">{vendor.area}, {vendor.city}</p>
               </div>
-              <span className="rounded-full border border-line bg-bg px-2.5 py-1 text-xs capitalize text-muted">{member.role}</span>
+              <span className="shrink-0 rounded-full border border-line bg-bg px-2.5 py-1 text-xs capitalize text-muted">{member.role}</span>
             </div>
           </Link>
         ))}

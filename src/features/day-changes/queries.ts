@@ -11,7 +11,13 @@ export async function getDayChangesForVendor(slug: string, serviceDate: string) 
   const rows = await db
     .select({
       change: dayChanges,
-      customer: customers,
+      customer: {
+        id: customers.id,
+        name: customers.name,
+        society: customers.society,
+        tower: customers.tower,
+        flat: customers.flat,
+      },
       product: products,
     })
     .from(dayChanges)

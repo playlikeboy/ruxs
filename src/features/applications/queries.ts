@@ -31,8 +31,3 @@ export async function getApplication(id: string) {
   const [row] = await getDb().select().from(vendorApplications).where(eq(vendorApplications.id, id)).limit(1);
   return row ?? null;
 }
-
-export async function countNewApplications() {
-  const [row] = await getDb().select({ n: sql<number>`count(*)::int` }).from(vendorApplications).where(eq(vendorApplications.status, "new"));
-  return row?.n ?? 0;
-}

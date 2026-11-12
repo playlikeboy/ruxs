@@ -8,7 +8,7 @@ export function Toaster() {
       position="top-center"
       toastOptions={{
         className:
-          "bg-white text-[#1C1B19] border border-[#E7E5DF] rounded-[10px] shadow-sm text-sm",
+          "bg-surface text-ink border border-line rounded-control shadow-sm text-sm",
       }}
     />
   );

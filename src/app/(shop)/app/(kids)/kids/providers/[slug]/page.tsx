@@ -31,7 +31,8 @@ function FileLinks({ title, icon: Icon, urls, noun }: { title: string; icon: typ
           <li key={url}>
             <a href={url} target="_blank" rel="noreferrer noopener" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-kids-ink/15 px-3.5 text-sm font-medium hover:border-kids-ink/40">
               <Icon className="h-4 w-4" aria-hidden="true" /> {noun} {i + 1}
-              <ExternalLink className="h-3.5 w-3.5 text-kids-ink/50" aria-label="opens in a new tab" />
+              <ExternalLink className="h-3.5 w-3.5 text-kids-ink/60" aria-hidden="true" />
+              <span className="sr-only">(opens in a new tab)</span>
             </a>
           </li>
         ))}
@@ -164,12 +165,12 @@ export default async function KidsProviderProfilePage({ params }: { params: Prom
             {reviews.map((rev) => (
               <li key={rev.id} className={`${kidsCard} p-4`}>
                 <div className="flex items-center justify-between">
-                  <span className="flex gap-0.5" aria-label={`${rev.rating} out of 5`}>
+                  <span className="flex gap-0.5" role="img" aria-label={`${rev.rating} out of 5`}>
                     {[1, 2, 3, 4, 5].map((n) => (
                       <Star key={n} className={`h-4 w-4 ${n <= rev.rating ? "fill-amber-400 text-amber-400" : "text-kids-ink/15"}`} aria-hidden="true" />
                     ))}
                   </span>
-                  <span className="text-xs text-kids-ink/50">{new Date(rev.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" })}</span>
+                  <span className="text-xs text-kids-ink/70">{new Date(rev.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" })}</span>
                 </div>
                 {rev.reviewText && <p className="mt-2 text-sm text-kids-ink/80">{rev.reviewText}</p>}
               </li>

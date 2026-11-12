@@ -1,13 +1,18 @@
 import "server-only";
-import { eq, and, lte, count } from "drizzle-orm";
+import { eq, and, lt, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { invoices, customers, ledgerEntries } from "@/db/schema";
-import { computeInvoice, formatInvoiceNumber } from "@/core/billing";
-import { istDateTime } from "@/core/time";
+import { computeInvoice, formatInvoiceNumber, type LedgerEntryForInvoice } from "@/core/billing";
+import { periodBounds } from "./period";
+
+const INSERT_CHUNK = 500;
 
 /**
  * Creates monthly invoices for one vendor from the ledger.
  * Internal: callers must authorize first (guarded action or cron). Never export from a "use server" module.
+ *
+ * Runs in one transaction under a per-vendor/period advisory lock so a cron
+ * tick and a manual "Generate bills" tap cannot hand out the same bill number.
  */
 export async function generateBillsForVendor(
   vendorId: string,
@@ -15,111 +20,96 @@ export async function generateBillsForVendor(
   database?: ReturnType<typeof getDb>
 ) {
   const db = database ?? getDb();
+  const { end: monthEnd } = periodBounds(period);
 
-  // 1. Fetch all customers of this vendor
-  const custList = await db
-    .select({ id: customers.id, name: customers.name })
-    .from(customers)
-    .where(eq(customers.vendorId, vendorId));
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`bills:${vendorId}:${period}`}))`);
 
-  if (custList.length === 0) {
-    return { created: 0, skipped: 0 };
-  }
+    // One query each for customers, existing bills and ledger rows (no per-customer round trips).
+    const [custList, existing, entries] = await Promise.all([
+      tx.select({ id: customers.id }).from(customers).where(eq(customers.vendorId, vendorId)),
+      tx
+        .select({ customerId: invoices.customerId })
+        .from(invoices)
+        .where(and(eq(invoices.vendorId, vendorId), eq(invoices.period, period))),
+      tx
+        .select({
+          customerId: ledgerEntries.customerId,
+          type: ledgerEntries.type,
+          amountPaise: ledgerEntries.amountPaise,
+          createdAt: ledgerEntries.createdAt,
+        })
+        .from(ledgerEntries)
+        .where(and(eq(ledgerEntries.vendorId, vendorId), lt(ledgerEntries.createdAt, monthEnd))),
+    ]);
 
-  // 2. Count existing invoices for this vendor in this period
-  const [existingCountRow] = await db
-    .select({ count: count() })
-    .from(invoices)
-    .where(
-      and(
-        eq(invoices.vendorId, vendorId),
-        eq(invoices.period, period)
-      )
-    );
-  let seq = (existingCountRow?.count ?? 0);
-
-  // Period end date
-  const [yearStr, monthStr] = period.split("-");
-  const year = parseInt(yearStr!, 10);
-  const month = parseInt(monthStr!, 10);
-  const nextYear = month === 12 ? year + 1 : year;
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const nextMonthStr = nextMonth.toString().padStart(2, "0");
-  const monthEnd = istDateTime(`${nextYear}-${nextMonthStr}-01`, "00:00:00");
-
-  let createdCount = 0;
-  let skippedCount = 0;
-
-  for (const cust of custList) {
-    // Check if invoice already exists
-    const [existing] = await db
-      .select({ id: invoices.id })
-      .from(invoices)
-      .where(
-        and(
-          eq(invoices.vendorId, vendorId),
-          eq(invoices.customerId, cust.id),
-          eq(invoices.period, period)
-        )
-      )
-      .limit(1);
-
-    if (existing) {
-      skippedCount++;
-      continue;
+    if (custList.length === 0) {
+      return { created: 0, skipped: 0 };
     }
 
-    // Fetch all ledger entries up to month end
-    const entries = await db
-      .select({
-        type: ledgerEntries.type,
-        amountPaise: ledgerEntries.amountPaise,
-        createdAt: ledgerEntries.createdAt,
-      })
-      .from(ledgerEntries)
-      .where(
-        and(
-          eq(ledgerEntries.vendorId, vendorId),
-          eq(ledgerEntries.customerId, cust.id),
-          lte(ledgerEntries.createdAt, monthEnd)
-        )
-      );
-
-    const computed = computeInvoice(entries, period);
-
-    // If zero balance and no charges/payments, skip creating an empty bill
-    if (
-      computed.openingPaise === 0 &&
-      computed.chargesPaise === 0 &&
-      computed.paymentsPaise === 0 &&
-      computed.closingPaise === 0
-    ) {
-      skippedCount++;
-      continue;
+    const billed = new Set(existing.map((e) => e.customerId));
+    const entriesByCustomer = new Map<string, LedgerEntryForInvoice[]>();
+    for (const { customerId, ...entry } of entries) {
+      const list = entriesByCustomer.get(customerId);
+      if (list) list.push(entry);
+      else entriesByCustomer.set(customerId, [entry]);
     }
 
-    seq++;
-    const billNumber = formatInvoiceNumber(period, seq);
-    const status = computed.closingPaise <= 0 ? "paid" : "generated";
+    let seq = existing.length;
+    let skippedCount = 0;
+    const now = new Date();
+    const rows: (typeof invoices.$inferInsert)[] = [];
 
-    await db
-      .insert(invoices)
-      .values({
+    for (const cust of custList) {
+      if (billed.has(cust.id)) {
+        skippedCount++;
+        continue;
+      }
+
+      const computed = computeInvoice(entriesByCustomer.get(cust.id) ?? [], period);
+
+      // If zero balance and no charges/payments, skip creating an empty bill
+      if (
+        computed.openingPaise === 0 &&
+        computed.chargesPaise === 0 &&
+        computed.paymentsPaise === 0 &&
+        computed.closingPaise === 0
+      ) {
+        skippedCount++;
+        continue;
+      }
+
+      seq++;
+      const paid = computed.closingPaise <= 0;
+      rows.push({
         vendorId,
         customerId: cust.id,
         period,
-        number: billNumber,
+        number: formatInvoiceNumber(period, seq),
         openingPaise: computed.openingPaise,
         chargesPaise: computed.chargesPaise,
         paymentsPaise: computed.paymentsPaise,
         closingPaise: computed.closingPaise,
-        status,
-        paidAt: computed.closingPaise <= 0 ? new Date() : null,
-      })
-      .onConflictDoNothing();
+        status: paid ? "paid" : "generated",
+        paidAt: paid ? now : null,
+      });
+    }
 
-    createdCount++;
-  }
+    if (rows.length === 0) {
+      return { created: 0, skipped: skippedCount };
+    }
 
-  return { created: createdCount, skipped: skippedCount };
+    // Chunked so a large vendor stays well under Postgres' bind-parameter limit.
+    let created = 0;
+    for (let i = 0; i < rows.length; i += INSERT_CHUNK) {
+      const inserted = await tx
+        .insert(invoices)
+        .values(rows.slice(i, i + INSERT_CHUNK))
+        .onConflictDoNothing()
+        .returning({ id: invoices.id });
+      created += inserted.length;
+    }
+
+    return { created, skipped: skippedCount + (rows.length - created) };
+  });
 }

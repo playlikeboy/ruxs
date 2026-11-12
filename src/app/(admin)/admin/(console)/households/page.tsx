@@ -3,7 +3,7 @@ import { getAdminHouseholds } from "@/features/admin/queries";
 import { AdminHouseholdsTable } from "@/features/admin/components/admin-households-table";
 import { AdminPagination } from "@/features/admin/components/admin-pagination";
 
-export const metadata = { title: "Households · Admin" };
+export const metadata = { title: "Households" };
 
 export default async function AdminHouseholdsPage({
   searchParams,
@@ -36,13 +36,13 @@ export default async function AdminHouseholdsPage({
             defaultValue={q}
             placeholder="Search name, phone, email, address…"
             aria-label="Search households"
-            className="h-10 w-full rounded-[10px] border border-line bg-surface pl-9 pr-3 text-xs placeholder:text-muted focus:border-ink focus:outline-none"
+            className="h-10 w-full rounded-control border border-line bg-surface pl-9 pr-3 text-xs placeholder:text-muted focus:border-ink"
           />
         </form>
       </div>
 
       {people.length === 0 ? (
-        <div className="rounded-[14px] border border-line bg-surface p-12 text-center text-sm text-muted">
+        <div className="rounded-card border border-line bg-surface p-12 text-center text-sm text-muted">
           No households found matching your query.
         </div>
       ) : (

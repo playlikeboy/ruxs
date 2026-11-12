@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getAdminInvoiceDetail } from "@/features/invoices/queries";
 import { InvoicePrintableView } from "@/features/invoices/components/invoice-printable-view";
 
-export const metadata = { title: "Invoice Details · Admin" };
+export const metadata = { title: "Invoice" };
 
 export default async function AdminInvoiceDetailPage({
   params,

@@ -3,10 +3,12 @@
 import { UiIcon } from "@/components/ui/app-icon";
 
 import { useState } from "react";
+import { cn } from "@/components/ui/cn";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { bookKidsServiceAction } from "../actions";
+import { kidsPrimaryButton, kidsSecondaryButton } from "./kids-ui";
 import { SlotCalendar, slotTimeFmt, type SlotDay } from "@/features/bookings/components/slot-calendar";
 
 interface ChildOption {
@@ -69,6 +71,8 @@ export function ServiceBookingForm({
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmedNumber, setConfirmedNumber] = useState<string | null>(null);
+  // One key per form: a retried submit (double tap, flaky network) returns the same booking.
+  const [clientKey] = useState(() => `kbk-${crypto.randomUUID()}`);
 
   // Calculate pricing breakdown
   const materialFee =
@@ -94,8 +98,6 @@ export function ServiceBookingForm({
     setIsPending(true);
 
     try {
-      const clientKey = `kbk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
       const res = await bookKidsServiceAction({
         serviceId: service.id,
         childId: selectedChildId,
@@ -109,11 +111,10 @@ export function ServiceBookingForm({
 
       if (!res.ok) {
         setError(res.error);
-        setIsPending(false);
         return;
       }
 
-      setConfirmedNumber(res.number || "KBK-CONFIRMED");
+      setConfirmedNumber(res.number);
       try {
         navigator.vibrate?.(40);
       } catch {}
@@ -126,35 +127,29 @@ export function ServiceBookingForm({
 
   if (confirmedNumber) {
     return (
-      <div className="rounded-[20px] border border-kids-ink/10 bg-white p-6 text-center space-y-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[20px] border border-kids-ink/10 bg-emerald-300 text-3xl shadow-sm">
-          <CheckCircle2 className="h-8 w-8 text-kids-ink" />
+      <div role="status" className="space-y-4 rounded-[20px] border border-kids-ink/10 bg-white p-6 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-kids-mint">
+          <CheckCircle2 className="h-8 w-8 text-good" aria-hidden="true" />
         </div>
         <div>
-          <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
+          <span className="inline-flex items-center gap-1 rounded-full bg-kids-mint/60 px-3 py-1 text-xs font-semibold text-good">
             Request sent <UiIcon name="party" />
           </span>
           <h2 className="mt-2 text-xl font-semibold text-kids-ink">{service.title}</h2>
-          <p className="mt-1 text-xs font-bold text-kids-ink/60">
-            Booking Ref: <span className="font-mono text-kids-ink">{confirmedNumber}</span>
+          <p className="mt-1 text-sm text-kids-ink/65">
+            Booking ref <span className="font-mono text-kids-ink">{confirmedNumber}</span>
           </p>
-          <p className="mt-2 text-xs font-semibold text-kids-ink/70">
+          <p className="mt-2 text-sm text-kids-ink/75">
             Requested for {new Date(slot!).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Kolkata" })} at {slotTimeFmt.format(new Date(slot!)).toLowerCase()} with {service.vendor.name}. You will see it as confirmed once they accept.
           </p>
         </div>
 
         <div className="flex flex-col gap-2 pt-2">
-          <Link
-            href="/app/kids/bookings"
-            className="rounded-full border border-kids-ink/10 bg-kids-sunny py-2.5 text-xs font-semibold text-kids-ink"
-          >
-            View My Bookings →
+          <Link href="/app/kids/bookings" className={kidsPrimaryButton}>
+            View my bookings
           </Link>
-          <Link
-            href="/app/kids"
-            className="rounded-full border border-slate-300 py-2 text-xs font-bold text-kids-ink/80 hover:bg-slate-50"
-          >
-            Explore More Activities
+          <Link href="/app/kids" className={kidsSecondaryButton}>
+            Explore more activities
           </Link>
         </div>
       </div>
@@ -164,37 +159,35 @@ export function ServiceBookingForm({
   return (
     <form onSubmit={handleBooking} className="space-y-4">
       {error && (
-        <div className="rounded-[20px] border border-red-500 bg-red-50 p-3 text-xs font-bold text-red-900 shadow-sm">
+        <p role="alert" className="rounded-[16px] border border-bad/25 bg-bad/5 p-3 text-sm font-medium text-bad">
           {error}
-        </div>
+        </p>
       )}
 
       {/* Select Child */}
       <div className="rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-semibold text-kids-ink">
-            Participating Child
+          <label htmlFor="kids-booking-child" className="text-sm font-semibold text-kids-ink">
+            Child
           </label>
-          <Link href="/app/kids/children" className="text-xs font-bold text-accent hover:underline">
-            + Manage profiles
+          <Link href="/app/kids/children" className="inline-flex min-h-10 items-center text-sm font-semibold text-accent underline-offset-4 hover:underline">
+            Manage children
           </Link>
         </div>
 
         {childProfiles.length === 0 ? (
           <div className="mt-2 text-center">
-            <p className="text-xs font-semibold text-kids-ink/70">No child profiles found.</p>
-            <Link
-              href="/app/kids/children"
-              className="mt-2 inline-block rounded-full border border-kids-ink/10 bg-kids-sunny/80 px-3 py-1 text-xs font-semibold"
-            >
-              Add Child Profile First
+            <p className="text-sm text-kids-ink/70">Add your child before requesting a session.</p>
+            <Link href="/app/kids/children" className={cn(kidsSecondaryButton, "mt-2")}>
+              Add a child
             </Link>
           </div>
         ) : (
           <select
+            id="kids-booking-child"
             value={selectedChildId}
             onChange={(e) => setSelectedChildId(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-kids-ink/10 bg-amber-50 px-3 py-2 text-xs font-semibold text-kids-ink focus:outline-none"
+            className="mt-2 w-full rounded-[12px] border border-kids-ink/15 bg-white px-3 py-2 text-base text-kids-ink placeholder:text-kids-ink/45"
           >
             {childProfiles.map((child) => (
               <option key={child.id} value={child.id}>
@@ -206,21 +199,24 @@ export function ServiceBookingForm({
       </div>
 
       {/* Mode selection */}
-      <div className="rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
-        <label className="block text-sm font-semibold text-kids-ink">
-          Delivery Mode
-        </label>
+      <fieldset className="rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
+        <legend className="sr-only">Where the session happens</legend>
+        <p aria-hidden="true" className="text-sm font-semibold text-kids-ink">
+          Where
+        </p>
         <div className="mt-2 grid grid-cols-3 gap-2">
           {service.deliveryModes.map((mode) => (
             <button
               key={mode}
               type="button"
               onClick={() => setDeliveryMode(mode as "home" | "studio" | "online")}
-              className={`rounded-xl border p-2 text-center text-xs font-semibold capitalize transition ${
+              aria-pressed={deliveryMode === mode}
+              className={cn(
+                "min-h-11 rounded-[12px] border px-2 text-center text-sm font-semibold transition-colors",
                 deliveryMode === mode
-                  ? "border-kids-ink/20 bg-kids-sunny/80 text-kids-ink"
-                  : "border-slate-200 bg-white text-kids-ink/70 hover:border-slate-300"
-              }`}
+                  ? "border-kids-ink bg-kids-ink text-white"
+                  : "border-kids-ink/15 bg-white text-kids-ink hover:border-kids-ink/40"
+              )}
             >
               {mode === "home" ? "Home Visit" : mode === "studio" ? "Studio" : "Online"}
             </button>
@@ -229,18 +225,21 @@ export function ServiceBookingForm({
 
         {deliveryMode === "home" && (
           <div className="mt-3">
-            <label className="block text-[11px] font-bold text-kids-ink/80">Home Address</label>
+            <label htmlFor="kids-booking-address" className="block text-sm font-semibold text-kids-ink">Home address</label>
             <input
+              id="kids-booking-address"
               type="text"
               required
+              maxLength={255}
+              autoComplete="street-address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Society, Flat / House No., Landmark"
-              className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none"
+              placeholder="Society, flat / house no., landmark"
+              className="mt-1 w-full rounded-[12px] border border-kids-ink/15 bg-white px-3 py-2 text-base text-kids-ink placeholder:text-kids-ink/45"
             />
           </div>
         )}
-      </div>
+      </fieldset>
 
       {/* Only times the teacher has free are offered */}
       <div className="space-y-4 rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
@@ -262,37 +261,37 @@ export function ServiceBookingForm({
 
       {/* Material Add-on if extra */}
       {service.materialFeePolicy === "extra" && service.materialFeePaise > 0 && (
-        <div className="flex items-center justify-between rounded-[20px] border border-kids-ink/10 bg-sky-50 p-3.5">
-          <div>
-            <span className="block text-xs font-semibold text-kids-ink">Include Project Material Kit</span>
-            <span className="block text-[11px] font-medium text-kids-ink/70">
-              Take-home hardware parts & workbox (+{formatINR(service.materialFeePaise)})
+        <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[20px] border border-kids-ink/10 bg-white p-3.5">
+          <span>
+            <span className="block text-sm font-semibold text-kids-ink">Add the materials kit</span>
+            <span className="block text-sm text-kids-ink/70">
+              +{formatINR(service.materialFeePaise)}, set by the provider
             </span>
-          </div>
+          </span>
           <input
             type="checkbox"
             checked={includeMaterials}
             onChange={(e) => setIncludeMaterials(e.target.checked)}
-            className="h-5 w-5 rounded border border-kids-ink/10 text-amber-500"
+            className="h-5 w-5 shrink-0 accent-kids-ink"
           />
-        </div>
+        </label>
       )}
 
       {/* Price Summary */}
-      <div className="rounded-[20px] border border-kids-ink/10 bg-amber-50 p-3.5">
-        <div className="flex items-center justify-between text-xs font-bold text-kids-ink/80">
-          <span>Session Fee</span>
-          <span>{formatINR(service.pricePaise)}</span>
+      <div className="rounded-[20px] border border-kids-ink/10 bg-kids-sunny/25 p-3.5">
+        <div className="flex items-center justify-between text-sm text-kids-ink/80">
+          <span>Session fee</span>
+          <span className="tabular-nums">{formatINR(service.pricePaise)}</span>
         </div>
         {materialFee > 0 && (
-          <div className="mt-1 flex items-center justify-between text-xs font-bold text-kids-ink/80">
-            <span>Material Fee</span>
-            <span>+{formatINR(materialFee)}</span>
+          <div className="mt-1 flex items-center justify-between text-sm text-kids-ink/80">
+            <span>Materials</span>
+            <span className="tabular-nums">+{formatINR(materialFee)}</span>
           </div>
         )}
-        <div className="mt-2 flex items-center justify-between border-t border-slate-300 pt-2 text-sm font-semibold text-kids-ink">
-          <span>Total Payable</span>
-          <span>{formatINR(totalAmountPaise)}</span>
+        <div className="mt-2 flex items-center justify-between border-t border-kids-ink/15 pt-2 text-base font-semibold text-kids-ink">
+          <span>Pay at the session</span>
+          <span className="tabular-nums">{formatINR(totalAmountPaise)}</span>
         </div>
       </div>
 
@@ -300,9 +299,9 @@ export function ServiceBookingForm({
       <button
         type="submit"
         disabled={isPending || childProfiles.length === 0 || !slot}
-        className="w-full rounded-full border border-kids-ink/10 bg-kids-sunny py-3 text-sm font-semibold text-kids-ink transition active:scale-[0.98] disabled:opacity-50"
+        className={cn(kidsPrimaryButton, "min-h-12 w-full disabled:opacity-50")}
       >
-        {isPending ? "Sending request..." : `Request Session (${formatINR(totalAmountPaise)}) →`}
+        {isPending ? "Sending request…" : `Request session · ${formatINR(totalAmountPaise)}`}
       </button>
     </form>
   );

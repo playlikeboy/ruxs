@@ -142,7 +142,7 @@ export function ProductForm({ slug, kind, product, sections, defaultSection = ""
         <Toggle id="p-sub" label="Subscriptions" checked={v.allowSubscription} onChange={(x) => set("allowSubscription", x)} />
       </div>
 
-      <details className="rounded-[12px] border border-line bg-surface px-4 py-3" open={!!product && (v.assetName !== d.asset || v.cutoffAt !== d.cutoff)}>
+      <details className="rounded-control border border-line bg-surface px-4 py-3" open={!!product && (v.assetName !== d.asset || v.cutoffAt !== d.cutoff)}>
         <summary className="cursor-pointer text-sm font-semibold text-ink">
           Delivery rules <span className="font-normal text-muted">· {v.shift}, order by {v.cutoffAt}{v.assetName ? `, returnable ${v.assetName}` : ""}</span>
         </summary>
@@ -175,7 +175,7 @@ export function ProductForm({ slug, kind, product, sections, defaultSection = ""
         </div>
       </details>
 
-      {error && <p role="alert" className="rounded-[10px] bg-blush px-3 py-2 text-sm font-medium text-bad">{error}</p>}
+      {error && <p role="alert" className="rounded-control bg-blush px-3 py-2 text-sm font-medium text-bad">{error}</p>}
       <div className="flex flex-wrap items-center gap-2 pt-1">
         <button type="submit" disabled={pending} className={buttonClass("primary", "lg")}>{pending ? "Saving…" : product ? "Save changes" : "Add item"}</button>
         <Link href={back} className={buttonClass("secondary", "lg")}>Cancel</Link>

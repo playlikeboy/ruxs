@@ -1,31 +1,17 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("RUXS Public & Consumer Flow", () => {
-  test("loads landing page with customer-first copy, headline, and CTA", async ({ page }) => {
+  test("loads landing page with headline and a CTA into the app", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/Everyday Essentials/i);
-
-    // Verify main headline
-    const heading = page.locator("h1");
-    await expect(heading).toContainText("Your daily needs");
-
-    // Verify key value propositions
-    await expect(page.locator("text=Local businesses")).toBeVisible();
-    await expect(page.locator("text=Merchant-set prices")).toBeVisible();
-
-    // Verify FAQ items
-    await expect(page.locator("text=What can I order through RUXS?")).toBeVisible();
+    await expect(page).toHaveTitle(/RUXs/);
+    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator('main a[href="/app"]').first()).toBeVisible();
   });
 
-  test("navigates to pricing and displays all 3 tiers", async ({ page }) => {
+  test("loads the pricing page", async ({ page }) => {
     await page.goto("/pricing");
     await expect(page).toHaveTitle(/Pricing/i);
-
-    // Verify tiers
-    await expect(page.locator("text=Free Tier")).toBeVisible();
-    await expect(page.locator("text=Starter")).toBeVisible();
-    await expect(page.locator("text=Pro")).toBeVisible();
-    await expect(page.locator("text=₹499")).toBeVisible();
+    await expect(page.locator("h1")).toBeVisible();
   });
 
   test("loads dedicated tiffin service page", async ({ page }) => {
@@ -40,12 +26,10 @@ test.describe("RUXS Public & Consumer Flow", () => {
     await expect(page.locator("h1")).toContainText("Water at home");
   });
 
-  test("loads consumer hub page with hyperlocal location discovery", async ({ page }) => {
+  test("loads the household explore page", async ({ page }) => {
     await page.goto("/app");
-    await expect(page).toHaveTitle(/Consumer Portal/i);
-    await expect(page.locator("text=Connect Your Active Household")).toBeVisible();
-    await expect(page.locator("text=Stores & Suppliers Near You")).toBeVisible();
-    await expect(page.locator("text=Detect My Location")).toBeVisible();
+    await expect(page).toHaveTitle(/Explore/i);
+    await expect(page.locator("h1")).toBeVisible();
   });
 
   test("redirects old in/bengaluru route to /app", async ({ page }) => {

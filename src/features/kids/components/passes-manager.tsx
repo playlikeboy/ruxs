@@ -7,7 +7,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Ticket, Clock } from "lucide-react";
 import { formatINR } from "@/core/money";
+import { cn } from "@/components/ui/cn";
 import { purchasePassAction } from "../actions";
+import { kidsSecondaryButton } from "./kids-ui";
+
+const validFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 
 interface AvailablePass {
   id: string;
@@ -65,36 +69,36 @@ export function PassesManager({
       if (!res.ok) {
         setError(res.error);
       } else {
-        setSuccessMsg("Pass purchased successfully! Your credits are now active.");
+        setSuccessMsg("Pass added. Your credits are ready to use.");
         router.refresh();
       }
-    } catch (err: any) {
+    } catch {
       setPurchasingId(null);
-      setError(err?.message ?? "Failed to purchase pass.");
+      setError("Could not reach RUXs. Check your connection and try again.");
     }
   };
 
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-[20px] border border-rose-500 bg-rose-50 p-3 text-xs font-bold text-rose-800">
+        <p role="alert" className="rounded-[16px] border border-bad/25 bg-bad/5 p-3 text-sm font-medium text-bad">
           {error}
-        </div>
+        </p>
       )}
 
       {successMsg && (
-        <div className="rounded-[20px] border border-emerald-500 bg-emerald-50 p-3 text-xs font-bold text-emerald-800">
+        <p role="status" className="rounded-[16px] border border-good/25 bg-kids-mint/40 p-3 text-sm font-medium text-good">
           {successMsg}
-        </div>
+        </p>
       )}
 
       {/* Owned Passes Wallet (if user has any) */}
       {purchasedPasses.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center gap-1.5 px-1">
-            <Ticket className="h-4 w-4 text-amber-600" />
+            <Ticket className="h-4 w-4 text-kids-ink" aria-hidden="true" />
             <h2 className="text-base font-semibold text-kids-ink">
-              My Active Pass Credits ({purchasedPasses.length})
+              My passes ({purchasedPasses.length})
             </h2>
           </div>
 
@@ -110,14 +114,14 @@ export function PassesManager({
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="rounded-full border border-kids-ink/20 bg-white px-2 py-0.5 text-[10px] font-semibold text-kids-ink">
-                        <UiIcon name="pass" /> ACTIVE WALLET
+                      <span className="inline-flex items-center gap-1 rounded-full border border-kids-ink/15 bg-white px-2 py-0.5 text-xs font-semibold text-kids-ink">
+                        <UiIcon name="pass" /> {isExpired ? "Expired" : "Active"}
                       </span>
                       <h3 className="mt-1.5 text-base font-semibold text-kids-ink">
                         {pass.name}
                       </h3>
                       {pass.description && (
-                        <p className="mt-0.5 text-xs font-medium text-kids-ink/70">
+                        <p className="mt-0.5 text-sm text-kids-ink/70">
                           {pass.description}
                         </p>
                       )}
@@ -125,29 +129,31 @@ export function PassesManager({
 
                     <div className="text-right">
                       <div className="rounded-[20px] border border-kids-ink/10 bg-white px-3 py-1.5">
-                        <span className="block text-xl font-semibold text-kids-ink">
+                        <span className="block text-xl font-semibold tabular-nums text-kids-ink">
                           {purchase.remainingCredits}
                         </span>
                         <span className="block text-xs text-kids-ink/55">
-                          Credits Left
+                          credits left
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-2.5 text-[11px] font-semibold text-kids-ink/70">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-kids-ink/10 pt-2.5 text-sm text-kids-ink/75">
                     <span className="inline-flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-kids-ink/60" />
+                      <Clock className="h-4 w-4" aria-hidden="true" />
                       <span>
-                        {isExpired ? "Expired on" : "Valid until"} {expiresDate.toLocaleDateString()}
+                        {isExpired ? "Expired on" : "Valid until"} {validFmt.format(expiresDate)}
                       </span>
                     </span>
-                    <Link
-                      href="/app/kids/workshops"
-                      className="text-xs font-semibold text-accent hover:underline"
-                    >
-                      Redeem against camps →
-                    </Link>
+                    {!isExpired && purchase.remainingCredits > 0 && (
+                      <Link
+                        href="/app/kids/workshops"
+                        className="inline-flex min-h-10 items-center text-sm font-semibold text-accent underline-offset-4 hover:underline"
+                      >
+                        Use on a workshop
+                      </Link>
+                    )}
                   </div>
                 </div>
               );
@@ -160,10 +166,10 @@ export function PassesManager({
       <section className="space-y-3">
         <div className="px-1">
           <h2 className="text-base font-semibold text-kids-ink">
-            Available Holiday & Weekend Passes
+            Holiday and weekend passes
           </h2>
-          <p className="text-xs font-semibold text-kids-ink/60">
-            Flexi-credits valid across robotics, pottery, chess and arts camps
+          <p className="text-sm text-kids-ink/65">
+            Prepaid session credits. Terms are shown on each pass.
           </p>
         </div>
 
@@ -175,36 +181,34 @@ export function PassesManager({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <span className="rounded-full border border-kids-ink/20 bg-amber-200 px-2.5 py-0.5 text-[10px] font-semibold text-kids-ink">
-                    <UiIcon name="star" /> {pass.creditsTotal} SESSIONS PASS
+                  <span className="inline-flex items-center gap-1 rounded-full bg-kids-sunny/70 px-2.5 py-0.5 text-xs font-semibold text-kids-ink">
+                    <UiIcon name="star" /> {pass.creditsTotal} {pass.creditsTotal === 1 ? "session" : "sessions"}
                   </span>
                   <h3 className="mt-2 text-lg font-semibold text-kids-ink">
                     {pass.name}
                   </h3>
-                  <p className="mt-1 text-xs font-medium text-kids-ink/70">
-                    {pass.description}
-                  </p>
+                  {pass.description && <p className="mt-1 text-sm text-kids-ink/70">{pass.description}</p>}
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="block text-xl font-semibold text-kids-ink">
+                  <span className="block text-xl font-semibold tabular-nums text-kids-ink">
                     {formatINR(pass.pricePaise)}
                   </span>
-                  <span className="block text-[10px] font-semibold text-slate-400">
+                  <span className="block text-xs text-kids-ink/60">
                     Valid {pass.validityDays} days
                   </span>
                 </div>
               </div>
 
               {pass.terms && (
-                <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-[11px] font-medium text-kids-ink/70">
-                  <span className="font-bold text-slate-800">Terms: </span>
+                <div className="mt-3 rounded-[12px] bg-kids-ink/[0.04] p-3 text-sm text-kids-ink/75">
+                  <span className="font-semibold text-kids-ink">Terms: </span>
                   {pass.terms}
                 </div>
               )}
 
-              <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                <span className="text-[11px] font-bold text-emerald-700">
+              <div className="mt-4 flex items-center justify-between gap-3 border-t border-kids-ink/10 pt-3">
+                <span className="text-sm text-kids-ink/70">
                   Online checkout opening soon
                 </span>
 
@@ -212,9 +216,9 @@ export function PassesManager({
                   type="button"
                   disabled={purchasingId === pass.id}
                   onClick={() => handlePurchase(pass.id)}
-                  className="rounded-full border border-kids-ink/10 bg-kids-sunny px-5 py-2 text-xs font-semibold text-kids-ink transition active:scale-[0.98] hover:bg-kids-sunny/80 disabled:opacity-50"
+                  className={cn(kidsSecondaryButton, "shrink-0 disabled:opacity-50")}
                 >
-                  {purchasingId === pass.id ? "Checking..." : "Coming soon"}
+                  {purchasingId === pass.id ? "Checking…" : "Coming soon"}
                 </button>
               </div>
             </div>

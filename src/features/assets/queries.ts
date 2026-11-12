@@ -13,40 +13,41 @@ export async function getVendorAssetOverview(slug: string) {
   const access = await requireVendorAccess(slug, ["owner", "staff", "driver"]);
   const db = getDb();
 
-  const configuredAssets = await db
-    .select({ asset: products.assetName })
-    .from(products)
-    .where(eq(products.vendorId, access.vendorId));
-
-  const balances = await db
-    .select({
-      asset: assetMovements.asset,
-      customerId: assetMovements.customerId,
-      customerName: customers.name,
-      society: customers.society,
-      tower: customers.tower,
-      floor: customers.floor,
-      flat: customers.flat,
-      balance: sql<number>`coalesce(sum(${assetMovements.delta}), 0)::int`,
-    })
-    .from(assetMovements)
-    .innerJoin(customers, eq(assetMovements.customerId, customers.id))
-    .where(eq(assetMovements.vendorId, access.vendorId))
-    .groupBy(
-      assetMovements.asset,
-      assetMovements.customerId,
-      customers.name,
-      customers.society,
-      customers.tower,
-      customers.floor,
-      customers.flat
-    )
-    .orderBy(
-      asc(customers.society),
-      asc(customers.tower),
-      desc(customers.floor),
-      asc(customers.flat)
-    );
+  const [configuredAssets, balances] = await Promise.all([
+    db
+      .selectDistinct({ asset: products.assetName })
+      .from(products)
+      .where(eq(products.vendorId, access.vendorId)),
+    db
+      .select({
+        asset: assetMovements.asset,
+        customerId: assetMovements.customerId,
+        customerName: customers.name,
+        society: customers.society,
+        tower: customers.tower,
+        floor: customers.floor,
+        flat: customers.flat,
+        balance: sql<number>`coalesce(sum(${assetMovements.delta}), 0)::int`,
+      })
+      .from(assetMovements)
+      .innerJoin(customers, eq(assetMovements.customerId, customers.id))
+      .where(eq(assetMovements.vendorId, access.vendorId))
+      .groupBy(
+        assetMovements.asset,
+        assetMovements.customerId,
+        customers.name,
+        customers.society,
+        customers.tower,
+        customers.floor,
+        customers.flat
+      )
+      .orderBy(
+        asc(customers.society),
+        asc(customers.tower),
+        desc(customers.floor),
+        asc(customers.flat)
+      ),
+  ]);
 
   const outstandingRows = balances.filter((row) => Number(row.balance) !== 0);
   const assetNames = Array.from(

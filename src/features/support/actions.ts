@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { supportTickets, vendors } from "@/db/schema";
-import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
+import { isUserAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { loadProfile } from "@/features/consumer/household";
 import { todayIST } from "@/core/time";
 import { formatTicketNumber, suggestTicketPriority, TICKET_CATEGORIES } from "@/core/tickets";
@@ -31,15 +31,16 @@ export async function raiseTicket(input: unknown) {
   const userPhone = profile?.phone ?? "Not provided";
   const userEmail = profile?.email ?? user.primaryEmail ?? null;
 
-  // Resolve vendor name if vendorId is provided
-  let vendorName = data.vendorName ?? null;
-  if (data.vendorId && !vendorName) {
+  // A linked store's name always comes from the database, never from the browser.
+  let vendorName = data.vendorId ? null : (data.vendorName ?? null);
+  if (data.vendorId) {
     const [v] = await db
       .select({ name: vendors.name })
       .from(vendors)
       .where(eq(vendors.id, data.vendorId))
       .limit(1);
-    vendorName = v?.name ?? null;
+    if (!v) return fail("We couldn't find that store. Refresh and try again.");
+    vendorName = v.name;
   }
 
   const today = todayIST();
@@ -97,7 +98,7 @@ export async function raiseTicket(input: unknown) {
       sendEmail({
         to: userEmail,
         fromType: "alerts",
-        subject: `[${ticketNumber}] Ticket Received: ${data.subject}`,
+        subject: `[${ticketNumber}] Ticket received: ${data.subject.replace(/[\r\n]+/g, " ")}`,
         html: emailHtml,
         text: `Your ticket ${ticketNumber} has been received. Subject: ${data.subject}. We are looking into this and will update you shortly.`,
       }).catch((e) => console.error("Ticket email error:", e));
@@ -110,56 +111,59 @@ export async function raiseTicket(input: unknown) {
   }
 }
 
-/** Admin or vendor resolution update */
+/**
+ * Admin or store resolution update. Admins can change everything; a store's owner
+ * or staff can only move the status and write the household-visible resolution
+ * on tickets linked to their own store.
+ */
 export async function updateTicketStatus(input: unknown) {
   const parsed = updateTicketSchema.safeParse(input);
   if (!parsed.success) return fail("Invalid parameters");
 
+  const user = await requireUser();
   const db = getDb();
   const { ticketId, status, priority, adminNotes, resolution } = parsed.data;
 
-  // Check if admin or vendor
-  let isAuthorized = false;
-  try {
-    await requireAdmin();
-    isAuthorized = true;
-  } catch {
-    // If not admin, check if vendor has access to the ticket
-    const [existing] = await db
-      .select({ vendorId: supportTickets.vendorId })
-      .from(supportTickets)
-      .where(eq(supportTickets.id, ticketId))
-      .limit(1);
+  const [existing] = await db
+    .select({ vendorId: supportTickets.vendorId, vendorSlug: vendors.slug, resolvedAt: supportTickets.resolvedAt })
+    .from(supportTickets)
+    .leftJoin(vendors, eq(supportTickets.vendorId, vendors.id))
+    .where(eq(supportTickets.id, ticketId))
+    .limit(1);
+  if (!existing) return fail("Ticket not found");
 
-    if (existing?.vendorId) {
-      const [v] = await db.select({ slug: vendors.slug }).from(vendors).where(eq(vendors.id, existing.vendorId)).limit(1);
-      if (v?.slug) {
-        await requireVendorAccess(v.slug);
-        isAuthorized = true;
-      }
-    }
+  const isAdmin = await isUserAdmin(user);
+  let merchantSlug: string | null = null;
+  if (!isAdmin) {
+    if (!existing.vendorSlug) return fail("Unauthorized to update this ticket");
+    // Throws (not found) unless this user is the store's owner or staff.
+    await requireVendorAccess(existing.vendorSlug, ["owner", "staff"]);
+    merchantSlug = existing.vendorSlug;
   }
 
-  if (!isAuthorized) return fail("Unauthorized to update this ticket");
-
-  const updateFields: Record<string, unknown> = {
+  const closing = status === "resolved" || status === "closed";
+  const updateFields: Partial<typeof supportTickets.$inferInsert> = {
     status,
     updatedAt: new Date(),
+    // Stamp when the ticket was first closed; reopening clears it.
+    resolvedAt: closing ? (existing.resolvedAt ?? new Date()) : null,
   };
-
-  if (priority) updateFields.priority = priority;
-  if (adminNotes !== undefined) updateFields.adminNotes = adminNotes;
-  if (resolution !== undefined) {
-    updateFields.resolution = resolution;
-    if (status === "resolved" || status === "closed") {
-      updateFields.resolvedAt = new Date();
-    }
+  if (resolution !== undefined) updateFields.resolution = resolution;
+  if (isAdmin) {
+    if (priority) updateFields.priority = priority;
+    if (adminNotes !== undefined) updateFields.adminNotes = adminNotes;
   }
 
-  await db.update(supportTickets).set(updateFields).where(eq(supportTickets.id, ticketId));
+  try {
+    await db.update(supportTickets).set(updateFields).where(eq(supportTickets.id, ticketId));
+  } catch (err) {
+    console.error("Failed to update ticket:", err);
+    return fail("Could not save the ticket. Please try again.");
+  }
 
   revalidatePath("/app/tickets");
   revalidatePath("/admin/tickets");
+  if (merchantSlug) revalidatePath(`/merchant-panel/${merchantSlug}/disputes`);
 
   return { ok: true as const };
 }

@@ -1,7 +1,7 @@
 import { cn } from "./cn";
 
 export const inputClass =
-  "min-h-11 w-full rounded-control border border-line bg-surface px-3 text-[15px] text-ink placeholder:text-muted/60 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:opacity-60";
+  "min-h-11 w-full rounded-control border border-line bg-surface px-3 text-base text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60";
 
 export function Field({ label, hint, htmlFor, children, className }: { label: string; hint?: string; htmlFor?: string; children: React.ReactNode; className?: string }) {
   return (
@@ -54,7 +54,7 @@ export function ChipGroup({ options, value, onChange, label }: { options: { valu
             aria-pressed={on}
             onClick={() => onChange(on ? value.filter((v) => v !== o.value) : [...value, o.value])}
             className={cn(
-              "min-h-9 rounded-full border px-3 text-[13px] font-medium transition",
+              "min-h-10 rounded-full border px-3 text-[13px] font-medium transition",
               on ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink/30"
             )}
           >

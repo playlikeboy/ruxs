@@ -28,14 +28,16 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
   const { vendor, items } = store;
   // Kids academies have their own playful profile page in Kids mode.
   if (isKidsVendorType(vendor.vendorType) && vendor.vendorType !== "kids_products") redirect(`/app/kids/providers/${vendor.slug}`);
-  const [reviewData, myReview, canReply] = await Promise.all([
+  const isBooking = vendor.businessType === "booking";
+  const [reviewData, myReview, canReply, typeDetails] = await Promise.all([
     getStoreReviewsPaginated(vendor.id, 1, 10),
     getMyReviewState(vendor.id),
     canReplyToStoreReviews(vendor.slug),
+    isBooking ? null : getPublicTypeDetails(vendor.id, items.map((i) => i.id)),
   ]);
 
   // Trainers, physiotherapists and other booking providers get a profile page, not a menu.
-  if (vendor.businessType === "booking") {
+  if (isBooking || !typeDetails) {
     const provider = await getProviderPublic(vendor.id);
     const firstCategory = category(provider.services[0]?.category.id ?? "other");
     return (
@@ -68,7 +70,6 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
     sections.set(key, [...(sections.get(key) ?? []), item]);
   }
   const canOrder = vendor.acceptingOrders && store.inRange;
-  const typeDetails = await getPublicTypeDetails(vendor.id, items.map((i) => i.id));
 
   const storeInfo = {
     vendorSlug: vendor.slug,
@@ -92,14 +93,14 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           aria-label="Back to explore"
           className="absolute left-4 top-[calc(1rem+env(safe-area-inset-top))] flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </Link>
       </div>
 
       <div className="relative -mt-5 rounded-t-3xl bg-white px-5 pt-5">
         <h1 className="text-[24px] font-bold leading-tight tracking-tight text-ink">{vendor.name}</h1>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-neutral-500">
-          <a href="#reviews"><RatingBadge rating={store.rating} /></a>
+          <a href="#reviews" className="rounded-md"><RatingBadge rating={store.rating} /></a>
           <span className="flex items-center gap-1">
             <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
             {vendor.area}
@@ -138,20 +139,22 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           {menu.length === 0 && <p className="mt-2 text-sm text-neutral-500">Nothing on the menu yet. Check back soon.</p>}
           {Array.from(sections.entries()).map(([title, list]) => (
             <div key={title} className="mt-5">
-              <h3 className="text-[13px] font-bold uppercase tracking-wider text-neutral-500">{title}</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted">{title}</h3>
               <ul className="divide-y divide-black/5">
-                {list.map((item) => (
+                {list.map((item) => {
+                  const chips = typeDetails.itemChips.get(item.id) ?? [];
+                  return (
                   <li key={item.id} className="flex gap-4 py-5">
                     <div className="min-w-0 flex-1">
                       <VegMark isVeg={item.isVeg} />
-                      <h4 className="mt-1 text-[16px] font-semibold text-ink">{item.name}</h4>
+                      <h4 className="mt-1 break-words text-base font-semibold text-ink">{item.name}</h4>
                       <p className="mt-0.5 text-[15px] font-medium text-ink tabular-nums">{formatINR(item.pricePaise)}</p>
 
                       {item.description && <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-neutral-500">{item.description}</p>}
-                      {(typeDetails.itemChips.get(item.id) ?? []).length > 0 && (
+                      {chips.length > 0 && (
                         <p className="mt-1.5 flex flex-wrap gap-1">
-                          {(typeDetails.itemChips.get(item.id) ?? []).slice(0, 3).map((c) => (
-                            <span key={c} className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">{c}</span>
+                          {chips.slice(0, 3).map((c) => (
+                            <span key={c} className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600">{c}</span>
                           ))}
                         </p>
                       )}
@@ -159,7 +162,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                         <p className="mt-1 text-xs text-neutral-500">+ {formatINR(item.depositPaise)} refundable {item.assetName} deposit on subscriptions</p>
                       )}
                       {item.allowSubscription && item.isAvailable && store.inRange && (
-                        <Link href={`/app/store/${vendor.slug}/subscribe/${item.id}`} className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-accent">
+                        <Link href={`/app/store/${vendor.slug}/subscribe/${item.id}`} className="mt-1 inline-flex min-h-10 items-center gap-1 text-[13px] font-semibold text-accent hover:underline">
                           <Repeat className="h-3.5 w-3.5" aria-hidden="true" /> Subscribe · order by {item.cutoffAt}
                         </Link>
                       )}
@@ -167,7 +170,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                     <div className="relative flex w-24 shrink-0 flex-col items-center">
                       {item.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element -- merchant-uploaded image host
-                        <img src={item.imageUrl} alt="" loading="lazy" className="h-24 w-24 rounded-2xl object-cover" />
+                        <img src={item.imageUrl} alt="" width={96} height={96} loading="lazy" decoding="async" className="h-24 w-24 rounded-2xl object-cover" />
                       ) : (
                         <StoreCover cover={category(item.kind)} alt="" className="h-24 w-24 rounded-2xl" />
                       )}
@@ -182,7 +185,8 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                       )}
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </div>
           ))}

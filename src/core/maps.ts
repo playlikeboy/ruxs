@@ -9,7 +9,7 @@ export interface LatLng {
 }
 
 /** Hosts we accept as Google Maps links (also the allowlist for expanding short links). */
-export const MAPS_HOSTS = ["google.com", "www.google.com", "maps.google.com", "google.co.in", "www.google.co.in", "maps.app.goo.gl", "goo.gl", "g.co"];
+export const MAPS_HOSTS: readonly string[] = ["google.com", "www.google.com", "maps.google.com", "google.co.in", "www.google.co.in", "maps.app.goo.gl", "goo.gl", "g.co"];
 
 export function isMapsHost(host: string): boolean {
   return MAPS_HOSTS.includes(host.toLowerCase());

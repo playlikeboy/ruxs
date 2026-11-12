@@ -23,7 +23,7 @@ export function CancelOrderButton({ orderId }: { orderId: string }) {
           }
         });
       }}
-      className="h-12 w-full rounded-xl border border-bad/30 text-sm font-semibold text-bad disabled:opacity-60"
+      className="h-12 w-full rounded-xl border border-bad/30 text-sm font-semibold text-bad transition hover:bg-bad/5 disabled:opacity-60"
     >
       {pending ? "Cancelling…" : "Cancel order"}
     </button>

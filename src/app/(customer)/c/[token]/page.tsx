@@ -1,6 +1,6 @@
-import { UiIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
-import { eq, and, or, isNull, gte, inArray } from "drizzle-orm";
+import { ChevronRight } from "lucide-react";
+import { eq, and, or, isNull, gte, lte, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
 import { subscriptions, products, ledgerEntries, assetMovements, dayChanges } from "@/db/schema";
 import { requireCustomerByToken } from "@/lib/auth/session";
@@ -8,9 +8,16 @@ import { formatINR } from "@/core/money";
 import { balance } from "@/core/ledger";
 import { canBalance } from "@/core/assets";
 import { buildUpiUrl } from "@/core/upi";
-import { todayIST, weekdayIST } from "@/core/time";
+import { addDaysIST, istDateTime, IST_TIMEZONE, todayIST, weekdayIST } from "@/core/time";
+import { Card } from "@/components/ui/card";
+import { buttonClass } from "@/components/ui/button";
 import { CustomerDayCards } from "@/features/day-changes/components/customer-day-cards";
 import { PauseDatesSheet } from "@/features/day-changes/components/pause-dates-sheet";
+
+const SCHEDULE_DAYS = 7;
+const weekdayFormat = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: IST_TIMEZONE });
+const dayNumFormat = new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: IST_TIMEZONE });
+const monthFormat = new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: IST_TIMEZONE });
 
 export default async function CustomerLinkPage({
   params,
@@ -21,9 +28,10 @@ export default async function CustomerLinkPage({
   const { customer, vendor } = await requireCustomerByToken(token);
   const db = getDb();
   const today = todayIST();
+  const lastDay = addDaysIST(today, SCHEDULE_DAYS - 1);
   const currentPeriod = today.substring(0, 7);
 
-  // 1. Fetch active subscriptions
+  // 1. Active subscriptions for this customer (scoped to the link's vendor).
   const subs = await db
     .select({
       sub: subscriptions,
@@ -33,67 +41,63 @@ export default async function CustomerLinkPage({
     .innerJoin(products, eq(subscriptions.productId, products.id))
     .where(
       and(
+        eq(subscriptions.vendorId, vendor.id),
         eq(subscriptions.customerId, customer.id),
         or(isNull(subscriptions.endsOn), gte(subscriptions.endsOn, today))
       )
     );
 
-  // 2. Fetch ledger balance
+  // 2. Ledger balance (only the amounts are needed).
   const ledger = await db
-    .select()
+    .select({ amountPaise: ledgerEntries.amountPaise })
     .from(ledgerEntries)
-    .where(eq(ledgerEntries.customerId, customer.id));
+    .where(and(eq(ledgerEntries.vendorId, vendor.id), eq(ledgerEntries.customerId, customer.id)));
   const currentBalance = balance(ledger);
 
-  // 3. Fetch cans/assets
+  // 3. Cans / dabbas held.
   const movements = await db
-    .select()
+    .select({ delta: assetMovements.delta })
     .from(assetMovements)
-    .where(eq(assetMovements.customerId, customer.id));
+    .where(and(eq(assetMovements.vendorId, vendor.id), eq(assetMovements.customerId, customer.id)));
   const cansHeld = canBalance(movements);
 
-  // 4. Fetch day changes strictly for this customer's subscriptions
+  // 4. Day changes for this customer's subscriptions inside the visible window.
+  //    Only the fields the client cards need are selected so nothing else is serialised to the browser.
   const subIds = subs.map((s) => s.sub.id);
   const changes =
     subIds.length > 0
       ? await db
-          .select()
+          .select({
+            subscriptionId: dayChanges.subscriptionId,
+            serviceDate: dayChanges.serviceDate,
+            kind: dayChanges.kind,
+            qty: dayChanges.qty,
+            isLate: dayChanges.isLate,
+          })
           .from(dayChanges)
           .where(
             and(
               eq(dayChanges.vendorId, vendor.id),
-              inArray(dayChanges.subscriptionId, subIds)
+              inArray(dayChanges.subscriptionId, subIds),
+              gte(dayChanges.serviceDate, today),
+              lte(dayChanges.serviceDate, lastDay)
             )
           )
       : [];
 
-  // Build next 7 days in IST
-  const days: {
-    dateStr: string;
-    dayLabel: string;
-    dayNum: string;
-    weekday: string;
-    isToday: boolean;
-  }[] = [];
-  const startMoment = new Date();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(startMoment);
-    d.setDate(d.getDate() + i);
-    const dateStr = d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-    const dayLabel = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "Asia/Kolkata" });
-    const dayNum = d.toLocaleDateString("en-US", { day: "numeric", timeZone: "Asia/Kolkata" });
-    const weekday = weekdayIST(dateStr);
-
-    days.push({
+  // Next 7 service dates in IST, built from the IST calendar date (not the server clock's zone).
+  const days = Array.from({ length: SCHEDULE_DAYS }, (_, i) => {
+    const dateStr = addDaysIST(today, i);
+    const noon = istDateTime(dateStr, "12:00:00");
+    return {
       dateStr,
-      dayLabel,
-      dayNum,
-      weekday,
+      dayLabel: weekdayFormat.format(noon),
+      dayNum: dayNumFormat.format(noon),
+      weekday: weekdayIST(dateStr),
       isToday: i === 0,
-    });
-  }
+    };
+  });
 
-  // Universal UPI payment deep link
   const upiUrl =
     vendor.upiVpa && currentBalance > 0
       ? buildUpiUrl({
@@ -104,92 +108,71 @@ export default async function CustomerLinkPage({
         })
       : null;
 
+  const balanceStatus = currentBalance > 0 ? "Due" : currentBalance < 0 ? "In credit" : "Settled";
+  const periodLabel = monthFormat.format(istDateTime(`${currentPeriod}-01`, "12:00:00"));
+
   return (
-    <div className="p-4 sm:p-6 space-y-5">
-      {/* Top Header */}
-      <div className="bg-surface border border-line rounded-[12px] p-4 space-y-3 shadow-xs">
-        <div className="flex items-start justify-between">
-          <div>
-            <span className="text-xs text-muted block">Direct Kitchen Service</span>
-            <h1 className="text-xl font-bold tracking-tight text-ink">
-              {vendor.name}
-            </h1>
-            <div className="text-xs text-muted mt-0.5">
-              {customer.name} • Flat {customer.flat}, {customer.society}
-            </div>
-          </div>
-
-          <a
-            href={`tel:${vendor.phone}`}
-            className="px-2.5 py-1 bg-[#FAFAF7] border border-line rounded-[8px] text-xs font-semibold text-ink"
-          >
-            <UiIcon name="phone" /> Kitchen
-          </a>
+    <div className="space-y-6 p-4 sm:p-6">
+      <Card className="space-y-4 p-4">
+        <div className="min-w-0">
+          <h1 className="break-words text-xl font-bold tracking-tight text-ink">{vendor.name}</h1>
+          <p className="mt-1 break-words text-xs text-muted">
+            {customer.name} · Flat {customer.flat}, {customer.society}
+          </p>
         </div>
 
-        {/* Khata Balance & UPI Pay button */}
-        <div className="pt-3 border-t border-line/60 grid grid-cols-2 gap-2">
-          <div className="p-3 bg-[#FAFAF7] rounded-[10px]">
-            <span className="text-[11px] text-muted block">Current Khata</span>
-            <span
-              className={`text-lg font-bold font-mono tabular-nums ${
-                currentBalance > 0 ? "text-[#B42318]" : "text-good"
-              }`}
-            >
-              {formatINR(currentBalance)}
-            </span>
+        <dl className="grid grid-cols-2 gap-2 border-t border-line pt-4">
+          <div className="rounded-control bg-bg p-3">
+            <dt className="text-xs text-muted">Khata balance</dt>
+            <dd className="mt-0.5">
+              <span
+                className={`block font-mono text-lg font-bold tabular-nums ${
+                  currentBalance > 0 ? "text-bad" : "text-good"
+                }`}
+              >
+                {formatINR(currentBalance)}
+              </span>
+              <span className="text-xs text-muted">{balanceStatus}</span>
+            </dd>
           </div>
 
-          <div className="p-3 bg-[#FAFAF7] rounded-[10px]">
-            <span className="text-[11px] text-muted block">Cans / Dabbas</span>
-            <span className="text-lg font-bold font-mono tabular-nums text-ink">
-              {cansHeld}
-            </span>
+          <div className="rounded-control bg-bg p-3">
+            <dt className="text-xs text-muted">Cans / dabbas with you</dt>
+            <dd className="mt-0.5 font-mono text-lg font-bold tabular-nums text-ink">{cansHeld}</dd>
           </div>
-        </div>
+        </dl>
 
-        {upiUrl && (
-          <a
-            href={upiUrl}
-            className="w-full min-h-[44px] py-2.5 px-4 bg-accent text-white font-semibold text-xs rounded-[10px] text-center hover:opacity-90 active:scale-[0.99] transition-all shadow-xs flex items-center justify-center gap-1.5"
-          >
-            <span>Pay {formatINR(currentBalance)} via UPI</span>
+        {upiUrl ? (
+          <a href={upiUrl} className={buttonClass("primary", "lg", "w-full")}>
+            Pay {formatINR(currentBalance)} via UPI
           </a>
-        )}
-      </div>
+        ) : null}
+      </Card>
 
-      {/* Holiday Pause Button */}
-      <div>
-        <PauseDatesSheet token={token} defaultStart={today} />
-      </div>
+      <PauseDatesSheet token={token} defaultStart={today} />
 
-      {/* 7-Day Calendar Cards for Deliver / Skip / Extra */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-ink">
-              Upcoming Schedule
-            </h2>
-            <p className="text-xs text-muted">
-              Tap to skip or add extras. Changes set before cutoff are free.
-            </p>
-          </div>
+      <section aria-labelledby="schedule-heading" className="space-y-3">
+        <div>
+          <h2 id="schedule-heading" className="text-base font-semibold text-ink">
+            Upcoming schedule
+          </h2>
+          <p className="mt-0.5 text-xs text-muted">
+            Skip a day or add extras. Changes made before the cutoff are free.
+          </p>
         </div>
 
         {subs.length === 0 ? (
-          <div className="p-6 text-center text-xs text-muted bg-surface border border-line rounded-[12px]">
-            No subscriptions linked yet. Contact your kitchen to activate your meal plan.
-          </div>
+          <Card className="p-6 text-center text-sm text-muted">
+            No plans are linked to this page yet. Ask your provider to set one up.
+          </Card>
         ) : (
           subs.map(({ sub, product }) => (
             <div key={sub.id} className="space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-semibold text-ink">
-                  {product.name} ({product.shift})
-                </span>
-                <span className="text-[11px] text-muted">
-                  Cutoff: {product.cutoffAt} IST
-                </span>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1">
+                <h3 className="text-sm font-semibold text-ink">
+                  {product.name} <span className="font-normal text-muted">({product.shift})</span>
+                </h3>
+                <span className="text-xs text-muted tabular-nums">Cutoff {product.cutoffAt} IST</span>
               </div>
 
               <CustomerDayCards
@@ -208,21 +191,21 @@ export default async function CustomerLinkPage({
             </div>
           ))
         )}
-      </div>
+      </section>
 
-      {/* View Itemised Monthly Bill Link */}
-      <div className="p-4 bg-surface border border-line rounded-[12px] space-y-2 text-xs">
-        <h3 className="font-semibold text-ink">Monthly Itemised Bill</h3>
-        <p className="text-muted leading-relaxed">
-          View full ledger breakdown of daily deliveries, skips, and payments.
+      <Card className="p-4">
+        <h2 className="text-sm font-semibold text-ink">Monthly bill</h2>
+        <p className="mt-1 text-xs leading-relaxed text-muted">
+          See each delivery, skip and payment for the month.
         </p>
         <Link
           href={`/c/${token}/bills/${currentPeriod}`}
-          className="inline-block pt-1 font-semibold text-accent hover:underline"
+          className="mt-2 inline-flex min-h-10 items-center gap-1 rounded-control text-sm font-semibold text-accent hover:underline"
         >
-          View {currentPeriod} Bill Breakdown →
+          View {periodLabel} bill
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Link>
-      </div>
+      </Card>
     </div>
   );
 }

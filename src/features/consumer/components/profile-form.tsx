@@ -22,7 +22,11 @@ export interface ProfileDefaults {
 }
 
 const inputClass =
-  "mt-1 h-12 w-full rounded-xl border border-black/10 bg-white px-3.5 text-[15px] text-ink placeholder:text-neutral-400 focus:border-ink focus:outline-none";
+  "mt-1 h-12 w-full rounded-xl border border-line bg-surface px-3.5 text-[15px] text-ink placeholder:text-muted focus:border-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30";
+const smallInputClass =
+  "mt-1 h-11 w-full rounded-lg border border-line bg-surface px-2.5 text-ink placeholder:text-muted focus:border-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30";
+const labelClass = "text-[13px] font-medium text-muted";
+const smallLabelClass = "text-xs font-medium text-muted";
 
 export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; next?: string }) {
   const router = useRouter();
@@ -95,7 +99,7 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
       {/* 1. Basic Info */}
       <div className="space-y-3.5">
         <label className="block">
-          <span className="text-[13px] font-medium text-neutral-600">Full name</span>
+          <span className={labelClass}>Full name</span>
           <input
             autoComplete="name"
             required
@@ -107,7 +111,7 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
         </label>
 
         <label className="block">
-          <span className="text-[13px] font-medium text-neutral-600">Mobile number (for delivery coordination)</span>
+          <span className={labelClass}>Mobile number (for delivery coordination)</span>
           <input
             autoComplete="tel"
             inputMode="tel"
@@ -123,7 +127,7 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
       {/* 2. Simplified Minimal Address */}
       <div className="space-y-3.5 pt-1">
         <label className="block">
-          <span className="text-[13px] font-medium text-neutral-600">House / Flat / Street address</span>
+          <span className={labelClass}>House / Flat / Street address</span>
           <input
             required
             value={form.flat}
@@ -134,7 +138,7 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
         </label>
 
         <label className="block">
-          <span className="text-[13px] font-medium text-neutral-600">Apartment / Society / Landmark</span>
+          <span className={labelClass}>Apartment / Society / Landmark</span>
           <input
             required
             value={form.society}
@@ -146,7 +150,7 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-[13px] font-medium text-neutral-600">Area / Locality</span>
+            <span className={labelClass}>Area / Locality</span>
             <input
               required
               value={form.area}
@@ -156,7 +160,7 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
             />
           </label>
           <label className="block">
-            <span className="text-[13px] font-medium text-neutral-600">City</span>
+            <span className={labelClass}>City</span>
             <input
               required
               value={form.city}
@@ -171,41 +175,43 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
         <div>
           <button
             type="button"
-            onClick={() => setShowOptionalFields(!showOptionalFields)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-accent hover:underline py-1"
+            onClick={() => setShowOptionalFields((v) => !v)}
+            aria-expanded={showOptionalFields}
+            aria-controls="profile-optional-fields"
+            className="flex min-h-10 items-center gap-1.5 py-1 text-xs font-semibold text-accent hover:underline"
           >
-            {showOptionalFields ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            {showOptionalFields ? "Hide extra details" : "+ Add Tower, Floor or Landmark (optional)"}
+            {showOptionalFields ? <ChevronUp className="h-4 w-4" aria-hidden="true" /> : <ChevronDown className="h-4 w-4" aria-hidden="true" />}
+            {showOptionalFields ? "Hide extra details" : "Add tower, floor or landmark (optional)"}
           </button>
 
           {showOptionalFields && (
-            <div className="mt-2.5 grid grid-cols-3 gap-2.5 rounded-2xl border border-black/5 bg-neutral-50/70 p-3 animate-in fade-in">
+            <div id="profile-optional-fields" className="mt-2 grid grid-cols-3 gap-2 rounded-xl bg-app-canvas p-3">
               <label className="block">
-                <span className="text-[11px] font-medium text-neutral-500">Tower / Block</span>
+                <span className={smallLabelClass}>Tower / Block</span>
                 <input
                   value={form.tower}
                   onChange={(e) => setForm({ ...form, tower: e.target.value })}
                   placeholder="e.g. B"
-                  className="mt-1 h-10 w-full rounded-lg border border-black/10 bg-white px-2.5 text-xs text-ink focus:border-ink focus:outline-none"
+                  className={smallInputClass}
                 />
               </label>
               <label className="block">
-                <span className="text-[11px] font-medium text-neutral-500">Floor</span>
+                <span className={smallLabelClass}>Floor</span>
                 <input
                   inputMode="numeric"
                   value={form.floor}
                   onChange={(e) => setForm({ ...form, floor: e.target.value })}
                   placeholder="e.g. 3"
-                  className="mt-1 h-10 w-full rounded-lg border border-black/10 bg-white px-2.5 text-xs text-ink focus:border-ink focus:outline-none"
+                  className={smallInputClass}
                 />
               </label>
               <label className="block">
-                <span className="text-[11px] font-medium text-neutral-500">Landmark</span>
+                <span className={smallLabelClass}>Landmark</span>
                 <input
                   value={form.landmark}
                   onChange={(e) => setForm({ ...form, landmark: e.target.value })}
                   placeholder="e.g. Gate 2"
-                  className="mt-1 h-10 w-full rounded-lg border border-black/10 bg-white px-2.5 text-xs text-ink focus:border-ink focus:outline-none"
+                  className={smallInputClass}
                 />
               </label>
             </div>
@@ -214,21 +220,21 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
       </div>
 
       {/* 3. Google Maps GPS Location */}
-      <div className="rounded-2xl border border-black/10 bg-gradient-to-br from-sky/30 via-white to-mint/20 p-4 shadow-2xs">
+      <div className="rounded-2xl border border-line bg-surface p-4">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-accent">
-            <MapPin className="h-4 w-4" />
+            <MapPin className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
-            <h3 className="text-[14px] font-bold text-ink">Google Maps Pin for Delivery</h3>
-            <p className="text-[11px] text-neutral-500">Vendors and delivery boys use this to navigate straight to your gate</p>
+            <h3 className="text-sm font-bold text-ink">Map pin for delivery</h3>
+            <p className="text-xs text-muted">Stores and delivery partners use this to reach your gate</p>
           </div>
         </div>
 
         {form.latitude != null && form.longitude != null ? (
-          <div className="mt-3 rounded-xl border border-good/20 bg-good/5 p-3 text-xs text-good flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-good/20 bg-good/5 p-3 text-xs text-good">
             <div className="flex items-center gap-2">
-              <Navigation className="h-4 w-4 text-good shrink-0" />
+              <Navigation className="h-4 w-4 shrink-0 text-good" aria-hidden="true" />
               <span className="font-semibold tabular-nums">
                 Pinned: {form.latitude.toFixed(4)}, {form.longitude.toFixed(4)}
               </span>
@@ -236,14 +242,15 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${form.latitude},${form.longitude}`}
               target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1 font-bold text-accent hover:underline text-[11px]"
+              rel="noopener noreferrer"
+              className="flex min-h-10 shrink-0 items-center gap-1 text-xs font-bold text-accent hover:underline"
             >
-              Test on Maps <ExternalLink className="h-3 w-3" />
+              Check on Maps <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              <span className="sr-only">(opens in a new tab)</span>
             </a>
           </div>
         ) : (
-          <p className="mt-2.5 text-xs text-neutral-500">No exact pin set yet.</p>
+          <p className="mt-2 text-xs text-muted">No exact pin set yet.</p>
         )}
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -251,35 +258,35 @@ export function ProfileForm({ defaults, next }: { defaults: ProfileDefaults; nex
             type="button"
             disabled={locating}
             onClick={handleDetectLocation}
-            className="flex h-10 items-center gap-1.5 rounded-xl bg-white border border-black/10 px-3.5 text-xs font-semibold text-ink shadow-2xs transition active:scale-95 disabled:opacity-60"
+            className="flex h-11 items-center gap-1.5 rounded-xl border border-line bg-surface px-3.5 text-[13px] font-semibold text-ink transition hover:bg-app-canvas active:scale-95 disabled:opacity-60"
           >
-            <Crosshair className={`h-3.5 w-3.5 text-accent ${locating ? "animate-spin" : ""}`} />
-            {locating ? "Pinning GPS…" : "Use My Current GPS Pin"}
+            <Crosshair className={`h-3.5 w-3.5 text-accent ${locating ? "animate-spin" : ""}`} aria-hidden="true" />
+            {locating ? "Finding you…" : "Use my current location"}
           </button>
         </div>
 
         <div className="mt-3">
           <label className="block">
-            <span className="text-[11px] font-medium text-neutral-500">Or paste Google Maps link / coordinates:</span>
+            <span className={smallLabelClass}>Or paste a Google Maps link or coordinates</span>
             <input
               type="text"
               value={mapsInput}
               onChange={(e) => handleMapsLinkChange(e.target.value)}
               placeholder="e.g. https://maps.app.goo.gl/... or 23.3739, 85.3342"
-              className="mt-1 h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-xs text-ink placeholder:text-neutral-400 focus:border-ink focus:outline-none"
+              className={smallInputClass}
             />
           </label>
         </div>
       </div>
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-muted">
         Stores only see your name, flat, phone and map pin after you order or subscribe so they can deliver on time.
       </p>
 
       <button
         type="submit"
         disabled={pending}
-        className="h-13 flex w-full items-center justify-center rounded-xl bg-accent py-3.5 text-[15px] font-bold text-white shadow-sm transition active:scale-[0.98] disabled:opacity-60"
+        className="flex h-13 w-full items-center justify-center rounded-xl bg-accent py-3.5 text-[15px] font-bold text-white shadow-sm transition hover:bg-accent/90 active:scale-[0.98] disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save address & pin"}
       </button>

@@ -3,13 +3,12 @@ import { ArrowRight, House, MapPin, Star } from "lucide-react";
 import { RuxsMark } from "@/components/marketing/ruxs-mark";
 import { CoverArt } from "@/components/ui/cover-art";
 import { getMyLocation, getMyPlans, getMyProfile, getSearchRadius, listStores } from "@/features/consumer/queries";
-import { getCategoryMap } from "@/features/platform/queries";
+import { getCategories, getCategoryMap } from "@/features/platform/queries";
 import { TodayCard, type TodayItem } from "@/features/consumer/components/today-card";
 import { HeroSubscriptionPlans, type HeroPlanItem } from "@/features/consumer/components/hero-subscription-plans";
 import { isLate } from "@/core/cutoff";
 import { isKidsVendorType } from "@/core/vendor-types";
 import { weekdayIST } from "@/core/time";
-import { getCategories } from "@/features/platform/queries";
 import { LocationChip } from "@/features/consumer/components/location-chip";
 import { SearchRadiusPicker } from "@/features/consumer/components/search-radius-picker";
 import { SearchBar } from "@/features/consumer/components/search-bar";
@@ -26,14 +25,22 @@ import { ModeSwitch } from "@/features/consumer/components/mode-switch";
 export const metadata = { title: "Explore" };
 
 export default async function ExplorePage() {
-  const { user, profile } = await getMyProfile();
-  const [location, categories, searchRadius] = await Promise.all([getMyLocation(), getCategories(), getSearchRadius()]);
+  // Independent reads run together; only listStores waits for the location.
+  const [{ user, profile }, location, categories, searchRadius, { today, plans }, category, kidsActivities, banners] = await Promise.all([
+    getMyProfile(),
+    getMyLocation(),
+    getCategories(),
+    getSearchRadius(),
+    getMyPlans(),
+    getCategoryMap(),
+    getKidsActivities(),
+    getHomeBanners(),
+  ]);
   // listStores already applies the geofence: only stores within the household's search radius come back.
   const stores = await listStores({ latitude: location.latitude, longitude: location.longitude });
   const radius = searchRadius.km;
 
   // Plans that deliver today, for the "receive today?" card.
-  const [{ today, plans }, category, kidsActivities, banners] = await Promise.all([getMyPlans(), getCategoryMap(), getKidsActivities(), getHomeBanners()]);
   const weekday = weekdayIST(today);
   const now = new Date();
   const todayItems: TodayItem[] = plans
@@ -142,11 +149,16 @@ export default async function ExplorePage() {
                       <span className="line-clamp-2 block text-[15px] font-semibold leading-snug text-ink">{a.name}</span>
                       <span className="mt-1 flex items-center justify-between gap-1 text-sm text-muted">
                         <span className="truncate">{a.vendor.name}</span>
-                        <span className="flex shrink-0 items-center gap-0.5 text-xs font-semibold tabular-nums text-ink">
-                          <Star className="h-3 w-3 fill-[#E8A33D] text-[#E8A33D]" aria-hidden="true" />
-                          {a.vendor.rating > 0 ? a.vendor.rating.toFixed(1) : "5.0"}
-                          {a.vendor.reviewCount > 0 && <span className="font-normal text-muted">({a.vendor.reviewCount})</span>}
-                        </span>
+                        {a.vendor.reviewCount > 0 ? (
+                          <span className="flex shrink-0 items-center gap-0.5 text-xs font-semibold tabular-nums text-ink">
+                            <Star className="h-3 w-3 fill-[#E8A33D] text-[#E8A33D]" aria-hidden="true" />
+                            {a.vendor.rating.toFixed(1)}
+                            <span className="font-normal text-muted">({a.vendor.reviewCount})</span>
+                            <span className="sr-only">average rating from {a.vendor.reviewCount} reviews</span>
+                          </span>
+                        ) : (
+                          <span className="shrink-0 text-xs font-semibold text-muted">New</span>
+                        )}
                       </span>
                       <span className="mt-2 flex items-center justify-between text-sm">
                         <span className="text-muted">Ages {a.ageMin}–{a.ageMax}</span>

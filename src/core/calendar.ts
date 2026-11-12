@@ -31,7 +31,11 @@ export function weekDates(monday: string): string[] {
 
 /** A valid YYYY-MM-DD from a query param, else today. */
 export function parseDateParam(value: string | undefined, now = new Date()): string {
-  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value + "T00:00:00Z"))) return value;
+  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    // Round-trip through Date so impossible days (2026-02-31) fall back to today instead of rolling over.
+    const parsed = new Date(value + "T00:00:00Z");
+    if (!Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value) return value;
+  }
   return todayIST(now);
 }
 

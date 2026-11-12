@@ -99,7 +99,6 @@ export default async function BookingsPage({
   return (
     <div className="space-y-5 p-4 sm:p-6">
       <PageHeader
-        eyebrow="Bookings"
         title="Calendar"
         description="Every session in one place. Tap a booking to call, get directions or mark it done."
         action={
@@ -112,7 +111,7 @@ export default async function BookingsPage({
       {requests > 0 && (
         <Link
           href={`/merchant-panel/${slug}/bookings?view=list&tab=upcoming`}
-          className="block rounded-card border border-warn/40 bg-butter px-4 py-3 text-sm text-ink"
+          className="block rounded-card border border-warn/40 bg-butter px-4 py-3 text-sm text-ink transition-colors hover:border-warn focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <span className="font-semibold">
             {requests} {requests === 1 ? "booking request needs" : "booking requests need"} your approval.
@@ -130,8 +129,8 @@ export default async function BookingsPage({
         ].map((x) => (
           <div key={x.k} className="rounded-card border border-line bg-surface px-3.5 py-3">
             <dt className="text-xs text-muted">{x.k}</dt>
-            <dd className="mt-0.5 text-xl font-semibold tabular-nums text-ink">{x.v}</dd>
-            <dd className="text-[11px] text-muted">{x.s}</dd>
+            <dd className="mt-0.5 break-words text-xl font-semibold tabular-nums text-ink">{x.v}</dd>
+            <dd className="text-xs text-muted">{x.s}</dd>
           </div>
         ))}
       </dl>

@@ -41,7 +41,7 @@ export function CategoryTile({ id, label, href, tint }: { id: string; label: str
     <Link href={href} onMouseEnter={play} onPointerDown={play} className="group flex flex-col items-center gap-1.5 text-center">
       <span
         className="flex h-16 w-16 items-center justify-center rounded-[20px] text-brand-deep transition-transform duration-150 group-active:scale-95"
-        style={{ backgroundColor: tint ?? "#F7F4ED" }}
+        style={{ backgroundColor: tint ?? "var(--app-canvas)" }}
         aria-hidden="true"
       >
         <TileIcon id={id} iconRef={icon} />

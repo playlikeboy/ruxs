@@ -3,17 +3,27 @@ import { formatINR } from "@/core/money";
 import { getAdminInvoices, getAdminInvoicePeriods } from "@/features/invoices/queries";
 import { AdminInvoicesTable } from "@/features/invoices/components/admin-invoices-table";
 import { AdminPagination } from "@/features/admin/components/admin-pagination";
-import { FileText, CheckCircle2, AlertCircle, ArrowUpRight } from "lucide-react";
+import { FileText, CheckCircle2, AlertCircle, CalendarDays, Search } from "lucide-react";
 
-export const metadata = { title: "Invoices & Billing · Admin" };
+export const metadata = { title: "Invoices" };
 
 const STATUS_FILTERS = [
-  { v: "", label: "All Status" },
+  { v: "", label: "All statuses" },
   { v: "generated", label: "Generated" },
   { v: "sent", label: "Sent" },
   { v: "paid", label: "Paid" },
   { v: "partially_paid", label: "Partial" },
 ];
+
+/** Builds an invoices URL, keeping only the filters that are set. */
+function invoicesHref(filters: { period?: string; status?: string; q?: string }) {
+  const params = new URLSearchParams();
+  if (filters.period) params.set("period", filters.period);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.q) params.set("q", filters.q);
+  const qs = params.toString();
+  return qs ? `/admin/invoices?${qs}` : "/admin/invoices";
+}
 
 export default async function AdminInvoicesPage({
   searchParams,
@@ -25,7 +35,9 @@ export default async function AdminInvoicesPage({
     page?: string;
   }>;
 }) {
-  const { period, status, q, page } = await searchParams;
+  const { period: rawPeriod, status: rawStatus, q, page } = await searchParams;
+  const period = rawPeriod && /^\d{4}-(0[1-9]|1[0-2])$/.test(rawPeriod) ? rawPeriod : undefined;
+  const status = STATUS_FILTERS.some((f) => f.v === rawStatus) ? rawStatus : "";
   const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
 
   const [invoicesData, periods] = await Promise.all([
@@ -58,9 +70,9 @@ export default async function AdminInvoicesPage({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-[16px] border border-line bg-surface p-4 shadow-2xs">
+        <div className="rounded-card border border-line bg-surface p-4">
           <div className="flex items-center justify-between text-muted">
-            <span className="text-xs uppercase tracking-wider font-semibold">Total Invoiced</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Total invoiced</span>
             <FileText className="h-4 w-4" aria-hidden="true" />
           </div>
           <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-ink">
@@ -69,7 +81,7 @@ export default async function AdminInvoicesPage({
           <p className="mt-0.5 text-xs text-muted">{invoicesData.total} total statements</p>
         </div>
 
-        <div className="rounded-[16px] border border-line bg-surface p-4 shadow-2xs">
+        <div className="rounded-card border border-line bg-surface p-4">
           <div className="flex items-center justify-between text-muted">
             <span className="text-xs uppercase tracking-wider font-semibold text-good">Collected</span>
             <CheckCircle2 className="h-4 w-4 text-good" aria-hidden="true" />
@@ -80,7 +92,7 @@ export default async function AdminInvoicesPage({
           <p className="mt-0.5 text-xs text-muted">{collectionRate}% collection rate</p>
         </div>
 
-        <div className="rounded-[16px] border border-line bg-surface p-4 shadow-2xs">
+        <div className="rounded-card border border-line bg-surface p-4">
           <div className="flex items-center justify-between text-muted">
             <span className="text-xs uppercase tracking-wider font-semibold text-bad">Outstanding</span>
             <AlertCircle className="h-4 w-4 text-bad" aria-hidden="true" />
@@ -91,26 +103,28 @@ export default async function AdminInvoicesPage({
           <p className="mt-0.5 text-xs text-muted">Due from households</p>
         </div>
 
-        <div className="rounded-[16px] border border-line bg-surface p-4 shadow-2xs">
+        <div className="rounded-card border border-line bg-surface p-4">
           <div className="flex items-center justify-between text-muted">
-            <span className="text-xs uppercase tracking-wider font-semibold">Billing Runs</span>
-            <ArrowUpRight className="h-4 w-4 text-accent" aria-hidden="true" />
+            <span className="text-xs font-semibold uppercase tracking-wider">Billing months</span>
+            <CalendarDays className="h-4 w-4" aria-hidden="true" />
           </div>
           <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-ink">
             {periods.length}
           </p>
-          <p className="mt-0.5 text-xs text-muted">Active monthly cycles</p>
+          <p className="mt-0.5 text-xs text-muted">Months with statements</p>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <form className="relative flex-1 min-w-[240px] max-w-sm" role="search">
+        <form className="relative min-w-[240px] max-w-sm flex-1" role="search">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
           <input
             name="q"
             defaultValue={q ?? ""}
             placeholder="Search invoice #, customer, store…"
-            className="h-10 w-full rounded-[10px] border border-line bg-surface px-3 text-xs placeholder:text-muted focus:border-ink focus:outline-none"
+            aria-label="Search invoices"
+            className="h-10 w-full rounded-control border border-line bg-surface pl-9 pr-3 text-xs placeholder:text-muted focus:border-ink"
           />
           {period && <input type="hidden" name="period" value={period} />}
           {status && <input type="hidden" name="status" value={status} />}
@@ -118,69 +132,66 @@ export default async function AdminInvoicesPage({
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Period selector */}
-          <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+          <nav aria-label="Filter by month" className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
             <Link
-              href={`/admin/invoices${status ? `?status=${status}` : ""}`}
+              href={invoicesHref({ status, q })}
+              aria-current={!period ? "page" : undefined}
               className={
                 "shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition " +
                 (!period
                   ? "border-ink bg-ink text-white"
-                  : "border-line bg-surface text-muted hover:border-ink/40")
+                  : "border-line bg-surface text-muted hover:border-ink/40 hover:text-ink")
               }
             >
-              All Months
+              All months
             </Link>
             {periods.map((p) => {
               const active = period === p;
-              const params = new URLSearchParams();
-              params.set("period", p);
-              if (status) params.set("status", status);
               return (
                 <Link
                   key={p}
-                  href={`/admin/invoices?${params.toString()}`}
+                  href={invoicesHref({ period: p, status, q })}
+                  aria-current={active ? "page" : undefined}
                   className={
                     "shrink-0 rounded-full border px-3 py-1 text-xs font-semibold font-mono transition " +
                     (active
                       ? "border-ink bg-ink text-white"
-                      : "border-line bg-surface text-muted hover:border-ink/40")
+                      : "border-line bg-surface text-muted hover:border-ink/40 hover:text-ink")
                   }
                 >
                   {p}
                 </Link>
               );
             })}
-          </div>
+          </nav>
 
           {/* Status selector */}
-          <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+          <nav aria-label="Filter by status" className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
             {STATUS_FILTERS.map((f) => {
-              const active = (status ?? "") === f.v;
-              const params = new URLSearchParams();
-              if (f.v) params.set("status", f.v);
-              if (period) params.set("period", period);
+              const active = status === f.v;
               return (
                 <Link
                   key={f.label}
-                  href={`/admin/invoices?${params.toString()}`}
+                  href={invoicesHref({ period, status: f.v, q })}
+                  aria-current={active ? "page" : undefined}
                   className={
                     "shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition " +
                     (active
                       ? "border-accent bg-accent text-white"
-                      : "border-line bg-surface text-muted hover:border-ink/40")
+                      : "border-line bg-surface text-muted hover:border-ink/40 hover:text-ink")
                   }
                 >
                   {f.label}
                 </Link>
               );
             })}
-          </div>
+          </nav>
         </div>
       </div>
 
       {/* Invoices List / Table */}
       {invoicesData.rows.length === 0 ? (
-        <div className="rounded-[16px] border border-dashed border-line bg-surface p-12 text-center">
+        <div className="rounded-card border border-dashed border-line bg-surface p-12 text-center">
           <p className="font-semibold text-ink">No invoices found</p>
           <p className="mt-1 text-xs text-muted">
             Try adjusting your search query, period, or status filters.

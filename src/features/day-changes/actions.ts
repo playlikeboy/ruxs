@@ -3,13 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db";
-import { dayChanges, subscriptions, products, orders, ledgerEntries } from "@/db/schema";
+import { dayChanges, subscriptions, products } from "@/db/schema";
 import { requireVendorAccess, requireCustomerByToken } from "@/lib/auth/session";
-import { isLate, lateCharge } from "@/core/cutoff";
-import { lateFeeKey } from "@/core/ledger";
+import { isLate } from "@/core/cutoff";
 import { todayIST } from "@/core/time";
 import { setDayChangeSchema, pauseDatesSchema } from "./schemas";
-import { applyHouseholdDayChange } from "./household";
+import { applyHouseholdDayChange, writeDayChange } from "./household";
 
 export async function setDayChange(input: unknown) {
   const parsed = setDayChangeSchema.safeParse(input);
@@ -19,8 +18,6 @@ export async function setDayChange(input: unknown) {
 
   const { token, slug, subscriptionId, serviceDate, kind, qty } = parsed.data;
   const db = getDb();
-  let vendorId: string;
-  let source: "link" | "vendor" = "link";
 
   const today = todayIST();
   if (serviceDate < today) {
@@ -42,17 +39,15 @@ export async function setDayChange(input: unknown) {
       if (result.ok) revalidatePath(`/c/${token}`);
       return result;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Database error";
-      return { ok: false, error: msg };
+      console.error("[day-changes] household day change failed", { subscriptionId, serviceDate, err });
+      return { ok: false, error: "Could not save the change. Please try again." };
     }
   } else if (slug) {
     // Vendor staff authorized
     const access = await requireVendorAccess(slug, ["owner", "staff"]);
-    vendorId = access.vendorId;
-    source = "vendor";
 
     const [sub] = await db
-      .select({ sub: subscriptions, product: products })
+      .select({ product: { name: products.name, cutoffAt: products.cutoffAt, lateRule: products.lateRule } })
       .from(subscriptions)
       .innerJoin(products, eq(subscriptions.productId, products.id))
       .where(
@@ -71,76 +66,25 @@ export async function setDayChange(input: unknown) {
     const tapIsLate = isLate(now, serviceDate, sub.product.cutoffAt);
 
     try {
-      await db
-        .insert(dayChanges)
-        .values({
-          vendorId,
-          subscriptionId,
-          serviceDate,
-          kind,
-          qty,
-          source,
-          receivedAt: now,
-          isLate: tapIsLate,
-        })
-        .onConflictDoUpdate({
-          target: [dayChanges.subscriptionId, dayChanges.serviceDate],
-          set: {
-            kind,
-            qty,
-            source,
-            receivedAt: now,
-            isLate: tapIsLate,
-          },
-        });
-
-      if (tapIsLate && kind === "skip") {
-        const [existingOrder] = await db
-          .select()
-          .from(orders)
-          .where(
-            and(
-              eq(orders.subscriptionId, subscriptionId),
-              eq(orders.serviceDate, serviceDate)
-            )
-          )
-          .limit(1);
-
-        if (existingOrder && existingOrder.status === "confirmed") {
-          await db
-            .update(orders)
-            .set({ status: "late_skip" })
-            .where(eq(orders.id, existingOrder.id));
-
-          const chargeResult = lateCharge(
-            sub.product.lateRule as "free" | "half" | "full" | "locked",
-            existingOrder.qty,
-            existingOrder.unitPricePaise
-          );
-
-          if (!chargeResult.refused && chargeResult.chargePaise > 0) {
-            await db
-              .insert(ledgerEntries)
-              .values({
-                vendorId,
-                customerId: existingOrder.customerId,
-                orderId: existingOrder.id,
-                type: "late_fee",
-                amountPaise: chargeResult.chargePaise,
-                notes: `Late skip fee for ${sub.product.name} on ${serviceDate}`,
-                idempotencyKey: lateFeeKey(existingOrder.id),
-                createdBy: access.user.id,
-              })
-              .onConflictDoNothing();
-          }
-        }
-      }
+      // Staff may record a change after cutoff; the shared writer applies the late-skip fee atomically.
+      await writeDayChange({
+        vendorId: access.vendorId,
+        subscriptionId,
+        serviceDate,
+        kind,
+        qty,
+        source: "vendor",
+        isLate: tapIsLate,
+        receivedAt: now,
+        product: sub.product,
+        actorId: access.user.id,
+      });
 
       revalidatePath(`/merchant-panel/${slug}/today`);
       return { ok: true, isLate: tapIsLate };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Database error";
-      return { ok: false, error: msg };
+      console.error("[day-changes] vendor day change failed", { subscriptionId, serviceDate, err });
+      return { ok: false, error: "Could not save the change. Please try again." };
     }
   } else {
     return { ok: false, error: "Unauthorized" };
@@ -232,45 +176,45 @@ export async function pauseDates(input: unknown) {
 
   const now = new Date();
 
+  // One multi-row upsert instead of a round trip per day per subscription.
+  const rows: (typeof dayChanges.$inferInsert)[] = [];
+  for (const cur = new Date(startMs); cur.getTime() <= endMs; cur.setUTCDate(cur.getUTCDate() + 1)) {
+    const serviceDate = cur.toISOString().slice(0, 10);
+    for (const subId of targetSubIds) {
+      rows.push({
+        vendorId,
+        subscriptionId: subId,
+        serviceDate,
+        kind: "skip",
+        qty: 0,
+        source: "pause",
+        receivedAt: now,
+        isLate: false,
+      });
+    }
+  }
+
   try {
-    const cur = new Date(startDate + "T00:00:00Z");
-    const end = new Date(endDate + "T00:00:00Z");
-
-    while (cur <= end) {
-      const serviceDate = cur.toISOString().split("T")[0]!;
-
-      for (const subId of targetSubIds) {
-        await db
-          .insert(dayChanges)
-          .values({
-            vendorId,
-            subscriptionId: subId,
-            serviceDate,
+    if (rows.length > 0) {
+      await db
+        .insert(dayChanges)
+        .values(rows)
+        .onConflictDoUpdate({
+          target: [dayChanges.subscriptionId, dayChanges.serviceDate],
+          set: {
             kind: "skip",
             qty: 0,
             source: "pause",
             receivedAt: now,
-            isLate: false,
-          })
-          .onConflictDoUpdate({
-            target: [dayChanges.subscriptionId, dayChanges.serviceDate],
-            set: {
-              kind: "skip",
-              qty: 0,
-              source: "pause",
-              receivedAt: now,
-            },
-          });
-      }
-
-      cur.setUTCDate(cur.getUTCDate() + 1);
+          },
+        });
     }
 
     if (token) revalidatePath(`/c/${token}`);
     if (slug) revalidatePath(`/merchant-panel/${slug}/today`);
     return { ok: true };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Database error";
-    return { ok: false, error: msg };
+    console.error("[day-changes] pause failed", { startDate, endDate, err });
+    return { ok: false, error: "Could not pause deliveries. Please try again." };
   }
 }

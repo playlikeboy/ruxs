@@ -1,5 +1,5 @@
 import "server-only";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import { orders, customers, products, consumers } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
@@ -16,6 +16,8 @@ export async function getRunSheetOrders(
   const conditions = [
     eq(orders.vendorId, access.vendorId),
     eq(orders.serviceDate, serviceDate),
+    // Skipped orders never appear on the run sheet.
+    ne(orders.status, "skipped"),
   ];
 
   if (shift) {
@@ -25,7 +27,17 @@ export async function getRunSheetOrders(
   const rows = await db
     .select({
       order: orders,
-      customer: customers,
+      // Only what a driver needs: this payload is sent to the client run sheet,
+      // so internal columns such as link_token_hash must stay out of it.
+      customer: {
+        id: customers.id,
+        name: customers.name,
+        phone: customers.phone,
+        society: customers.society,
+        tower: customers.tower,
+        floor: customers.floor,
+        flat: customers.flat,
+      },
       product: products,
       latitude: consumers.latitude,
       longitude: consumers.longitude,
@@ -36,18 +48,15 @@ export async function getRunSheetOrders(
     .leftJoin(consumers, eq(customers.userId, consumers.userId))
     .where(and(...conditions));
 
-  // Filter out skipped orders from run sheet
-  const activeStops = rows
-    .filter((r) => r.order.status !== "skipped")
-    .map((r) => ({
-      ...r,
-      society: r.customer.society,
-      tower: r.customer.tower,
-      floor: r.customer.floor,
-      flat: r.customer.flat,
-      latitude: r.latitude ?? null,
-      longitude: r.longitude ?? null,
-    }));
+  const activeStops = rows.map((r) => ({
+    ...r,
+    society: r.customer.society,
+    tower: r.customer.tower,
+    floor: r.customer.floor,
+    flat: r.customer.flat,
+    latitude: r.latitude ?? null,
+    longitude: r.longitude ?? null,
+  }));
 
   return sortRunSheet(activeStops);
 }

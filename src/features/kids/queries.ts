@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, gte, inArray, isNull, lte, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   kidsCategories,
@@ -24,7 +24,7 @@ import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/sessi
 import { getRatingMap } from "@/features/platform/queries";
 import { getNearbyVendorDistances } from "@/features/consumer/queries";
 import { calculateWorkshopAvailability } from "@/core/kids/workshop-capacity";
-import type { KidsActivityItem, KidsKitItem, KidsWorkshopItem, KidsVendorSummary } from "./types";
+import type { KidsActivityItem, KidsKitItem, KidsWorkshopItem } from "./types";
 import type { KidsCategoryId, KidsFormat } from "@/core/kids";
 import { isKidsProviderVetted } from "@/core/kids/booking-status";
 
@@ -32,6 +32,21 @@ import { isKidsProviderVetted } from "@/core/kids/booking-status";
 function vettedProvider() {
   return and(eq(kidsProviderProfiles.verificationStatus, "approved"), eq(kidsProviderProfiles.safetyReviewStatus, "passed"))!;
 }
+
+/**
+ * Vendor columns households may see. Never select the whole vendors row on a
+ * household path: it carries the vendor's phone, which households never see.
+ */
+const publicVendor = {
+  id: vendors.id,
+  name: vendors.name,
+  slug: vendors.slug,
+  area: vendors.area,
+};
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Route ids come from the URL; a malformed one is "not found", not a Postgres cast error. */
+const isUuid = (id: string) => UUID_RE.test(id);
 
 /**
  * All active categories in display order.
@@ -45,75 +60,17 @@ export async function getKidsCategories() {
     .orderBy(asc(kidsCategories.sort), asc(kidsCategories.name));
 }
 
-export async function getKidsCategoryById(id: string) {
-  const db = getDb();
-  const [cat] = await db
-    .select()
-    .from(kidsCategories)
-    .where(and(eq(kidsCategories.id, id), eq(kidsCategories.isActive, true)))
-    .limit(1);
-  return cat ?? null;
-}
-
-/**
- * Filtered search for kids activities & classes.
- */
-export async function searchKidsServices(filters?: {
-  categoryId?: string;
-  age?: number;
-  deliveryMode?: "home" | "studio" | "online";
-  searchQuery?: string;
-}) {
-  const db = getDb();
-  const conditions = [
-    eq(kidsServices.isActive, true),
-    isNull(kidsServices.archivedAt),
-    eq(vendors.status, "active"),
-    vettedProvider(),
-  ];
-
-  if (filters?.categoryId && filters.categoryId !== "all") {
-    conditions.push(eq(kidsServices.categoryId, filters.categoryId));
-  }
-
-  if (filters?.age && filters.age > 0) {
-    conditions.push(lte(kidsServices.minAge, filters.age));
-    conditions.push(gte(kidsServices.maxAge, filters.age));
-  }
-
-  const rows = await db
-    .select({
-      service: kidsServices,
-      category: kidsCategories,
-      vendor: vendors,
-      profile: kidsProviderProfiles,
-    })
-    .from(kidsServices)
-    .innerJoin(kidsCategories, eq(kidsServices.categoryId, kidsCategories.id))
-    .innerJoin(vendors, eq(kidsServices.vendorId, vendors.id))
-    .leftJoin(kidsProviderProfiles, eq(vendors.id, kidsProviderProfiles.vendorId))
-    .where(and(...conditions))
-    .orderBy(asc(kidsServices.pricePaise));
-
-  const query = filters?.searchQuery?.trim().toLowerCase();
-  if (!query) return rows;
-
-  return rows.filter(({ service, vendor, category }) => {
-    const haystack = `${service.title} ${service.description} ${vendor.name} ${vendor.area} ${category.name}`.toLowerCase();
-    return haystack.includes(query);
-  });
-}
-
 /**
  * Detailed single service view.
  */
 export async function getKidsServiceById(id: string) {
+  if (!isUuid(id)) return null;
   const db = getDb();
   const [row] = await db
     .select({
       service: kidsServices,
       category: kidsCategories,
-      vendor: vendors,
+      vendor: { ...publicVendor, bookingNoticeMinutes: vendors.bookingNoticeMinutes },
       profile: kidsProviderProfiles,
     })
     .from(kidsServices)
@@ -144,10 +101,7 @@ export async function getKidsServiceById(id: string) {
 /**
  * Workshops discovery catalog.
  */
-export async function getKidsWorkshopsCatalog(filters?: {
-  categoryId?: string;
-  searchQuery?: string;
-}) {
+async function getKidsWorkshopsCatalog() {
   const db = getDb();
   const conditions = [
     eq(kidsWorkshops.publicationState, "published"),
@@ -155,15 +109,11 @@ export async function getKidsWorkshopsCatalog(filters?: {
     vettedProvider(),
   ];
 
-  if (filters?.categoryId && filters.categoryId !== "all") {
-    conditions.push(eq(kidsWorkshops.categoryId, filters.categoryId));
-  }
-
   const rows = await db
     .select({
       workshop: kidsWorkshops,
       category: kidsCategories,
-      vendor: vendors,
+      vendor: publicVendor,
       profile: kidsProviderProfiles,
     })
     .from(kidsWorkshops)
@@ -197,7 +147,7 @@ export async function getKidsWorkshopsCatalog(filters?: {
     }
   }
 
-  const results = rows.map((r) => {
+  return rows.map((r) => {
     const enrolled = enrollmentMap.get(r.workshop.id) ?? 0;
     const availability = calculateWorkshopAvailability(r.workshop.capacity, enrolled);
     return {
@@ -206,26 +156,19 @@ export async function getKidsWorkshopsCatalog(filters?: {
       availability,
     };
   });
-
-  const query = filters?.searchQuery?.trim().toLowerCase();
-  if (!query) return results;
-
-  return results.filter(({ workshop, vendor, category }) => {
-    const haystack = `${workshop.title} ${workshop.description} ${vendor.name} ${category.name}`.toLowerCase();
-    return haystack.includes(query);
-  });
 }
 
 /**
  * Detailed single workshop view.
  */
 export async function getKidsWorkshopById(id: string) {
+  if (!isUuid(id)) return null;
   const db = getDb();
   const [row] = await db
     .select({
       workshop: kidsWorkshops,
       category: kidsCategories,
-      vendor: vendors,
+      vendor: publicVendor,
       profile: kidsProviderProfiles,
     })
     .from(kidsWorkshops)
@@ -276,7 +219,7 @@ export async function getKidsWorkshopById(id: string) {
 export async function getKidsProviderBySlug(slug: string) {
   const db = getDb();
   const [vendor] = await db
-    .select()
+    .select({ ...publicVendor, vendorType: vendors.vendorType })
     .from(vendors)
     .where(and(eq(vendors.slug, slug), eq(vendors.status, "active")))
     .limit(1);
@@ -380,7 +323,7 @@ export async function getMyKidsBookings() {
       booking: kidsServiceBookings,
       service: kidsServices,
       child: kidsChildren,
-      vendor: vendors,
+      vendor: publicVendor,
     })
     .from(kidsServiceBookings)
     .innerJoin(kidsChildren, eq(kidsServiceBookings.childId, kidsChildren.id))
@@ -402,7 +345,7 @@ export async function getMyKidsEnrollments() {
       enrollment: kidsWorkshopEnrollments,
       workshop: kidsWorkshops,
       child: kidsChildren,
-      vendor: vendors,
+      vendor: publicVendor,
     })
     .from(kidsWorkshopEnrollments)
     .innerJoin(kidsChildren, eq(kidsWorkshopEnrollments.childId, kidsChildren.id))
@@ -526,7 +469,7 @@ export async function getAdminKidsConsoleData() {
     db.select().from(kidsCategories).orderBy(asc(kidsCategories.sort)),
     db
       .select({
-        vendor: vendors,
+        vendor: { ...publicVendor, status: vendors.status },
         profile: kidsProviderProfiles,
       })
       .from(vendors)
@@ -537,7 +480,7 @@ export async function getAdminKidsConsoleData() {
     db
       .select({
         review: kidsReviews,
-        vendor: vendors,
+        vendor: { name: vendors.name, slug: vendors.slug },
       })
       .from(kidsReviews)
       .innerJoin(vendors, eq(kidsReviews.vendorId, vendors.id))
@@ -587,7 +530,7 @@ async function allActivities(): Promise<KidsActivityItem[]> {
     .select({
       service: kidsServices,
       category: kidsCategories,
-      vendor: vendors,
+      vendor: publicVendor,
     })
     .from(kidsServices)
     .innerJoin(kidsCategories, eq(kidsServices.categoryId, kidsCategories.id))
@@ -620,7 +563,6 @@ async function allActivities(): Promise<KidsActivityItem[]> {
         ageMax: service.maxAge,
         durationMinutes: service.durationMinutes,
         pricePaise: service.pricePaise,
-        trialPricePaise: Math.round(service.pricePaise * 0.7),
         category: catKey,
         format,
         vendor: {
@@ -634,11 +576,7 @@ async function allActivities(): Promise<KidsActivityItem[]> {
         },
         badge: "⭐ VERIFIED MENTOR",
         emoji: category.emoji || inferEmojiFallback(catKey),
-        highlights: [
-          "Small batch (max 6 students)",
-          "Verified background-checked mentor",
-          "Take-home project & certificate",
-        ],
+        highlights: [],
         homeSupervisionRequired: service.deliveryModes.includes("home"),
         verifiedTutor: true,
       };
@@ -649,7 +587,7 @@ async function allActivities(): Promise<KidsActivityItem[]> {
   const rows = await db
     .select({
       service: services,
-      vendor: vendors,
+      vendor: publicVendor,
     })
     .from(services)
     .innerJoin(vendors, eq(services.vendorId, vendors.id))
@@ -682,7 +620,7 @@ async function allActivities(): Promise<KidsActivityItem[]> {
       ageMax: 12,
       durationMinutes: service.durationMinutes,
       pricePaise: service.pricePaise,
-      trialPricePaise: isTrial ? service.pricePaise : Math.round(service.pricePaise * 0.7),
+      trialPricePaise: isTrial ? service.pricePaise : undefined,
       category,
       format,
       vendor: {
@@ -696,21 +634,23 @@ async function allActivities(): Promise<KidsActivityItem[]> {
       },
       badge: isTrial ? "⭐ TRIAL CLASS" : "🏆 SMALL BATCH",
       emoji: inferEmojiFallback(category),
-      highlights: [
-        "Small batch (max 6 students)",
-        "Verified background-checked mentor",
-        "Take-home project & certificate",
-      ],
+      highlights: [],
     };
   });
+}
+
+/** "1 day" / "3 days" from inclusive YYYY-MM-DD dates. */
+function workshopLengthLabel(startDate: string, endDate: string) {
+  const days = Math.round((Date.parse(endDate) - Date.parse(startDate)) / 86_400_000) + 1;
+  return days > 1 ? `${days} days` : "1 day";
 }
 
 async function allWorkshops(): Promise<KidsWorkshopItem[]> {
   const catalog = await getKidsWorkshopsCatalog();
   const getRatings = await getRatingMap();
 
-  if (catalog.length > 0) {
-    return catalog.map(({ workshop, category, vendor, availability, enrolledCount }): KidsWorkshopItem => {
+  // No published workshops nearby means none are shown: never placeholder listings.
+  return catalog.map(({ workshop, category, vendor, availability, enrolledCount }): KidsWorkshopItem => {
       const ratingSummary = getRatings(vendor.id);
       const catKey = (category.id as KidsCategoryId) || "stem";
       const isOnline = workshop.venueOrMode.toLowerCase().includes("online");
@@ -722,7 +662,7 @@ async function allWorkshops(): Promise<KidsWorkshopItem[]> {
         title: workshop.title,
         description: workshop.description ?? "Interactive holiday bootcamp.",
         dateLabel: `${workshop.startDate} to ${workshop.endDate}`,
-        timeLabel: "Weekend Batch",
+        timeLabel: workshopLengthLabel(workshop.startDate, workshop.endDate),
         minAge: workshop.minAge,
         maxAge: workshop.maxAge,
         category: catKey,
@@ -743,72 +683,6 @@ async function allWorkshops(): Promise<KidsWorkshopItem[]> {
         badge: availability.isAlmostFull ? "🔥 FILLING FAST" : "WEEKEND CAMP",
       };
     });
-  }
-
-  const activities = await getKidsActivities();
-  const firstVendor: KidsVendorSummary = activities[0]?.vendor ?? {
-    id: "demo-v",
-    name: "RoboSparks Kids STEM & Robotics Lab",
-    slug: "robosparks-kids-stem-ranchi",
-    area: "Morabadi",
-    rating: 4.9,
-    reviewCount: 16,
-    serviceModes: ["studio", "home"],
-  };
-
-  return [
-    {
-      id: "ws-stem-rover",
-      title: "Mars Rover Robotics & Sensors Bootcamp",
-      description: "Build an ultrasonic obstacle-avoiding rover car with motors and real breadboards.",
-      dateLabel: "This Saturday",
-      timeLabel: "10:30 AM – 12:30 PM",
-      minAge: 7,
-      maxAge: 13,
-      category: "stem",
-      format: "studio",
-      vendor: firstVendor,
-      pricePaise: 120000,
-      batchSize: 8,
-      enrolledCount: 6,
-      emoji: "🚀",
-      badge: "WEEKEND CAMP",
-    },
-    {
-      id: "ws-clay-pottery",
-      title: "Mess-Free Pottery Wheel & Clay Sculpting Carnival",
-      description: "Shape bowls, vases, and mini cartoon sculptures using kid-friendly pottery wheels.",
-      dateLabel: "This Sunday",
-      timeLabel: "4:00 PM – 5:30 PM",
-      minAge: 4,
-      maxAge: 11,
-      category: "arts",
-      format: "studio",
-      vendor: firstVendor,
-      pricePaise: 49900,
-      batchSize: 6,
-      enrolledCount: 5,
-      emoji: "🎨",
-      badge: "MESS-FREE FUN",
-    },
-    {
-      id: "ws-chess-blitz",
-      title: "Grandmaster Chess Blitz & Tactics Arena",
-      description: "Master sneaky forks, skewers, and 3-move checkmates with a rated FIDE coach.",
-      dateLabel: "Next Saturday",
-      timeLabel: "3:00 PM – 5:00 PM",
-      minAge: 6,
-      maxAge: 14,
-      category: "logic",
-      format: "studio",
-      vendor: firstVendor,
-      pricePaise: 50000,
-      batchSize: 10,
-      enrolledCount: 7,
-      emoji: "♟️",
-      badge: "POPULAR",
-    },
-  ];
 }
 
 async function allKits(): Promise<KidsKitItem[]> {
@@ -818,7 +692,7 @@ async function allKits(): Promise<KidsKitItem[]> {
   const rows = await db
     .select({
       product: products,
-      vendor: vendors,
+      vendor: publicVendor,
     })
     .from(products)
     .innerJoin(vendors, eq(products.vendorId, vendors.id))
@@ -856,14 +730,9 @@ async function allKits(): Promise<KidsKitItem[]> {
         reviewCount: ratingSummary.count ?? 0,
         serviceModes: ["delivery"],
       },
-      features: [
-        "100% Non-toxic & kid-safe materials",
-        "Step-by-step illustrated guide",
-        "Same-day or next-day home delivery",
-      ],
+      features: [],
       emoji: "🧩",
       badge: "DOORSTEP KIT",
-      nonToxicCertified: true,
     };
   });
 }

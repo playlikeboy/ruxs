@@ -11,7 +11,7 @@ import { rupeesToPaise } from "@/core/money";
 export async function inviteStaff(input: unknown) {
   const parsed = inviteStaffSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
   const { slug, email, role } = parsed.data;
@@ -31,17 +31,18 @@ export async function inviteStaff(input: unknown) {
       .onConflictDoNothing();
 
     revalidatePath(`/merchant-panel/${slug}/settings`);
-    return { ok: true };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Database error";
-    return { ok: false, error: message };
+    return { ok: true as const };
+  } catch (err) {
+    // Never echo database errors to the browser.
+    console.error("inviteStaff failed", err);
+    return { ok: false as const, error: "Could not send the invite. Try again." };
   }
 }
 
 export async function saveStorefront(input: unknown) {
   const parsed = storefrontSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
   const { slug, ...data } = parsed.data;
   const access = await requireVendorAccess(slug, ["owner"]);
@@ -74,5 +75,5 @@ export async function saveStorefront(input: unknown) {
   revalidatePath(`/merchant-panel/${slug}`, "layout");
   revalidatePath("/app", "layout");
   revalidatePath("/admin", "layout");
-  return { ok: true };
+  return { ok: true as const };
 }

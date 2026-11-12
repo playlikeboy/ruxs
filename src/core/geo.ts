@@ -49,11 +49,14 @@ export function resolveCoordinates(
   const normArea = area.toLowerCase().trim();
   const normCity = city.toLowerCase().trim();
 
-  // 1. Try exact or partial area match
-  for (const loc of localities) {
-    const locName = loc.name.toLowerCase();
-    if (normArea.includes(locName) || locName.includes(normArea)) {
-      return { latitude: loc.latitude, longitude: loc.longitude };
+  // 1. Try exact or partial area match. A blank area (or a blank locality
+  // name) would "match" everything, so only compare non-empty text.
+  if (normArea) {
+    for (const loc of localities) {
+      const locName = loc.name.toLowerCase().trim();
+      if (locName && (normArea.includes(locName) || locName.includes(normArea))) {
+        return { latitude: loc.latitude, longitude: loc.longitude };
+      }
     }
   }
 

@@ -1,32 +1,15 @@
 import { z } from "zod";
 import { GST_RATES_BPS } from "@/core/pricing";
 
-export const createVendorSchema = z.object({
-  name: z.string().min(2, "Vendor name must be at least 2 characters"),
-  slug: z
-    .string()
-    .min(2, "Slug must be at least 2 characters")
-    .regex(/^[a-z0-9-]+$/, "Slug must only contain lowercase letters, numbers, and hyphens"),
-  phone: z
-    .string()
-    .regex(/^\+91[6-9]\d{9}$/, "Phone must be a valid 10-digit Indian number with +91"),
-  upiVpa: z.string().min(3, "Valid UPI VPA required"),
-  city: z.string().min(2, "City is required"),
-  area: z.string().min(2, "Area is required"),
-  categoryId: z.string().regex(/^[a-z0-9-]+$/, "Pick what your business offers"),
-  latitude: z.number().min(-90).max(90).nullable().default(null),
-  longitude: z.number().min(-180).max(180).nullable().default(null),
-});
-
 export const inviteStaffSchema = z.object({
-  slug: z.string(),
-  email: z.string().email("Valid email required"),
+  slug: z.string().min(1),
+  email: z.string().trim().toLowerCase().email("Valid email required").max(254),
   role: z.enum(["staff", "driver"]),
 });
 
 /** Everything a vendor may change about their own business (not login, plan, fee or status). */
 export const storefrontSchema = z.object({
-  slug: z.string(),
+  slug: z.string().min(1),
   name: z.string().trim().min(2, "Business name must be at least 2 characters").max(80),
   phone: z.string().trim().regex(/^\+91[6-9]\d{9}$/, "Use a valid Indian mobile number with +91"),
   upiVpa: z.string().trim().min(3, "UPI ID is required").max(80),

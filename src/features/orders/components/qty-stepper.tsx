@@ -16,7 +16,7 @@ export function QtyStepper({
   max = 99,
 }: QtyStepperProps) {
   return (
-    <div className="flex items-center justify-between p-2 bg-[#FAFAF7] border border-line rounded-[10px]">
+    <div className="flex items-center justify-between p-2 bg-bg border border-line rounded-[10px]">
       <span className="text-xs font-medium text-ink">{label}</span>
       <div className="flex items-center gap-2">
         <button
@@ -24,11 +24,11 @@ export function QtyStepper({
           aria-label={`Decrease ${label}`}
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, value - 1))}
-          className="w-8 h-8 flex items-center justify-center bg-surface border border-line rounded-[8px] text-ink font-semibold disabled:opacity-40 hover:bg-white active:scale-95 transition-all"
+          className="w-8 h-8 flex items-center justify-center bg-surface border border-line rounded-[8px] text-ink font-semibold disabled:opacity-40 hover:bg-bg active:scale-95 transition-all"
         >
           -
         </button>
-        <span className="w-6 text-center text-sm font-semibold tabular-nums text-ink">
+        <span aria-live="polite" className="w-6 text-center text-sm font-semibold tabular-nums text-ink">
           {value}
         </span>
         <button
@@ -36,7 +36,7 @@ export function QtyStepper({
           aria-label={`Increase ${label}`}
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, value + 1))}
-          className="w-8 h-8 flex items-center justify-center bg-surface border border-line rounded-[8px] text-ink font-semibold disabled:opacity-40 hover:bg-white active:scale-95 transition-all"
+          className="w-8 h-8 flex items-center justify-center bg-surface border border-line rounded-[8px] text-ink font-semibold disabled:opacity-40 hover:bg-bg active:scale-95 transition-all"
         >
           +
         </button>

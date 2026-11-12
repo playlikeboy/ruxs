@@ -1,5 +1,4 @@
 import { requireVendorModule } from "@/lib/auth/session";
-import Link from "next/link";
 import { formatINR } from "@/core/money";
 import type { ShopOrderStatus } from "@/core/shop";
 import { SLOT_LABEL } from "@/config/service-kinds";
@@ -9,6 +8,8 @@ import { OrderStatusButtons } from "@/features/shop-orders/components/order-stat
 import { StatusPill } from "@/features/consumer/components/status-pill";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MapPin } from "lucide-react";
+import { PageHeader } from "@/components/ui/card";
+import { SegmentedLinks } from "@/components/ui/segmented";
 
 export const metadata = { title: "Orders" };
 
@@ -22,24 +23,23 @@ export default async function MerchantOrdersPage({
   searchParams: Promise<{ view?: string }>;
 }) {
   const { vendor: slug } = await params;
-  // Booking providers have sessions, not deliveries.
-  await requireVendorModule(slug, "orders");
-  const { view: rawView } = await searchParams;
+  const [, { view: rawView }] = await Promise.all([requireVendorModule(slug, "orders"), searchParams]);
   const view = rawView === "done" ? "done" : "open";
   const { orders } = await getVendorShopOrders(slug, view);
   const base = `/merchant-panel/${slug}/orders`;
 
   return (
     <div className="space-y-5 p-4 sm:p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Orders</h1>
-        <p className="mt-0.5 text-sm text-muted">One-time orders from the RUXs app. Daily plans are on Today.</p>
-      </div>
+      <PageHeader title="Orders" description="One-time orders from the RUXs app. Daily plans are on Today." />
 
-      <div className="inline-grid w-full max-w-xs grid-cols-2 rounded-xl border border-line bg-surface p-1 text-sm font-semibold shadow-2xs">
-        <Link href={base} className={"rounded-lg py-1.5 text-center transition " + (view === "open" ? "bg-ink text-white shadow-2xs" : "text-muted hover:text-ink")}>Active</Link>
-        <Link href={base + "?view=done"} className={"rounded-lg py-1.5 text-center transition " + (view === "done" ? "bg-ink text-white shadow-2xs" : "text-muted hover:text-ink")}>Past 14 days</Link>
-      </div>
+      <SegmentedLinks
+        className="w-full max-w-xs"
+        active={view}
+        items={[
+          { key: "open", label: "Active", href: base },
+          { key: "done", label: "Past 14 days", href: base + "?view=done" },
+        ]}
+      />
 
       {orders.length === 0 ? (
         <EmptyState
@@ -54,42 +54,42 @@ export default async function MerchantOrdersPage({
               ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
               : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.address)}`;
             return (
-              <li key={order.id} className={"space-y-3.5 rounded-2xl border bg-surface p-4.5 shadow-2xs transition hover:shadow-xs " + (order.status === "placed" ? "border-accent/40 shadow-[0_0_0_3px_rgba(189,75,42,0.08)]" : "border-line")}>
+              <li key={order.id} className={"space-y-3.5 rounded-card border bg-surface p-4 " + (order.status === "placed" ? "border-accent/50" : "border-line")}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-semibold text-ink">{customerName}</p>
+                    <p className="truncate font-semibold text-ink">{customerName}</p>
                     <p className="text-xs text-muted">{order.number} · {timeFmt.format(order.createdAt)}</p>
                   </div>
                   <StatusPill status={order.status} />
                 </div>
                 <ul className="space-y-1 text-sm">
                   {items.map((i) => (
-                    <li key={i.id} className="flex justify-between">
-                      <span className="text-ink"><span className="font-mono font-bold tabular-nums">{i.qty}×</span> {i.name}</span>
-                      <span className="tabular-nums text-muted">{formatINR(i.lineTotalPaise)}</span>
+                    <li key={i.id} className="flex justify-between gap-3">
+                      <span className="min-w-0 text-ink"><span className="font-bold tabular-nums">{i.qty}×</span> {i.name}</span>
+                      <span className="shrink-0 tabular-nums text-muted">{formatINR(i.lineTotalPaise)}</span>
                     </li>
                   ))}
                 </ul>
-                <div className="space-y-1.5 rounded-[10px] bg-bg p-3 text-xs text-muted">
+                <div className="space-y-1.5 rounded-control bg-app-canvas p-3 text-xs text-muted">
                   <p><span className="font-semibold text-ink">{dayLabelIST(order.deliverOn)}</span> · {SLOT_LABEL[order.slot] ?? order.slot}</p>
                   <p className="text-ink">{order.address}</p>
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-black/5">
-                    <p>Phone: <a href={`tel:${customerPhone}`} className="font-mono text-ink underline">{customerPhone}</a></p>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-1.5">
+                    <p>Phone: <a href={`tel:${customerPhone}`} className="tabular-nums text-ink underline">{customerPhone}</a></p>
                     <a
                       href={mapsUrl}
                       target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-md bg-white border border-line px-2 py-0.5 text-[11px] font-semibold text-accent hover:border-accent shadow-2xs transition active:scale-95"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-surface px-2.5 text-xs font-semibold text-accent transition-colors hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     >
-                      <MapPin className="h-3 w-3" />
-                      Google Maps ↗
+                      <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                      Directions<span className="sr-only"> in Google Maps (opens in a new tab)</span>
                     </a>
                   </div>
                   {order.notes && <p className="text-warn">Note: {order.notes}</p>}
                 </div>
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-muted">{order.paymentMode === "online" ? (order.paymentStatus === "paid" ? "Paid online · do not collect" : "Refund due · do not collect") : order.paymentMode === "cod" ? "Collect on delivery" : "Add to monthly bill"}</span>
-                  <span className="font-mono text-base font-bold tabular-nums text-ink">{formatINR(order.totalPaise)}</span>
+                  <span className="shrink-0 text-base font-bold tabular-nums text-ink">{formatINR(order.totalPaise)}</span>
                 </div>
                 <OrderStatusButtons
                   orderId={order.id}

@@ -36,9 +36,9 @@ export function ConfirmDeliveryButton({
         toast.error(res.error);
       } else {
         if ("isDelivered" in res && res.isDelivered) {
-          toast.success("Order marked delivered! Both parties confirmed.");
+          toast.success("Order delivered. You and the store both confirmed.");
         } else {
-          toast.success("Delivery confirmed! Waiting for store confirmation.");
+          toast.success("Thanks for confirming. Waiting for the store to confirm.");
         }
         router.refresh();
       }
@@ -47,11 +47,11 @@ export function ConfirmDeliveryButton({
 
   if (isConsumerConfirmed && !isVendorConfirmed) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-sm text-blue-900">
-        <Clock className="h-5 w-5 shrink-0 text-blue-600" aria-hidden="true" />
+      <div role="status" className="flex items-center gap-3 rounded-2xl border border-line bg-brand-water p-4 text-sm text-ink">
+        <Clock className="h-5 w-5 shrink-0 text-ink" aria-hidden="true" />
         <div>
-          <p className="font-semibold text-blue-950">You confirmed delivery receipt</p>
-          <p className="text-xs text-blue-800/80">Waiting for store / delivery partner to confirm and finalize.</p>
+          <p className="font-semibold text-ink">You confirmed you received this order</p>
+          <p className="text-xs text-muted">Waiting for the store or delivery partner to confirm.</p>
         </div>
       </div>
     );
@@ -59,29 +59,29 @@ export function ConfirmDeliveryButton({
 
   if (isVendorConfirmed && !isConsumerConfirmed) {
     return (
-      <div className="space-y-3 rounded-2xl border-2 border-emerald-500/30 bg-emerald-50/60 p-4">
+      <div className="space-y-3 rounded-2xl border border-good/30 bg-brand-leaf p-4">
         <div className="flex items-start gap-3">
-          <PackageCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
+          <PackageCheck className="mt-0.5 h-5 w-5 shrink-0 text-good" aria-hidden="true" />
           <div>
-            <p className="font-semibold text-emerald-950">Store marked this order as delivered!</p>
-            <p className="mt-0.5 text-xs text-emerald-800">Please confirm if you have received your order.</p>
+            <p className="font-semibold text-ink">The store marked this order as delivered</p>
+            <p className="mt-0.5 text-xs text-muted">Confirm once you have your order.</p>
           </div>
         </div>
         <button
           type="button"
           disabled={pending}
           onClick={handleConfirm}
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-xs transition hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-good text-sm font-bold text-white transition hover:bg-good/90 active:scale-[0.98] disabled:opacity-60"
         >
           {pending ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Confirming receipt…
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              Confirming…
             </>
           ) : (
             <>
-              <CheckCircle2 className="h-4 w-4" />
-              Confirm Delivery Received
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              I received my order
             </>
           )}
         </button>
@@ -91,24 +91,24 @@ export function ConfirmDeliveryButton({
 
   // Active delivery (out_for_delivery or accepted): customer can also mark delivery received
   return (
-    <div className="rounded-2xl border border-black/5 bg-white p-3.5 shadow-2xs">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="rounded-2xl border border-line bg-surface p-4">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <p className="text-sm font-semibold text-ink">Received your delivery?</p>
-          <p className="text-xs text-neutral-500">Confirm receipt so the delivery can be finalized.</p>
+          <p className="text-xs text-muted">Confirm once it reaches you so the order can be closed.</p>
         </div>
         <button
           type="button"
           disabled={pending}
           onClick={handleConfirm}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-600/30 bg-emerald-50 px-4 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-good/30 bg-good/5 px-4 text-sm font-bold text-good transition hover:bg-good/10 active:scale-[0.98] disabled:opacity-60"
         >
           {pending ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
           ) : (
-            <CheckCircle2 className="h-3.5 w-3.5" />
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
           )}
-          Mark Delivered
+          {pending ? "Confirming…" : "Mark received"}
         </button>
       </div>
     </div>

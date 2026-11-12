@@ -14,7 +14,7 @@ export function EmptyState({
   icon = "list",
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center bg-surface border border-line rounded-[12px] my-4">
+    <div className="flex flex-col items-center justify-center p-8 text-center bg-surface border border-line rounded-card my-4">
       <div className="w-12 h-12 mb-3 text-muted flex items-center justify-center">
         {icon === "dabba" ? (
           <svg
@@ -73,7 +73,7 @@ export function EmptyState({
           </svg>
         )}
       </div>
-      <h3 className="text-base font-medium text-ink mb-1">{title}</h3>
+      <h3 className="text-base font-semibold text-ink mb-1">{title}</h3>
       <p className="text-sm text-muted max-w-xs mb-4">{description}</p>
       {action && <div className="mt-1">{action}</div>}
     </div>

@@ -1,6 +1,9 @@
 import { requireVendorModule } from "@/lib/auth/session";
 import { formatINR } from "@/core/money";
 import { getVendorAnalytics } from "@/features/analytics/queries";
+import { PageHeader } from "@/components/ui/card";
+
+export const metadata = { title: "Analytics" };
 
 export default async function AnalyticsPage({
   params,
@@ -8,8 +11,7 @@ export default async function AnalyticsPage({
   params: Promise<{ vendor: string }>;
 }) {
   const { vendor: slug } = await params;
-  // Booking providers have sessions, not deliveries.
-  await requireVendorModule(slug, "analytics");
+  await requireVendorModule(slug, "analytics", ["owner", "staff"]);
   const data = await getVendorAnalytics(slug);
 
   const count = (status: string) =>
@@ -27,36 +29,35 @@ export default async function AnalyticsPage({
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">Business intelligence</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Analytics</h1>
-        <p className="mt-1 text-sm text-muted">Order activity from {data.fromDate} through {data.toDate}. Revenue is calculated from delivered order price snapshots, not payment settlement.</p>
-      </div>
+      <PageHeader
+        title="Analytics"
+        description={`Orders from ${data.fromDate} to ${data.toDate}. Value uses the price each delivered order was placed at, not payments received.`}
+      />
 
-      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <div className="rounded-[12px] border border-line bg-surface p-4">
+      <section aria-label="Last 30 days" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div className="rounded-card border border-line bg-surface p-4">
           <p className="text-xs text-muted">Orders created</p>
           <p className="mt-2 text-3xl font-semibold tabular-nums text-ink">{totalOrders.toLocaleString("en-IN")}</p>
           <p className="mt-1 text-xs text-muted">All statuses, 30 days</p>
         </div>
-        <div className="rounded-[12px] border border-line bg-surface p-4">
+        <div className="rounded-card border border-line bg-surface p-4">
           <p className="text-xs text-muted">Delivered orders</p>
           <p className="mt-2 text-3xl font-semibold tabular-nums text-good">{count("delivered").toLocaleString("en-IN")}</p>
           <p className="mt-1 text-xs text-muted">{units("delivered").toLocaleString("en-IN")} units delivered</p>
         </div>
-        <div className="rounded-[12px] border border-line bg-surface p-4">
+        <div className="rounded-card border border-line bg-surface p-4">
           <p className="text-xs text-muted">Still confirmed</p>
           <p className="mt-2 text-3xl font-semibold tabular-nums text-ink">{count("confirmed").toLocaleString("en-IN")}</p>
           <p className="mt-1 text-xs text-muted">Orders not yet closed</p>
         </div>
-        <div className="rounded-[12px] border border-line bg-surface p-4">
+        <div className="rounded-card border border-line bg-surface p-4">
           <p className="text-xs text-muted">Delivered value</p>
-          <p className="mt-2 text-2xl font-semibold tabular-nums text-ink">{formatINR(deliveredValue)}</p>
+          <p className="mt-2 break-words text-2xl font-semibold tabular-nums text-ink">{formatINR(deliveredValue)}</p>
           <p className="mt-1 text-xs text-muted">Based on order-time prices</p>
         </div>
       </section>
 
-      <section className="rounded-[12px] border border-line bg-surface p-4 sm:p-5">
+      <section className="rounded-card border border-line bg-surface p-4 sm:p-5">
         <h2 className="text-base font-semibold text-ink">Status breakdown</h2>
         {data.byStatus.length === 0 ? (
           <p className="mt-3 text-sm text-muted">There are no orders in this 30-day window yet.</p>
@@ -75,7 +76,7 @@ export default async function AnalyticsPage({
         )}
       </section>
 
-      <section className="rounded-[12px] border border-line bg-surface p-4 sm:p-5">
+      <section className="rounded-card border border-line bg-surface p-4 sm:p-5">
         <div>
           <h2 className="text-base font-semibold text-ink">Product performance</h2>
           <p className="mt-1 text-sm text-muted">Past orders keep their recorded unit price when you later change a product&apos;s price.</p>
@@ -87,11 +88,11 @@ export default async function AnalyticsPage({
             <table className="w-full min-w-[620px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line text-xs text-muted">
-                  <th className="py-3 pr-4 font-medium">Product</th>
-                  <th className="py-3 pr-4 font-medium">Shift</th>
-                  <th className="py-3 pr-4 text-right font-medium">Orders</th>
-                  <th className="py-3 pr-4 text-right font-medium">Units delivered</th>
-                  <th className="py-3 text-right font-medium">Delivered value</th>
+                  <th scope="col" className="py-3 pr-4 font-medium">Product</th>
+                  <th scope="col" className="py-3 pr-4 font-medium">Shift</th>
+                  <th scope="col" className="py-3 pr-4 text-right font-medium">Orders</th>
+                  <th scope="col" className="py-3 pr-4 text-right font-medium">Units delivered</th>
+                  <th scope="col" className="py-3 text-right font-medium">Delivered value</th>
                 </tr>
               </thead>
               <tbody>

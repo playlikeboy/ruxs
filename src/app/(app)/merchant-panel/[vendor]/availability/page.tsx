@@ -7,7 +7,7 @@ export const metadata = { title: "Availability" };
 
 export default async function AvailabilityPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
-  await requireVendorModule(slug, "availability");
+  await requireVendorModule(slug, "availability", ["owner", "staff"]);
   const { access, rules, blocks } = await getAvailability(slug);
   if (access.vendor.businessType !== "booking") redirect(`/merchant-panel/${slug}/today`);
 
@@ -30,7 +30,7 @@ export default async function AvailabilityPage({ params }: { params: Promise<{ v
       </section>
 
       {access.role === "owner" && (
-        <section className="space-y-3 rounded-[14px] border border-line bg-surface p-5">
+        <section className="space-y-3 rounded-card border border-line bg-surface p-5">
           <h2 className="text-lg font-semibold text-ink">Booking rules</h2>
           <BookingRulesForm slug={slug} noticeMinutes={access.vendor.bookingNoticeMinutes} cancelCutoffHours={access.vendor.cancelCutoffHours} />
         </section>

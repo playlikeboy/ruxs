@@ -1,5 +1,6 @@
 import { UiIcon } from "@/components/ui/app-icon";
-import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
 import {
   breadcrumbsJsonLd,
   buildMetadata,
@@ -21,17 +22,14 @@ export const metadata = buildMetadata({
 
 const principles = [
   {
-    number: "01",
     title: "Everyday essentials should be easy to find",
     body: "From a regular lunch dabba to the next water can, household essentials are often delivered by neighbourhood businesses people already trust. RUXs is building a simpler way to discover those services and choose the routine that fits your home.",
   },
   {
-    number: "02",
     title: "Local businesses keep their independence",
     body: "Each merchant manages their own catalogue, prices, delivery schedule and subscription terms. RUXs is not a one-price-fits-all catalogue: the offer and price are set by the business you choose.",
   },
   {
-    number: "03",
     title: "Customers and merchants both deserve better tools",
     body: "Customers need a clear way to understand their service and manage day-to-day changes. Merchants need dependable tools for recurring orders, delivery runs, customer balances, returnable containers and billing. RUXs brings those parts together without making the two experiences compete.",
   },
@@ -83,7 +81,7 @@ export default function AboutPage() {
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-12 sm:px-6 sm:pb-24 sm:pt-20 md:grid-cols-[1.08fr_0.92fr] md:gap-14">
         <div className="space-y-6">
           <span className="inline-flex items-center gap-2 rounded-full bg-peach px-3 py-1.5 text-xs font-semibold text-ink">
-            <span className="h-2 w-2 rounded-full bg-good" />
+            <span className="h-2 w-2 rounded-full bg-good" aria-hidden="true" />
             Made for the neighbourhood
           </span>
           <h1 className="max-w-2xl text-4xl font-semibold leading-[1.08] tracking-tight text-ink sm:text-6xl">
@@ -93,17 +91,17 @@ export default function AboutPage() {
             RUXs helps you discover recurring essentials such as tiffin subscriptions and 20L water-can delivery from local businesses. Behind the scenes, those businesses get a dedicated workspace to keep their daily service running smoothly.
           </p>
           <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-            <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
-              Find services near me <span aria-hidden="true" className="ml-2">→</span>
-            </Link>
-            <Link href="/merchant-panel" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white">
+            <ButtonLink href="/app" size="lg" className="px-6">
+              Find services near me <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </ButtonLink>
+            <ButtonLink href="/merchant-panel" variant="secondary" size="lg" className="px-6">
               Merchant portal
-            </Link>
+            </ButtonLink>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-xs font-medium text-muted">
-            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-6 w-6 text-accent" /> Merchant-set prices</span>
-            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-6 w-6 text-accent" /> Recurring services</span>
-            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-6 w-6 text-accent" /> Local businesses</span>
+            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-4 w-4 text-accent" /> Merchant-set prices</span>
+            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-4 w-4 text-accent" /> Recurring services</span>
+            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-4 w-4 text-accent" /> Local businesses</span>
           </div>
         </div>
 
@@ -118,14 +116,14 @@ export default function AboutPage() {
               <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-peach text-sm font-extrabold text-accent">R</span>
             </div>
             <div className="mt-5 flex items-center gap-4 rounded-[16px] bg-bg p-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px] bg-[#FFF0E8]"><TiffinDabbaIllustration className="h-14 w-14" /></div>
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px] bg-brand-peach"><TiffinDabbaIllustration className="h-14 w-14" /></div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-ink">A meal plan for your week</p>
                 <p className="text-xs leading-5 text-muted">Choose the kitchen, plan and price that work for you.</p>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-4 rounded-[16px] bg-bg p-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px] bg-[#E2EEFA]"><WaterCanIllustration className="h-14 w-14" /></div>
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px] bg-sky"><WaterCanIllustration className="h-14 w-14" /></div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-ink">Water when you need it</p>
                 <p className="text-xs leading-5 text-muted">Build a dependable delivery routine with a local supplier.</p>
@@ -146,14 +144,12 @@ export default function AboutPage() {
 
       <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-2xl space-y-4 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">Why we exist</p>
           <h2 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Bring convenience home without losing the local touch.</h2>
           <p className="text-base leading-7 text-muted">We believe finding a dependable daily service should feel simple, and running a small service business should not mean drowning in messages, ledgers and spreadsheets.</p>
         </div>
         <div className="mt-12">
           {principles.map((principle) => (
-            <article key={principle.number} className="grid gap-3 border-t border-line py-7 sm:grid-cols-[72px_1fr] sm:gap-6 sm:py-9">
-              <p className="text-sm font-semibold text-accent tabular-nums">{principle.number}</p>
+            <article key={principle.title} className="border-t border-line py-7 sm:py-9">
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold tracking-tight text-ink">{principle.title}</h3>
                 <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">{principle.body}</p>
@@ -163,16 +159,15 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-[#FFF3C9]">
+      <section className="bg-butter">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="max-w-2xl space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">What you can discover</p>
             <h2 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Little routines that make a big difference.</h2>
             <p className="text-sm leading-7 text-ink/80 sm:text-base">Start with the essentials people order on repeat, then discover more neighbourhood services as coverage grows.</p>
           </div>
           <div className="mt-9 grid gap-4 sm:grid-cols-2">
             {features.map((feature) => (
-              <article key={feature.title} className="flex gap-4 rounded-[16px] border border-black/5 bg-white/75 p-5 sm:p-6">
+              <article key={feature.title} className="flex gap-4 rounded-card border border-line bg-surface p-5 sm:p-6">
                 <div className={"flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-[14px] " + feature.tint}>
                   {feature.illustration}
                 </div>
@@ -188,12 +183,15 @@ export default function AboutPage() {
 
       <section className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-24">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[18px] bg-peach"><TiffinDabbaIllustration className="h-14 w-14" /></div>
-        <p className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-accent">Find your everyday essentials</p>
-        <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-ink sm:text-5xl">Your next great local routine starts here.</h2>
+        <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-semibold tracking-tight text-ink sm:text-5xl">Your next great local routine starts here.</h2>
         <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted sm:text-base">Explore local services for your home—or open the merchant portal if you run a neighbourhood business.</p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/app" className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-accent px-7 py-3 text-sm font-semibold text-white transition hover:opacity-90">Find services near me <span aria-hidden="true" className="ml-2">→</span></Link>
-          <Link href="/merchant-panel" className="inline-flex min-h-12 items-center justify-center rounded-[10px] border border-line bg-surface px-7 py-3 text-sm font-semibold text-ink transition hover:bg-white">Open merchant portal</Link>
+          <ButtonLink href="/app" size="lg" className="px-7">
+            Find services near me <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </ButtonLink>
+          <ButtonLink href="/merchant-panel" variant="secondary" size="lg" className="px-7">
+            Open merchant portal
+          </ButtonLink>
         </div>
       </section>
     </div>

@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { cn } from "./cn";
 
@@ -24,7 +22,7 @@ export function SegmentedLinks({
       aria-label="Switch section"
       className={cn(
         "relative grid rounded-full p-1",
-        tone === "kids" ? "bg-white/80 shadow-[0_2px_0_rgba(124,58,237,0.12)] ring-1 ring-kids-grape/15" : "bg-app-canvas ring-1 ring-line",
+        tone === "kids" ? "bg-white/80 shadow-[0_2px_0_rgba(189,75,42,0.12)] ring-1 ring-kids-grape/15" : "bg-app-canvas ring-1 ring-line",
         className
       )}
       style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -33,7 +31,7 @@ export function SegmentedLinks({
         aria-hidden="true"
         className={cn(
           "absolute bottom-1 top-1 rounded-full transition-transform duration-200 ease-[cubic-bezier(.25,1,.5,1)] motion-reduce:transition-none",
-          tone === "kids" ? "bg-gradient-to-r from-kids-bubblegum to-kids-grape shadow-[0_4px_12px_rgba(168,85,247,0.35)]" : "bg-white shadow-[0_2px_5px_rgba(32,36,31,0.08)] ring-1 ring-black/[0.035]"
+          tone === "kids" ? "bg-kids-grape shadow-[0_4px_12px_rgba(189,75,42,0.28)]" : "bg-white shadow-[0_2px_5px_rgba(32,36,31,0.08)] ring-1 ring-black/[0.035]"
         )}
         style={{ left: 4, width: `calc((100% - 8px) / ${items.length})`, transform: `translateX(${index * 100}%)` }}
       />

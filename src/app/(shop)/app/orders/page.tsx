@@ -34,18 +34,18 @@ export default async function OrdersPage() {
         <ul className="space-y-3 p-4">
           {orders.map(({ order, vendorName, items }) => (
             <li key={order.id}>
-              <Link href={`/app/orders/${order.id}`} className="block rounded-2xl border border-black/5 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] active:bg-neutral-50">
+              <Link href={`/app/orders/${order.id}`} className="block rounded-2xl border border-black/5 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-colors hover:bg-neutral-50 active:bg-neutral-50">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-ink">{vendorName}</p>
-                    <p className="text-xs text-neutral-500">{order.number} · {dateFmt.format(order.createdAt)}</p>
+                    <p className="text-xs text-muted tabular-nums">{order.number} · {dateFmt.format(order.createdAt)}</p>
                   </div>
                   <StatusPill status={order.status} />
                 </div>
                 <p className="mt-3 line-clamp-1 text-sm text-neutral-600">{items.map((i) => `${i.qty} × ${i.name}`).join(", ")}</p>
                 <div className="mt-3 flex items-center justify-between border-t border-black/5 pt-3">
                   <span className="text-[15px] font-semibold text-ink tabular-nums">{formatINR(order.totalPaise)}</span>
-                  <span className="flex items-center text-sm font-semibold text-accent">Details <ChevronRight className="h-4 w-4" /></span>
+                  <span className="flex items-center text-sm font-semibold text-accent">Details <ChevronRight className="h-4 w-4" aria-hidden="true" /></span>
                 </div>
               </Link>
             </li>

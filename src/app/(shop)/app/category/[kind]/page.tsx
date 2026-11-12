@@ -1,4 +1,5 @@
-import { AppIcon, UiIcon } from "@/components/ui/app-icon";
+import { ChevronRight } from "lucide-react";
+import { AppIcon } from "@/components/ui/app-icon";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -27,11 +28,10 @@ export async function generateMetadata({ params }: { params: Promise<{ kind: str
 
 export default async function CategoryPage({ params }: { params: Promise<{ kind: string }> }) {
   const { kind } = await params;
-  const [categories, searchRadius] = await Promise.all([getCategories(), getSearchRadius()]);
+  const [categories, searchRadius, location] = await Promise.all([getCategories(), getSearchRadius(), getMyLocation()]);
   const config = categories.find((k) => k.id === kind);
   if (!config) notFound();
 
-  const location = await getMyLocation();
   const stores = await listStores({
     kind,
     latitude: location.latitude,
@@ -48,7 +48,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ kind:
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-bold tracking-tight text-ink">{config.label}</h1>
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="mt-1 text-sm text-muted tabular-nums">
               {stores.length} {stores.length === 1 ? "store" : "stores"} within {searchRadius.km} km · {config.blurb.toLowerCase()}
             </p>
           </div>
@@ -58,20 +58,20 @@ export default async function CategoryPage({ params }: { params: Promise<{ kind:
         {(kind === "kids" || kind === "kids-kits") && (
           <Link
             href="/app/kids"
-            className="mt-4 flex items-center justify-between rounded-2xl border-2 border-slate-900 bg-amber-300 p-3.5 shadow-[3px_3px_0_0_#0f172a] transition active:translate-y-0.5 active:shadow-none"
+            className="mt-4 flex min-h-12 items-center justify-between gap-3 rounded-[16px] border border-line bg-brand-butter p-3.5 transition-colors hover:border-ink/25"
           >
-            <div>
-              <span className="text-xs font-black uppercase tracking-wider text-slate-800"><UiIcon name="sparkle" /> Dedicated Experience</span>
-              <p className="text-sm font-extrabold text-slate-950">Open Interactive Kids Zone & Classes →</p>
-            </div>
-            <UiIcon name="sparkle" className="h-6 w-6 text-accent" />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-ink">Open Kids Zone</span>
+              <span className="block text-xs text-muted">Classes, workshops and learning kits in one place</span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
           </Link>
         )}
         {stores.length === 0 ? (
-          <div className="mt-8 rounded-2xl bg-neutral-50 p-8 text-center">
-            <AppIcon name={kind} className="h-10 w-10 text-accent" />
+          <div className="mt-8 rounded-[16px] bg-app-canvas p-8 text-center">
+            <AppIcon name={kind} className="mx-auto h-10 w-10 text-accent" />
             <p className="mt-3 font-semibold text-ink">No {config.shortLabel.toLowerCase()} stores within {searchRadius.km} km yet</p>
-            <p className="mt-1 text-sm text-neutral-500">Try a wider radius. We&apos;re onboarding local vendors in your area.</p>
+            <p className="mt-1 text-sm text-muted">Try a wider radius, or check your location.</p>
           </div>
         ) : (
           <div className="mt-5">

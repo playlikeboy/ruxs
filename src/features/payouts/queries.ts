@@ -5,29 +5,61 @@ import { bookings, customers, payments, services, shopOrders, vendorPayouts, ven
 import { requireAdmin, requireVendorAccess } from "@/lib/auth/session";
 import { paymentState, vendorBalance, type BalancePayout } from "@/core/payouts";
 
-/** Balance for one vendor. No auth check: callers must have checked access. */
-export async function computeVendorBalance(vendorId: string, commissionBps: number) {
-  const db = getDb();
-  const [paid, payouts] = await Promise.all([
+type BalanceReader = Pick<ReturnType<typeof getDb>, "select">;
+
+/** Paid online money and payouts, optionally limited to one vendor. */
+function balanceRows(db: BalanceReader, vendorId?: string) {
+  return Promise.all([
     db
-      .select({ amountPaise: payments.amountPaise, purpose: payments.purpose, orderStatus: shopOrders.status, bookingStatus: bookings.status })
+      .select({
+        vendorId: payments.vendorId,
+        amountPaise: payments.amountPaise,
+        purpose: payments.purpose,
+        orderStatus: shopOrders.status,
+        bookingStatus: bookings.status,
+      })
       .from(payments)
       .leftJoin(shopOrders, eq(payments.shopOrderId, shopOrders.id))
       .leftJoin(bookings, eq(payments.bookingId, bookings.id))
-      .where(and(eq(payments.vendorId, vendorId), eq(payments.status, "paid"))),
+      .where(vendorId ? and(eq(payments.vendorId, vendorId), eq(payments.status, "paid")) : eq(payments.status, "paid")),
     db
-      .select({ amountPaise: vendorPayouts.amountPaise, status: vendorPayouts.status })
+      .select({ vendorId: vendorPayouts.vendorId, amountPaise: vendorPayouts.amountPaise, status: vendorPayouts.status })
       .from(vendorPayouts)
-      .where(eq(vendorPayouts.vendorId, vendorId)),
+      .where(vendorId ? eq(vendorPayouts.vendorId, vendorId) : undefined),
   ]);
+}
+
+type PaidRow = Awaited<ReturnType<typeof balanceRows>>[0][number];
+type PayoutRow = Awaited<ReturnType<typeof balanceRows>>[1][number];
+
+function toBalance(paid: PaidRow[], payouts: PayoutRow[], commissionBps: number) {
   return vendorBalance(
     paid.map((p) => ({
       amountPaise: p.amountPaise,
       state: paymentState(p.purpose as "shop_order" | "dues" | "booking", p.purpose === "booking" ? p.bookingStatus : p.orderStatus),
     })),
-    payouts as BalancePayout[],
+    payouts.map((p) => ({ amountPaise: p.amountPaise, status: p.status as BalancePayout["status"] })),
     commissionBps
   );
+}
+
+function groupByVendor<T extends { vendorId: string }>(rows: T[]): Map<string, T[]> {
+  const out = new Map<string, T[]>();
+  for (const row of rows) {
+    const list = out.get(row.vendorId);
+    if (list) list.push(row);
+    else out.set(row.vendorId, [row]);
+  }
+  return out;
+}
+
+/**
+ * Balance for one vendor. No auth check: callers must have checked access.
+ * Pass a transaction as `database` to read inside it (e.g. under a payout lock).
+ */
+export async function computeVendorBalance(vendorId: string, commissionBps: number, database?: BalanceReader) {
+  const [paid, payouts] = await balanceRows(database ?? getDb(), vendorId);
+  return toBalance(paid, payouts, commissionBps);
 }
 
 export async function getVendorEarnings(slug: string) {
@@ -87,8 +119,13 @@ export async function getAdminPayouts() {
       .where(eq(bookings.paymentStatus, "refund_due"))
       .orderBy(desc(bookings.updatedAt)),
   ]);
-  const balances = await Promise.all(
-    allVendors.map(async (v) => ({ vendor: v, balance: await computeVendorBalance(v.id, v.commissionBps) }))
-  );
+  // Two queries for every vendor's balance instead of two per vendor.
+  const [paid, payouts] = await balanceRows(db);
+  const paidByVendor = groupByVendor(paid);
+  const payoutsByVendor = groupByVendor(payouts);
+  const balances = allVendors.map((v) => ({
+    vendor: v,
+    balance: toBalance(paidByVendor.get(v.id) ?? [], payoutsByVendor.get(v.id) ?? [], v.commissionBps),
+  }));
   return { balances, requests, refunds, bookingRefunds };
 }

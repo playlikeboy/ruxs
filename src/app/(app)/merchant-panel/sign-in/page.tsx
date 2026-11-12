@@ -26,7 +26,7 @@ export default async function MerchantSignInPage({ searchParams }: { searchParam
     <div className="fixed inset-0 z-10 overflow-y-auto bg-[#141311]">
       <div className="mx-auto flex min-h-full max-w-sm flex-col justify-center px-6 py-10">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-accent text-lg font-black text-white">R</span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-control bg-accent text-lg font-black text-white">R</span>
           <span>
             <span className="block text-sm font-bold tracking-wide text-white">RUXs</span>
             <span className="block text-xs font-medium uppercase tracking-[0.18em] text-white/50">Merchant panel</span>

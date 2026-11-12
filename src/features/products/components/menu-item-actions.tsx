@@ -9,7 +9,7 @@ export function AvailabilitySwitch({ slug, id, isAvailable }: { slug: string; id
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-muted">
+    <label className="flex min-h-10 cursor-pointer items-center gap-2 text-xs font-medium text-muted">
       <input
         type="checkbox"
         className="peer sr-only"
@@ -27,7 +27,7 @@ export function AvailabilitySwitch({ slug, id, isAvailable }: { slug: string; id
           });
         }}
       />
-      <span className="relative h-5 w-9 rounded-full bg-line transition peer-checked:bg-good after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4" aria-hidden="true" />
+      <span className="relative h-5 w-9 rounded-full bg-muted/40 transition peer-checked:bg-good peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent peer-disabled:opacity-60 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4" aria-hidden="true" />
       {isAvailable ? "In stock" : "Sold out"}
     </label>
   );

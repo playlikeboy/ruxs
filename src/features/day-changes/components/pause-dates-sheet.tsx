@@ -20,7 +20,7 @@ export function PauseDatesSheet({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (new Date(startDate) > new Date(endDate)) {
+    if (startDate > endDate) {
       toast.error("Start date must be before or equal to end date");
       return;
     }
@@ -52,11 +52,21 @@ export function PauseDatesSheet({
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-ink/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-surface rounded-t-[16px] sm:rounded-[12px] border border-line p-5 space-y-4 shadow-lg animate-in slide-in-from-bottom-6">
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-ink/40 backdrop-blur-xs"
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && !isPending) setIsOpen(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pause-title"
+            className="w-full max-w-md bg-surface rounded-t-[16px] sm:rounded-[12px] border border-line p-5 space-y-4 shadow-lg"
+          >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-base font-semibold text-ink">
+                <h3 id="pause-title" className="text-base font-semibold text-ink">
                   Pause Delivery for Holiday
                 </h3>
                 <p className="text-xs text-muted">
@@ -66,6 +76,7 @@ export function PauseDatesSheet({
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
+                aria-label="Close"
                 className="text-muted hover:text-ink text-sm p-1"
               >
                 <UiIcon name="close" />
@@ -82,6 +93,8 @@ export function PauseDatesSheet({
                     id="pstart"
                     type="date"
                     required
+                    autoFocus
+                    min={defaultStart}
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="w-full px-3 py-2 text-xs bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent font-mono"
@@ -96,6 +109,7 @@ export function PauseDatesSheet({
                     id="pend"
                     type="date"
                     required
+                    min={startDate}
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     className="w-full px-3 py-2 text-xs bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent font-mono"
@@ -107,7 +121,7 @@ export function PauseDatesSheet({
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="flex-1 py-2.5 px-3 bg-[#FAFAF7] text-muted text-xs font-medium rounded-[10px] border border-line hover:text-ink"
+                  className="flex-1 py-2.5 px-3 bg-bg text-muted text-xs font-medium rounded-[10px] border border-line hover:text-ink"
                 >
                   Cancel
                 </button>

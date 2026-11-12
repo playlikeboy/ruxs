@@ -44,10 +44,10 @@ export function TiffinKitchenPrep({
   };
 
   return (
-    <div className="rounded-[18px] border border-amber-200/90 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/30 p-5 shadow-2xs space-y-4 print:border-none print:bg-white print:p-0">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-100 pb-3">
+    <div className="rounded-[18px] border border-line bg-surface p-5 shadow-2xs space-y-4 print:border-none print:bg-white print:p-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 text-white shadow-2xs">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-white shadow-2xs">
             <ChefHat className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
@@ -59,7 +59,7 @@ export function TiffinKitchenPrep({
         <button
           type="button"
           onClick={handlePrint}
-          className="flex h-9 items-center gap-1.5 rounded-[10px] bg-amber-600 px-3 text-xs font-semibold text-white shadow-2xs transition hover:bg-amber-700 active:scale-95 print:hidden"
+          className="flex h-9 items-center gap-1.5 rounded-[10px] bg-accent px-3 text-xs font-semibold text-white shadow-2xs transition hover:opacity-90 active:scale-95 print:hidden"
         >
           <Printer className="h-3.5 w-3.5" aria-hidden="true" />
           <span>Print Kitchen Sheet</span>
@@ -68,15 +68,15 @@ export function TiffinKitchenPrep({
 
       {/* Headcount KPI Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-        <div className="rounded-[12px] border border-amber-100 bg-white/90 p-3 shadow-2xs">
-          <p className="text-[10px] uppercase font-bold text-amber-700 tracking-wider">Total Tiffins To Pack</p>
+        <div className="rounded-[12px] border border-line bg-bg p-3 shadow-2xs">
+          <p className="text-[10px] uppercase font-bold text-warn tracking-wider">Total Tiffins To Pack</p>
           <p className="mt-1 font-mono text-3xl font-black text-ink tabular-nums">
             {totalMeals}
           </p>
           <p className="text-muted text-[11px]">Boxes needed for today</p>
         </div>
 
-        <div className="rounded-[12px] border border-amber-100 bg-white/90 p-3 shadow-2xs">
+        <div className="rounded-[12px] border border-line bg-bg p-3 shadow-2xs">
           <p className="text-[10px] uppercase font-bold text-good tracking-wider">Pure Veg Tiffins</p>
           <p className="mt-1 font-mono text-3xl font-black text-good tabular-nums">
             {vegCount}
@@ -84,7 +84,7 @@ export function TiffinKitchenPrep({
           <p className="text-muted text-[11px]">Green label boxes</p>
         </div>
 
-        <div className="rounded-[12px] border border-amber-100 bg-white/90 p-3 shadow-2xs">
+        <div className="rounded-[12px] border border-line bg-bg p-3 shadow-2xs">
           <p className="text-[10px] uppercase font-bold text-bad tracking-wider">Non-Veg Tiffins</p>
           <p className="mt-1 font-mono text-3xl font-black text-bad tabular-nums">
             {nonVegCount}
@@ -92,8 +92,8 @@ export function TiffinKitchenPrep({
           <p className="text-muted text-[11px]">Red label boxes</p>
         </div>
 
-        <div className="rounded-[12px] border border-amber-100 bg-white/90 p-3 shadow-2xs">
-          <p className="text-[10px] uppercase font-bold text-amber-700 tracking-wider">Rotis Headcount</p>
+        <div className="rounded-[12px] border border-line bg-bg p-3 shadow-2xs">
+          <p className="text-[10px] uppercase font-bold text-warn tracking-wider">Rotis Headcount</p>
           <p className="mt-1 font-mono text-3xl font-black text-ink tabular-nums">
             {totalMeals * 4 + extraRotis}
           </p>
@@ -104,19 +104,19 @@ export function TiffinKitchenPrep({
       {/* Itemized Prep Breakdown & Skips List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
         {/* Menu Items to Cook */}
-        <div className="rounded-[14px] border border-amber-100/90 bg-white/80 p-3.5 space-y-2">
+        <div className="rounded-[14px] border border-line bg-bg p-3.5 space-y-2">
           <div className="flex items-center gap-1.5 font-bold text-ink">
-            <UtensilsCrossed className="h-4 w-4 text-amber-600" />
+            <UtensilsCrossed className="h-4 w-4 text-accent" aria-hidden="true" />
             <span>Items to Cook Today</span>
           </div>
           {confirmedProducts.length === 0 ? (
             <p className="text-muted text-xs">No active subscription meals scheduled for today.</p>
           ) : (
-            <ul className="divide-y divide-amber-100/60">
+            <ul className="divide-y divide-line">
               {confirmedProducts.map((p) => (
                 <li key={p.id} className="py-2 flex items-center justify-between">
                   <span className="font-medium text-ink">{p.name}</span>
-                  <span className="font-mono font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-[6px]">
+                  <span className="font-mono font-bold text-warn bg-butter px-2 py-0.5 rounded-[6px]">
                     {p.qty} portions
                   </span>
                 </li>
@@ -126,10 +126,10 @@ export function TiffinKitchenPrep({
         </div>
 
         {/* Skipped Today List */}
-        <div className="rounded-[14px] border border-amber-100/90 bg-white/80 p-3.5 space-y-2">
+        <div className="rounded-[14px] border border-line bg-bg p-3.5 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 font-bold text-ink">
-              <AlertTriangle className="h-4 w-4 text-warn" />
+              <AlertTriangle className="h-4 w-4 text-warn" aria-hidden="true" />
               <span>Paused / Skipped for Today</span>
             </div>
             <span className="text-[11px] font-mono font-semibold text-muted">
@@ -139,20 +139,20 @@ export function TiffinKitchenPrep({
 
           {skipsToday.length === 0 ? (
             <div className="flex items-center gap-2 text-good py-2">
-              <CheckCircle2 className="h-4 w-4" />
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               <span>Full attendance today. No customer skips recorded.</span>
             </div>
           ) : (
-            <ul className="divide-y divide-amber-100/60 max-h-48 overflow-y-auto">
-              {skipsToday.map((s, idx) => (
-                <li key={idx} className="py-1.5 flex items-center justify-between">
+            <ul className="divide-y divide-line max-h-48 overflow-y-auto">
+              {skipsToday.map((s) => (
+                <li key={`${s.customerName}-${s.flat}-${s.tower}-${s.productName}`} className="py-1.5 flex items-center justify-between">
                   <div>
                     <p className="font-semibold text-ink">{s.customerName}</p>
                     <p className="text-[10px] text-muted">
                       {s.flat}{s.tower !== "-" ? `, ${s.tower}` : ""} · {s.society}
                     </p>
                   </div>
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-muted">
+                  <span className="rounded-full bg-surface border border-line px-2 py-0.5 text-[10px] font-semibold text-muted">
                     Skipped {s.productName}
                   </span>
                 </li>

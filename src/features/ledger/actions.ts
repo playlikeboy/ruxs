@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db";
-import { ledgerEntries, invoices } from "@/db/schema";
+import { ledgerEntries, invoices, customers } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { rupeesToPaise } from "@/core/money";
 import { adjustmentKey, paymentKey } from "@/core/ledger";
@@ -19,8 +19,22 @@ export async function addAdjustment(input: unknown) {
   const access = await requireVendorAccess(slug, ["owner", "staff"]);
   const db = getDb();
 
+  const amountPaise = rupeesToPaise(amountRupees);
+  if (amountPaise === 0) {
+    return { ok: false, error: "Adjustment amount cannot be zero" };
+  }
+
   try {
-    const amountPaise = rupeesToPaise(amountRupees);
+    // customerId comes from the client: it must belong to this vendor before money moves.
+    const [customer] = await db
+      .select({ id: customers.id })
+      .from(customers)
+      .where(and(eq(customers.id, customerId), eq(customers.vendorId, access.vendorId)))
+      .limit(1);
+    if (!customer) {
+      return { ok: false, error: "Customer not found" };
+    }
+
     const key = adjustmentKey(crypto.randomUUID());
 
     await db.insert(ledgerEntries).values({
@@ -37,8 +51,8 @@ export async function addAdjustment(input: unknown) {
     revalidatePath(`/merchant-panel/${slug}/bills`);
     return { ok: true };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to add adjustment";
-    return { ok: false, error: msg };
+    console.error("[ledger] addAdjustment failed", err);
+    return { ok: false, error: "Failed to add adjustment" };
   }
 }
 
@@ -52,14 +66,14 @@ export async function markPaid(input: unknown) {
   const access = await requireVendorAccess(slug, ["owner", "staff"]);
   const db = getDb();
 
-  try {
-    const amountPaise = rupeesToPaise(amountRupees);
-    if (amountPaise <= 0) {
-      return { ok: false, error: "Payment amount must be greater than zero" };
-    }
+  const amountPaise = rupeesToPaise(amountRupees);
+  if (amountPaise <= 0) {
+    return { ok: false, error: "Payment amount must be greater than zero" };
+  }
 
+  try {
     const result = await db.transaction(async (tx) => {
-      // 1. Fetch invoice
+      // 1. Fetch and lock the invoice so two concurrent payments cannot lose an update
       const [invoice] = await tx
         .select()
         .from(invoices)
@@ -69,10 +83,11 @@ export async function markPaid(input: unknown) {
             eq(invoices.vendorId, access.vendorId)
           )
         )
-        .limit(1);
+        .limit(1)
+        .for("update");
 
       if (!invoice) {
-        throw new Error("Invoice not found");
+        return { ok: false, error: "Invoice not found" };
       }
 
       // 2. Insert payment into ledger (negative amount reduces balance)
@@ -106,10 +121,10 @@ export async function markPaid(input: unknown) {
       return { ok: true };
     });
 
-    revalidatePath(`/merchant-panel/${slug}/bills`);
+    if (result.ok) revalidatePath(`/merchant-panel/${slug}/bills`);
     return result;
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to record payment";
-    return { ok: false, error: msg };
+    console.error("[ledger] markPaid failed", err);
+    return { ok: false, error: "Failed to record payment" };
   }
 }

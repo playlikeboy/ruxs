@@ -48,6 +48,11 @@ describe("geo spatial rules", () => {
     expect(findNearestLocality(12.9, 77.6, [])).toBeNull();
   });
 
+  it("does not treat a blank area as matching every locality", () => {
+    expect(resolveCoordinates("Atlantis", "", LOCALITIES)).toBeNull();
+    expect(resolveCoordinates("Atlantis", "   ", LOCALITIES)).toBeNull();
+  });
+
   it("identifies nearest locality from GPS coordinates", () => {
     // Near Bellandur lake (12.9310, 77.6790)
     const { locality, distanceKm } = findNearestLocality(12.931, 77.679, LOCALITIES)!;

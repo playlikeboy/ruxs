@@ -4,12 +4,12 @@ import { AdminTicketRow } from "@/features/support/components/admin-ticket-row";
 import { AdminPagination } from "@/features/admin/components/admin-pagination";
 import { TICKET_CATEGORIES } from "@/core/tickets";
 
-export const metadata = { title: "Tickets & Disputes · Admin" };
+export const metadata = { title: "Tickets" };
 
 const STATUS_FILTERS = [
-  { v: "", t: "All Status" },
+  { v: "", t: "All statuses" },
   { v: "open", t: "Open" },
-  { v: "in_progress", t: "In Progress" },
+  { v: "in_progress", t: "In progress" },
   { v: "resolved", t: "Resolved" },
   { v: "closed", t: "Closed" },
 ];
@@ -40,7 +40,7 @@ export default async function AdminTicketsPage({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 pb-1">
+      <nav aria-label="Filter by status" className="flex flex-wrap items-center gap-2 pb-1">
         {STATUS_FILTERS.map((f) => {
           const params = new URLSearchParams();
           if (f.v) params.set("status", f.v);
@@ -52,21 +52,22 @@ export default async function AdminTicketsPage({
             <Link
               key={f.t}
               href={href}
+              aria-current={isActive ? "page" : undefined}
               className={
                 "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors " +
                 (isActive
                   ? "border-ink bg-ink text-white"
-                  : "border-line bg-surface text-muted hover:border-black/20")
+                  : "border-line bg-surface text-muted hover:border-ink/40 hover:text-ink")
               }
             >
               {f.t}
             </Link>
           );
         })}
-      </div>
+      </nav>
 
       {tickets.length === 0 ? (
-        <div className="rounded-[14px] border border-line bg-surface p-12 text-center text-sm text-muted">
+        <div className="rounded-card border border-line bg-surface p-12 text-center text-sm text-muted">
           No support tickets match the current filters.
         </div>
       ) : (

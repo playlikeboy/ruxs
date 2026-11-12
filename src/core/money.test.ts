@@ -24,4 +24,11 @@ describe("money rules", () => {
     expect(paiseToRupees(9050)).toBe(90.5);
     expect(paiseToRupees(0)).toBe(0);
   });
+
+  it("never turns non-finite input into money", () => {
+    expect(rupeesToPaise(Infinity)).toBe(0);
+    expect(rupeesToPaise("Infinity")).toBe(0);
+    expect(rupeesToPaise(NaN)).toBe(0);
+    expect(rupeesToPaise("abc")).toBe(0);
+  });
 });

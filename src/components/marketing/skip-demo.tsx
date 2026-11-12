@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { Check, Minus, Plus } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 
@@ -21,6 +21,17 @@ const RESULT: Record<Choice, string> = {
 /** A working example of tomorrow's choice, the same three actions as the household link. */
 export function SkipDemo() {
   const [choice, setChoice] = useState<Choice>("deliver");
+  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // ARIA radio group: arrow keys move and select; only the checked radio is in the tab order.
+  function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    const step = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+    if (step === 0) return;
+    event.preventDefault();
+    const next = (index + step + OPTIONS.length) % OPTIONS.length;
+    setChoice(OPTIONS[next]!.id);
+    buttons.current[next]?.focus();
+  }
 
   return (
     <div className="w-full max-w-[400px] rounded-[16px] border border-line bg-surface p-5 sm:p-6">
@@ -31,7 +42,7 @@ export function SkipDemo() {
       <p className="mt-1 text-sm text-muted">Tiffin plan · your home kitchen</p>
 
       <div role="radiogroup" aria-label="Tomorrow's lunch" className="mt-5 grid grid-cols-3 gap-2">
-        {OPTIONS.map(({ id, label, icon: Icon }) => {
+        {OPTIONS.map(({ id, label, icon: Icon }, index) => {
           const active = choice === id;
           return (
             <button
@@ -39,7 +50,12 @@ export function SkipDemo() {
               type="button"
               role="radio"
               aria-checked={active}
+              tabIndex={active ? 0 : -1}
+              ref={(el) => {
+                buttons.current[index] = el;
+              }}
               onClick={() => setChoice(id)}
+              onKeyDown={(event) => onKeyDown(event, index)}
               className={cn(
                 "flex min-h-12 items-center justify-center gap-1.5 rounded-[12px] border text-base font-semibold transition-colors duration-150",
                 active ? "border-ink bg-ink text-bg" : "border-line bg-bg text-ink hover:border-ink/40"

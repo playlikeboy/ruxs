@@ -2,16 +2,16 @@
 "use client";
 
 import { RuxsMark } from "@/components/marketing/ruxs-mark";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { Download, Share2, PlusSquare, CheckCircle, X, Smartphone } from "lucide-react";
 
 const PWA_STORY_PREVIEWS = [
-  { src: "/brand/ruxs-pwa-wide.png", label: "Daily Essentials" },
-  { src: "/brand/ruxs-pwa-order-narrow.png", label: "Easy Subscriptions" },
-  { src: "/brand/ruxs-pwa-delivery-narrow.png", label: "Morning Delivery" },
-  { src: "/brand/ruxs-pwa-tiffin-narrow.png", label: "Hot Tiffins" },
-  { src: "/brand/ruxs-pwa-kids-act-narrow.png", label: "Kids Zone" },
-  { src: "/brand/ruxs-pwa-kids-meals-narrow.png", label: "Kids Meals" },
+  { src: "/brand/ruxs-pwa-wide.png", label: "Daily essentials", width: 1024, height: 576 },
+  { src: "/brand/ruxs-pwa-order-narrow.png", label: "Subscriptions", width: 682, height: 1024 },
+  { src: "/brand/ruxs-pwa-delivery-narrow.png", label: "Morning delivery", width: 682, height: 1024 },
+  { src: "/brand/ruxs-pwa-tiffin-narrow.png", label: "Tiffins", width: 682, height: 1024 },
+  { src: "/brand/ruxs-pwa-kids-act-narrow.png", label: "Kids Zone", width: 682, height: 1024 },
+  { src: "/brand/ruxs-pwa-kids-meals-narrow.png", label: "Kids meals", width: 682, height: 1024 },
 ];
 
 interface BeforeInstallPromptEvent extends Event {
@@ -74,6 +74,19 @@ export function InstallAppPrompt({
   const isIOS = useSyncExternalStore(subscribe, getIsIOS, () => false);
   const initialDismissed = useSyncExternalStore(subscribe, getIsDismissed, () => false);
   const isDismissed = dismissedOverride || initialDismissed;
+  const guideTitleId = useId();
+  const guideCloseRef = useRef<HTMLButtonElement>(null);
+
+  // The banner's install guide is a modal: focus its close button and let Escape close it.
+  useEffect(() => {
+    if (!showIOSGuide || variant === "card") return;
+    guideCloseRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowIOSGuide(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showIOSGuide, variant]);
 
   useEffect(() => {
     const getStoredPrompt = () =>
@@ -145,18 +158,20 @@ export function InstallAppPrompt({
     setDismissedOverride(true);
     try {
       localStorage.setItem("ruxs_pwa_dismissed", String(Date.now()));
-    } catch {}
+    } catch {
+      /* stays dismissed for this visit only */
+    }
   };
 
   if (isStandalone && variant === "card") {
     return (
-      <div className={"flex items-center gap-3.5 rounded-2xl border border-black/5 bg-mint/30 p-4 " + className}>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-good/15 text-good">
+      <div className={"flex items-center gap-3.5 rounded-card border border-line bg-brand-leaf p-4 " + className}>
+        <div className="flex h-10 w-10 items-center justify-center rounded-control bg-good/15 text-good" aria-hidden="true">
           <CheckCircle className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-ink">App Installed</p>
-          <p className="text-xs text-neutral-500">You are using the official RUXs native PWA experience.</p>
+          <p className="text-sm font-semibold text-ink">App installed</p>
+          <p className="text-xs text-muted">You&apos;re using RUXs from your home screen.</p>
         </div>
       </div>
     );
@@ -164,38 +179,39 @@ export function InstallAppPrompt({
 
   if (variant === "card") {
     return (
-      <div className={"rounded-2xl border border-black/10 bg-gradient-to-br from-peach/30 via-white to-butter/20 p-4.5 shadow-2xs " + className}>
+      <div className={"rounded-card border border-line bg-surface p-4 " + className}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <RuxsMark className="h-11 w-11 shrink-0" aria-hidden="true" />
             <div>
               <div className="flex items-center gap-1.5">
-                <h3 className="text-[15px] font-bold text-ink">Install RUXs App</h3>
-                <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">FAST</span>
+                <h3 className="text-base font-semibold text-ink">Install the RUXs app</h3>
               </div>
-              <p className="text-xs text-neutral-500">Instant home screen access, offline speed &amp; notifications</p>
+              <p className="text-xs text-muted">Open RUXs straight from your home screen.</p>
             </div>
           </div>
         </div>
 
         <div className="mt-3.5 -mx-1 flex gap-2.5 overflow-x-auto pb-1 px-1 scrollbar-none snap-x">
           {PWA_STORY_PREVIEWS.map((p) => (
-            <div
+            <figure
               key={p.src}
-              className="group relative shrink-0 snap-start overflow-hidden rounded-xl border border-black/8 bg-white shadow-2xs transition hover:shadow-xs"
+              className="relative shrink-0 snap-start overflow-hidden rounded-control border border-line bg-surface"
             >
               <img
                 src={p.src}
-                alt={p.label}
+                alt=""
+                width={p.width}
+                height={p.height}
                 className="h-28 w-auto object-cover"
                 loading="lazy"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-1.5 pt-3">
-                <span className="block text-[10px] font-medium text-white truncate max-w-[120px]">
+              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-1.5 pt-4">
+                <span className="block max-w-[120px] truncate text-xs font-medium text-white">
                   {p.label}
                 </span>
-              </div>
-            </div>
+              </figcaption>
+            </figure>
           ))}
         </div>
 
@@ -203,42 +219,44 @@ export function InstallAppPrompt({
           <button
             type="button"
             onClick={handleInstallClick}
-            className="flex-1 flex h-11 items-center justify-center gap-2 rounded-xl bg-ink text-sm font-bold text-white shadow-xs transition active:scale-[0.98]"
+            aria-expanded={deferredPrompt ? undefined : showIOSGuide}
+            className="flex-1 flex min-h-11 items-center justify-center gap-2 rounded-control bg-ink text-sm font-semibold text-white transition hover:bg-ink/90 active:scale-[0.98]"
           >
-            <Download className="h-4 w-4" />
+            <Download className="h-4 w-4" aria-hidden="true" />
             Install on this device
           </button>
         </div>
 
         {showIOSGuide && (
-          <div className="mt-3.5 rounded-xl border border-black/10 bg-white p-3.5 text-xs text-neutral-600 shadow-xs animate-in fade-in">
-            <div className="flex items-center justify-between pb-2 border-b border-black/5">
+          <div className="mt-3.5 rounded-control border border-line bg-bg p-3.5 text-sm text-muted">
+            <div className="flex items-center justify-between pb-2 border-b border-line">
               <span className="font-semibold text-ink flex items-center gap-1.5">
-                <Share2 className="h-3.5 w-3.5 text-accent" />
+                <Share2 className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                 {isIOS ? "How to install on iPhone & iPad" : "How to install in Chrome / Android"}
               </span>
               <button
                 type="button"
                 onClick={() => setShowIOSGuide(false)}
-                className="text-neutral-400 hover:text-ink"
+                aria-label="Close install steps"
+                className="-mr-2 flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-app-canvas hover:text-ink"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
             {isIOS ? (
-              <ol className="mt-2.5 space-y-2 list-decimal list-inside text-neutral-600">
+              <ol className="mt-2.5 space-y-2 list-decimal list-inside text-muted">
                 <li>
-                  Tap the <strong className="text-ink">Share icon</strong> (<Share2 className="inline h-3 w-3 mx-0.5 text-accent" />) in Safari&apos;s bottom toolbar.
+                  Tap the <strong className="text-ink">Share icon</strong> (<Share2 className="inline h-3 w-3 mx-0.5 text-accent" aria-hidden="true" />) in Safari&apos;s bottom toolbar.
                 </li>
                 <li>
-                  Scroll down and tap <strong className="text-ink">Add to Home Screen</strong> (<PlusSquare className="inline h-3 w-3 mx-0.5 text-ink" />).
+                  Scroll down and tap <strong className="text-ink">Add to Home Screen</strong> (<PlusSquare className="inline h-3 w-3 mx-0.5 text-ink" aria-hidden="true" />).
                 </li>
                 <li>
                   Tap <strong className="text-ink">Add</strong> in the top-right corner.
                 </li>
               </ol>
             ) : (
-              <ol className="mt-2.5 space-y-2 list-decimal list-inside text-neutral-600">
+              <ol className="mt-2.5 space-y-2 list-decimal list-inside text-muted">
                 <li>
                   Tap the <strong className="text-ink">menu button (⋮)</strong> in Chrome&apos;s top-right corner.
                 </li>
@@ -259,13 +277,13 @@ export function InstallAppPrompt({
   // Default: Banner style
   return (
     <>
-      <div className={"relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-r from-peach/50 via-white to-butter/40 p-3.5 shadow-sm " + className}>
+      <div className={"relative overflow-hidden rounded-card border border-accent/20 bg-brand-peach p-3.5 " + className}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <RuxsMark className="h-9 w-9 shrink-0" aria-hidden="true" />
             <div className="min-w-0">
-              <p className="text-xs font-bold text-ink leading-tight truncate">Install RUXs App</p>
-              <p className="text-[11px] text-neutral-600 leading-tight">Fast 1-tap ordering right from your home screen</p>
+              <p className="text-sm font-semibold text-ink leading-tight truncate">Install the RUXs app</p>
+              <p className="text-xs text-muted leading-tight">Open RUXs straight from your home screen.</p>
             </div>
           </div>
 
@@ -273,55 +291,64 @@ export function InstallAppPrompt({
             <button
               type="button"
               onClick={handleInstallClick}
-              className="flex h-8 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-semibold text-white shadow-2xs transition active:scale-95"
+              className="flex min-h-10 items-center gap-1.5 rounded-control bg-ink px-3 text-sm font-semibold text-white transition hover:bg-ink/90 active:scale-[0.98]"
             >
-              <Download className="h-3.5 w-3.5" />
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
               Install
             </button>
             <button
               type="button"
               onClick={handleDismiss}
-              aria-label="Dismiss banner"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-black/5 hover:text-ink transition"
+              aria-label="Dismiss install banner"
+              className="flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-white/60 hover:text-ink transition"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         </div>
       </div>
 
       {showIOSGuide && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs p-4 sm:items-center">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl animate-in slide-in-from-bottom-5">
-            <div className="flex items-center justify-between pb-3 border-b border-black/5">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowIOSGuide(false);
+          }}
+        >
+          <div role="dialog" aria-modal="true" aria-labelledby={guideTitleId} className="w-full max-w-sm rounded-[24px] bg-surface p-5 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-line">
               <div className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                <span className="flex h-8 w-8 items-center justify-center rounded-control bg-accent/10 text-accent" aria-hidden="true">
                   <Smartphone className="h-4 w-4" />
                 </span>
-                <h3 className="text-base font-bold text-ink">Install on Home Screen</h3>
+                <h2 id={guideTitleId} className="text-base font-semibold text-ink">Add RUXs to your home screen</h2>
               </div>
               <button
+                ref={guideCloseRef}
                 type="button"
                 onClick={() => setShowIOSGuide(false)}
-                className="rounded-full p-1 text-neutral-400 hover:bg-neutral-100 hover:text-ink"
+                aria-label="Close install steps"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-app-canvas hover:text-ink"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
-            <p className="mt-3 text-xs text-neutral-600">
-              Install RUXs for a full-screen, native experience with zero download required.
+            <p className="mt-3 text-sm text-muted">
+              RUXs opens full screen, like an app, with nothing to download from a store.
             </p>
 
             <div className="mt-3 -mx-1 flex gap-2 overflow-x-auto pb-1 px-1 scrollbar-none snap-x">
               {PWA_STORY_PREVIEWS.map((p) => (
                 <div
                   key={p.src}
-                  className="shrink-0 snap-start overflow-hidden rounded-xl border border-black/8 bg-neutral-100 shadow-2xs"
+                  className="shrink-0 snap-start overflow-hidden rounded-control border border-line bg-app-canvas"
                 >
                   <img
                     src={p.src}
                     alt={p.label}
+                    width={p.width}
+                    height={p.height}
                     className="h-20 w-auto object-cover"
                     loading="lazy"
                   />
@@ -330,32 +357,32 @@ export function InstallAppPrompt({
             </div>
 
             {isIOS ? (
-              <ol className="mt-3.5 space-y-2.5 rounded-2xl bg-neutral-50 p-3.5 text-xs text-neutral-700">
+              <ol className="mt-3.5 space-y-2.5 rounded-card bg-app-canvas p-3.5 text-sm text-ink">
                 <li className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">1</span>
-                  <span>Tap the <strong className="text-ink">Share icon</strong> (<Share2 className="inline h-3.5 w-3.5 text-accent mx-0.5" />) in Safari toolbar</span>
+                  <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">1</span>
+                  <span>Tap the <strong className="text-ink">Share icon</strong> (<Share2 className="inline h-3.5 w-3.5 text-accent mx-0.5" aria-hidden="true" />) in Safari toolbar</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">2</span>
-                  <span>Scroll down and select <strong className="text-ink">Add to Home Screen</strong> (<PlusSquare className="inline h-3.5 w-3.5 text-ink mx-0.5" />)</span>
+                  <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">2</span>
+                  <span>Scroll down and select <strong className="text-ink">Add to Home Screen</strong> (<PlusSquare className="inline h-3.5 w-3.5 text-ink mx-0.5" aria-hidden="true" />)</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">3</span>
+                  <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">3</span>
                   <span>Tap <strong className="text-ink">Add</strong> in top right corner</span>
                 </li>
               </ol>
             ) : (
-              <ol className="mt-3.5 space-y-2.5 rounded-2xl bg-neutral-50 p-3.5 text-xs text-neutral-700">
+              <ol className="mt-3.5 space-y-2.5 rounded-card bg-app-canvas p-3.5 text-sm text-ink">
                 <li className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">1</span>
+                  <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">1</span>
                   <span>Tap the <strong className="text-ink">menu button (⋮)</strong> in Chrome&apos;s top-right corner</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">2</span>
+                  <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">2</span>
                   <span>Select <strong className="text-ink">Install app</strong> (or <strong className="text-ink">Add to Home screen</strong>)</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">3</span>
+                  <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">3</span>
                   <span>Tap <strong className="text-ink">Install</strong> to complete</span>
                 </li>
               </ol>
@@ -364,7 +391,7 @@ export function InstallAppPrompt({
             <button
               type="button"
               onClick={() => setShowIOSGuide(false)}
-              className="mt-4 flex h-11 w-full items-center justify-center rounded-xl bg-ink text-xs font-bold text-white"
+              className="mt-4 flex min-h-11 w-full items-center justify-center rounded-control bg-ink text-sm font-semibold text-white transition hover:bg-ink/90"
             >
               Got it
             </button>

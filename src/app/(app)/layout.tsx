@@ -17,7 +17,7 @@ export default function AppLayout({
 }) {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-bg text-ink flex flex-col antialiased selection:bg-[#FFE8DD]">
+      <div className="min-h-screen bg-bg text-ink flex flex-col antialiased selection:bg-peach">
         {/* Each page sets its own width: the merchant panel is full-width, auth pages stay narrow. */}
         <main className="relative w-full flex-1 overflow-x-clip">
           {children}

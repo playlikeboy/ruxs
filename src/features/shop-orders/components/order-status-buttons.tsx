@@ -1,10 +1,9 @@
 "use client";
 
-import { UiIcon } from "@/components/ui/app-icon";
-
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { UiIcon } from "@/components/ui/app-icon";
 import { nextVendorStep, STATUS_LABEL, type ShopOrderStatus } from "@/core/shop";
 import { updateShopOrderStatus } from "@/features/shop-orders/actions";
 
@@ -43,7 +42,7 @@ export function OrderStatusButtons({
       if (!res.ok) toast.error(res.error);
       else {
         if ("waitingFor" in res && res.waitingFor === "consumer") {
-          toast.success("Delivery marked! Awaiting customer confirmation.");
+          toast.success("Marked delivered. Waiting for the customer to confirm.");
         } else {
           toast.success(STATUS_LABEL[to]);
         }
@@ -58,8 +57,8 @@ export function OrderStatusButtons({
 
   if (vendorAlreadyDelivered && (status === "out_for_delivery" || status === "accepted")) {
     return (
-      <div className="rounded-[10px] border border-amber-200 bg-amber-50/80 px-3.5 py-2.5 text-center text-xs font-semibold text-amber-800">
-        <UiIcon name="hourglass" /> You marked delivered · Waiting for customer confirmation
+      <div role="status" className="rounded-control border border-warn/20 bg-butter px-3.5 py-2.5 text-center text-xs font-semibold text-warn">
+        <UiIcon name="hourglass" /> You marked delivered · Waiting for the customer to confirm
       </div>
     );
   }
@@ -68,22 +67,22 @@ export function OrderStatusButtons({
   return (
     <div className="space-y-2">
       {customerConfirmed && (
-        <p className="rounded-[8px] bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200">
-          <UiIcon name="check" /> Customer confirmed delivery! Tap below to finalize:
+        <p className="rounded-lg border border-good/20 bg-mint px-2.5 py-1.5 text-xs font-semibold text-good">
+          <UiIcon name="check" /> The customer confirmed delivery. Tap below to close the order.
         </p>
       )}
       <div className="flex gap-2">
         {status === "placed" ? (
-          <button type="button" disabled={pending} onClick={() => move("rejected")} className="h-11 flex-1 rounded-[10px] border border-line text-sm font-semibold text-bad disabled:opacity-60">
+          <button type="button" disabled={pending} onClick={() => move("rejected")} className="h-11 flex-1 rounded-control border border-line text-sm font-semibold text-bad transition hover:bg-bad/5 disabled:opacity-60">
             Decline
           </button>
         ) : (
-          <button type="button" disabled={pending} onClick={() => move("cancelled")} className="h-11 rounded-[10px] border border-line px-3 text-sm font-semibold text-muted disabled:opacity-60">
+          <button type="button" disabled={pending} onClick={() => move("cancelled")} className="h-11 rounded-control border border-line px-3 text-sm font-semibold text-muted transition hover:bg-app-canvas hover:text-ink disabled:opacity-60">
             Cancel
           </button>
         )}
-        <button type="button" disabled={pending} onClick={() => move(next)} className="h-11 flex-[2] rounded-[10px] bg-accent text-sm font-bold text-white transition active:scale-[0.98] disabled:opacity-60">
-          {pending ? "Updating…" : customerConfirmed && next === "delivered" ? "Confirm & Finalize" : NEXT_LABEL[next]}
+        <button type="button" disabled={pending} onClick={() => move(next)} className="h-11 flex-[2] rounded-control bg-accent text-sm font-bold text-white transition hover:bg-accent/90 active:scale-[0.98] disabled:opacity-60">
+          {pending ? "Updating…" : customerConfirmed && next === "delivered" ? "Confirm delivered" : NEXT_LABEL[next]}
         </button>
       </div>
     </div>

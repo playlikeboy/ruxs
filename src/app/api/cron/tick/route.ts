@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { vendors, products } from "@/db/schema";
@@ -9,48 +9,53 @@ import { generateBillsForVendor } from "@/features/billing/generate-bills";
 import { sendTomorrowReminders } from "@/features/notifications/reminders";
 import { isEveningReminderWindow } from "@/core/reminders";
 
+/** Constant-time compare of two secrets; hashing first hides the length too. */
+function secretMatches(given: string, expected: string): boolean {
+  const a = createHash("sha256").update(given).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
 export async function POST(req: Request) {
   const env = getServerEnv();
   if (!env.CRON_SECRET) {
     return new Response("Cron secret not configured", { status: 500 });
   }
 
-  // Constant-time token verification
-  const authHeader = req.headers.get("authorization") || "";
-  const parts = authHeader.split(" ");
-  if (parts.length !== 2 || parts[0] !== "Bearer" || !parts[1]) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
-  const tokenBuf = Buffer.from(parts[1]);
-  const secretBuf = Buffer.from(env.CRON_SECRET);
-  if (
-    tokenBuf.length !== secretBuf.length ||
-    !timingSafeEqual(tokenBuf, secretBuf)
-  ) {
+  const authHeader = req.headers.get("authorization") ?? "";
+  const [scheme, token, ...rest] = authHeader.split(" ");
+  if (scheme !== "Bearer" || !token || rest.length > 0 || !secretMatches(token, env.CRON_SECRET)) {
     return new Response("Unauthorized", { status: 401 });
   }
 
   const db = getDb();
   const now = new Date();
   const today = todayIST(now);
+  // One failing product or vendor must not stop the rest of the tick; each
+  // step is idempotent, so the next tick retries whatever failed here.
+  const failures: string[] = [];
 
   // 1. Lock cutoffs for active vendors whose products passed cutoffAt today
   const activeRows = await db
-    .select({
-      product: products,
-      vendor: vendors,
-    })
+    .select({ productId: products.id, cutoffAt: products.cutoffAt, vendorId: vendors.id })
     .from(products)
     .innerJoin(vendors, eq(products.vendorId, vendors.id))
     .where(eq(vendors.status, "active"));
 
   let lockedProductsCount = 0;
-  for (const { product } of activeRows) {
-    const cutoffTime = istDateTime(today, product.cutoffAt);
-    if (now.getTime() >= cutoffTime.getTime()) {
-      await lockCutoffForProduct(product.id, today, db);
+  for (const row of activeRows) {
+    const cutoffTime = istDateTime(today, row.cutoffAt);
+    if (now.getTime() < cutoffTime.getTime()) continue;
+    try {
+      await lockCutoffForProduct(row.productId, today, db);
       lockedProductsCount++;
+    } catch (err) {
+      console.error("[cron] cutoff lock failed", { productId: row.productId, error: errorMessage(err) });
+      failures.push(`cutoff:${row.productId}`);
     }
   }
 
@@ -60,31 +65,44 @@ export async function POST(req: Request) {
   const tenAmTime = istDateTime(today, "10:00:00");
 
   if (isFirstDay && now.getTime() >= tenAmTime.getTime()) {
-    const parts = today.split("-").map(Number);
-    const year = parts[0]!;
-    const month = parts[1]!;
+    const [year, month] = today.split("-").map(Number) as [number, number];
     const lastMonthYear = month === 1 ? year - 1 : year;
     const lastMonthNum = month === 1 ? 12 : month - 1;
     const lastMonthPeriod = `${lastMonthYear}-${String(lastMonthNum).padStart(2, "0")}`;
 
-    const activeVendorIds = Array.from(
-      new Set(activeRows.map((r) => r.vendor.id))
-    );
+    const activeVendorIds = Array.from(new Set(activeRows.map((r) => r.vendorId)));
 
-    for (const vId of activeVendorIds) {
-      await generateBillsForVendor(vId, lastMonthPeriod, db);
-      billedVendorsCount++;
+    for (const vendorId of activeVendorIds) {
+      try {
+        await generateBillsForVendor(vendorId, lastMonthPeriod, db);
+        billedVendorsCount++;
+      } catch (err) {
+        console.error("[cron] bill generation failed", { vendorId, period: lastMonthPeriod, error: errorMessage(err) });
+        failures.push(`bill:${vendorId}`);
+      }
     }
   }
 
   // 3. Evening reminders for tomorrow's sessions (18:00 IST, deduped per booking)
-  const reminders = isEveningReminderWindow(now) ? await sendTomorrowReminders(now) : null;
+  let reminders: Awaited<ReturnType<typeof sendTomorrowReminders>> | null = null;
+  if (isEveningReminderWindow(now)) {
+    try {
+      reminders = await sendTomorrowReminders(now);
+    } catch (err) {
+      console.error("[cron] reminders failed", { error: errorMessage(err) });
+      failures.push("reminders");
+    }
+  }
 
-  return Response.json({
-    ok: true,
-    serviceDate: today,
-    lockedProducts: lockedProductsCount,
-    billedVendors: billedVendorsCount,
-    reminders,
-  });
+  return Response.json(
+    {
+      ok: failures.length === 0,
+      serviceDate: today,
+      lockedProducts: lockedProductsCount,
+      billedVendors: billedVendorsCount,
+      reminders,
+      failures,
+    },
+    { status: failures.length === 0 ? 200 : 500 }
+  );
 }

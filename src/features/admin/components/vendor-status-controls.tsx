@@ -3,12 +3,13 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { buttonClass } from "@/components/ui/button";
 import { adminSetVendorStatus } from "@/features/admin/actions";
 
-const NEXT: Record<string, { to: "active" | "suspended"; label: string; tone: string }[]> = {
-  pending: [{ to: "active", label: "Approve", tone: "bg-good text-white" }],
-  active: [{ to: "suspended", label: "Suspend", tone: "border border-bad/40 text-bad" }],
-  suspended: [{ to: "active", label: "Reactivate", tone: "bg-good text-white" }],
+const NEXT: Record<string, { to: "active" | "suspended"; label: string; done: string; tone: string }[]> = {
+  pending: [{ to: "active", label: "Approve", done: "Vendor approved", tone: "inline-flex min-h-10 select-none items-center justify-center gap-1.5 rounded-control px-3 text-[13px] font-semibold text-white transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent bg-good hover:bg-good/90" }],
+  active: [{ to: "suspended", label: "Suspend", done: "Vendor suspended", tone: buttonClass("danger", "sm") }],
+  suspended: [{ to: "active", label: "Reactivate", done: "Vendor reactivated", tone: "inline-flex min-h-10 select-none items-center justify-center gap-1.5 rounded-control px-3 text-[13px] font-semibold text-white transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent bg-good hover:bg-good/90" }],
 };
 
 export function VendorStatusControls({ vendorId, status }: { vendorId: string; status: string }) {
@@ -27,12 +28,12 @@ export function VendorStatusControls({ vendorId, status }: { vendorId: string; s
               const res = await adminSetVendorStatus({ vendorId, status: n.to });
               if (!res.ok) toast.error(res.error);
               else {
-                toast.success(n.label + "d");
+                toast.success(n.done);
                 router.refresh();
               }
             });
           }}
-          className={"h-10 rounded-[10px] px-4 text-sm font-semibold disabled:opacity-60 " + n.tone}
+          className={n.tone}
         >
           {n.label}
         </button>

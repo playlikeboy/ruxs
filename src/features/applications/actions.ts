@@ -8,8 +8,8 @@ import { categories, platformAdmins, vendorApplications } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { renderEmailHtml, sendEmail } from "@/features/notifications/service";
 import { applicationSchema, applicationUpdateSchema } from "./schemas";
+import { APP_URL } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in";
 
 function fail(error: string) {
   return { ok: false as const, error };
@@ -47,7 +47,7 @@ export async function submitVendorApplication(input: unknown) {
     details: data.details || null,
   });
 
-  after(() => emailAdmins(data.businessName, category.label, data.area, data.city).catch(() => {}));
+  after(() => emailAdmins(data.businessName, category.label, data.area, data.city).catch((err) => console.error("Application email to admins failed", err)));
   revalidatePath("/admin/applications");
   return { ok: true as const, duplicate: false };
 }

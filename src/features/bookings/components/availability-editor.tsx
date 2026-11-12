@@ -52,8 +52,8 @@ export function WeeklyHoursEditor({ slug, initial }: { slug: string; initial: Wi
                     <input type="time" aria-label={`${day.label} from`} value={r.startTime} onChange={(e) => update(i, { startTime: e.target.value })} className={timeInput} />
                     <span className="text-muted">to</span>
                     <input type="time" aria-label={`${day.label} until`} value={r.endTime} onChange={(e) => update(i, { endTime: e.target.value })} className={timeInput} />
-                    <button type="button" aria-label="Remove window" onClick={() => setRules((all) => all.filter((_, j) => j !== i))} className="rounded-full p-2 text-muted hover:bg-bg hover:text-bad">
-                      <Trash2 className="h-4 w-4" />
+                    <button type="button" aria-label={`Remove ${day.label} ${r.startTime}–${r.endTime}`} onClick={() => setRules((all) => all.filter((_, j) => j !== i))} className="rounded-full p-2 text-muted hover:bg-bg hover:text-bad">
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
                 ))}
@@ -63,7 +63,7 @@ export function WeeklyHoursEditor({ slug, initial }: { slug: string; initial: Wi
                 onClick={() => setRules((r) => [...r, { weekday: day.id, startTime: windows.length ? "17:00" : "06:00", endTime: windows.length ? "20:00" : "10:00" }])}
                 className="flex h-9 shrink-0 items-center gap-1 self-start rounded-[10px] border border-line px-3 text-xs font-semibold"
               >
-                <Plus className="h-3.5 w-3.5" /> Add hours
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" /> Add hours
               </button>
             </div>
           );
@@ -132,6 +132,8 @@ export function BookingRulesForm({ slug, noticeMinutes, cancelCutoffHours }: { s
   );
 }
 
+const blockFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+
 function toIsoIST(date: string, time: string) {
   return `${date}T${time}:00+05:30`;
 }
@@ -144,7 +146,6 @@ export function TimeOffEditor({ slug, blocks }: { slug: string; blocks: { id: st
   const [toTime, setToTime] = useState("23:59");
   const [reason, setReason] = useState("");
   const [pending, startTransition] = useTransition();
-  const fmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 
   return (
     <div className="space-y-3">
@@ -153,7 +154,7 @@ export function TimeOffEditor({ slug, blocks }: { slug: string; blocks: { id: st
           {blocks.map((b) => (
             <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
               <span>
-                {fmt.format(new Date(b.startsAt))} → {fmt.format(new Date(b.endsAt))}
+                {blockFmt.format(new Date(b.startsAt))} – {blockFmt.format(new Date(b.endsAt))}
                 {b.reason ? <span className="text-muted"> · {b.reason}</span> : null}
               </span>
               <button
@@ -166,7 +167,8 @@ export function TimeOffEditor({ slug, blocks }: { slug: string; blocks: { id: st
                     else router.refresh();
                   })
                 }
-                className="text-xs font-semibold text-bad"
+                aria-label={`Remove time off from ${blockFmt.format(new Date(b.startsAt))}`}
+                className="min-h-10 px-2 text-xs font-semibold text-bad disabled:opacity-60"
               >
                 Remove
               </button>
@@ -193,15 +195,15 @@ export function TimeOffEditor({ slug, blocks }: { slug: string; blocks: { id: st
         <label className="text-xs font-medium">
           From
           <span className="mt-1 flex gap-1">
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={timeInput + " flex-1"} />
-            <input type="time" value={fromTime} onChange={(e) => setFromTime(e.target.value)} className={timeInput} />
+            <input type="date" aria-label="From date" value={from} onChange={(e) => setFrom(e.target.value)} className={timeInput + " flex-1"} />
+            <input type="time" aria-label="From time" value={fromTime} onChange={(e) => setFromTime(e.target.value)} className={timeInput} />
           </span>
         </label>
         <label className="text-xs font-medium">
           Until
           <span className="mt-1 flex gap-1">
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={timeInput + " flex-1"} />
-            <input type="time" value={toTime} onChange={(e) => setToTime(e.target.value)} className={timeInput} />
+            <input type="date" aria-label="Until date" value={to} onChange={(e) => setTo(e.target.value)} className={timeInput + " flex-1"} />
+            <input type="time" aria-label="Until time" value={toTime} onChange={(e) => setToTime(e.target.value)} className={timeInput} />
           </span>
         </label>
         <label className="text-xs font-medium">
@@ -209,7 +211,7 @@ export function TimeOffEditor({ slug, blocks }: { slug: string; blocks: { id: st
           <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Holiday" className={timeInput + " mt-1 w-full"} />
         </label>
         <button type="submit" disabled={pending} className="h-10 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60">
-          Add time off
+          {pending ? "Saving…" : "Add time off"}
         </button>
       </form>
     </div>

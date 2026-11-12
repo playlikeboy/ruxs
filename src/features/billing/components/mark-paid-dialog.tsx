@@ -61,11 +61,21 @@ export function MarkPaidDialog({
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-ink/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-surface rounded-t-[16px] sm:rounded-[12px] border border-line p-5 space-y-4 shadow-lg animate-in slide-in-from-bottom-6">
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-ink/40 backdrop-blur-xs"
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && !isPending) setIsOpen(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`paytitle-${invoiceId}`}
+            className="w-full max-w-md bg-surface rounded-t-[16px] sm:rounded-[12px] border border-line p-5 space-y-4 shadow-lg"
+          >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-base font-semibold text-ink">Record Payment</h3>
+                <h3 id={`paytitle-${invoiceId}`} className="text-base font-semibold text-ink">Record Payment</h3>
                 <p className="text-xs text-muted">
                   {billNumber} • {customerName}
                 </p>
@@ -73,6 +83,7 @@ export function MarkPaidDialog({
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
+                aria-label="Close"
                 className="text-muted hover:text-ink text-sm p-1"
               >
                 <UiIcon name="close" />
@@ -82,16 +93,19 @@ export function MarkPaidDialog({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label
-                  htmlFor="payamt"
+                  htmlFor={`payamt-${invoiceId}`}
                   className="block text-xs font-medium text-ink mb-1"
                 >
                   Amount Received (₹)
                 </label>
                 <input
-                  id="payamt"
+                  id={`payamt-${invoiceId}`}
                   type="number"
+                  inputMode="decimal"
                   step="0.01"
+                  min="0.01"
                   required
+                  autoFocus
                   value={amountRupees}
                   onChange={(e) => setAmountRupees(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent tabular-nums font-mono"
@@ -100,16 +114,17 @@ export function MarkPaidDialog({
 
               <div>
                 <label
-                  htmlFor="paynotes"
+                  htmlFor={`paynotes-${invoiceId}`}
                   className="block text-xs font-medium text-ink mb-1"
                 >
                   Payment Reference / Mode (Optional)
                 </label>
                 <input
-                  id="paynotes"
+                  id={`paynotes-${invoiceId}`}
                   type="text"
                   placeholder="e.g. Google Pay / Cash / UPI"
                   value={notes}
+                  maxLength={200}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent"
                 />
@@ -119,7 +134,7 @@ export function MarkPaidDialog({
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="flex-1 py-2.5 px-3 bg-[#FAFAF7] text-muted text-xs font-medium rounded-[10px] border border-line hover:text-ink"
+                  className="flex-1 py-2.5 px-3 bg-bg text-muted text-xs font-medium rounded-[10px] border border-line hover:text-ink"
                 >
                   Cancel
                 </button>

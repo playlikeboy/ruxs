@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import { reloadIfStaleDeploy } from "@/lib/stale-deploy";
-import Link from "next/link";
+import { Button, ButtonLink } from "@/components/ui/button";
 
 export default function AppError({
   error,
@@ -17,28 +18,24 @@ export default function AppError({
   }, [error]);
 
   return (
-    <div className="p-6 my-8 text-center space-y-4 bg-surface border border-line rounded-[12px] max-w-sm mx-auto shadow-xs">
-      <div className="w-10 h-10 mx-auto rounded-full bg-[#FCE4EC] text-[#B42318] flex items-center justify-center font-bold">
-        !
-      </div>
+    <div role="alert" className="mx-auto my-8 max-w-sm space-y-4 rounded-card border border-line bg-surface p-6 text-center">
+      <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blush text-bad" aria-hidden="true">
+        <AlertTriangle className="h-5 w-5" />
+      </span>
       <div>
         <h2 className="text-base font-semibold text-ink">Something went wrong</h2>
-        <p className="text-xs text-muted mt-1">
-          We couldn’t load this view. Retry, or return to the merchant portal.
+        <p className="mt-1 text-sm text-muted">
+          We couldn’t load this view. Try again, or go back to the merchant panel.
         </p>
       </div>
-      {error.digest ? <p className="text-[11px] text-muted">Reference: {error.digest}</p> : null}
+      {error.digest ? <p className="text-xs text-muted">Reference: {error.digest}</p> : null}
       <div className="flex items-center justify-center gap-3">
-        <button
-          type="button"
-          onClick={() => reset()}
-          className="py-2 px-4 bg-accent text-white text-xs font-semibold rounded-[8px] hover:opacity-90 active:scale-95 transition-all shadow-xs"
-        >
-          Try Again
-        </button>
-        <Link href="/merchant-panel" className="py-2 px-4 border border-line text-ink text-xs font-semibold rounded-[8px]">
-          Merchant portal
-        </Link>
+        <Button type="button" size="sm" onClick={() => reset()}>
+          Try again
+        </Button>
+        <ButtonLink href="/merchant-panel" variant="secondary" size="sm">
+          Merchant panel
+        </ButtonLink>
       </div>
     </div>
   );

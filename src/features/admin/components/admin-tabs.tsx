@@ -75,7 +75,7 @@ export function AdminSidebarNav({ badges }: { badges: Record<string, number> }) 
     <nav aria-label="Admin console navigation" className="space-y-6 px-3 py-4">
       {NAV_GROUPS.map((group) => (
         <div key={group.title} className="space-y-1">
-          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted/70">
+          <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-muted">
             {group.title}
           </p>
           <div className="space-y-0.5">
@@ -90,7 +90,7 @@ export function AdminSidebarNav({ badges }: { badges: Record<string, number> }) 
                   href={t.href}
                   aria-current={active ? "page" : undefined}
                   className={
-                    "flex h-9 items-center gap-2.5 rounded-[10px] px-3 text-xs transition-colors " +
+                    "flex h-9 items-center gap-2.5 rounded-[10px] px-3 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
                     (active
                       ? "bg-ink font-bold text-white shadow-xs"
                       : "text-muted font-medium hover:bg-bg hover:text-ink")
@@ -113,6 +113,7 @@ export function AdminSidebarNav({ badges }: { badges: Record<string, number> }) 
                       }
                     >
                       {badge}
+                      <span className="sr-only"> need attention</span>
                     </span>
                   )}
                 </Link>
@@ -143,7 +144,7 @@ export function AdminTabs({ badges }: { badges: Record<string, number> }) {
             href={t.href}
             aria-current={active ? "page" : undefined}
             className={
-              "flex shrink-0 items-center gap-1.5 border-b-2 px-3 pb-2.5 pt-1.5 text-xs font-semibold transition " +
+              "flex min-h-10 shrink-0 items-center gap-1.5 border-b-2 px-3 pb-2.5 pt-1.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent " +
               (active
                 ? "border-ink text-ink"
                 : "border-transparent text-muted hover:text-ink")
@@ -153,6 +154,7 @@ export function AdminTabs({ badges }: { badges: Record<string, number> }) {
             {badge > 0 && (
               <span className="rounded-full bg-accent px-1.5 text-[10px] font-bold text-white tabular-nums">
                 {badge}
+                <span className="sr-only"> need attention</span>
               </span>
             )}
           </Link>

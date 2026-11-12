@@ -15,7 +15,7 @@ function Brand() {
           <span className="font-bold text-sm tracking-tight text-ink group-hover:text-accent transition">
             RUXs
           </span>
-          <span className="rounded-[4px] bg-accent/15 px-1 py-0.2 text-[9px] font-black uppercase tracking-wider text-accent">
+          <span className="rounded-[4px] bg-accent/15 px-1 py-px text-[10px] font-bold uppercase tracking-wider text-accent">
             Console
           </span>
         </div>
@@ -37,6 +37,12 @@ export default async function AdminConsoleLayout({ children }: { children: React
 
   return (
     <div className="min-h-dvh bg-bg text-ink antialiased">
+      <a
+        href="#admin-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-ink focus:shadow-2xs"
+      >
+        Skip to content
+      </a>
       {/* Desktop Fixed Left Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-surface lg:flex">
         <div className="border-b border-line px-5 py-4">
@@ -52,31 +58,33 @@ export default async function AdminConsoleLayout({ children }: { children: React
         <div className="border-t border-line p-3 space-y-1">
           <Link
             href="/admin/vendors/new"
-            className="flex h-9 items-center gap-2.5 rounded-[10px] bg-accent/10 px-3 text-xs font-bold text-accent hover:bg-accent hover:text-white transition"
+            className="flex h-9 items-center gap-2.5 rounded-control bg-accent/10 px-3 text-xs font-bold text-accent transition hover:bg-accent hover:text-white"
           >
-            <Plus className="h-4 w-4" /> Add Vendor Store
+            <Plus className="h-4 w-4" aria-hidden="true" /> Add vendor store
           </Link>
 
           <Link
             href="/merchant-panel"
             target="_blank"
-            className="flex h-8 items-center justify-between rounded-[8px] px-3 text-xs font-medium text-muted hover:bg-bg hover:text-ink transition"
+            className="flex h-9 items-center justify-between rounded-control px-3 text-xs font-medium text-muted transition hover:bg-bg hover:text-ink"
           >
             <span className="flex items-center gap-2">
-              <Store className="h-3.5 w-3.5 text-muted" /> Merchant Panel
+              <Store className="h-3.5 w-3.5" aria-hidden="true" /> Merchant Panel
+              <span className="sr-only">(opens in a new tab)</span>
             </span>
-            <ExternalLink className="h-3 w-3 text-muted/60" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
 
           <Link
             href="/app"
             target="_blank"
-            className="flex h-8 items-center justify-between rounded-[8px] px-3 text-xs font-medium text-muted hover:bg-bg hover:text-ink transition"
+            className="flex h-9 items-center justify-between rounded-control px-3 text-xs font-medium text-muted transition hover:bg-bg hover:text-ink"
           >
             <span className="flex items-center gap-2">
-              <Home className="h-3.5 w-3.5 text-muted" /> Household App
+              <Home className="h-3.5 w-3.5" aria-hidden="true" /> Household App
+              <span className="sr-only">(opens in a new tab)</span>
             </span>
-            <ExternalLink className="h-3 w-3 text-muted/60" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
         </div>
       </aside>
@@ -90,21 +98,15 @@ export default async function AdminConsoleLayout({ children }: { children: React
               <Brand />
             </div>
 
-            <div className="hidden items-center gap-3 lg:flex">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Systems Operational
-              </span>
-              <span className="text-muted/40">|</span>
-              <span className="text-xs text-muted">RUXs Multi-Vendor Marketplace Core</span>
-            </div>
+            {/* Spacer keeps the actions right-aligned on desktop, where the brand sits in the sidebar. */}
+            <div className="hidden lg:block" aria-hidden="true" />
 
             <div className="flex items-center gap-3">
               <Link
                 href="/admin/vendors/new"
-                className="hidden sm:flex h-9 items-center gap-1.5 rounded-[8px] bg-accent px-3 text-xs font-bold text-white shadow-2xs hover:opacity-95 transition"
+                className="hidden h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-bold text-white shadow-2xs transition hover:bg-accent/90 sm:flex"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>New Store</span>
               </Link>
               <UserNav />
@@ -118,7 +120,7 @@ export default async function AdminConsoleLayout({ children }: { children: React
         </header>
 
         {/* Page Content */}
-        <main className="mx-auto max-w-7xl overflow-x-clip pb-16">
+        <main id="admin-main" tabIndex={-1} className="mx-auto max-w-7xl overflow-x-clip pb-16 focus:outline-none">
           {children}
         </main>
       </div>

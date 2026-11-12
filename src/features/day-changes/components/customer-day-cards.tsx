@@ -54,6 +54,7 @@ export function CustomerDayCards({
   });
 
   const handleAction = (dateStr: string, kind: "skip" | "extra" | "qty", qty = 0) => {
+    const previous = changes[dateStr];
     // Optimistic update
     setChanges((prev) => ({
       ...prev,
@@ -70,6 +71,13 @@ export function CustomerDayCards({
       });
 
       if (!res.ok) {
+        // Roll back so the card shows what the kitchen will actually do.
+        setChanges((prev) => {
+          const next = { ...prev };
+          if (previous) next[dateStr] = previous;
+          else delete next[dateStr];
+          return next;
+        });
         toast.error(res.error ?? "Failed to update day");
       } else {
         if (res.isLate) {
@@ -107,10 +115,10 @@ export function CustomerDayCards({
                   className={`w-10 h-10 rounded-[10px] flex flex-col items-center justify-center font-bold font-mono leading-none ${
                     day.isToday
                       ? "bg-accent text-white"
-                      : "bg-[#FAFAF7] text-ink border border-line"
+                      : "bg-bg text-ink border border-line"
                   }`}
                 >
-                  <span className="text-[10px] uppercase font-sans font-medium">
+                  <span aria-hidden="true" className="text-[10px] uppercase font-sans font-medium">
                     {day.dayLabel}
                   </span>
                   <span className="text-sm">{day.dayNum}</span>
@@ -122,7 +130,7 @@ export function CustomerDayCards({
                       {day.isToday ? "Today" : `${day.dayLabel}, ${day.dayNum}`}
                     </span>
                     {day.isToday && (
-                      <span className="px-2 py-0.5 bg-[#FFE8DD] text-accent text-[10px] font-bold rounded-full">
+                      <span className="px-2 py-0.5 bg-peach text-accent text-[10px] font-bold rounded-full">
                         Cutoff {subscription.cutoffAt}
                       </span>
                     )}
@@ -145,11 +153,12 @@ export function CustomerDayCards({
               <button
                 type="button"
                 disabled={isPending}
+                aria-pressed={currentKind !== "skip" && currentKind !== "extra"}
                 onClick={() => handleAction(day.dateStr, "qty", subscription.qty)}
                 className={`py-2 px-2 text-xs font-semibold rounded-[8px] border transition-all active:scale-95 ${
                   currentKind !== "skip" && currentKind !== "extra"
                     ? "bg-good text-white border-good shadow-xs"
-                    : "bg-[#FAFAF7] text-muted border-line hover:bg-white"
+                    : "bg-bg text-muted border-line hover:bg-surface"
                 }`}
               >
                 <UiIcon name="check" /> Deliver
@@ -158,11 +167,12 @@ export function CustomerDayCards({
               <button
                 type="button"
                 disabled={isPending}
+                aria-pressed={currentKind === "skip"}
                 onClick={() => handleAction(day.dateStr, "skip", 0)}
                 className={`py-2 px-2 text-xs font-semibold rounded-[8px] border transition-all active:scale-95 ${
                   currentKind === "skip"
-                    ? "bg-[#1C1B19] text-white border-ink shadow-xs"
-                    : "bg-[#FAFAF7] text-muted border-line hover:bg-white"
+                    ? "bg-ink text-white border-ink shadow-xs"
+                    : "bg-bg text-muted border-line hover:bg-surface"
                 }`}
               >
                 <UiIcon name="close" /> Skip
@@ -171,11 +181,12 @@ export function CustomerDayCards({
               <button
                 type="button"
                 disabled={isPending}
+                aria-pressed={currentKind === "extra"}
                 onClick={() => handleAction(day.dateStr, "extra", 1)}
                 className={`py-2 px-2 text-xs font-semibold rounded-[8px] border transition-all active:scale-95 ${
                   currentKind === "extra"
                     ? "bg-accent text-white border-accent shadow-xs"
-                    : "bg-[#FAFAF7] text-muted border-line hover:bg-white"
+                    : "bg-bg text-muted border-line hover:bg-surface"
                 }`}
               >
                 + Extra

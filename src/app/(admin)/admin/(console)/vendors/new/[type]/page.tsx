@@ -30,9 +30,9 @@ export default async function NewVendorOfTypePage({
   searchParams: Promise<{ application?: string }>;
 }) {
   const [{ type }, { application: applicationId }] = await Promise.all([params, searchParams]);
-  const categories = await getOnboardCategories();
+  const validId = applicationId && /^[0-9a-f-]{36}$/.test(applicationId) ? applicationId : null;
+  const [categories, app] = await Promise.all([getOnboardCategories(), validId ? getApplication(validId) : null]);
   const chosen = resolve(categories, type);
-  const app = applicationId && /^[0-9a-f-]{36}$/.test(applicationId) ? await getApplication(applicationId) : null;
   // Unknown type: show the picker with a note rather than a dead end.
   return <NewVendorScreen categories={categories} categoryId={chosen?.id} unknownType={chosen ? undefined : type} app={app} />;
 }

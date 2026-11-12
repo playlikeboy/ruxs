@@ -25,13 +25,13 @@ export function KidsSubNav() {
                 href={t.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group flex min-h-10 items-center justify-center gap-1.5 rounded-full px-2 text-xs sm:text-sm font-semibold transition-all",
+                  "group flex min-h-10 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-semibold transition-colors sm:text-sm",
                   active
                     ? "bg-white text-kids-ink shadow-[0_2px_6px_rgba(23,71,55,0.12)] font-bold"
                     : "text-kids-ink/65 hover:text-kids-ink hover:bg-white/40"
                 )}
               >
-                <span className="text-sm transition-transform duration-200 group-hover:scale-125 group-active:scale-95">{t.emoji}</span>
+                <span aria-hidden="true" className="text-sm transition-transform duration-200 group-hover:scale-125 group-active:scale-95 motion-reduce:transform-none motion-reduce:transition-none">{t.emoji}</span>
                 <span>{t.label}</span>
               </Link>
             </li>

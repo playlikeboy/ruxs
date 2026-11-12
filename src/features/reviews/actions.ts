@@ -8,6 +8,8 @@ import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/sessi
 import { hideSchema, replySchema, saveReviewSchema } from "./schemas";
 import { getStoreReviewsPaginated } from "./queries";
 import { renderEmailHtml, sendUserEmailIfAllowed } from "@/features/notifications/service";
+import { APP_URL } from "@/lib/app-url";
+
 
 function fail(error: string) {
   return { ok: false as const, error };
@@ -46,9 +48,15 @@ export async function saveMyReview(input: unknown) {
   }
 
   const values = { rating: parsed.data.rating, comment: parsed.data.comment || null, authorName, updatedAt: new Date() };
-  await db
+  // The unique (vendor, user) index settles a double tap that slipped past the check above.
+  const [inserted] = await db
     .insert(vendorReviews)
-    .values({ vendorId: vendor.id, customerId: customer?.id ?? null, userId: user.id, ...values });
+    .values({ vendorId: vendor.id, customerId: customer?.id ?? null, userId: user.id, ...values })
+    .onConflictDoNothing()
+    .returning({ id: vendorReviews.id });
+  if (!inserted) {
+    return fail("You have already rated this store. Only one rating per customer is allowed.");
+  }
 
   revalidatePath(`/app/store/${parsed.data.vendorSlug}`);
   revalidatePath("/app", "layout");
@@ -85,7 +93,7 @@ export async function replyToReview(input: unknown) {
           { label: "Reply", value: reply },
         ],
         actionText: "View Store Reviews",
-        actionUrl: `https://ruxs.in/app/store/${parsed.data.slug}#reviews`,
+        actionUrl: `${APP_URL}/app/store/${parsed.data.slug}#reviews`,
       });
       sendUserEmailIfAllowed({
         userId: updated.userId,
@@ -93,7 +101,7 @@ export async function replyToReview(input: unknown) {
         category: "reviews",
         subject: `${access.vendor.name} replied to your review`,
         html: emailHtml,
-        text: `Hi ${updated.authorName},\n\n${access.vendor.name} replied to your review:\n\n"${reply}"\n\nView at https://ruxs.in/app/store/${parsed.data.slug}#reviews`,
+        text: `Hi ${updated.authorName},\n\n${access.vendor.name} replied to your review:\n\n"${reply}"\n\nView at ${APP_URL}/app/store/${parsed.data.slug}#reviews`,
       }).catch((e) => console.error("Review reply email error:", e));
     }
   }
@@ -120,7 +128,6 @@ export async function adminSetReviewHidden(input: unknown) {
   return { ok: true as const };
 }
 
-/** Fetch next page of reviews for a store. Public query wrapped in a server action. */
 /** Public read: published store reviews only. Inputs are clamped because anyone can call it. */
 export async function fetchStoreReviewsPage(vendorId: string, page: number, pageSize = 10) {
   const safePage = Number.isInteger(page) && page > 0 ? Math.min(page, 1000) : 1;

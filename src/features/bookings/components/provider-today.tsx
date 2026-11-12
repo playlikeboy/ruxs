@@ -84,7 +84,7 @@ export async function ProviderToday({ slug }: { slug: string }) {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-ink">Today&apos;s sessions</h2>
-          <Link href={`${base}/bookings`} className="text-sm font-semibold text-accent">All bookings →</Link>
+          <Link href={`${base}/bookings`} className="inline-flex items-center gap-1 text-sm font-semibold text-accent">All bookings <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
         </div>
         {todays.length === 0 ? (
           <p className="rounded-[16px] border border-dashed border-line bg-surface p-6 text-center text-sm text-muted">No sessions today. Keep your weekly hours up to date so clients can book.</p>
@@ -94,7 +94,7 @@ export async function ProviderToday({ slug }: { slug: string }) {
               <li key={booking.id} className="rounded-[16px] border border-line bg-surface p-4">
                 <p className="font-mono text-lg font-bold tabular-nums text-ink">{formatSlotTime(booking.startsAt)} – {formatSlotTime(booking.endsAt)}</p>
                 <p className="truncate font-semibold text-ink">{customerName}</p>
-                <p className="truncate text-xs text-muted">{serviceName ?? "Session"} · {MODE_LABEL[booking.mode] ?? booking.mode} · <span className="capitalize">{booking.status.replace("_", "-")}</span></p>
+                <p className="truncate text-xs text-muted">{serviceName ?? "Session"} · {MODE_LABEL[booking.mode] ?? booking.mode} · <span className="capitalize">{booking.status.replaceAll("_", "-")}</span></p>
                 {access.role !== "driver" && kind === "kids" && (
                   <div className="mt-3 empty:hidden"><KidsBookingActions slug={slug} bookingId={booking.id} status={booking.status} started={booking.startsAt <= now} /></div>
                 )}

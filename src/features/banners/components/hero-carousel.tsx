@@ -25,7 +25,9 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
   const go = (i: number) => {
     const el = track.current;
-    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollTo({ left: i * el.clientWidth, behavior: reduce ? "auto" : "smooth" });
   };
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   if (slides.length === 0) return null;
 
   return (
-    <section aria-roledescription="carousel" aria-label="Offers and news" className="mt-4" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onTouchStart={() => setPaused(true)}>
+    <section aria-roledescription="carousel" aria-label="Offers and news" className="mt-4" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onTouchStart={() => setPaused(true)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
       <ul
         ref={track}
         onScroll={(e) => {
@@ -59,11 +61,11 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               </span>
               {s.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element -- admin-supplied URLs from any host
-                <img src={s.imageUrl} alt="" loading={i === 0 ? "eager" : "lazy"} className="h-auto w-[38%] shrink-0 object-cover" />
+                <img src={s.imageUrl} alt="" loading={i === 0 ? "eager" : "lazy"} className="h-full w-[38%] shrink-0 object-cover" />
               )}
             </>
           );
-          const cls = `flex h-[148px] w-full overflow-hidden ${TONE[s.tone] ?? TONE.peach}`;
+          const cls = `flex h-[148px] w-full overflow-hidden rounded-[20px] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${TONE[s.tone] ?? TONE.peach}`;
           return (
             <li key={s.id} className="w-full shrink-0 snap-start" aria-roledescription="slide" aria-label={`${i + 1} of ${slides.length}`}>
               {external ? (
@@ -76,16 +78,24 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         })}
       </ul>
       {slides.length > 1 && (
-        <div className="mt-2 flex justify-center gap-1.5">
+        <div className="mt-1 flex justify-center">
           {slides.map((s, i) => (
             <button
               key={s.id}
               type="button"
               onClick={() => go(i)}
               aria-label={`Show slide ${i + 1}`}
-              aria-current={i === active}
-              className={"h-1.5 rounded-full transition-all " + (i === active ? "w-5 bg-ink" : "w-1.5 bg-ink/20")}
-            />
+              aria-current={i === active ? "true" : undefined}
+              className="group flex h-6 items-center px-1 focus-visible:outline-none"
+            >
+              <span
+                aria-hidden="true"
+                className={
+                  "block h-1.5 rounded-full transition-all motion-reduce:transition-none group-focus-visible:ring-2 group-focus-visible:ring-accent group-focus-visible:ring-offset-1 " +
+                  (i === active ? "w-5 bg-ink" : "w-1.5 bg-ink/20")
+                }
+              />
+            </button>
           ))}
         </div>
       )}

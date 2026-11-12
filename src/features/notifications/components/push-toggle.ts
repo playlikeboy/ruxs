@@ -35,37 +35,43 @@ export function usePushAlerts(vapidPublicKey: string | null) {
   }, [support]);
 
   const state: PushState = support === "ok" ? live : support;
-  const setState = setLive;
 
   const enable = useCallback(async () => {
     if (!vapidPublicKey) return "Alerts are not set up yet.";
-    setState("working");
+    setLive("working");
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        setState(permission === "denied" ? "blocked" : "off");
+        setLive(permission === "denied" ? "blocked" : "off");
         return "Allow notifications to get order alerts.";
       }
       const reg = await registration();
       const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(vapidPublicKey) }));
       const res = await savePushSubscription(sub.toJSON());
-      setState(res.ok ? "on" : "off");
+      setLive(res.ok ? "on" : "off");
       return res.ok ? null : res.error;
     } catch {
-      setState("off");
+      setLive("off");
       return "This browser couldn't turn on alerts.";
     }
   }, [vapidPublicKey]);
 
+  /** Returns an error message, or null when alerts are off for this device. */
   const disable = useCallback(async () => {
-    setState("working");
-    const reg = await registration();
-    const sub = await reg.pushManager.getSubscription();
-    if (sub) {
-      await removePushSubscription({ endpoint: sub.endpoint });
-      await sub.unsubscribe();
+    setLive("working");
+    try {
+      const reg = await registration();
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await removePushSubscription({ endpoint: sub.endpoint });
+        await sub.unsubscribe();
+      }
+      setLive("off");
+      return null;
+    } catch {
+      setLive("on");
+      return "Couldn't turn off alerts. Please try again.";
     }
-    setState("off");
   }, []);
 
   return { state, enable, disable };

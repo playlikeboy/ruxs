@@ -28,6 +28,7 @@ import {
   vendorIdSchema,
   vendorStatusSchema,
 } from "./schemas";
+import { APP_URL } from "@/lib/app-url";
 
 const DEFAULT_WEEK = ["mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
@@ -111,7 +112,7 @@ async function issueCredentials(vendorId: string): Promise<{ ok: true; credentia
 
   return {
     ok: true,
-    credentials: { loginId, password, loginUrl: (process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in") + "/merchant-panel/sign-in" },
+    credentials: { loginId, password, loginUrl: `${APP_URL}/merchant-panel/sign-in` },
   };
 }
 
@@ -164,6 +165,12 @@ export async function adminCreateVendor(input: unknown) {
           .values({ vendorId: row!.id, verificationStatus: "approved", safetyReviewStatus: "passed", verifiedByAdminId: admin.id, verifiedAt: new Date() })
           .onConflictDoNothing();
       }
+      if (parsed.data.applicationId) {
+        await tx
+          .update(vendorApplications)
+          .set({ status: "approved", vendorId: row!.id, updatedAt: new Date() })
+          .where(eq(vendorApplications.id, parsed.data.applicationId));
+      }
       return row;
     });
   } catch (err) {
@@ -173,12 +180,6 @@ export async function adminCreateVendor(input: unknown) {
     return fail(`Could not create the ${VENDOR_TYPE_INFO[vendorType].label.toLowerCase()}: ${cause.slice(0, 200)}`);
   }
 
-  if (parsed.data.applicationId) {
-    await db
-      .update(vendorApplications)
-      .set({ status: "approved", vendorId: vendor!.id, updatedAt: new Date() })
-      .where(eq(vendorApplications.id, parsed.data.applicationId));
-  }
   const issued = await issueCredentials(vendor!.id);
   revalidatePath("/admin", "layout");
   if (!issued.ok) return { ok: true as const, vendorId: vendor!.id, credentials: null, warning: issued.error };
@@ -265,61 +266,63 @@ export async function adminToggleAcceptingOrders(input: unknown) {
   return { ok: true as const, acceptingOrders: updated.acceptingOrders };
 }
 
+type Db = ReturnType<typeof getDb>;
+
+async function deleteLoginAccount(userId: string | null) {
+  if (!userId) return;
+  try {
+    const existingUser = await hexclave.getUser(userId);
+    if (existingUser) await existingUser.delete();
+  } catch (err) {
+    // The store row is already gone; an orphaned login is adopted on the next issue, so log and move on.
+    console.error("Could not delete merchant login", userId, err);
+  }
+}
+
+/**
+ * Permanently deletes a vendor with no ledger history (FK cascades remove its catalog, profiles and members).
+ * A vendor with ledger rows, or one the database refuses to delete, is suspended and paused instead,
+ * because ledger rows are immutable (0001_ledger_immutability.sql).
+ */
+async function deleteOrSuspendVendor(db: Db, vendor: { id: string; loginUserId: string | null }, hasLedger: boolean): Promise<"deleted" | "suspended"> {
+  if (!hasLedger) {
+    try {
+      await db.delete(vendors).where(eq(vendors.id, vendor.id));
+      await deleteLoginAccount(vendor.loginUserId);
+      return "deleted";
+    } catch (err) {
+      console.error("Vendor delete refused, suspending instead", vendor.id, err);
+    }
+  }
+  await db.update(vendors).set({ status: "suspended", acceptingOrders: false, updatedAt: new Date() }).where(eq(vendors.id, vendor.id));
+  return "suspended";
+}
+
 export async function adminDeleteVendor(input: unknown) {
   const parsed = vendorIdSchema.safeParse(input);
   if (!parsed.success) return fail("Invalid vendor ID");
   await requireAdmin();
   const db = getDb();
 
-  const [vendor] = await db
-    .select()
-    .from(vendors)
-    .where(eq(vendors.id, parsed.data.vendorId))
-    .limit(1);
+  const [[vendor], [hasLedger]] = await Promise.all([
+    db.select({ id: vendors.id, name: vendors.name, loginUserId: vendors.loginUserId }).from(vendors).where(eq(vendors.id, parsed.data.vendorId)).limit(1),
+    db.select({ id: ledgerEntries.id }).from(ledgerEntries).where(eq(ledgerEntries.vendorId, parsed.data.vendorId)).limit(1),
+  ]);
   if (!vendor) return fail("Vendor not found");
 
-  // Check if vendor has immutable financial ledger entries
-  const [hasLedger] = await db
-    .select({ id: ledgerEntries.id })
-    .from(ledgerEntries)
-    .where(eq(ledgerEntries.vendorId, vendor.id))
-    .limit(1);
+  const outcome = await deleteOrSuspendVendor(db, vendor, !!hasLedger);
+  revalidatePath("/admin", "layout");
+  revalidatePath("/admin/vendors");
 
-  if (hasLedger) {
-    // Due to ledger immutability trigger (0001_ledger_immutability.sql), financial records cannot be deleted.
-    // Deactivate & suspend the store instead so it cannot operate or appear in search/orders.
-    await db
-      .update(vendors)
-      .set({
-        status: "suspended",
-        acceptingOrders: false,
-        updatedAt: new Date(),
-      })
-      .where(eq(vendors.id, vendor.id));
-
-    revalidatePath("/admin", "layout");
-    revalidatePath("/admin/vendors");
+  if (outcome === "suspended") {
     return {
       ok: false as const,
       protectedByLedger: true,
-      error: `Store "${vendor.name}" has permanent financial ledger records and cannot be permanently deleted. The store has been deactivated and suspended instead.`,
+      error: hasLedger
+        ? `Store "${vendor.name}" has permanent financial ledger records and cannot be permanently deleted. The store has been deactivated and suspended instead.`
+        : `Store "${vendor.name}" has records that must be kept, so it cannot be permanently deleted. The store has been deactivated and suspended instead.`,
     };
   }
-
-  // Safe to delete! Postgres foreign key cascades remove products, type profiles, members, etc.
-  await db.delete(vendors).where(eq(vendors.id, vendor.id));
-
-  if (vendor.loginUserId) {
-    try {
-      const existingUser = await hexclave.getUser(vendor.loginUserId);
-      if (existingUser) await existingUser.delete();
-    } catch {
-      // ignore if already deleted
-    }
-  }
-
-  revalidatePath("/admin", "layout");
-  revalidatePath("/admin/vendors");
   return { ok: true as const, message: `Store "${vendor.name}" was permanently deleted.` };
 }
 
@@ -329,14 +332,15 @@ export async function adminBulkSetVendorStatus(input: unknown) {
   await requireAdmin();
   const db = getDb();
 
-  await db
+  const updated = await db
     .update(vendors)
     .set({ status: parsed.data.status, updatedAt: new Date() })
-    .where(inArray(vendors.id, parsed.data.vendorIds));
+    .where(inArray(vendors.id, parsed.data.vendorIds))
+    .returning({ id: vendors.id });
 
   revalidatePath("/admin", "layout");
   revalidatePath("/admin/vendors");
-  return { ok: true as const, count: parsed.data.vendorIds.length };
+  return { ok: true as const, count: updated.length };
 }
 
 export async function adminBulkDeleteVendors(input: unknown) {
@@ -344,38 +348,21 @@ export async function adminBulkDeleteVendors(input: unknown) {
   if (!parsed.success) return fail(firstIssue(parsed.error));
   await requireAdmin();
   const db = getDb();
+  const ids = Array.from(new Set(parsed.data.vendorIds));
+
+  // Two queries for the whole selection instead of two per vendor.
+  const [rows, withLedger] = await Promise.all([
+    db.select({ id: vendors.id, loginUserId: vendors.loginUserId }).from(vendors).where(inArray(vendors.id, ids)),
+    db.selectDistinct({ vendorId: ledgerEntries.vendorId }).from(ledgerEntries).where(inArray(ledgerEntries.vendorId, ids)),
+  ]);
+  const ledgerVendors = new Set(withLedger.map((r) => r.vendorId));
 
   let deletedCount = 0;
   let suspendedCount = 0;
-
-  for (const id of parsed.data.vendorIds) {
-    const [vendor] = await db.select().from(vendors).where(eq(vendors.id, id)).limit(1);
-    if (!vendor) continue;
-
-    const [hasLedger] = await db
-      .select({ id: ledgerEntries.id })
-      .from(ledgerEntries)
-      .where(eq(ledgerEntries.vendorId, vendor.id))
-      .limit(1);
-
-    if (hasLedger) {
-      await db
-        .update(vendors)
-        .set({ status: "suspended", acceptingOrders: false, updatedAt: new Date() })
-        .where(eq(vendors.id, vendor.id));
-      suspendedCount++;
-    } else {
-      await db.delete(vendors).where(eq(vendors.id, vendor.id));
-      if (vendor.loginUserId) {
-        try {
-          const existingUser = await hexclave.getUser(vendor.loginUserId);
-          if (existingUser) await existingUser.delete();
-        } catch {
-          // ignore
-        }
-      }
-      deletedCount++;
-    }
+  for (const vendor of rows) {
+    const outcome = await deleteOrSuspendVendor(db, vendor, ledgerVendors.has(vendor.id));
+    if (outcome === "deleted") deletedCount++;
+    else suspendedCount++;
   }
 
   revalidatePath("/admin", "layout");

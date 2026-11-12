@@ -9,18 +9,15 @@ import { BookingStatus } from "@/features/bookings/components/booking-status";
 
 export const metadata = { title: "Bookings" };
 
-export default async function MyBookingsPage() {
-  const rows = await getMyBookings();
-  const now = new Date();
-  const upcoming = rows.filter((r) => r.booking.endsAt > now && ["held", "confirmed"].includes(r.booking.status)).reverse();
-  const past = rows.filter((r) => !upcoming.includes(r));
+type BookingListRow = Awaited<ReturnType<typeof getMyBookings>>[number];
 
-  const Row = ({ r }: { r: (typeof rows)[number] }) => (
+function BookingRow({ r }: { r: BookingListRow }) {
+  return (
     <li>
-      <Link href={`/app/bookings/${r.booking.id}`} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] active:bg-neutral-50">
+      <Link href={`/app/bookings/${r.booking.id}`} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-colors hover:bg-neutral-50 active:bg-neutral-50">
         <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-neutral-50 text-center">
-          <span className="text-[10px] font-semibold uppercase text-neutral-500">{dayLabelIST(todayIST(r.booking.startsAt)).split(",")[0]}</span>
-          <span className="text-sm font-bold text-ink">{formatSlotTime(r.booking.startsAt)}</span>
+          <span className="text-xs font-semibold uppercase text-muted">{dayLabelIST(todayIST(r.booking.startsAt)).split(",")[0]}</span>
+          <span className="text-sm font-bold tabular-nums text-ink">{formatSlotTime(r.booking.startsAt)}</span>
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold text-ink">{r.serviceName ?? "Session"}</p>
@@ -34,6 +31,14 @@ export default async function MyBookingsPage() {
       </Link>
     </li>
   );
+}
+
+export default async function MyBookingsPage() {
+  const rows = await getMyBookings();
+  const now = new Date();
+  const upcoming = rows.filter((r) => r.booking.endsAt > now && ["held", "confirmed"].includes(r.booking.status)).reverse();
+  const upcomingIds = new Set(upcoming.map((r) => r.booking.id));
+  const past = rows.filter((r) => !upcomingIds.has(r.booking.id));
 
   return (
     <div className="min-h-dvh bg-neutral-50">
@@ -51,14 +56,14 @@ export default async function MyBookingsPage() {
         <div className="space-y-6 p-4">
           {upcoming.length > 0 && (
             <section className="space-y-2">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-500">Upcoming</h2>
-              <ul className="space-y-2">{upcoming.map((r) => <Row key={r.booking.id} r={r} />)}</ul>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-muted">Upcoming</h2>
+              <ul className="space-y-2">{upcoming.map((r) => <BookingRow key={r.booking.id} r={r} />)}</ul>
             </section>
           )}
           {past.length > 0 && (
             <section className="space-y-2">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-500">Past &amp; cancelled</h2>
-              <ul className="space-y-2">{past.map((r) => <Row key={r.booking.id} r={r} />)}</ul>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-muted">Past &amp; cancelled</h2>
+              <ul className="space-y-2">{past.map((r) => <BookingRow key={r.booking.id} r={r} />)}</ul>
             </section>
           )}
         </div>

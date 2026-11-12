@@ -164,7 +164,7 @@ export function RunSheetList({
                 isDone
                   ? "border-line opacity-75"
                   : isFailed
-                    ? "border-[#B42318]/30 bg-[#FFF5F5]"
+                    ? "border-bad/30 bg-blush/40"
                     : isExpanded
                       ? "border-accent shadow-xs"
                       : "border-line"
@@ -174,6 +174,7 @@ export function RunSheetList({
               <button
                 type="button"
                 onClick={() => setExpandedId(isExpanded ? null : stop.order.id)}
+                aria-expanded={isExpanded}
                 className="w-full p-4 flex items-start justify-between text-left"
               >
                 <div>
@@ -198,15 +199,15 @@ export function RunSheetList({
 
                 <div className="flex items-center gap-2">
                   {isDone ? (
-                    <span className="px-2.5 py-1 bg-[#E1F3E7] text-good text-xs font-semibold rounded-full flex items-center gap-1">
+                    <span className="px-2.5 py-1 bg-mint text-good text-xs font-semibold rounded-full flex items-center gap-1">
                       <UiIcon name="check" /> Delivered
                     </span>
                   ) : isFailed ? (
-                    <span className="px-2.5 py-1 bg-[#FCE4EC] text-[#B42318] text-xs font-semibold rounded-full">
+                    <span className="px-2.5 py-1 bg-blush text-bad text-xs font-semibold rounded-full">
                       Failed
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 bg-[#FAFAF7] text-muted text-xs font-medium rounded-full border border-line">
+                    <span className="px-2 py-0.5 bg-bg text-muted text-xs font-medium rounded-full border border-line">
                       Pending
                     </span>
                   )}
@@ -215,7 +216,7 @@ export function RunSheetList({
 
               {/* Expanded Action Panel */}
               {isExpanded && !isDone && !isFailed && (
-                <div className="p-4 pt-0 space-y-4 border-t border-line/60 bg-[#FAFAF7]/50">
+                <div className="p-4 pt-0 space-y-4 border-t border-line/60 bg-bg/50">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-3">
                     <a
                       href={`tel:${stop.customer.phone}`}
@@ -228,8 +229,8 @@ export function RunSheetList({
                         ? `https://www.google.com/maps/dir/?api=1&destination=${stop.latitude},${stop.longitude}`
                         : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${stop.customer.flat}, ${stop.customer.society}`)}`}
                       target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-md bg-white border border-line px-2 py-0.5 text-[11px] font-semibold text-accent hover:border-accent shadow-2xs transition active:scale-95"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-md bg-surface border border-line px-2 py-0.5 text-[11px] font-semibold text-accent hover:border-accent shadow-2xs transition active:scale-95"
                     >
                       <UiIcon name="map" /> Open Maps ↗
                     </a>
@@ -276,7 +277,7 @@ export function RunSheetList({
                       type="button"
                       disabled={isPending}
                       onClick={() => handleFail(stop)}
-                      className="min-h-[48px] py-3 px-3 bg-surface border border-line text-muted font-medium text-xs rounded-[10px] hover:text-[#B42318] hover:border-[#B42318]/40 active:scale-98 transition-all"
+                      className="min-h-[48px] py-3 px-3 bg-surface border border-line text-muted font-medium text-xs rounded-[10px] hover:text-bad hover:border-bad/40 active:scale-98 transition-all"
                     >
                       Failed
                     </button>

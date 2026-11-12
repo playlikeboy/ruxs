@@ -83,19 +83,20 @@ export function AdminOrdersList({ orders }: { orders: AdminOrderRow[] }) {
 
       <ul className="grid gap-3 lg:grid-cols-2">
         {orders.map(({ order, items, vendorName, vendorSlug, customerName }) => (
-          <li key={order.id} className="space-y-3 rounded-[14px] border border-line bg-surface p-4 shadow-2xs">
+          <li key={order.id} className="space-y-3 rounded-2xl border border-line bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-semibold text-sm">
                   <Link href={`/merchant-panel/${vendorSlug}/orders`} className="hover:underline text-ink">
                     {vendorName}
                   </Link>{" "}
-                  → <span className="text-ink">{customerName}</span>
+                  <span aria-hidden="true">→</span>
+                  <span className="sr-only">for</span> <span className="text-ink">{customerName}</span>
                 </p>
                 <p className="text-xs text-muted">
                   <span className="font-mono">{order.number}</span> · {timeFmt.format(new Date(order.createdAt))} ·{" "}
                   {order.paymentMode === "online"
-                    ? `Online · ${order.paymentStatus.replace("_", " ")}`
+                    ? `Online · ${order.paymentStatus.replaceAll("_", " ")}`
                     : order.paymentMode === "cod"
                     ? "Cash on delivery"
                     : "Monthly bill"}
@@ -110,7 +111,7 @@ export function AdminOrdersList({ orders }: { orders: AdminOrderRow[] }) {
               <span className="text-xs text-muted">
                 {dayLabelIST(order.deliverOn)} · {order.address.slice(0, 50)}
               </span>
-              <span className="font-mono font-bold text-ink tabular-nums">
+              <span className="font-bold text-ink tabular-nums">
                 {formatINR(order.totalPaise)}
               </span>
             </div>

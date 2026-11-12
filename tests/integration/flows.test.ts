@@ -20,15 +20,20 @@ mock.module("@/features/notifications/dispatch", () => ({
   notifyUsers: async () => {},
   vendorRecipientIds: async () => [],
 }));
+async function mockVendorAccess(slug: string) {
+  const { getDb } = await import("@/db");
+  const { vendors } = await import("@/db/schema");
+  const { eq } = await import("drizzle-orm");
+  const [vendor] = await getDb().select().from(vendors).where(eq(vendors.slug, slug)).limit(1);
+  if (!vendor) throw new Error("no vendor " + slug);
+  return { vendorId: vendor.id, vendor, role: "owner", user: { id: "merchant-user" } };
+}
 mock.module("@/lib/auth/session", () => ({
   requireUser: async () => currentUser,
-  requireVendorAccess: async (slug: string) => {
-    const { getDb } = await import("@/db");
-    const { vendors } = await import("@/db/schema");
-    const { eq } = await import("drizzle-orm");
-    const [vendor] = await getDb().select().from(vendors).where(eq(vendors.slug, slug)).limit(1);
-    if (!vendor) throw new Error("no vendor " + slug);
-    return { vendorId: vendor.id, vendor, role: "owner", user: { id: "merchant-user" } };
+  requireVendorAccess: mockVendorAccess,
+  requireVendorModule: mockVendorAccess,
+  requireCustomerByToken: async () => {
+    throw new Error("requireCustomerByToken is not used in these flows");
   },
   requireAdmin: async () => ({ user: { id: "admin" } }),
   isUserAdmin: async () => false,

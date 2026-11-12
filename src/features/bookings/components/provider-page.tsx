@@ -58,7 +58,7 @@ export function ProviderPage(p: ProviderPageProps) {
       <div className="relative">
         <StoreCover cover={p.cover} alt={vendor.name} className="aspect-[16/9] w-full" />
         <Link href="/app" aria-label="Back to explore" className="absolute left-4 top-[calc(1rem+env(safe-area-inset-top))] flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md">
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </Link>
       </div>
 
@@ -152,7 +152,7 @@ export function ProviderPage(p: ProviderPageProps) {
                           Book
                         </Link>
                       ) : (
-                        <span className="flex h-10 items-center rounded-xl bg-neutral-100 px-4 text-xs font-semibold text-neutral-400">
+                        <span className="flex h-10 items-center rounded-xl bg-neutral-100 px-4 text-xs font-semibold text-muted">
                           {homeOnly && !p.homeVisitsReach && p.visible ? `Home visits within ${vendor.serviceRadiusKm} km only` : "Unavailable"}
                         </span>
                       )}

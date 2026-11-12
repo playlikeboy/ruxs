@@ -1,7 +1,40 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { formatINR } from "@/core/money";
+import { istDateTime, IST_TIMEZONE } from "@/core/time";
 import { getCustomerBillByToken } from "@/features/billing/queries";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { buttonClass, ButtonLink } from "@/components/ui/button";
+
+/** Billing periods are stored as YYYY-MM. */
+const PERIOD_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+const entryDateFormat = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  timeZone: IST_TIMEZONE,
+});
+
+function periodLabel(period: string): string {
+  return new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: IST_TIMEZONE }).format(
+    istDateTime(`${period}-01`, "12:00:00")
+  );
+}
+
+function BackLink({ token }: { token: string }) {
+  return (
+    <Link
+      href={`/c/${token}`}
+      className="inline-flex min-h-10 items-center gap-1.5 rounded-control text-sm font-medium text-muted hover:text-ink"
+    >
+      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+      Back to schedule
+    </Link>
+  );
+}
 
 export default async function CustomerMonthlyBillPage({
   params,
@@ -9,28 +42,25 @@ export default async function CustomerMonthlyBillPage({
   params: Promise<{ token: string; month: string }>;
 }) {
   const { token, month } = await params;
+  if (!PERIOD_RE.test(month)) {
+    notFound();
+  }
+
   const billData = await getCustomerBillByToken(token, month);
+  const label = periodLabel(month);
 
   if (!billData) {
     return (
-      <div className="p-4 sm:p-6 space-y-4">
-        <Link
-          href={`/c/${token}`}
-          className="text-xs text-muted hover:text-ink font-medium"
-        >
-          ← Back to Schedule
-        </Link>
+      <div className="space-y-4 p-4 sm:p-6">
+        <BackLink token={token} />
         <EmptyState
-          title={`No bill for ${month}`}
-          description="A monthly bill has not been generated for this period yet. Bills are automatically generated on the 1st of each month."
+          title={`No bill for ${label} yet`}
+          description="Bills are generated on the 1st of each month. Your running balance is on the schedule page."
           icon="bill"
           action={
-            <Link
-              href={`/c/${token}`}
-              className="inline-block px-4 py-2 bg-accent text-white text-xs font-semibold rounded-[10px]"
-            >
-              Return to Household Page
-            </Link>
+            <ButtonLink href={`/c/${token}`} size="sm">
+              Back to schedule
+            </ButtonLink>
           }
         />
       </div>
@@ -39,139 +69,94 @@ export default async function CustomerMonthlyBillPage({
 
   const { invoice, customer, vendor, upiUrl, entries } = billData;
   const isPaid = invoice.status === "paid";
+  const isCleared = !isPaid && invoice.closingPaise <= 0;
+  const statusLabel = isPaid ? "Paid in full" : isCleared ? "Cleared" : "Payment due";
 
   return (
-    <div className="p-4 sm:p-6 space-y-5">
-      {/* Back Link */}
-      <div>
-        <Link
-          href={`/c/${token}`}
-          className="text-xs text-muted hover:text-ink font-medium"
-        >
-          ← Back to Schedule
-        </Link>
-      </div>
+    <div className="space-y-6 p-4 sm:p-6">
+      <BackLink token={token} />
 
-      {/* Bill Header Card */}
-      <div className="bg-surface border border-line rounded-[12px] p-4 space-y-3 shadow-xs">
-        <div className="flex items-start justify-between">
-          <div>
-            <span className="text-xs text-muted block">{vendor.name}</span>
-            <h1 className="text-xl font-bold tracking-tight text-ink">
-              Monthly Bill • {invoice.period}
-            </h1>
-            <div className="text-xs text-muted mt-0.5">
-              Invoice #{invoice.number} • {customer.name} (Flat {customer.flat})
-            </div>
-          </div>
-
-          <span
-            className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${
-              isPaid
-                ? "bg-[#E1F3E7] text-good"
-                : invoice.closingPaise <= 0
-                  ? "bg-[#E1F3E7] text-good"
-                  : "bg-[#FFF3C9] text-[#9A5B00]"
-            }`}
-          >
-            {isPaid ? "Paid in Full" : invoice.closingPaise <= 0 ? "Cleared" : "Payment Due"}
-          </span>
-        </div>
-
-        {/* Bill Summary Breakdown */}
-        <div className="pt-3 border-t border-line/60 space-y-2 text-xs">
-          <div className="flex items-center justify-between py-1 border-b border-line/40">
-            <span className="text-muted">Opening Balance</span>
-            <span className="font-mono text-ink">
-              {formatINR(invoice.openingPaise)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-1 border-b border-line/40">
-            <span className="text-muted">Charges this Month</span>
-            <span className="font-mono text-ink font-semibold">
-              +{formatINR(invoice.chargesPaise)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-1 border-b border-line/40">
-            <span className="text-muted">Payments Received</span>
-            <span className="font-mono text-good font-semibold">
-              -{formatINR(invoice.paymentsPaise)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between pt-1 text-sm font-bold">
-            <span className="text-ink">Total Due</span>
-            <span
-              className={`font-mono tabular-nums ${
-                invoice.closingPaise > 0 ? "text-[#B42318]" : "text-good"
-              }`}
-            >
-              {formatINR(invoice.closingPaise)}
-            </span>
-          </div>
-        </div>
-
-        {/* UPI Button */}
-        {upiUrl && (
-          <div className="pt-2">
-            <a
-              href={upiUrl}
-              className="w-full min-h-[44px] py-3 px-4 bg-accent text-white font-semibold text-xs rounded-[10px] text-center hover:opacity-90 active:scale-[0.99] transition-all shadow-xs flex items-center justify-center gap-1.5"
-            >
-              <span>Pay {formatINR(invoice.closingPaise)} via UPI App</span>
-            </a>
-            <p className="text-[11px] text-muted text-center mt-1.5">
-              Opens Google Pay, PhonePe, Paytm, or any UPI app. Paid directly to {vendor.name}.
+      <Card className="space-y-4 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="break-words text-xs text-muted">{vendor.name}</p>
+            <h1 className="text-xl font-bold tracking-tight text-ink">Bill for {label}</h1>
+            <p className="mt-0.5 break-words text-xs text-muted">
+              Invoice #{invoice.number} · {customer.name} (Flat {customer.flat})
             </p>
           </div>
-        )}
-      </div>
+          <Badge tone={isPaid || isCleared ? "good" : "warn"} className="shrink-0">
+            {statusLabel}
+          </Badge>
+        </div>
 
-      {/* Itemised Transactions */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-ink">Itemised Deliveries & Events</h2>
+        <dl className="space-y-2 border-t border-line pt-4 text-sm">
+          <div className="flex items-center justify-between border-b border-line pb-2">
+            <dt className="text-muted">Opening balance</dt>
+            <dd className="font-mono tabular-nums text-ink">{formatINR(invoice.openingPaise)}</dd>
+          </div>
+          <div className="flex items-center justify-between border-b border-line pb-2">
+            <dt className="text-muted">Charges this month</dt>
+            <dd className="font-mono font-semibold tabular-nums text-ink">+{formatINR(invoice.chargesPaise)}</dd>
+          </div>
+          <div className="flex items-center justify-between border-b border-line pb-2">
+            <dt className="text-muted">Payments received</dt>
+            <dd className="font-mono font-semibold tabular-nums text-good">−{formatINR(invoice.paymentsPaise)}</dd>
+          </div>
+          <div className="flex items-center justify-between pt-1 text-base font-bold">
+            <dt className="text-ink">Total due</dt>
+            <dd className={`font-mono tabular-nums ${invoice.closingPaise > 0 ? "text-bad" : "text-good"}`}>
+              {formatINR(invoice.closingPaise)}
+            </dd>
+          </div>
+        </dl>
+
+        {upiUrl ? (
+          <div className="space-y-1.5">
+            <a href={upiUrl} className={buttonClass("primary", "lg", "w-full")}>
+              Pay {formatINR(invoice.closingPaise)} via UPI
+            </a>
+            <p className="text-center text-xs text-muted">
+              Opens Google Pay, PhonePe, Paytm or any UPI app. Paid directly to {vendor.name}.
+            </p>
+          </div>
+        ) : null}
+      </Card>
+
+      <section aria-labelledby="entries-heading" className="space-y-3">
+        <h2 id="entries-heading" className="text-sm font-semibold text-ink">
+          Deliveries, skips and payments
+        </h2>
 
         {entries.length === 0 ? (
-          <div className="p-4 bg-surface border border-line rounded-[12px] text-xs text-muted text-center">
-            No entries for this period.
-          </div>
+          <Card className="p-4 text-center text-sm text-muted">No entries for this month.</Card>
         ) : (
-          <div className="bg-surface border border-line rounded-[12px] divide-y divide-line overflow-hidden shadow-xs">
-            {entries.map((entry) => {
-              const isDebit = entry.amountPaise > 0;
-              return (
-                <div
-                  key={entry.id}
-                  className="p-3.5 flex items-start justify-between text-xs"
-                >
-                  <div className="space-y-0.5">
-                    <div className="font-medium text-ink">
-                      {entry.notes || entry.type.replace("_", " ")}
+          <Card className="overflow-hidden">
+            <ul className="divide-y divide-line">
+              {entries.map((entry) => {
+                const isDebit = entry.amountPaise > 0;
+                return (
+                  <li key={entry.id} className="flex items-start justify-between gap-3 p-3.5 text-sm">
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="break-words font-medium text-ink first-letter:uppercase">
+                        {entry.notes || entry.type.replaceAll("_", " ")}
+                      </p>
+                      <p className="text-xs text-muted tabular-nums">
+                        {entryDateFormat.format(new Date(entry.createdAt))}
+                      </p>
                     </div>
-                    <div className="text-[11px] text-muted">
-                      {new Date(entry.createdAt).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        timeZone: "Asia/Kolkata",
-                      })}
-                    </div>
-                  </div>
-
-                  <div
-                    className={`font-mono font-bold tabular-nums ${
-                      isDebit ? "text-ink" : "text-good"
-                    }`}
-                  >
-                    {isDebit ? `+${formatINR(entry.amountPaise)}` : `-${formatINR(Math.abs(entry.amountPaise))}`}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                    <p
+                      className={`shrink-0 font-mono font-bold tabular-nums ${isDebit ? "text-ink" : "text-good"}`}
+                    >
+                      {isDebit ? `+${formatINR(entry.amountPaise)}` : `−${formatINR(Math.abs(entry.amountPaise))}`}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
         )}
-      </div>
+      </section>
     </div>
   );
 }

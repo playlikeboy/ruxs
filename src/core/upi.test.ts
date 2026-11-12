@@ -27,4 +27,10 @@ describe("upi payment link builder", () => {
       "upi://pay?pa=neer%40okhdfcbank&pn=Neer+Water&am=1234.50&cu=INR&tn=RX-202610-042"
     );
   });
+
+  it("rejects fractional or negative paise", () => {
+    const base = { vpa: "a@b", payeeName: "A", billNumber: "X" };
+    expect(() => buildUpiUrl({ ...base, amountPaise: 10.5 })).toThrow();
+    expect(() => buildUpiUrl({ ...base, amountPaise: -100 })).toThrow();
+  });
 });

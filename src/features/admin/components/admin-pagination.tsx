@@ -55,7 +55,7 @@ export function AdminPagination({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4 text-xs text-muted">
-      <div>
+      <div className="tabular-nums">
         Showing <span className="font-semibold text-ink">{start}</span> to{" "}
         <span className="font-semibold text-ink">{end}</span> of{" "}
         <span className="font-semibold text-ink">{totalItems}</span> results
@@ -65,13 +65,13 @@ export function AdminPagination({
         {page > 1 ? (
           <Link
             href={createPageUrl(page - 1)}
-            className="flex h-8 items-center gap-1 rounded-[8px] border border-line bg-surface px-2.5 font-medium text-ink transition hover:bg-bg"
+            className="flex h-8 items-center gap-1 rounded-[8px] border border-line bg-surface px-2.5 font-medium text-ink transition hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Prev</span>
           </Link>
         ) : (
-          <span className="flex h-8 items-center gap-1 rounded-[8px] border border-line/60 bg-surface/50 px-2.5 font-medium text-muted/60 cursor-not-allowed">
+          <span aria-disabled="true" className="flex h-8 cursor-not-allowed items-center gap-1 rounded-[8px] border border-line/60 bg-surface/50 px-2.5 font-medium text-muted/70">
             <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Prev</span>
           </span>
@@ -87,9 +87,10 @@ export function AdminPagination({
               <Link
                 key={`page-${p}`}
                 href={createPageUrl(p)}
+                aria-label={`Page ${p}`}
                 aria-current={p === page ? "page" : undefined}
                 className={
-                  "flex h-8 min-w-8 items-center justify-center rounded-[8px] border px-2 font-semibold transition " +
+                  "flex h-8 min-w-8 items-center justify-center rounded-[8px] border px-2 font-semibold tabular-nums transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
                   (p === page
                     ? "border-ink bg-ink text-white"
                     : "border-line bg-surface text-ink hover:bg-bg")
@@ -104,13 +105,13 @@ export function AdminPagination({
         {page < totalPages ? (
           <Link
             href={createPageUrl(page + 1)}
-            className="flex h-8 items-center gap-1 rounded-[8px] border border-line bg-surface px-2.5 font-medium text-ink transition hover:bg-bg"
+            className="flex h-8 items-center gap-1 rounded-[8px] border border-line bg-surface px-2.5 font-medium text-ink transition hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             <span>Next</span>
             <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         ) : (
-          <span className="flex h-8 items-center gap-1 rounded-[8px] border border-line/60 bg-surface/50 px-2.5 font-medium text-muted/60 cursor-not-allowed">
+          <span aria-disabled="true" className="flex h-8 cursor-not-allowed items-center gap-1 rounded-[8px] border border-line/60 bg-surface/50 px-2.5 font-medium text-muted/70">
             <span>Next</span>
             <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           </span>

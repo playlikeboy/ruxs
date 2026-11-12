@@ -80,8 +80,7 @@ export function paymentState(purpose: "shop_order" | "dues" | "booking", status:
     if (status === "cancelled") return "excluded";
     return "pending";
   }
-  const orderStatus = status;
-  if (orderStatus === "delivered") return "settled";
-  if (orderStatus === "cancelled" || orderStatus === "rejected") return "excluded";
+  if (status === "delivered") return "settled";
+  if (status === "cancelled" || status === "rejected") return "excluded";
   return "pending";
 }

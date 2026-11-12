@@ -13,7 +13,7 @@ function keys() {
   if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
     throw new Error("Razorpay is not configured");
   }
-  return { keyId: env.RAZORPAY_KEY_ID, keySecret: env.RAZORPAY_KEY_SECRET, webhookSecret: env.RAZORPAY_WEBHOOK_SECRET };
+  return { keyId: env.RAZORPAY_KEY_ID, keySecret: env.RAZORPAY_KEY_SECRET };
 }
 
 export function razorpayKeyId(): string | null {
@@ -54,6 +54,9 @@ export async function createRazorpayOrder(input: {
 }
 
 export async function refundRazorpayPayment(paymentId: string, amountPaise: number, note: string) {
+  if (!Number.isInteger(amountPaise) || amountPaise < 1) {
+    throw new Error("Refund amount must be positive integer paise");
+  }
   return call<{ id: string; status: string }>(`/payments/${encodeURIComponent(paymentId)}/refund`, {
     amount: amountPaise,
     notes: { reason: note.slice(0, 250) },
@@ -74,7 +77,8 @@ export function verifyCheckoutSignature(orderId: string, paymentId: string, sign
 
 /** Webhook signature: HMAC-SHA256(raw request body, webhook secret). */
 export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
-  const secret = keys().webhookSecret;
+  // The webhook only needs its own secret, so it works even when API keys are unset.
+  const secret = getServerEnv().RAZORPAY_WEBHOOK_SECRET;
   if (!secret) return false;
   const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
   return safeEqualHex(expected, signature);

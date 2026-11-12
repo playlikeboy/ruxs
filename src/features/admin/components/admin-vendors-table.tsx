@@ -1,7 +1,5 @@
 "use client";
 
-import { AppIcon } from "@/components/ui/app-icon";
-
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,6 +21,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AppIcon } from "@/components/ui/app-icon";
+import { buttonClass } from "@/components/ui/button";
 import { VENDOR_TYPE_INFO, toVendorType } from "@/core/vendor-types";
 import {
   adminBulkDeleteVendors,
@@ -32,7 +32,10 @@ import {
   adminSetVendorStatus,
   adminToggleAcceptingOrders,
 } from "@/features/admin/actions";
+import { AdminDialog } from "./admin-dialog";
 import { ExportButton, type ExportData } from "./export-button";
+import { APP_URL } from "@/lib/app-url";
+
 
 interface VendorRow {
   vendor: {
@@ -56,8 +59,8 @@ interface VendorRow {
 
 const DEFAULT_STATUS_CONFIG = {
   label: "Pending",
-  badge: "border-amber-600/20 bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  dot: "bg-amber-500",
+  badge: "border-warn/20 bg-warn/10 text-warn",
+  dot: "bg-warn",
 };
 
 const STATUS_CONFIG: Record<
@@ -66,14 +69,14 @@ const STATUS_CONFIG: Record<
 > = {
   active: {
     label: "Active",
-    badge: "border-emerald-600/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-    dot: "bg-emerald-500",
+    badge: "border-good/20 bg-good/10 text-good",
+    dot: "bg-good",
   },
   pending: DEFAULT_STATUS_CONFIG,
   suspended: {
     label: "Suspended",
-    badge: "border-rose-600/20 bg-rose-500/10 text-rose-700 dark:text-rose-400",
-    dot: "bg-rose-500",
+    badge: "border-bad/20 bg-bad/10 text-bad",
+    dot: "bg-bad",
   },
 };
 
@@ -120,6 +123,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
   // --- Handlers ---
   const handleToggleStatus = (vendorId: string, currentStatus: string) => {
     const nextStatus = currentStatus === "active" ? "suspended" : "active";
+    if (nextStatus === "suspended" && !window.confirm("Suspend this vendor? Their store disappears from the app and their panel locks.")) return;
     startTransition(async () => {
       const res = await adminSetVendorStatus({ vendorId, status: nextStatus });
       if (!res.ok) toast.error(res.error);
@@ -144,7 +148,8 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
     });
   };
 
-  const handleGenerateCredentials = (vendorId: string, vendorName: string) => {
+  const handleGenerateCredentials = (vendorId: string, vendorName: string, hasLogin: boolean) => {
+    if (hasLogin && !window.confirm(`Replace the password for ${vendorName}? The owner's old password stops working.`)) return;
     startTransition(async () => {
       const res = await adminGenerateCredentials({ vendorId });
       if (!res.ok) toast.error(res.error);
@@ -191,7 +196,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
       const res = await adminBulkSetVendorStatus({ vendorIds: selectedIds, status });
       if (!res.ok) toast.error(res.error);
       else {
-        toast.success(`Updated ${res.count} stores to ${status}`);
+        toast.success(`${status === "active" ? "Activated" : "Suspended"} ${res.count} ${res.count === 1 ? "store" : "stores"}`);
         setSelectedIds([]);
         router.refresh();
       }
@@ -207,7 +212,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
         const parts = [];
         if (res.deletedCount > 0) parts.push(`${res.deletedCount} permanently deleted`);
         if (res.suspendedCount > 0) parts.push(`${res.suspendedCount} suspended (protected by financial ledger)`);
-        toast.success(`Bulk action complete: ${parts.join(", ") || "No changes"}`);
+        toast.success(parts.length ? parts.join(", ") : "No stores changed");
         setBulkDeleteConfirmOpen(false);
         setSelectedIds([]);
         router.refresh();
@@ -274,9 +279,9 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
 
       {/* Bulk Action Sticky Bar */}
       {selectedIds.length > 0 && (
-        <div className="sticky top-16 z-20 flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-ink/20 bg-ink px-4 py-3 text-white shadow-lg animate-in fade-in slide-in-from-top-2">
+        <div className="sticky top-16 z-20 flex flex-wrap items-center justify-between gap-3 rounded-[12px] bg-ink px-4 py-3 text-white shadow-md">
           <div className="flex items-center gap-2 text-xs font-medium">
-            <CheckSquare className="h-4 w-4 text-accent" />
+            <CheckSquare className="h-4 w-4" />
             <span>
               <strong className="text-white">{selectedIds.length}</strong> stores selected
             </span>
@@ -287,30 +292,30 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
               type="button"
               disabled={isPending}
               onClick={() => handleBulkStatus("active")}
-              className="flex items-center gap-1.5 rounded-[8px] bg-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/20 transition disabled:opacity-50"
+              className="flex min-h-9 items-center gap-1.5 rounded-[10px] bg-white/10 px-3 text-xs font-semibold transition hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50"
             >
-              <Power className="h-3.5 w-3.5 text-emerald-400" /> Activate
+              <Power className="h-3.5 w-3.5" /> Activate
             </button>
             <button
               type="button"
               disabled={isPending}
               onClick={() => handleBulkStatus("suspended")}
-              className="flex items-center gap-1.5 rounded-[8px] bg-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/20 transition disabled:opacity-50"
+              className="flex min-h-9 items-center gap-1.5 rounded-[10px] bg-white/10 px-3 text-xs font-semibold transition hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50"
             >
-              <PowerOff className="h-3.5 w-3.5 text-rose-400" /> Suspend
+              <PowerOff className="h-3.5 w-3.5" /> Suspend
             </button>
             <button
               type="button"
               disabled={isPending}
               onClick={() => setBulkDeleteConfirmOpen(true)}
-              className="flex items-center gap-1.5 rounded-[8px] bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700 transition disabled:opacity-50"
+              className="flex min-h-9 items-center gap-1.5 rounded-[10px] bg-bad px-3 text-xs font-semibold text-white transition hover:bg-bad/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50"
             >
               <Trash2 className="h-3.5 w-3.5" /> Delete
             </button>
             <button
               type="button"
               onClick={() => setSelectedIds([])}
-              className="rounded-[8px] px-2 py-1.5 text-xs text-white/70 hover:text-white transition"
+              className="min-h-9 rounded-[10px] px-2 text-xs text-white/80 transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               Deselect
             </button>
@@ -339,7 +344,8 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                     type="button"
                     onClick={() => toggleSelectOne(vendor.id)}
                     aria-label={`Select ${vendor.name}`}
-                    className="text-muted hover:text-ink"
+                    aria-pressed={isSelected}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
                   >
                     {isSelected ? (
                       <CheckSquare className="h-5 w-5 text-accent" />
@@ -393,21 +399,21 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
               <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-line pt-2.5 text-xs">
                 <Link
                   href={`/admin/vendors/${vendor.id}`}
-                  className="flex items-center gap-1 rounded-[8px] border border-line bg-surface px-2.5 py-1 font-semibold text-ink hover:bg-bg"
+                  className="flex min-h-9 items-center gap-1 rounded-[10px] border border-line bg-surface px-2.5 font-semibold text-ink hover:bg-bg"
                 >
                   <Pencil className="h-3 w-3" /> Edit
                 </Link>
                 <Link
                   href={`/app/store/${vendor.slug}`}
                   target="_blank"
-                  className="flex items-center gap-1 rounded-[8px] border border-line bg-surface px-2.5 py-1 text-muted hover:text-ink hover:bg-bg"
+                  className="flex min-h-9 items-center gap-1 rounded-[10px] border border-line bg-surface px-2.5 text-muted hover:text-ink hover:bg-bg"
                 >
                   <Store className="h-3 w-3" /> Store <ExternalLink className="h-2.5 w-2.5" />
                 </Link>
                 <Link
                   href={`/merchant-panel/${vendor.slug}/today`}
                   target="_blank"
-                  className="flex items-center gap-1 rounded-[8px] border border-line bg-surface px-2.5 py-1 text-muted hover:text-ink hover:bg-bg"
+                  className="flex min-h-9 items-center gap-1 rounded-[10px] border border-line bg-surface px-2.5 text-muted hover:text-ink hover:bg-bg"
                 >
                   Panel <ExternalLink className="h-2.5 w-2.5" />
                 </Link>
@@ -415,15 +421,15 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                 <button
                   type="button"
                   onClick={() => handleToggleStatus(vendor.id, vendor.status)}
-                  className="flex items-center gap-1 rounded-[8px] border border-line bg-surface px-2 py-1 text-[11px] text-muted hover:text-ink"
+                  className="flex min-h-9 items-center gap-1 rounded-[10px] border border-line bg-surface px-2.5 text-muted hover:text-ink"
                 >
                   {vendor.status === "active" ? (
                     <>
-                      <PowerOff className="h-3 w-3 text-rose-500" /> Suspend
+                      <PowerOff className="h-3 w-3 text-bad" /> Suspend
                     </>
                   ) : (
                     <>
-                      <Power className="h-3 w-3 text-emerald-500" /> Activate
+                      <Power className="h-3 w-3 text-good" /> Activate
                     </>
                   )}
                 </button>
@@ -431,7 +437,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                 <button
                   type="button"
                   onClick={() => setDeleteTarget(vendor)}
-                  className="ml-auto flex items-center gap-1 rounded-[8px] border border-bad/30 bg-bad/5 px-2 py-1 text-[11px] font-bold text-bad hover:bg-bad hover:text-white transition"
+                  className="ml-auto flex min-h-9 items-center gap-1 rounded-[10px] border border-bad/20 bg-bad/5 px-2.5 font-semibold text-bad transition hover:bg-bad/10"
                 >
                   <Trash2 className="h-3 w-3" /> Delete
                 </button>
@@ -451,7 +457,8 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                   type="button"
                   onClick={toggleSelectAll}
                   aria-label="Select all stores"
-                  className="text-muted hover:text-ink"
+                  aria-pressed={allSelected}
+                  className="rounded-[6px] text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
                   {allSelected ? (
                     <CheckSquare className="h-4 w-4 text-accent" />
@@ -477,7 +484,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
               const isSelected = selectedIds.includes(vendor.id);
               const isMenuOpen = activeMenuId === vendor.id;
               const accepting = vendor.acceptingOrders !== false;
-              const storeUrl = `https://ruxs.in/app/store/${vendor.slug}`;
+              const storeUrl = `${APP_URL}/app/store/${vendor.slug}`;
 
               return (
                 <tr
@@ -492,7 +499,8 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                       type="button"
                       onClick={() => toggleSelectOne(vendor.id)}
                       aria-label={`Select ${vendor.name}`}
-                      className="text-muted hover:text-ink"
+                      aria-pressed={isSelected}
+                      className="rounded-[6px] text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     >
                       {isSelected ? (
                         <CheckSquare className="h-4 w-4 text-accent" />
@@ -547,7 +555,8 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                         <button
                           type="button"
                           onClick={() => copyToClipboard(vendor.loginId!, `login-${vendor.id}`, "Login ID")}
-                          className="text-muted hover:text-ink"
+                          className="rounded-[4px] text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+                          aria-label={`Copy login ID for ${vendor.name}`}
                           title="Copy login ID"
                         >
                           {copiedKey === `login-${vendor.id}` ? (
@@ -560,7 +569,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleGenerateCredentials(vendor.id, vendor.name)}
+                      onClick={() => handleGenerateCredentials(vendor.id, vendor.name, !!vendor.loginId)}
                       className="mt-0.5 text-[11px] font-medium text-accent hover:underline flex items-center gap-1"
                     >
                       <KeyRound className="h-3 w-3" /> Reset password
@@ -582,12 +591,14 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                     <button
                       type="button"
                       onClick={() => handleToggleOrders(vendor.id, accepting)}
-                      title={accepting ? "Click to pause orders" : "Click to open orders"}
+                      title={accepting ? "Pause orders" : "Resume orders"}
+                      aria-label={accepting ? `Orders open for ${vendor.name}. Pause orders` : `Orders paused for ${vendor.name}. Resume orders`}
                       className={
                         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition " +
                         (accepting
-                          ? "bg-good/15 text-good hover:bg-good/25"
-                          : "bg-muted/15 text-muted hover:bg-muted/25")
+                          ? "bg-good/10 text-good hover:bg-good/20"
+                          : "bg-muted/10 text-muted hover:bg-muted/20") +
+                        " focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                       }
                     >
                       <ShoppingBag className="h-3 w-3" />
@@ -613,7 +624,7 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                     <div className="relative inline-flex items-center justify-end gap-1">
                       <Link
                         href={`/admin/vendors/${vendor.id}`}
-                        className="rounded-[8px] border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink hover:bg-bg transition"
+                        className="flex h-8 items-center rounded-[8px] border border-line bg-surface px-2.5 text-xs font-semibold text-ink transition hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                       >
                         Edit
                       </Link>
@@ -624,9 +635,10 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                         onClick={() =>
                           setActiveMenuId(isMenuOpen ? null : vendor.id)
                         }
-                        aria-label="More store options"
+                        aria-label={`More options for ${vendor.name}`}
                         aria-expanded={isMenuOpen}
-                        className="flex h-7 w-7 items-center justify-center rounded-[8px] border border-line text-muted hover:text-ink hover:bg-bg transition"
+                        aria-controls={isMenuOpen ? `vendor-menu-${vendor.id}` : undefined}
+                        className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-line text-muted transition hover:bg-bg hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </button>
@@ -635,83 +647,81 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
                       {isMenuOpen && (
                         <>
                           <div
+                            aria-hidden="true"
                             className="fixed inset-0 z-40"
                             onClick={() => setActiveMenuId(null)}
                           />
                           <div
-                            role="menu"
-                            className="absolute right-0 top-full z-50 mt-1 w-52 rounded-[14px] border border-line bg-surface p-1.5 shadow-xl text-left text-xs animate-in fade-in zoom-in-95"
+                            id={`vendor-menu-${vendor.id}`}
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape") setActiveMenuId(null);
+                            }}
+                            className="absolute right-0 top-full z-50 mt-1 w-56 rounded-[12px] border border-line bg-surface p-1.5 text-left text-xs shadow-lg"
                           >
                             <Link
                               href={`/admin/vendors/${vendor.id}`}
-                              role="menuitem"
-                              className="flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium"
+                              className="flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium focus-visible:bg-bg focus-visible:outline-none"
                               onClick={() => setActiveMenuId(null)}
                             >
-                              <Pencil className="h-3.5 w-3.5 text-muted" /> Edit Details &amp; Settings
+                              <Pencil className="h-3.5 w-3.5 text-muted" /> Edit details
                             </Link>
 
                             <Link
                               href={`/app/store/${vendor.slug}`}
                               target="_blank"
-                              role="menuitem"
-                              className="flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium"
+                              className="flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium focus-visible:bg-bg focus-visible:outline-none"
                               onClick={() => setActiveMenuId(null)}
                             >
-                              <Store className="h-3.5 w-3.5 text-muted" /> View Public Storefront <ExternalLink className="h-3 w-3 ml-auto text-muted" />
+                              <Store className="h-3.5 w-3.5 text-muted" /> View storefront <ExternalLink className="h-3 w-3 ml-auto text-muted" />
                             </Link>
 
                             <Link
                               href={`/merchant-panel/${vendor.slug}/today`}
                               target="_blank"
-                              role="menuitem"
-                              className="flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium"
+                              className="flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium focus-visible:bg-bg focus-visible:outline-none"
                               onClick={() => setActiveMenuId(null)}
                             >
-                              <ExternalLink className="h-3.5 w-3.5 text-muted" /> Open Merchant Panel
+                              <ExternalLink className="h-3.5 w-3.5 text-muted" /> Open merchant panel
                             </Link>
 
                             <button
                               type="button"
-                              role="menuitem"
                               onClick={() => {
                                 copyToClipboard(storeUrl, `store-${vendor.id}`, "Storefront link");
                                 setActiveMenuId(null);
                               }}
-                              className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium text-left"
+                              className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium text-left focus-visible:bg-bg focus-visible:outline-none"
                             >
-                              <Copy className="h-3.5 w-3.5 text-muted" /> Copy Storefront URL
+                              <Copy className="h-3.5 w-3.5 text-muted" /> Copy storefront link
                             </button>
 
                             <button
                               type="button"
-                              role="menuitem"
                               onClick={() => {
                                 handleToggleOrders(vendor.id, accepting);
                                 setActiveMenuId(null);
                               }}
-                              className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium text-left"
+                              className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium text-left focus-visible:bg-bg focus-visible:outline-none"
                             >
                               <ShoppingBag className="h-3.5 w-3.5 text-muted" />
-                              {accepting ? "Pause Orders" : "Resume Orders"}
+                              {accepting ? "Pause orders" : "Resume orders"}
                             </button>
 
                             <button
                               type="button"
-                              role="menuitem"
                               onClick={() => {
                                 handleToggleStatus(vendor.id, vendor.status);
                                 setActiveMenuId(null);
                               }}
-                              className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium text-left"
+                              className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-ink hover:bg-bg font-medium text-left focus-visible:bg-bg focus-visible:outline-none"
                             >
                               {vendor.status === "active" ? (
                                 <>
-                                  <PowerOff className="h-3.5 w-3.5 text-rose-500" /> Suspend Store
+                                  <PowerOff className="h-3.5 w-3.5 text-bad" /> Suspend store
                                 </>
                               ) : (
                                 <>
-                                  <Power className="h-3.5 w-3.5 text-emerald-500" /> Activate Store
+                                  <Power className="h-3.5 w-3.5 text-good" /> Activate store
                                 </>
                               )}
                             </button>
@@ -720,14 +730,13 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
 
                             <button
                               type="button"
-                              role="menuitem"
                               onClick={() => {
                                 setDeleteTarget(vendor);
                                 setActiveMenuId(null);
                               }}
-                              className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 font-bold text-bad hover:bg-bad/10 text-left"
+                              className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-left font-semibold text-bad hover:bg-bad/10 focus-visible:bg-bad/10 focus-visible:outline-none"
                             >
-                              <Trash2 className="h-3.5 w-3.5" /> Delete Store…
+                              <Trash2 className="h-3.5 w-3.5" /> Delete store…
                             </button>
                           </div>
                         </>
@@ -741,211 +750,126 @@ export function AdminVendorsTable({ rows }: { rows: VendorRow[] }) {
         </table>
       </div>
 
-      {/* Single Vendor Delete Modal */}
-      {deleteTarget && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in"
-        >
-          <div className="w-full max-w-md rounded-[18px] border border-line bg-surface p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bad/10 text-bad">
-                <Trash2 className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div>
-                <h4 className="text-base font-bold text-ink">
-                  Delete &ldquo;{deleteTarget.name}&rdquo;?
-                </h4>
-                <p className="text-xs text-muted">Confirm store deletion or safe suspension</p>
-              </div>
-            </div>
-
-            <div className="rounded-[12px] bg-bg p-3.5 text-xs text-muted space-y-2">
-              <p>
-                • Clean/test stores without ledger transactions will be permanently deleted from the database along with catalog items and logins.
-              </p>
-              <p>
-                • Stores with immutable financial ledger history will be immediately deactivated and suspended instead to preserve legal accounting records.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => setDeleteTarget(null)}
-                className="rounded-[10px] border border-line px-4 py-2 text-xs font-semibold text-muted hover:text-ink hover:bg-bg transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleDeleteVendor}
-                className="flex items-center gap-1.5 rounded-[10px] bg-bad px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-bad/90 transition disabled:opacity-50"
-              >
-                {isPending ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Deleting…</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span>Delete Store</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+      {/* Single vendor delete */}
+      <AdminDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        busy={isPending}
+        icon={<Trash2 className="h-5 w-5" />}
+        title={<>Delete &ldquo;{deleteTarget?.name}&rdquo;?</>}
+        description="Permanent for test stores; a safe suspension for stores with money history."
+      >
+        <ul className="list-disc space-y-1.5 rounded-[12px] bg-bg py-3 pl-8 pr-3.5 text-sm text-muted">
+          <li>A store with no ledger history is deleted with its catalog items and login.</li>
+          <li>A store with ledger history is suspended and paused instead, so accounting records stay intact.</li>
+        </ul>
+        <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+          <button type="button" disabled={isPending} onClick={() => setDeleteTarget(null)} className={buttonClass("secondary", "sm")}>
+            Cancel
+          </button>
+          <button type="button" disabled={isPending} onClick={handleDeleteVendor} className={"inline-flex min-h-10 select-none items-center justify-center gap-1.5 rounded-control px-3 text-[13px] font-semibold text-white transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent bg-bad hover:bg-bad/90"}>
+            {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" /> : <Trash2 className="h-3.5 w-3.5" />}
+            {isPending ? "Deleting…" : "Delete store"}
+          </button>
         </div>
-      )}
+      </AdminDialog>
 
-      {/* Bulk Delete Modal */}
-      {bulkDeleteConfirmOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in"
-        >
-          <div className="w-full max-w-md rounded-[18px] border border-line bg-surface p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bad/10 text-bad">
-                <AlertTriangle className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div>
-                <h4 className="text-base font-bold text-ink">
-                  Delete {selectedIds.length} stores?
-                </h4>
-                <p className="text-xs text-muted">Bulk operation confirmation</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-muted">
-              Unused or onboarding stores will be permanently wiped. Any stores with permanent financial ledger records will be automatically suspended and deactivated instead.
-            </p>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => setBulkDeleteConfirmOpen(false)}
-                className="rounded-[10px] border border-line px-4 py-2 text-xs font-semibold text-muted hover:text-ink hover:bg-bg transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleBulkDelete}
-                className="flex items-center gap-1.5 rounded-[10px] bg-bad px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-bad/90 transition disabled:opacity-50"
-              >
-                {isPending ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Processing…</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span>Confirm Bulk Delete</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+      {/* Bulk delete */}
+      <AdminDialog
+        open={bulkDeleteConfirmOpen}
+        onClose={() => setBulkDeleteConfirmOpen(false)}
+        busy={isPending}
+        icon={<AlertTriangle className="h-5 w-5" />}
+        title={`Delete ${selectedIds.length} ${selectedIds.length === 1 ? "store" : "stores"}?`}
+        description="This can't be undone for stores that get deleted."
+      >
+        <p className="text-sm text-muted">
+          Stores with no ledger history are deleted permanently. Stores with ledger history are suspended and paused instead.
+        </p>
+        <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+          <button type="button" disabled={isPending} onClick={() => setBulkDeleteConfirmOpen(false)} className={buttonClass("secondary", "sm")}>
+            Cancel
+          </button>
+          <button type="button" disabled={isPending} onClick={handleBulkDelete} className={"inline-flex min-h-10 select-none items-center justify-center gap-1.5 rounded-control px-3 text-[13px] font-semibold text-white transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent bg-bad hover:bg-bad/90"}>
+            {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" /> : <Trash2 className="h-3.5 w-3.5" />}
+            {isPending ? "Deleting…" : "Delete stores"}
+          </button>
         </div>
-      )}
+      </AdminDialog>
 
-      {/* Fresh Credentials Modal */}
-      {credentialsModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in"
-        >
-          <div className="w-full max-w-md rounded-[18px] border border-line bg-surface p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-                <KeyRound className="h-5 w-5" aria-hidden="true" />
-              </div>
+      {/* Fresh credentials */}
+      <AdminDialog
+        open={credentialsModal !== null}
+        onClose={() => setCredentialsModal(null)}
+        tone="accent"
+        icon={<KeyRound className="h-5 w-5" />}
+        title={`Login for ${credentialsModal?.vendorName ?? ""}`}
+        description="Copy these now. The password is not shown again."
+      >
+        {credentialsModal && (
+          <>
+            <dl className="space-y-3 rounded-[12px] border border-line bg-bg p-4 text-sm">
               <div>
-                <h4 className="text-base font-bold text-ink">
-                  Credentials for {credentialsModal.vendorName}
-                </h4>
-                <p className="text-xs text-muted">Share these with the merchant securely</p>
-              </div>
-            </div>
-
-            <div className="rounded-[14px] bg-bg p-4 space-y-3 text-xs border border-line">
-              <div>
-                <span className="text-muted block text-[11px] uppercase tracking-wide">Login ID</span>
-                <div className="flex items-center justify-between font-mono font-bold text-sm text-ink mt-0.5">
-                  <span>{credentialsModal.loginId}</span>
+                <dt className="text-xs text-muted">Login ID</dt>
+                <dd className="mt-0.5 flex items-center justify-between gap-2 font-mono font-semibold text-ink">
+                  <span className="break-all">{credentialsModal.loginId}</span>
                   <button
                     type="button"
                     onClick={() => copyToClipboard(credentialsModal.loginId, "cred-login", "Login ID")}
-                    className="text-muted hover:text-ink"
+                    aria-label="Copy login ID"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-muted hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    {copiedKey === "cred-login" ? <Check className="h-4 w-4 text-good" /> : <Copy className="h-4 w-4" />}
                   </button>
-                </div>
+                </dd>
               </div>
-
-              <div className="border-t border-line pt-2">
-                <span className="text-muted block text-[11px] uppercase tracking-wide">Password (Shown Once)</span>
-                <div className="flex items-center justify-between font-mono font-bold text-sm text-ink mt-0.5">
-                  <span className="bg-amber-100 dark:bg-amber-950/50 px-2 py-0.5 rounded text-ink select-all">
-                    {credentialsModal.password}
-                  </span>
+              <div className="border-t border-line pt-3">
+                <dt className="text-xs text-muted">Password (shown once)</dt>
+                <dd className="mt-0.5 flex items-center justify-between gap-2 font-mono font-semibold text-ink">
+                  <span className="select-all break-all">{credentialsModal.password}</span>
                   <button
                     type="button"
                     onClick={() => copyToClipboard(credentialsModal.password, "cred-pass", "Password")}
-                    className="text-muted hover:text-ink"
+                    aria-label="Copy password"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-muted hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    {copiedKey === "cred-pass" ? <Check className="h-4 w-4 text-good" /> : <Copy className="h-4 w-4" />}
                   </button>
-                </div>
+                </dd>
               </div>
-
-              <div className="border-t border-line pt-2">
-                <span className="text-muted block text-[11px] uppercase tracking-wide">Sign-in Link</span>
-                <div className="flex items-center justify-between font-mono text-[11px] text-muted truncate mt-0.5">
-                  <span className="truncate">{credentialsModal.loginUrl}</span>
+              <div className="border-t border-line pt-3">
+                <dt className="text-xs text-muted">Sign-in link</dt>
+                <dd className="mt-0.5 flex items-center justify-between gap-2 font-mono text-xs text-muted">
+                  <span className="break-all">{credentialsModal.loginUrl}</span>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(credentialsModal.loginUrl, "cred-url", "Sign-in URL")}
-                    className="text-muted hover:text-ink shrink-0 ml-2"
+                    onClick={() => copyToClipboard(credentialsModal.loginUrl, "cred-url", "Sign-in link")}
+                    aria-label="Copy sign-in link"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-muted hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    {copiedKey === "cred-url" ? <Check className="h-4 w-4 text-good" /> : <Copy className="h-4 w-4" />}
                   </button>
-                </div>
+                </dd>
               </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
+            </dl>
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+              <button type="button" onClick={() => setCredentialsModal(null)} className={buttonClass("secondary", "sm")}>
+                Done
+              </button>
               <button
                 type="button"
                 onClick={() => {
-                  const text = `RUXs Merchant Login\nStore: ${credentialsModal.vendorName}\nLogin ID: ${credentialsModal.loginId}\nPassword: ${credentialsModal.password}\nLogin URL: ${credentialsModal.loginUrl}`;
-                  copyToClipboard(text, "cred-all", "All credentials");
+                  const text = `RUXs merchant login\nStore: ${credentialsModal.vendorName}\nLogin ID: ${credentialsModal.loginId}\nPassword: ${credentialsModal.password}\nLogin page: ${credentialsModal.loginUrl}`;
+                  copyToClipboard(text, "cred-all", "Login details");
                 }}
-                className="rounded-[10px] bg-accent px-4 py-2 text-xs font-bold text-white shadow-2xs hover:opacity-95 transition"
+                className={buttonClass("primary", "sm")}
               >
-                Copy All Details
-              </button>
-              <button
-                type="button"
-                onClick={() => setCredentialsModal(null)}
-                className="rounded-[10px] border border-line px-4 py-2 text-xs font-semibold text-muted hover:text-ink hover:bg-bg transition"
-              >
-                Done
+                <Copy className="h-3.5 w-3.5" /> Copy all details
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </AdminDialog>
     </div>
   );
 }

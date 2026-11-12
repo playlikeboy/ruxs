@@ -49,12 +49,12 @@ export default async function AccountPage({
       <PageHeader title="Account" back={next} />
       <div className="px-4 pt-5">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-ink text-2xl font-bold text-white">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-ink text-2xl font-bold text-white" aria-hidden="true">
             {(defaults.name || user.primaryEmail || "?").charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
             <p className="truncate text-xl font-semibold text-ink">{defaults.name || "Welcome"}</p>
-            <p className="truncate text-sm text-neutral-500">{user.primaryEmail}</p>
+            <p className="truncate text-sm text-muted">{user.primaryEmail}</p>
           </div>
         </div>
 
@@ -65,7 +65,7 @@ export default async function AccountPage({
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-ink">{profile ? "Delivery address" : "Where should we deliver?"}</h2>
-          {!profile && <p className="mt-1 text-sm text-neutral-500">Add your address once to order and subscribe.</p>}
+          {!profile && <p className="mt-1 text-sm text-muted">Add your address once to order and subscribe.</p>}
           <div className="mt-4">
             <ProfileForm defaults={defaults} next={next} />
           </div>
@@ -73,32 +73,32 @@ export default async function AccountPage({
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-ink">Notifications</h2>
-          <p className="mt-1 text-sm text-neutral-500">Manage email and device notifications for your home.</p>
+          <p className="mt-1 text-sm text-muted">Manage email and device notifications for your home.</p>
           <div className="mt-4">
             <NotificationSettings initial={notificationPrefs} userEmail={user.primaryEmail} />
           </div>
         </section>
 
         <section className="mt-10 divide-y divide-black/5 border-y border-black/5">
-          <Link href="/app/orders" className="flex items-center justify-between py-4 text-[15px] text-ink">Order history <ChevronRight className="h-5 w-5 text-neutral-400" /></Link>
-          <Link href="/app/plans" className="flex items-center justify-between py-4 text-[15px] text-ink">My plans &amp; bills <ChevronRight className="h-5 w-5 text-neutral-400" /></Link>
-          <Link href="/app/tickets" className="flex items-center justify-between py-4 text-[15px] text-ink">
-            <div>
-              <p className="font-medium text-ink">Help &amp; Support / Disputes</p>
-              <p className="text-xs text-neutral-500">Raise a ticket, dispute an order, or check resolutions</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-neutral-400" />
+          <Link href="/app/orders" className="flex min-h-12 items-center justify-between gap-3 py-4 text-[15px] text-ink transition-colors hover:text-accent">Order history <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" /></Link>
+          <Link href="/app/plans" className="flex min-h-12 items-center justify-between gap-3 py-4 text-[15px] text-ink transition-colors hover:text-accent">My plans &amp; bills <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" /></Link>
+          <Link href="/app/tickets" className="flex min-h-12 items-center justify-between gap-3 py-4 text-[15px] text-ink transition-colors hover:text-accent">
+            <span className="min-w-0">
+              <span className="block font-medium">Help and support</span>
+              <span className="block text-xs text-muted">Raise a ticket, dispute an order, or check resolutions</span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
           </Link>
-          <Link href="/privacy" className="flex items-center justify-between py-4 text-[15px] text-ink">Privacy <ChevronRight className="h-5 w-5 text-neutral-400" /></Link>
+          <Link href="/privacy" className="flex min-h-12 items-center justify-between gap-3 py-4 text-[15px] text-ink transition-colors hover:text-accent">Privacy <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" /></Link>
         </section>
 
-        <Link href="/merchant-panel/sign-in" className="mt-6 flex items-center gap-3 rounded-2xl border border-black/10 p-4">
+        <Link href="/merchant-panel/sign-in" className="mt-6 flex items-center gap-3 rounded-2xl border border-black/10 p-4 transition-colors hover:border-ink/25">
           <Store className="h-6 w-6 text-accent" aria-hidden="true" />
           <span className="flex-1">
             <span className="block text-[15px] font-semibold text-ink">Run a kitchen or water business?</span>
-            <span className="block text-sm text-neutral-500">Go to the merchant panel</span>
+            <span className="block text-sm text-muted">Go to the merchant panel</span>
           </span>
-          <ChevronRight className="h-5 w-5 text-neutral-400" />
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
         </Link>
 
         <SignOutButton className="mt-8 h-12 w-full justify-center rounded-xl border border-black/10 text-ink" />

@@ -17,7 +17,7 @@ export const raiseTicketSchema = z.object({
 
   // Optional Context IDs
   vendorId: z.string().uuid().optional().nullable(),
-  vendorName: z.string().optional().nullable(),
+  vendorName: z.string().trim().max(120).optional().nullable(),
   orderId: z.string().uuid().optional().nullable(),
   bookingId: z.string().uuid().optional().nullable(),
   subscriptionId: z.string().uuid().optional().nullable(),

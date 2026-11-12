@@ -58,15 +58,16 @@ export function CutoffTimer({ cutoffAt, shift }: CutoffTimerProps) {
     <div
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${
         isPassed
-          ? "bg-[#FAFAF7] text-muted border-line"
+          ? "bg-bg text-muted border-line"
           : isWarning
-            ? "bg-[#FFF3C9] text-[#9A5B00] border-[#9A5B00]/20"
+            ? "bg-butter text-warn border-warn/20"
             : "bg-surface text-ink border-line"
       }`}
     >
       <span
+        aria-hidden="true"
         className={`w-2 h-2 rounded-full ${
-          isPassed ? "bg-muted" : isWarning ? "bg-[#9A5B00] animate-pulse" : "bg-good"
+          isPassed ? "bg-muted" : isWarning ? "bg-warn motion-safe:animate-pulse" : "bg-good"
         }`}
       />
       <span className="capitalize">{shift}:</span>

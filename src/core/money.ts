@@ -28,7 +28,8 @@ export function formatINR(paise: number): string {
  */
 export function rupeesToPaise(rupees: number | string): number {
   const val = typeof rupees === "string" ? parseFloat(rupees) : rupees;
-  if (isNaN(val)) return 0;
+  // NaN and ±Infinity never become money.
+  if (!Number.isFinite(val)) return 0;
   return Math.round(val * 100);
 }
 

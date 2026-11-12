@@ -1,12 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
 import { orders, products, ledgerEntries, assetMovements } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 import { deliveryKey, depositKey } from "@/core/ledger";
 import { markDeliveredSchema, markFailedSchema } from "./schemas";
+
+/** Statuses a driver can still act on at the door. */
+const DELIVERABLE: string[] = ["confirmed", "failed"];
 
 export async function markDelivered(input: unknown) {
   const parsed = markDeliveredSchema.safeParse(input);
@@ -34,13 +37,21 @@ export async function markDelivered(input: unknown) {
             eq(orders.vendorId, access.vendorId)
           )
         )
-        .limit(1);
+        .limit(1)
+        .for("update", { of: orders });
 
       if (!row) {
-        throw new Error("Order not found");
+        return { ok: false, error: "Order not found" };
       }
 
       const { order, product } = row;
+      // Re-tapping an already delivered stop must not write a second can movement.
+      if (order.status === "delivered") {
+        return { ok: true };
+      }
+      if (!DELIVERABLE.includes(order.status)) {
+        return { ok: false, error: `This order is ${order.status.replace("_", " ")} and cannot be delivered` };
+      }
       const now = new Date();
 
       // 2. Update order to delivered
@@ -109,12 +120,14 @@ export async function markDelivered(input: unknown) {
       return { ok: true };
     });
 
-    revalidatePath(`/merchant-panel/${slug}/run`);
-    revalidatePath(`/merchant-panel/${slug}/today`);
+    if (result.ok) {
+      revalidatePath(`/merchant-panel/${slug}/run`);
+      revalidatePath(`/merchant-panel/${slug}/today`);
+    }
     return result;
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Delivery record failed";
-    return { ok: false, error: msg };
+    console.error("[orders] markDelivered failed", { orderId, err });
+    return { ok: false, error: "Delivery record failed" };
   }
 }
 
@@ -138,19 +151,21 @@ export async function markFailed(input: unknown) {
       .where(
         and(
           eq(orders.id, orderId),
-          eq(orders.vendorId, access.vendorId)
+          eq(orders.vendorId, access.vendorId),
+          // A delivered order already carries a ledger charge; failing it would leave that charge orphaned.
+          inArray(orders.status, DELIVERABLE)
         )
       )
-      .returning();
+      .returning({ id: orders.id });
 
     if (!updated) {
-      return { ok: false, error: "Order not found" };
+      return { ok: false, error: "Order not found or no longer open" };
     }
 
     revalidatePath(`/merchant-panel/${slug}/run`);
     return { ok: true };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed update failed";
-    return { ok: false, error: msg };
+    console.error("[orders] markFailed failed", { orderId, err });
+    return { ok: false, error: "Could not mark the order as failed" };
   }
 }

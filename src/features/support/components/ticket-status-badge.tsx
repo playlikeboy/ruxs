@@ -1,69 +1,38 @@
 import { UiIcon } from "@/components/ui/app-icon";
+import { cn } from "@/components/ui/cn";
 import { TICKET_STATUS_LABELS, type TicketPriority, type TicketStatus } from "@/core/tickets";
+
+const STATUS_TONE: Record<string, { chip: string; dot: string | null }> = {
+  open: { chip: "bg-butter text-warn ring-warn/20", dot: "bg-warn" },
+  in_progress: { chip: "bg-sky text-ink ring-ink/10", dot: "bg-ink" },
+  resolved: { chip: "bg-mint text-good ring-good/20", dot: null },
+  closed: { chip: "bg-neutral-100 text-muted ring-line", dot: null },
+};
 
 export function TicketStatusBadge({ status }: { status: TicketStatus | string }) {
   const label = TICKET_STATUS_LABELS[status as TicketStatus] ?? status;
+  const tone = STATUS_TONE[status] ?? { chip: "bg-neutral-100 text-muted ring-line", dot: null };
 
-  switch (status) {
-    case "open":
-      return (
-        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
-          ● {label}
-        </span>
-      );
-    case "in_progress":
-      return (
-        <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-600/20">
-          ● {label}
-        </span>
-      );
-    case "resolved":
-      return (
-        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-          <UiIcon name="check" /> {label}
-        </span>
-      );
-    case "closed":
-      return (
-        <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-600 ring-1 ring-inset ring-neutral-500/20">
-          {label}
-        </span>
-      );
-    default:
-      return (
-        <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-600">
-          {label}
-        </span>
-      );
-  }
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset", tone.chip)}>
+      {status === "resolved" ? <UiIcon name="check" /> : tone.dot ? <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} aria-hidden="true" /> : null}
+      {label}
+    </span>
+  );
 }
 
+const PRIORITY: Record<string, { label: string; chip: string }> = {
+  urgent: { label: "Urgent", chip: "bg-blush font-bold text-bad ring-bad/20" },
+  high: { label: "High", chip: "bg-peach font-bold text-accent ring-accent/20" },
+  medium: { label: "Medium", chip: "bg-butter font-semibold text-warn ring-warn/20" },
+  low: { label: "Low", chip: "bg-neutral-100 font-semibold text-muted ring-line" },
+};
+
 export function TicketPriorityBadge({ priority }: { priority: TicketPriority | string }) {
-  switch (priority) {
-    case "urgent":
-      return (
-        <span className="inline-flex items-center rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-rose-700 ring-1 ring-inset ring-rose-600/20">
-          Urgent
-        </span>
-      );
-    case "high":
-      return (
-        <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-orange-700 ring-1 ring-inset ring-orange-600/20">
-          High
-        </span>
-      );
-    case "medium":
-      return (
-        <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-amber-700 ring-1 ring-inset ring-amber-600/20">
-          Medium
-        </span>
-      );
-    case "low":
-    default:
-      return (
-        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">
-          Low
-        </span>
-      );
-  }
+  const p = PRIORITY[priority] ?? PRIORITY.low!;
+  return (
+    <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-[11px] uppercase tracking-wider ring-1 ring-inset", p.chip)}>
+      {p.label}
+    </span>
+  );
 }

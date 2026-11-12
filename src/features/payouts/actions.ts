@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { bookings, payments, shopOrders, vendorPayouts, vendors } from "@/db/schema";
@@ -12,6 +12,13 @@ import { computeVendorBalance } from "./queries";
 
 function fail(error: string) {
   return { ok: false as const, error };
+}
+
+type Tx = Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0];
+
+/** Transaction-scoped lock on one vendor's payout ledger. */
+async function lockVendorPayouts(tx: Tx, vendorId: string) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"payout:" + vendorId}))`);
 }
 
 function revalidateMoney(slug?: string) {
@@ -28,22 +35,30 @@ export async function requestWithdrawal(input: unknown) {
   if (!access.vendor.upiVpa) return fail("Add your UPI ID in Settings first, so RUXs knows where to send the money");
   const db = getDb();
 
-  const [open] = await db
-    .select({ id: vendorPayouts.id })
-    .from(vendorPayouts)
-    .where(and(eq(vendorPayouts.vendorId, access.vendorId), eq(vendorPayouts.status, "requested")))
-    .limit(1);
-  if (open) return fail("You already have a withdrawal request in progress");
+  // The per-vendor lock serialises double taps and admin payouts, so the
+  // balance read and the insert cannot both pass for the same money.
+  const error = await db.transaction(async (tx) => {
+    await lockVendorPayouts(tx, access.vendorId);
 
-  const balance = await computeVendorBalance(access.vendorId, access.vendor.commissionBps);
-  if (balance.availablePaise < 100) return fail("Nothing to withdraw yet");
+    const [open] = await tx
+      .select({ id: vendorPayouts.id })
+      .from(vendorPayouts)
+      .where(and(eq(vendorPayouts.vendorId, access.vendorId), eq(vendorPayouts.status, "requested")))
+      .limit(1);
+    if (open) return "You already have a withdrawal request in progress";
 
-  await db.insert(vendorPayouts).values({
-    vendorId: access.vendorId,
-    amountPaise: balance.availablePaise,
-    period: todayIST().slice(0, 7),
-    requestedBy: access.user.id,
+    const balance = await computeVendorBalance(access.vendorId, access.vendor.commissionBps, tx);
+    if (balance.availablePaise < 100) return "Nothing to withdraw yet";
+
+    await tx.insert(vendorPayouts).values({
+      vendorId: access.vendorId,
+      amountPaise: balance.availablePaise,
+      period: todayIST().slice(0, 7),
+      requestedBy: access.user.id,
+    });
+    return null;
   });
+  if (error) return fail(error);
   revalidateMoney(parsed.data.slug);
   return { ok: true as const };
 }
@@ -95,20 +110,25 @@ export async function adminRecordPayout(input: unknown) {
   const [vendor] = await db.select().from(vendors).where(eq(vendors.id, parsed.data.vendorId)).limit(1);
   if (!vendor) return fail("Vendor not found");
 
-  const balance = await computeVendorBalance(vendor.id, vendor.commissionBps);
-  if (balance.availablePaise < 100) return fail("Nothing available to pay out");
+  const recorded = await db.transaction(async (tx) => {
+    await lockVendorPayouts(tx, vendor.id);
+    const balance = await computeVendorBalance(vendor.id, vendor.commissionBps, tx);
+    if (balance.availablePaise < 100) return false;
 
-  const now = new Date();
-  await db.insert(vendorPayouts).values({
-    vendorId: vendor.id,
-    amountPaise: balance.availablePaise,
-    status: "paid",
-    period: todayIST().slice(0, 7),
-    requestedBy: user.id,
-    processedBy: user.id,
-    processedAt: now,
-    reference: parsed.data.reference,
+    const now = new Date();
+    await tx.insert(vendorPayouts).values({
+      vendorId: vendor.id,
+      amountPaise: balance.availablePaise,
+      status: "paid",
+      period: todayIST().slice(0, 7),
+      requestedBy: user.id,
+      processedBy: user.id,
+      processedAt: now,
+      reference: parsed.data.reference,
+    });
+    return true;
   });
+  if (!recorded) return fail("Nothing available to pay out");
   revalidateMoney(vendor.slug);
   return { ok: true as const };
 }

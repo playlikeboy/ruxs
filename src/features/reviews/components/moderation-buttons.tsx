@@ -22,7 +22,7 @@ export function ReplyForm({
   const [pending, startTransition] = useTransition();
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="text-xs font-semibold text-accent hover:underline">
+      <button type="button" onClick={() => setOpen(true)} className="min-h-10 text-xs font-semibold text-accent hover:underline">
         {initial ? "Edit reply" : "Reply publicly"}
       </button>
     );
@@ -44,10 +44,10 @@ export function ReplyForm({
         });
       }}
     >
-      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} maxLength={500} placeholder="Thank them, or explain what you're fixing" className="w-full rounded-[10px] border border-line bg-surface px-3 py-2 text-sm" />
+      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} maxLength={500} aria-label="Your public reply" placeholder="Thank them, or explain what you're fixing" className="w-full rounded-control border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30" />
       <div className="flex gap-2">
-        <button type="submit" disabled={pending} className="h-9 rounded-[10px] bg-ink px-3 text-xs font-semibold text-white disabled:opacity-60">{pending ? "Saving…" : "Save reply"}</button>
-        <button type="button" onClick={() => setOpen(false)} className="h-9 rounded-[10px] border border-line px-3 text-xs font-semibold">Cancel</button>
+        <button type="submit" disabled={pending} className="h-10 rounded-control bg-ink px-3 text-xs font-semibold text-white hover:bg-ink/90 disabled:opacity-60">{pending ? "Saving…" : "Save reply"}</button>
+        <button type="button" onClick={() => setOpen(false)} className="h-10 rounded-control border border-line px-3 text-xs font-semibold text-ink hover:bg-app-canvas">Cancel</button>
       </div>
     </form>
   );
@@ -70,7 +70,7 @@ export function HideReviewButton({ reviewId, hidden }: { reviewId: string; hidde
           }
         })
       }
-      className={"text-xs font-semibold disabled:opacity-60 " + (hidden ? "text-good" : "text-bad")}
+      className={"min-h-10 text-xs font-semibold hover:underline disabled:opacity-60 " + (hidden ? "text-good" : "text-bad")}
     >
       {hidden ? "Show" : "Hide"}
     </button>

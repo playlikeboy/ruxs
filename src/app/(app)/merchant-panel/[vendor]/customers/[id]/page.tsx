@@ -1,11 +1,29 @@
-import { UiIcon } from "@/components/ui/app-icon";
 import { requireVendorModule } from "@/lib/auth/session";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Phone } from "lucide-react";
 import { formatINR } from "@/core/money";
+import { todayIST } from "@/core/time";
 import { getCustomerDetails } from "@/features/customers/queries";
 import { AddAdjustmentDialog } from "@/features/customers/components/add-adjustment-dialog";
 import { ResetLinkButton } from "@/features/customers/components/reset-link-button";
+import { Badge } from "@/components/ui/badge";
+import { buttonClass } from "@/components/ui/button";
+
+export const metadata = { title: "Customer" };
+
+const ledgerDateFmt = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Asia/Kolkata",
+});
+
+const LEDGER_TONE: Record<string, React.ComponentProps<typeof Badge>["tone"]> = {
+  payment: "good",
+  late_fee: "warn",
+};
 
 export default async function CustomerDetailPage({
   params,
@@ -13,7 +31,8 @@ export default async function CustomerDetailPage({
   params: Promise<{ vendor: string; id: string }>;
 }) {
   const { vendor: slug, id } = await params;
-  await requireVendorModule(slug, "customers");
+  // Same roles as the nav: the khata and adjustments are desk work, not for drivers.
+  await requireVendorModule(slug, "customers", ["owner", "staff"]);
   const data = await getCustomerDetails(slug, id);
 
   if (!data) {
@@ -21,192 +40,131 @@ export default async function CustomerDetailPage({
   }
 
   const { customer, subscriptions, ledger, balancePaise, canHoldings } = data;
+  const today = todayIST();
+  const activeCount = subscriptions.filter(({ sub }) => !sub.endsOn || sub.endsOn >= today).length;
 
   return (
-    <div className="p-4 sm:p-6 space-y-5">
-      {/* Back Link */}
-      <div>
-        <Link
-          href={`/merchant-panel/${slug}/customers`}
-          className="text-xs text-muted hover:text-ink font-medium"
-        >
-          ← Back to Customers
-        </Link>
-      </div>
+    <div className="space-y-5 p-4 sm:p-6">
+      <Link href={`/merchant-panel/${slug}/customers`} className="text-sm font-semibold text-muted hover:text-ink">
+        ← Customers
+      </Link>
 
-      {/* Household Profile Card */}
-      <div className="bg-surface border border-line rounded-[12px] p-4 space-y-3 shadow-xs">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-ink">
-              {customer.name}
-            </h1>
-            <div className="text-sm font-medium text-ink mt-0.5">
+      <section className="space-y-3 rounded-card border border-line bg-surface p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">{customer.name}</h1>
+            <p className="mt-0.5 text-sm font-medium text-ink">
               Flat {customer.flat}
               {customer.tower ? `, Tower ${customer.tower}` : ""}
-              {customer.floor ? ` (Fl ${customer.floor})` : ""}
-            </div>
-            <div className="text-xs text-muted mt-0.5">{customer.society}</div>
+              {customer.floor ? ` (Floor ${customer.floor})` : ""}
+            </p>
+            <p className="mt-0.5 text-sm text-muted">{customer.society}</p>
           </div>
 
-          <a
-            href={`tel:${customer.phone}`}
-            className="px-3 py-1.5 bg-[#FAFAF7] border border-line rounded-[8px] text-xs font-semibold text-ink hover:bg-white active:scale-95 transition-all"
-          >
-            <UiIcon name="phone" /> {customer.phone}
+          <a href={`tel:${customer.phone}`} className={buttonClass("secondary", "sm", "tabular-nums")}>
+            <Phone className="h-4 w-4" aria-hidden="true" /> {customer.phone}
           </a>
         </div>
 
-        {/* Balance & Cans Metrics */}
-        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-line">
-          <div className="p-3 bg-[#FAFAF7] rounded-[10px]">
-            <span className="text-[11px] text-muted block">Khata Balance</span>
-            <span
-              className={`text-lg font-bold font-mono tabular-nums ${
-                balancePaise > 0
-                  ? "text-[#B42318]"
-                  : balancePaise < 0
-                    ? "text-good"
-                    : "text-ink"
+        <dl className="grid grid-cols-2 gap-2 border-t border-line pt-3">
+          <div className="rounded-control bg-app-canvas p-3">
+            <dt className="text-xs text-muted">Khata balance</dt>
+            <dd
+              className={`text-lg font-bold tabular-nums ${
+                balancePaise > 0 ? "text-bad" : balancePaise < 0 ? "text-good" : "text-ink"
               }`}
             >
               {formatINR(balancePaise)}
-            </span>
+            </dd>
           </div>
 
-          <div className="p-3 bg-[#FAFAF7] rounded-[10px]">
-            <span className="text-[11px] text-muted block">Cans / Assets Held</span>
-            <span className="text-lg font-bold font-mono tabular-nums text-ink">
-              {canHoldings}
-            </span>
+          <div className="rounded-control bg-app-canvas p-3">
+            <dt className="text-xs text-muted">Cans / assets held</dt>
+            <dd className="text-lg font-bold tabular-nums text-ink">{canHoldings}</dd>
           </div>
-        </div>
-      </div>
+        </dl>
+      </section>
 
-      {/* Subscriptions */}
-      <div className="bg-surface border border-line rounded-[12px] p-4 space-y-3 shadow-xs">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-ink">Active Subscriptions</h2>
-          <span className="text-xs text-muted tabular-nums">
-            {subscriptions.length} active
-          </span>
+      <section className="space-y-3 rounded-card border border-line bg-surface p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-ink">Subscriptions</h2>
+          <span className="text-xs tabular-nums text-muted">{activeCount} active</span>
         </div>
 
         {subscriptions.length === 0 ? (
-          <div className="text-xs text-muted py-2">
-            No active subscriptions assigned to this household yet.
-          </div>
+          <p className="py-2 text-sm text-muted">No subscriptions for this household yet.</p>
         ) : (
-          <div className="divide-y divide-line/60">
-            {subscriptions.map(({ sub, product }) => (
-              <div
-                key={sub.id}
-                className="py-2.5 flex items-center justify-between text-xs first:pt-0 last:pb-0"
-              >
-                <div>
-                  <div className="font-medium text-ink">{product.name}</div>
-                  <div className="text-muted text-[11px]">
-                    Qty: {sub.qty} • Days: {sub.days.join(", ")}
+          <ul className="divide-y divide-line">
+            {subscriptions.map(({ sub, product }) => {
+              const ended = !!sub.endsOn && sub.endsOn < today;
+              return (
+                <li key={sub.id} className="flex items-center justify-between gap-3 py-2.5 text-sm first:pt-0 last:pb-0">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 font-medium text-ink">
+                      <span className="truncate">{product.name}</span>
+                      {ended && <Badge>Ended</Badge>}
+                    </p>
+                    <p className="text-xs text-muted">
+                      Qty {sub.qty} · {sub.days.length === 7 ? "Daily" : sub.days.join(", ")}
+                    </p>
                   </div>
-                </div>
-                <div className="font-mono text-ink font-semibold">
-                  {formatINR(product.pricePaise)} / meal
-                </div>
-              </div>
-            ))}
-          </div>
+                  <span className="shrink-0 font-semibold tabular-nums text-ink">{formatINR(product.pricePaise)} each</span>
+                </li>
+              );
+            })}
+          </ul>
         )}
-      </div>
+      </section>
 
-      {/* Khata Ledger Timeline */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-ink">Khata History</h2>
-            <p className="text-xs text-muted">
-              Append-only ledger. Changes are recorded with immutable entries.
-            </p>
+            <h2 className="text-base font-semibold text-ink">Khata history</h2>
+            <p className="text-sm text-muted">Entries are never edited. Corrections are added as new entries.</p>
           </div>
 
-          <AddAdjustmentDialog
-            slug={slug}
-            customerId={customer.id}
-            customerName={customer.name}
-          />
+          <AddAdjustmentDialog slug={slug} customerId={customer.id} customerName={customer.name} />
         </div>
 
         {ledger.length === 0 ? (
-          <div className="p-6 text-center text-xs text-muted bg-surface border border-line rounded-[12px]">
-            No khata transactions recorded yet.
-          </div>
+          <p className="rounded-card border border-line bg-surface p-6 text-center text-sm text-muted">
+            No khata entries recorded yet.
+          </p>
         ) : (
-          <div className="bg-surface border border-line rounded-[12px] divide-y divide-line overflow-hidden shadow-xs">
+          <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
             {ledger.map((entry) => {
               const isDebit = entry.amountPaise > 0; // Household owes more
               return (
-                <div
-                  key={entry.id}
-                  className="p-3.5 flex items-start justify-between text-xs"
-                >
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
-                          entry.type === "payment"
-                            ? "bg-[#E1F3E7] text-good"
-                            : entry.type === "late_fee"
-                              ? "bg-[#FFF3C9] text-[#9A5B00]"
-                              : entry.type === "delivery"
-                                ? "bg-[#FAFAF7] text-ink border border-line"
-                                : "bg-surface text-muted border border-line"
-                        }`}
-                      >
-                        {entry.type.replace("_", " ")}
-                      </span>
-                      <span className="text-muted text-[11px]">
-                        {new Date(entry.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          timeZone: "Asia/Kolkata",
-                        })}
-                      </span>
+                <li key={entry.id} className="flex items-start justify-between gap-3 p-3.5 text-sm">
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge tone={LEDGER_TONE[entry.type] ?? "neutral"} className="capitalize">
+                        {entry.type.replaceAll("_", " ")}
+                      </Badge>
+                      <span className="text-xs text-muted">{ledgerDateFmt.format(new Date(entry.createdAt))}</span>
                     </div>
-
-                    {entry.notes && (
-                      <div className="text-ink text-xs pt-0.5">
-                        {entry.notes}
-                      </div>
-                    )}
+                    {entry.notes && <p className="pt-0.5 text-sm text-ink">{entry.notes}</p>}
                   </div>
 
-                  <div className="text-right">
-                    <div
-                      className={`font-mono font-bold tabular-nums ${
-                        isDebit ? "text-ink" : "text-good"
-                      }`}
-                    >
-                      {isDebit ? `+${formatINR(entry.amountPaise)}` : `-${formatINR(Math.abs(entry.amountPaise))}`}
-                    </div>
-                  </div>
-                </div>
+                  <span className={`shrink-0 font-bold tabular-nums ${isDebit ? "text-ink" : "text-good"}`}>
+                    {isDebit ? `+${formatINR(entry.amountPaise)}` : `-${formatINR(Math.abs(entry.amountPaise))}`}
+                  </span>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
-      </div>
+      </section>
 
-      {/* Household Link Management */}
-      <div className="p-4 bg-surface border border-line rounded-[12px] space-y-2 text-xs">
-        <h3 className="font-semibold text-ink">Private Link Management</h3>
-        <p className="text-muted leading-relaxed">
-          The household accesses their calendar, bills, and pause controls using their secure private link.
+      <section className="space-y-2 rounded-card border border-line bg-surface p-4">
+        <h2 className="text-base font-semibold text-ink">Private link</h2>
+        <p className="text-sm leading-relaxed text-muted">
+          The household uses their private link to see their calendar and bills, and to skip or pause deliveries.
         </p>
         <div className="pt-1">
           <ResetLinkButton slug={slug} customerId={customer.id} />
         </div>
-      </div>
+      </section>
     </div>
   );
 }

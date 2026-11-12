@@ -10,12 +10,10 @@ export interface UpiPaymentParams {
  * upi://pay?pa={vpa}&pn={payeeName}&am={rupees}&cu=INR&tn={billNumber}
  * (PRD §10 Rule 6)
  */
-export function buildUpiUrl(params: {
-  vpa: string;
-  payeeName: string;
-  amountPaise: number;
-  billNumber: string;
-}): string {
+export function buildUpiUrl(params: UpiPaymentParams): string {
+  if (!Number.isInteger(params.amountPaise) || params.amountPaise < 0) {
+    throw new Error("UPI amount must be non-negative integer paise");
+  }
   const rupees = (params.amountPaise / 100).toFixed(2);
   const searchParams = new URLSearchParams({
     pa: params.vpa,

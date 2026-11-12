@@ -34,7 +34,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const status = order.status as ShopOrderStatus;
   const stepIndex = STEPS.findIndex((s) => s.status === status);
   const closedBad = status === "cancelled" || status === "rejected";
-  const myReview = await getMyReviewState(order.vendorId);
+  // Only a delivered order offers the review link, so skip the lookup otherwise.
+  const myReview = status === "delivered" ? await getMyReviewState(order.vendorId) : null;
 
   return (
     <div className="min-h-dvh bg-neutral-50 pb-8">
@@ -52,14 +53,17 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               {STEPS.map((step, i) => {
                 const done = i <= stepIndex;
                 return (
-                  <li key={step.status} className="flex gap-3">
+                  <li key={step.status} className="flex gap-3" aria-current={i === stepIndex ? "step" : undefined}>
                     <div className="flex flex-col items-center">
                       <span className={"flex h-6 w-6 items-center justify-center rounded-full " + (done ? "bg-good text-white" : "border-2 border-neutral-200 bg-white")}>
-                        {done && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                        {done && <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true" />}
                       </span>
-                      {i < STEPS.length - 1 && <span className={"h-7 w-0.5 " + (i < stepIndex ? "bg-good" : "bg-neutral-200")} />}
+                      {i < STEPS.length - 1 && <span aria-hidden="true" className={"h-7 w-0.5 " + (i < stepIndex ? "bg-good" : "bg-neutral-200")} />}
                     </div>
-                    <p className={"pt-0.5 text-sm " + (done ? "font-semibold text-ink" : "text-neutral-400")}>{step.label}</p>
+                    <p className={"pt-0.5 text-sm " + (done ? "font-semibold text-ink" : "text-muted")}>
+                      {step.label}
+                      <span className="sr-only">{done ? " (done)" : " (not yet)"}</span>
+                    </p>
                   </li>
                 );
               })}
@@ -69,7 +73,6 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             {dayLabelIST(order.deliverOn)} · {SLOT_LABEL[order.slot] ?? order.slot}
           </p>
         </section>
-
 
         <section className="rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
           <h2 className="font-semibold text-ink">Items</h2>
@@ -114,37 +117,37 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
         {status === "awaiting_payment" && <PayOrderButton orderId={order.id} totalPaise={order.totalPaise} />}
         {(status === "placed" || status === "awaiting_payment") && <CancelOrderButton orderId={order.id} />}
-        {status === "delivered" && (
+        {myReview && (
           myReview.mine ? (
             <Link
               href={`/app/store/${vendorSlug}#reviews`}
-              className="flex h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-100/70"
+              className="flex h-12 items-center justify-center gap-2 rounded-xl border border-line bg-brand-leaf text-sm font-semibold text-good transition-colors hover:border-good/40"
             >
               <UiIcon name="star" /> You rated {vendorName} ({myReview.mine.rating}/5 stars)
             </Link>
           ) : (
             <Link
               href={`/app/store/${vendorSlug}#reviews`}
-              className="flex h-12 items-center justify-center gap-2 rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink shadow-2xs hover:bg-neutral-50 active:scale-[0.98] transition-all"
+              className="flex h-12 items-center justify-center gap-2 rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink transition-colors hover:bg-neutral-50"
             >
               <UiIcon name="star" /> Rate {vendorName}
             </Link>
           )
         )}
         {!isOpenStatus(status) && (
-          <Link href={`/app/store/${vendorSlug}`} className="flex h-12 items-center justify-center rounded-xl bg-ink text-sm font-semibold text-white">Order again</Link>
+          <Link href={`/app/store/${vendorSlug}`} className="flex h-12 items-center justify-center rounded-xl bg-ink text-sm font-semibold text-white transition-colors hover:bg-ink/90">Order again</Link>
         )}
-        <div className="pt-1 flex justify-center">
+        <div className="flex justify-center pt-1">
           <RaiseDisputeButton
             orderId={order.id}
             vendorId={order.vendorId}
             vendorName={vendorName}
-            label="Dispute or Report an Issue with This Order"
+            label="Report a problem with this order"
             variant="compact"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-rose-600 transition-colors"
+            className="inline-flex min-h-10 items-center gap-1.5 text-xs font-semibold text-muted transition-colors hover:text-bad"
           />
         </div>
-        <p className="text-center text-xs text-neutral-500">Need direct escalation? Write to adminruxs@gmail.com or WhatsApp 9610201507 (WhatsApp only) with {order.number}.</p>
+        <p className="text-center text-xs text-muted">Need direct escalation? Write to adminruxs@gmail.com or WhatsApp 9610201507 (WhatsApp only) with {order.number}.</p>
       </div>
     </div>
   );

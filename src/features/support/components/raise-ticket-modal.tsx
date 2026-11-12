@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, LifeBuoy, Loader2, ShieldAlert, X } from "lucide-react";
 import { TICKET_CATEGORIES, type TicketCategory } from "@/core/tickets";
@@ -47,6 +47,8 @@ export function RaiseTicketModal({
   const [error, setError] = useState<string | null>(null);
   const [ticketNumber, setTicketNumber] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const titleId = useId();
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   const handleOpen = () => {
     setCategory(defaultCategory);
@@ -64,6 +66,21 @@ export function RaiseTicketModal({
     }
   };
 
+  // Escape closes the dialog; focus moves in on open and returns to the trigger on close.
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeRef.current?.click();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      previous?.focus();
+    };
+  }, [open]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -78,7 +95,9 @@ export function RaiseTicketModal({
     }
 
     startTransition(async () => {
-      const res = await raiseTicket({
+      let res: Awaited<ReturnType<typeof raiseTicket>>;
+      try {
+        res = await raiseTicket({
         category,
         subject: subject.trim(),
         description: description.trim(),
@@ -88,7 +107,11 @@ export function RaiseTicketModal({
         bookingId: bookingId || null,
         subscriptionId: subscriptionId || null,
         reviewId: reviewId || null,
-      });
+        });
+      } catch {
+        setError("Could not submit your request. Please try again.");
+        return;
+      }
 
       if (!res.ok) {
         setError(res.error);
@@ -149,33 +172,32 @@ export function RaiseTicketModal({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          aria-labelledby={titleId}
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:p-4"
         >
-          <div
-            className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-black/10 max-h-[92vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="relative max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-[20px] bg-surface p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:rounded-[20px] sm:pb-6">
             {/* Close button */}
             <button
+              ref={closeRef}
               type="button"
               onClick={handleClose}
-              className="absolute right-4 top-4 rounded-full p-2 text-neutral-400 hover:bg-neutral-100 hover:text-ink transition-colors"
+              className="absolute right-4 top-4 rounded-full p-2 text-muted transition-colors hover:bg-neutral-100 hover:text-ink"
               aria-label="Close dialog"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
 
             {ticketNumber ? (
               <div className="py-4 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                  <CheckCircle2 className="h-9 w-9" />
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-mint text-good">
+                  <CheckCircle2 className="h-9 w-9" aria-hidden="true" />
                 </div>
-                <h3 className="mt-4 text-xl font-bold text-ink">Ticket Submitted</h3>
-                <p className="mt-1 text-sm font-medium text-emerald-600">
+                <h2 id={titleId} className="mt-4 text-xl font-bold text-ink">Ticket submitted</h2>
+                <p className="mt-1 text-sm font-medium text-good">
                   Reference: <span className="font-mono font-bold">{ticketNumber}</span>
                 </p>
-                <p className="mt-3 text-sm text-neutral-600 leading-relaxed max-w-sm mx-auto">
-                  Our operations team has received your ticket and is reviewing it. We have sent a confirmation email with this reference number.
+                <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted">
+                  Our team has your ticket and will review it. If your account has an email address, a confirmation with this reference is on its way.
                 </p>
                 <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
                   <button
@@ -186,7 +208,7 @@ export function RaiseTicketModal({
                     }}
                     className="inline-flex h-11 items-center justify-center rounded-xl bg-ink px-5 text-sm font-semibold text-white hover:bg-ink/90 active:scale-[0.98] transition-all"
                   >
-                    View All Tickets
+                    View all tickets
                   </button>
                   <button
                     type="button"
@@ -200,8 +222,8 @@ export function RaiseTicketModal({
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight text-ink">{computedTitle}</h2>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <h2 id={titleId} className="pr-10 text-xl font-bold tracking-tight text-ink">{computedTitle}</h2>
+                  <p className="mt-1 text-xs text-muted">
                     Disputes, delivery issues, hygiene reports, or general assistance.
                   </p>
                 </div>
@@ -237,15 +259,15 @@ export function RaiseTicketModal({
 
                 {/* Category selector */}
                 <div>
-                  <label htmlFor="ticket-category" className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
-                    Issue Category
+                  <label htmlFor="ticket-category" className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
+                    Category
                   </label>
                   <select
                     id="ticket-category"
                     value={category}
                     disabled={lockCategory || pending}
                     onChange={(e) => setCategory(e.target.value as TicketCategory)}
-                    className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-medium text-ink focus:border-accent focus:outline-hidden focus:ring-2 focus:ring-accent/20 disabled:bg-neutral-100"
+                    className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-medium text-ink focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:bg-neutral-100"
                   >
                     {Object.entries(TICKET_CATEGORIES).map(([key, meta]) => (
                       <option key={key} value={key}>
@@ -253,15 +275,15 @@ export function RaiseTicketModal({
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="mt-1 text-xs text-muted">
                     {activeMeta.description}
                   </p>
                 </div>
 
                 {/* Subject */}
                 <div>
-                  <label htmlFor="ticket-subject" className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
-                    Subject / Title
+                  <label htmlFor="ticket-subject" className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
+                    Subject
                   </label>
                   <input
                     id="ticket-subject"
@@ -272,17 +294,17 @@ export function RaiseTicketModal({
                     placeholder="e.g. Missing meal container, delayed driver, or quality concern"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm text-ink placeholder:text-neutral-400 focus:border-accent focus:outline-hidden focus:ring-2 focus:ring-accent/20 disabled:bg-neutral-100"
+                    className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm text-ink placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:bg-neutral-100"
                   />
                 </div>
 
                 {/* Description */}
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label htmlFor="ticket-desc" className="block text-xs font-semibold uppercase tracking-wider text-neutral-600">
+                    <label htmlFor="ticket-desc" className="block text-xs font-semibold uppercase tracking-wider text-muted">
                       Details
                     </label>
-                    <span className="text-[11px] text-neutral-400 tabular-nums">
+                    <span className="text-[11px] tabular-nums text-muted">
                       {description.length} / 2000
                     </span>
                   </div>
@@ -295,13 +317,13 @@ export function RaiseTicketModal({
                     placeholder="Describe what happened with as much specific detail as possible..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm text-ink placeholder:text-neutral-400 focus:border-accent focus:outline-hidden focus:ring-2 focus:ring-accent/20 disabled:bg-neutral-100"
+                    className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm text-ink placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:bg-neutral-100"
                   />
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-700">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
+                  <div role="alert" className="flex items-center gap-2 rounded-xl bg-blush p-3 text-xs font-semibold text-bad">
+                    <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>{error}</span>
                   </div>
                 )}
@@ -311,7 +333,7 @@ export function RaiseTicketModal({
                     type="button"
                     disabled={pending}
                     onClick={handleClose}
-                    className="h-10 rounded-xl px-4 text-sm font-semibold text-neutral-600 hover:bg-neutral-100 disabled:opacity-50"
+                    className="h-10 rounded-xl px-4 text-sm font-semibold text-muted hover:bg-neutral-100 hover:text-ink disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -322,11 +344,11 @@ export function RaiseTicketModal({
                   >
                     {pending ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                         Submitting…
                       </>
                     ) : (
-                      "Submit Request"
+                      "Submit"
                     )}
                   </button>
                 </div>

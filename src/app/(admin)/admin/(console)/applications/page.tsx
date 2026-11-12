@@ -3,7 +3,7 @@ import { cn } from "@/components/ui/cn";
 import { getApplications, type ApplicationStatus } from "@/features/applications/queries";
 import { ApplicationRow } from "@/features/applications/components/application-row";
 
-export const metadata = { title: "Applications · Admin" };
+export const metadata = { title: "Applications" };
 
 const TABS: { v: ApplicationStatus | ""; label: string }[] = [
   { v: "new", label: "New" },
@@ -15,7 +15,7 @@ const TABS: { v: ApplicationStatus | ""; label: string }[] = [
 
 export default async function ApplicationsPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const { status: raw } = await searchParams;
-  const status = (["new", "contacted", "approved", "rejected"].includes(raw ?? "") ? raw : raw === "all" ? "" : "new") as ApplicationStatus | "";
+  const status: ApplicationStatus | "" = raw === "all" ? "" : TABS.find((t) => t.v !== "" && t.v === raw)?.v ?? "new";
   const { rows, counts } = await getApplications({ status: status || undefined });
 
   return (
@@ -29,14 +29,14 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
           const active = status === t.v;
           const n = t.v ? counts[t.v] ?? 0 : Object.values(counts).reduce((a, b) => a + (b ?? 0), 0);
           return (
-            <Link key={t.label} href={`/admin/applications?status=${t.v || "all"}`} aria-current={active ? "page" : undefined} className={cn("inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold", active ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink")}>
+            <Link key={t.label} href={`/admin/applications?status=${t.v || "all"}`} aria-current={active ? "page" : undefined} className={cn("inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition", active ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink/40")}>
               {t.label} <span className="tabular-nums opacity-70">{n}</span>
             </Link>
           );
         })}
       </nav>
       {rows.length === 0 ? (
-        <p className="rounded-[16px] border border-dashed border-line bg-surface p-8 text-center text-sm text-muted">Nothing here. New applications from /apply appear in the New tab.</p>
+        <p className="rounded-card border border-dashed border-line bg-surface p-8 text-center text-sm text-muted">Nothing here. New applications from /apply appear in the New tab.</p>
       ) : (
         <ul className="space-y-3">
           {rows.map(({ app, categoryLabel }) => (

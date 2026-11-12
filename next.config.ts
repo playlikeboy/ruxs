@@ -14,12 +14,12 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Dev bundles evaluate source maps with eval(); production never needs it.
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://static.cloudflareinsights.com https://js.stripe.com https://checkout.razorpay.com`,
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://static.cloudflareinsights.com https://checkout.razorpay.com`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      `connect-src 'self' ${hexclaveApi} https://*.hexclave.com https://cloudflareinsights.com https://static.cloudflareinsights.com https://api.stripe.com https://api.razorpay.com https://lumberjack.razorpay.com`,
-      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://api.razorpay.com https://checkout.razorpay.com",
+      `connect-src 'self' ${hexclaveApi} https://*.hexclave.com https://cloudflareinsights.com https://static.cloudflareinsights.com https://api.razorpay.com https://lumberjack.razorpay.com`,
+      "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self' https://*.hexclave.com https://api.razorpay.com",
@@ -89,13 +89,11 @@ const nextConfig: NextConfig = {
 
 const createNextConfig = (phase: string): NextConfig => {
   if (phase === "phase-development-server") {
-    initOpenNextCloudflareForDev().catch(() => {});
+    initOpenNextCloudflareForDev().catch((err: unknown) => {
+      console.warn("[next.config] Cloudflare dev bindings unavailable:", err instanceof Error ? err.message : err);
+    });
   }
   return nextConfig;
 };
 
 export default createNextConfig;
-
-
-
-

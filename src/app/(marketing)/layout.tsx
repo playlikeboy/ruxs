@@ -8,12 +8,12 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-bg text-ink antialiased selection:bg-[#FFE8DD]">
-      <header className="sticky top-0 z-30 border-b border-line bg-[#FAFAF7]/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="RUXs home">
-            <RuxsMark className="h-9 w-9 shrink-0" aria-hidden="true" />
-            <span className="text-xl font-extrabold tracking-[-0.04em] text-accent">RUXs</span>
+    <div className="flex min-h-screen flex-col bg-bg text-ink antialiased selection:bg-peach">
+      <header className="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6">
+          <Link href="/" className="flex shrink-0 items-center gap-2 sm:gap-2.5" aria-label="RUXs home">
+            <RuxsMark className="h-9 w-9 shrink-0" alt="" aria-hidden="true" />
+            <span className="text-lg font-extrabold tracking-[-0.03em] text-accent sm:text-xl">RUXs</span>
           </Link>
 
           <nav aria-label="Main navigation" className="hidden items-center gap-4 text-sm font-medium text-muted lg:flex">
@@ -27,14 +27,14 @@ export default function MarketingLayout({
           </nav>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <Link href="/app/kids" className="rounded-[10px] px-2.5 py-2 text-xs font-semibold text-ink transition hover:bg-surface sm:hidden">
+            <Link href="/app/kids" className="inline-flex min-h-10 items-center rounded-control px-2.5 text-xs font-semibold text-ink transition-colors hover:bg-surface sm:hidden">
               Kids
             </Link>
-            <Link href="/sign-in" className="rounded-[10px] px-2.5 py-2 text-xs font-semibold text-ink transition hover:bg-surface sm:px-3.5 sm:text-sm">
+            <Link href="/sign-in" className="inline-flex min-h-10 items-center rounded-control px-2.5 text-xs font-semibold text-ink transition-colors hover:bg-surface sm:px-3.5 sm:text-sm">
               Sign in
             </Link>
-            <Link href="/app" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[10px] bg-ink px-3.5 py-2 text-xs font-semibold text-bg transition hover:bg-[#383D36] sm:gap-2 sm:px-4 sm:text-sm">
-              Open the app <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <Link href="/app" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-ink px-3.5 text-xs font-semibold text-bg transition-colors hover:bg-ink/90 sm:gap-2 sm:px-4 sm:text-sm">
+              Open the app <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -47,8 +47,8 @@ export default function MarketingLayout({
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-3">
               <Link href="/" className="flex items-center gap-2.5" aria-label="RUXs home">
-                <RuxsMark className="h-8 w-8 shrink-0" aria-hidden="true" />
-                <span className="font-extrabold tracking-tight text-accent">RUXs</span>
+                <RuxsMark className="h-8 w-8 shrink-0" alt="" aria-hidden="true" />
+                <span className="font-extrabold tracking-[-0.03em] text-accent">RUXs</span>
               </Link>
               <p className="max-w-sm text-sm leading-6 text-muted">
                 Neighbourhood services for more of everyday life — from meals, water and dairy to kids&apos; learning, gifts and local specialists.
@@ -101,8 +101,9 @@ export default function MarketingLayout({
                 >
                   <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-good" aria-hidden="true" />
                   <span>
-                    <strong className="block text-ink font-semibold">9610201507</strong>
-                    <span className="text-xs text-muted">Contact Only on WhatsApp</span>
+                    <strong className="block font-semibold tabular-nums text-ink">9610201507</strong>
+                    <span className="text-xs text-muted">WhatsApp messages only</span>
+                    <span className="sr-only"> (opens WhatsApp in a new tab)</span>
                   </span>
                 </a>
               </div>

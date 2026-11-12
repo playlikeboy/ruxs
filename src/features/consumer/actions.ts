@@ -39,6 +39,7 @@ import {
   saveSearchRadiusSchema,
   subscribeSchema,
 } from "./schemas";
+import { APP_URL } from "@/lib/app-url";
 
 
 function fail(error: string) {
@@ -470,8 +471,10 @@ export async function setMyDay(input: unknown) {
       kind: kind === "skip" ? "skip" : "qty",
       qty: kind === "skip" ? 0 : mine.sub.qty,
     });
-    if (result.ok) revalidatePath("/app/plans");
-    if (result.ok) revalidatePath("/app");
+    if (result.ok) {
+      revalidatePath("/app/plans");
+      revalidatePath("/app");
+    }
 
     if (result.ok && user.primaryEmail) {
       const isSkip = kind === "skip";
@@ -488,7 +491,7 @@ export async function setMyDay(input: unknown) {
           { label: "Status", value: isSkip ? "Off today" : "Delivering" },
         ],
         actionText: "View My Plans",
-        actionUrl: "https://ruxs.in/app/plans",
+        actionUrl: `${APP_URL}/app/plans`,
       });
       sendUserEmailIfAllowed({
         userId: user.id,
@@ -512,8 +515,9 @@ export async function setMyDay(input: unknown) {
  * kitchen count drops; skips after cutoff are left alone (they may be charged).
  */
 export async function skipAllToday() {
+  // Outside the try: a signed-out redirect must not be swallowed as an error.
+  const user = await requireUser();
   try {
-    const user = await requireUser();
     const db = getDb();
     const today = todayIST();
     const weekday = weekdayIST(today);
@@ -557,7 +561,7 @@ export async function skipAllToday() {
           { label: "Deliveries Skipped", value: String(skipped) },
         ],
         actionText: "Manage Plans",
-        actionUrl: "https://ruxs.in/app/plans",
+        actionUrl: `${APP_URL}/app/plans`,
       });
       sendUserEmailIfAllowed({
         userId: user.id,

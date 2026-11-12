@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, QrCode } from "lucide-react";
 import { formatINR } from "@/core/money";
@@ -129,11 +127,11 @@ export function InvoicePrintableView({ invoice, vendor, customer, entries }: Inv
               Billing Period: <span className="font-bold text-ink">{invoice.period}</span>
             </p>
             <p className="text-muted">
-              Generated: <span className="text-ink">{new Date(invoice.createdAt).toLocaleDateString("en-IN")}</span>
+              Generated: <span className="text-ink">{new Date(invoice.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}</span>
             </p>
             {invoice.paidAt && (
               <p className="text-good font-semibold">
-                Paid on: {new Date(invoice.paidAt).toLocaleDateString("en-IN")}
+                Paid on: {new Date(invoice.paidAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
               </p>
             )}
           </div>
@@ -164,6 +162,7 @@ export function InvoicePrintableView({ invoice, vendor, customer, entries }: Inv
                         {new Date(entry.createdAt).toLocaleDateString("en-IN", {
                           day: "numeric",
                           month: "short",
+                          timeZone: "Asia/Kolkata",
                         })}
                       </td>
                       <td className="py-2.5 px-3 font-medium capitalize text-ink">

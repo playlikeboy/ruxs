@@ -5,18 +5,26 @@ import { getDb } from "@/db";
 import { supportTickets } from "@/db/schema";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 
+type TicketRow = typeof supportTickets.$inferSelect;
+
+/** Admin notes are internal: households and stores never receive them. */
+function withoutAdminNotes(ticket: TicketRow): TicketRow {
+  return { ...ticket, adminNotes: null };
+}
+
 /** Households can only see their own tickets */
 export const getMyTickets = cache(async () => {
   const user = await requireUser();
   const db = getDb();
-  return db
+  const rows = await db
     .select()
     .from(supportTickets)
     .where(eq(supportTickets.userId, user.id))
     .orderBy(desc(supportTickets.createdAt));
+  return rows.map(withoutAdminNotes);
 });
 
-/** Single ticket lookup ensuring the household owns it (or caller is admin) */
+/** Single ticket lookup ensuring the household owns it */
 export async function getMyTicket(ticketId: string) {
   const user = await requireUser();
   const db = getDb();
@@ -25,18 +33,19 @@ export async function getMyTicket(ticketId: string) {
     .from(supportTickets)
     .where(and(eq(supportTickets.id, ticketId), eq(supportTickets.userId, user.id)))
     .limit(1);
-  return ticket ?? null;
+  return ticket ? withoutAdminNotes(ticket) : null;
 }
 
 /** Vendor dispute view: vendorId strictly from requireVendorAccess */
 export async function getVendorTickets(slug: string) {
-  const access = await requireVendorAccess(slug);
+  const access = await requireVendorAccess(slug, ["owner", "staff"]);
   const db = getDb();
-  return db
+  const rows = await db
     .select()
     .from(supportTickets)
     .where(eq(supportTickets.vendorId, access.vendorId))
     .orderBy(desc(supportTickets.createdAt));
+  return rows.map(withoutAdminNotes);
 }
 
 /** Admin console view for tickets */

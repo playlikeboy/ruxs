@@ -1,10 +1,9 @@
 "use client";
 
-import { UiIcon } from "@/components/ui/app-icon";
-
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { UiIcon } from "@/components/ui/app-icon";
 import { importCustomers, type ImportResultRow } from "@/features/customers/actions";
 import { CopyShareButton } from "./copy-share-button";
 
@@ -30,7 +29,9 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
 
   const handleSingleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const line = `${name}, ${phone}, ${society}, ${tower || "Main"}, ${floor || "0"}, ${flat}`;
+    // Commas or tabs inside a field would shift the columns on the server.
+    const clean = (v: string) => v.replace(/[,\t]/g, " ").trim();
+    const line = `${clean(name)}, ${clean(phone)}, ${clean(society)}, ${clean(tower) || "Main"}, ${clean(floor) || "0"}, ${clean(flat)}`;
 
     startTransition(async () => {
       const res = await importCustomers({ slug, rawText: line });
@@ -38,7 +39,7 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
         toast.error(res.error ?? "Failed to add household");
       } else if (res.results) {
         setImportedRows(res.results);
-        toast.success("Household added successfully!");
+        toast.success("Household added");
       }
     });
   };
@@ -57,7 +58,7 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
       } else if (res.results) {
         setImportedRows(res.results);
         const successes = res.results.filter((r) => !r.error).length;
-        toast.success(`Imported ${successes} households!`);
+        toast.success(`Imported ${successes} ${successes === 1 ? "household" : "households"}`);
       }
     });
   };
@@ -67,9 +68,9 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
 
     return (
       <div className="space-y-4">
-        <div className="p-4 bg-[#E1F3E7] border border-[#2F7D4F]/20 rounded-[12px] space-y-1">
+        <div className="p-4 bg-mint border border-good/20 rounded-2xl space-y-1">
           <h2 className="text-sm font-semibold text-good">
-            Import Complete: {successes.length} Added
+            Import complete: {successes.length} added
           </h2>
           <p className="text-xs text-ink/80">
             Share each household&apos;s private link. They can tap Deliver, Skip, or Extra every morning without downloading any app.
@@ -80,19 +81,19 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
           {importedRows.map((row, idx) => (
             <div
               key={idx}
-              className={`p-3.5 bg-surface border rounded-[12px] flex items-center justify-between text-xs ${
-                row.error ? "border-[#B42318]/30 bg-[#FFF5F5]" : "border-line shadow-xs"
+              className={`p-3.5 bg-surface border rounded-2xl flex items-center justify-between text-xs ${
+                row.error ? "border-bad/30 bg-bad/5" : "border-line"
               }`}
             >
               <div>
                 <div className="font-semibold text-ink">
-                  {row.name} <span className="font-mono text-muted">Flat {row.flat}</span>
+                  {row.name} <span className="tabular-nums text-muted">Flat {row.flat}</span>
                 </div>
-                <div className="text-[11px] text-muted mt-0.5">
+                <div className="mt-0.5 text-xs text-muted">
                   {row.society} {row.tower ? `(${row.tower})` : ""} • {row.phone}
                 </div>
                 {row.error && (
-                  <div className="text-[11px] text-[#B42318] font-medium mt-1">
+                  <div role="alert" className="mt-1 text-xs font-medium text-bad">
                     <UiIcon name="warning" /> {row.error}
                   </div>
                 )}
@@ -114,15 +115,15 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
               setImportedRows(null);
               setRawText("");
             }}
-            className="flex-1 py-2.5 px-3 bg-surface border border-line text-xs font-semibold text-ink rounded-[10px] hover:bg-[#FAFAF7]"
+            className="min-h-11 flex-1 rounded-control border border-line bg-surface px-3 py-2.5 text-sm font-semibold text-ink hover:bg-app-canvas"
           >
-            Add More Households
+            Add more households
           </button>
           <Link
             href={`/merchant-panel/${slug}/customers`}
-            className="flex-1 py-2.5 px-3 bg-accent text-white text-xs font-semibold rounded-[10px] text-center hover:opacity-90 shadow-xs"
+            className="flex min-h-11 flex-1 items-center justify-center rounded-control bg-accent px-3 py-2.5 text-center text-sm font-semibold text-white hover:bg-accent/90"
           >
-            Go to Customers List
+            Go to customers
           </Link>
         </div>
       </div>
@@ -132,32 +133,34 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
   return (
     <div className="space-y-4">
       {/* Mode switcher tabs */}
-      <div className="grid grid-cols-2 p-1 bg-[#FAFAF7] border border-line rounded-[10px]">
+      <div className="grid grid-cols-2 rounded-control border border-line bg-app-canvas p-1" role="group" aria-label="How to add">
         <button
           type="button"
           onClick={() => setMode("single")}
-          className={`py-2 text-xs font-semibold rounded-[8px] transition-colors ${
-            mode === "single" ? "bg-white text-ink shadow-xs" : "text-muted hover:text-ink"
+          aria-pressed={mode === "single"}
+          className={`min-h-10 rounded-lg py-2 text-xs font-semibold transition-colors ${
+            mode === "single" ? "bg-surface text-ink shadow-xs" : "text-muted hover:text-ink"
           }`}
         >
-          Single Household
+          One household
         </button>
         <button
           type="button"
           onClick={() => setMode("batch")}
-          className={`py-2 text-xs font-semibold rounded-[8px] transition-colors ${
-            mode === "batch" ? "bg-white text-ink shadow-xs" : "text-muted hover:text-ink"
+          aria-pressed={mode === "batch"}
+          className={`min-h-10 rounded-lg py-2 text-xs font-semibold transition-colors ${
+            mode === "batch" ? "bg-surface text-ink shadow-xs" : "text-muted hover:text-ink"
           }`}
         >
-          Paste Lines / CSV
+          Paste lines / CSV
         </button>
       </div>
 
       {mode === "single" ? (
-        <form onSubmit={handleSingleSubmit} className="space-y-3.5 bg-surface border border-line rounded-[12px] p-4 shadow-xs">
+        <form onSubmit={handleSingleSubmit} className="space-y-3.5 bg-surface border border-line rounded-2xl p-4">
           <div>
             <label htmlFor="cname" className="block text-xs font-medium text-ink mb-1">
-              Customer / Household Name
+              Household name
             </label>
             <input
               id="cname"
@@ -166,13 +169,13 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
               placeholder="e.g. Rahul Sharma"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent"
+              className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-control text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
             />
           </div>
 
           <div>
             <label htmlFor="cphone" className="block text-xs font-medium text-ink mb-1">
-              Phone Number
+              Phone number
             </label>
             <input
               id="cphone"
@@ -181,13 +184,13 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
               placeholder="+919876543210"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent font-mono"
+              className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-control text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent font-mono"
             />
           </div>
 
           <div>
             <label htmlFor="csociety" className="block text-xs font-medium text-ink mb-1">
-              Apartment / Society Name
+              Apartment or society
             </label>
             <input
               id="csociety"
@@ -196,7 +199,7 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
               placeholder="e.g. Green Glen Layout"
               value={society}
               onChange={(e) => setSociety(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent"
+              className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-control text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
             />
           </div>
 
@@ -211,7 +214,7 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
                 placeholder="A"
                 value={tower}
                 onChange={(e) => setTower(e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent"
+                className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-control text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
               />
             </div>
             <div>
@@ -224,7 +227,7 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
                 placeholder="3"
                 value={floor}
                 onChange={(e) => setFloor(e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent font-mono"
+                className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-control text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent font-mono"
               />
             </div>
             <div>
@@ -238,7 +241,7 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
                 placeholder="302"
                 value={flat}
                 onChange={(e) => setFlat(e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent font-mono"
+                className="w-full px-3 py-2 text-sm bg-surface border border-line rounded-control text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent font-mono"
               />
             </div>
           </div>
@@ -246,27 +249,27 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
           <button
             type="submit"
             disabled={isPending}
-            className="w-full mt-2 py-3 bg-accent text-white font-semibold text-sm rounded-[10px] hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 shadow-xs"
+            className="w-full mt-2 py-3 bg-accent text-white font-semibold text-sm rounded-control hover:bg-accent/90 active:scale-[0.99] transition-all disabled:opacity-50"
           >
-            {isPending ? "Creating..." : "Save Household & Generate Link"}
+            {isPending ? "Saving…" : "Save and create link"}
           </button>
         </form>
       ) : (
-        <form onSubmit={handleBatchSubmit} className="space-y-3.5 bg-surface border border-line rounded-[12px] p-4 shadow-xs">
+        <form onSubmit={handleBatchSubmit} className="space-y-3.5 bg-surface border border-line rounded-2xl p-4">
           <div>
             <div className="flex items-center justify-between mb-1">
               <label htmlFor="raw" className="block text-xs font-medium text-ink">
-                Paste CSV or Comma/Tab-Delimited Lines
+                Paste CSV, comma or tab separated lines
               </label>
               <button
                 type="button"
                 onClick={() => setRawText(sampleCsv)}
-                className="text-[11px] text-accent hover:underline"
+                className="min-h-10 text-xs font-semibold text-accent hover:underline"
               >
-                Insert Sample
+                Insert sample
               </button>
             </div>
-            <p className="text-[11px] text-muted mb-2">
+            <p className="mb-2 text-xs text-muted">
               Format: <span className="font-mono">Name, Phone, Society, Tower, Floor, Flat</span>
             </p>
             <textarea
@@ -276,16 +279,16 @@ Vikram Patel, 9811122233, Mantri Espana, Wing 2, 8, 804`;
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
               placeholder={sampleCsv}
-              className="w-full px-3 py-2 text-xs font-mono bg-surface border border-line rounded-[10px] text-ink focus:outline-hidden focus:ring-2 focus:ring-accent leading-relaxed"
+              className="w-full px-3 py-2 text-xs font-mono bg-surface border border-line rounded-control text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent leading-relaxed"
             />
           </div>
 
           <button
             type="submit"
             disabled={isPending}
-            className="w-full py-3 bg-accent text-white font-semibold text-sm rounded-[10px] hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 shadow-xs"
+            className="w-full py-3 bg-accent text-white font-semibold text-sm rounded-control hover:bg-accent/90 active:scale-[0.99] transition-all disabled:opacity-50"
           >
-            {isPending ? "Importing lines..." : "Import Households"}
+            {isPending ? "Importing…" : "Import households"}
           </button>
         </form>
       )}

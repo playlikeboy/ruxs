@@ -334,8 +334,11 @@ export async function saveService(input: unknown) {
       .returning({ id: services.id });
     if (!updated) return fail("Service not found");
   } else {
-    const [created] = await db.insert(services).values({ ...values, vendorId: access.vendorId }).returning({ id: services.id });
-    if (created && hasItemTable(type)) await provisionItemDetails(db, access.vendorId, type, created.id);
+    // The service and its type-specific detail row are created together or not at all.
+    await db.transaction(async (tx) => {
+      const [created] = await tx.insert(services).values({ ...values, vendorId: access.vendorId }).returning({ id: services.id });
+      if (created && hasItemTable(type)) await provisionItemDetails(tx, access.vendorId, type, created.id);
+    });
   }
   revalidateProvider(slug);
   return { ok: true as const };

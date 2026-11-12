@@ -19,22 +19,25 @@ export const requireUser = cache(async () => {
   return user;
 });
 
+// React's cache() keys on argument identity, so cache on primitives (not the user object).
+const isAdminByIdOrEmail = cache(async (userId: string, email: string | undefined): Promise<boolean> => {
+  const db = getDb();
+  const [row] = await db
+    .select({ id: platformAdmins.id })
+    .from(platformAdmins)
+    .where(email ? or(eq(platformAdmins.userId, userId), eq(platformAdmins.email, email)) : eq(platformAdmins.userId, userId))
+    .limit(1);
+  return !!row;
+});
+
 /**
  * Admins live in the platform_admins table, matched by Hexclave user id or by a
  * verified primary email. Cached per request.
  */
-export const isUserAdmin = cache(
-  async (user: { id: string; primaryEmail?: string | null; primaryEmailVerified?: boolean }): Promise<boolean> => {
-    const db = getDb();
-    const email = user.primaryEmailVerified ? user.primaryEmail?.toLowerCase() : undefined;
-    const [row] = await db
-      .select({ id: platformAdmins.id })
-      .from(platformAdmins)
-      .where(email ? or(eq(platformAdmins.userId, user.id), eq(platformAdmins.email, email)) : eq(platformAdmins.userId, user.id))
-      .limit(1);
-    return !!row;
-  }
-);
+export function isUserAdmin(user: { id: string; primaryEmail?: string | null; primaryEmailVerified?: boolean }): Promise<boolean> {
+  const email = user.primaryEmailVerified ? user.primaryEmail?.toLowerCase() : undefined;
+  return isAdminByIdOrEmail(user.id, email);
+}
 
 /** Staff-facing pages send signed-out people to the merchant sign-in, not the household one. */
 export const requireStaffUser = cache(async (next: string) => {

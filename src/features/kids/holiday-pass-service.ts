@@ -4,12 +4,17 @@ import { getDb } from "@/db";
 import {
   kidsPassPurchases,
   kidsPassRedemptions,
+  kidsServiceBookings,
+  kidsWorkshopEnrollments,
 } from "@/db/schema";
 import {
   calculateRemainingCredits,
   calculateReversedCredits,
   canRedeemPass,
 } from "@/core/kids/pass-redemption";
+
+/** A rule the guardian can act on; its message is safe to show. */
+class PassRuleError extends Error {}
 
 /**
  * Pass purchases are closed until passes are wired to verified online payment.
@@ -34,11 +39,12 @@ export async function redeemPassCredit(input: {
   const db = getDb();
   const creditsNeeded = input.creditsToDeduct ?? 1;
 
-  // Check idempotency first
+  // Check idempotency first, only among this guardian's own passes.
   const [already] = await db
-    .select()
+    .select({ id: kidsPassRedemptions.id, status: kidsPassRedemptions.status })
     .from(kidsPassRedemptions)
-    .where(eq(kidsPassRedemptions.idempotencyKey, input.clientKey))
+    .innerJoin(kidsPassPurchases, eq(kidsPassRedemptions.purchaseId, kidsPassPurchases.id))
+    .where(and(eq(kidsPassRedemptions.idempotencyKey, input.clientKey), eq(kidsPassPurchases.guardianUserId, input.guardianUserId)))
     .limit(1);
 
   if (already) {
@@ -61,12 +67,30 @@ export async function redeemPassCredit(input: {
         .limit(1);
 
       if (!purchase) {
-        throw new Error("Pass purchase not found or does not belong to you.");
+        throw new PassRuleError("Pass purchase not found or does not belong to you.");
+      }
+
+      // The session a credit pays for must also be this guardian's.
+      if (input.bookingId) {
+        const [own] = await tx
+          .select({ id: kidsServiceBookings.id })
+          .from(kidsServiceBookings)
+          .where(and(eq(kidsServiceBookings.id, input.bookingId), eq(kidsServiceBookings.guardianUserId, input.guardianUserId)))
+          .limit(1);
+        if (!own) throw new PassRuleError("Booking not found.");
+      }
+      if (input.enrollmentId) {
+        const [own] = await tx
+          .select({ id: kidsWorkshopEnrollments.id })
+          .from(kidsWorkshopEnrollments)
+          .where(and(eq(kidsWorkshopEnrollments.id, input.enrollmentId), eq(kidsWorkshopEnrollments.guardianUserId, input.guardianUserId)))
+          .limit(1);
+        if (!own) throw new PassRuleError("Workshop enrollment not found.");
       }
 
       const eligibility = canRedeemPass(purchase.remainingCredits, purchase.validUntil, creditsNeeded);
       if (!eligibility.canRedeem) {
-        throw new Error(eligibility.reason || "Cannot redeem pass credits.");
+        throw new PassRuleError(eligibility.reason || "Cannot redeem pass credits.");
       }
 
       const newRemaining = calculateRemainingCredits(purchase.remainingCredits, creditsNeeded);
@@ -93,8 +117,9 @@ export async function redeemPassCredit(input: {
 
     return { ok: true as const, redemptionId: result!.id };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to redeem credits.";
-    return { ok: false as const, error: msg };
+    if (err instanceof PassRuleError) return { ok: false as const, error: err.message };
+    console.error("redeemPassCredit failed", err);
+    return { ok: false as const, error: "Could not use the pass credit. Please try again." };
   }
 }
 
@@ -127,7 +152,7 @@ export async function reversePassCredit(input: {
         .for("update")
         .limit(1);
 
-      if (!purchase) return;
+      if (!purchase) throw new PassRuleError("Pass purchase not found or does not belong to you.");
 
       const newRemaining = calculateReversedCredits(
         purchase.remainingCredits,
@@ -148,7 +173,8 @@ export async function reversePassCredit(input: {
 
     return { ok: true as const };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to reverse redemption.";
-    return { ok: false as const, error: msg };
+    if (err instanceof PassRuleError) return { ok: false as const, error: err.message };
+    console.error("reversePassCredit failed", err);
+    return { ok: false as const, error: "Could not return the pass credit. Please try again." };
   }
 }

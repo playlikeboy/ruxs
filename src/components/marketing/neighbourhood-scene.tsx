@@ -8,7 +8,7 @@ export function NeighbourhoodScene({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-[24px] border border-line/80 bg-[#FEF1D3] shadow-[0_2px_12px_rgba(0,0,0,0.04)]",
+        "overflow-hidden rounded-[24px] border border-line/80 bg-brand-butter",
         className
       )}
     >
@@ -19,7 +19,7 @@ export function NeighbourhoodScene({ className }: { className?: string }) {
           alt="Illustration of a neighbourhood street with homes, local shops, and a person riding a bicycle"
           width={1024}
           height={330}
-          className="block h-auto w-full object-cover"
+          className="block h-auto w-full"
           loading="lazy"
           decoding="async"
         />

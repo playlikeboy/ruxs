@@ -4,7 +4,9 @@ import { UiIcon } from "@/components/ui/app-icon";
 
 import { useState } from "react";
 import { Plus, User, Trash2, Edit2, ShieldAlert } from "lucide-react";
+import { cn } from "@/components/ui/cn";
 import { saveChildAction, deleteChildAction } from "../actions";
+import { kidsPrimaryButton, kidsSecondaryButton } from "./kids-ui";
 import { STANDARD_SCHOOL_CLASSES, calculateAge } from "@/core/kids/age-eligibility";
 
 interface ChildItem {
@@ -65,7 +67,6 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
 
       if (!res.ok) {
         setError(res.error);
-        setIsPending(false);
         return;
       }
 
@@ -99,7 +100,7 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
   };
 
   const handleDelete = async (childId: string) => {
-    if (!confirm("Are you sure you want to remove this child profile?")) return;
+    if (!confirm("Remove this child profile?")) return;
     setIsPending(true);
     setError(null);
 
@@ -120,8 +121,8 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
   return (
     <div className="space-y-4">
       {error && (
-        <div className="flex items-center gap-2 rounded-[20px] border border-red-500 bg-red-50 p-3 text-xs font-bold text-red-900">
-          <ShieldAlert className="h-4 w-4 shrink-0 text-red-600" />
+        <div role="alert" className="flex items-center gap-2 rounded-[16px] border border-bad/25 bg-bad/5 p-3 text-sm font-medium text-bad">
+          <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
@@ -129,10 +130,10 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
       {/* Children list */}
       <div className="space-y-2.5">
         {children.length === 0 && !isAdding && (
-          <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-6 text-center shadow-sm">
+          <div className="rounded-[20px] border border-dashed border-kids-ink/20 bg-white p-6 text-center">
             <UiIcon name="age" className="h-6 w-6 text-accent" />
-            <p className="mt-2 text-sm font-semibold text-kids-ink">No child profiles yet</p>
-            <p className="mt-1 text-xs text-kids-ink/60">
+            <p className="mt-2 text-base font-semibold text-kids-ink">No child profiles yet</p>
+            <p className="mt-1 text-sm text-kids-ink/65">
               Add your child once to quickly book classes, workshops, and manage age-appropriate activities.
             </p>
           </div>
@@ -146,16 +147,16 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
               className="flex items-center justify-between rounded-[20px] border border-kids-ink/10 bg-white p-3.5"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-kids-ink/20 bg-amber-200 text-lg shadow-sm">
-                  <User className="h-5 w-5 text-kids-ink" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-kids-sunny/70">
+                  <User className="h-5 w-5 text-kids-ink" aria-hidden="true" />
                 </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-kids-ink">{child.displayName}</h4>
-                  <p className="text-xs font-semibold text-kids-ink/60">
-                    {age > 0 ? `Age ${age}` : ""} {child.schoolClass ? `· ${child.schoolClass}` : ""}
+                <div className="min-w-0">
+                  <h3 className="truncate text-base font-semibold text-kids-ink">{child.displayName}</h3>
+                  <p className="text-sm text-kids-ink/65">
+                    {[age > 0 ? `Age ${age}` : null, child.schoolClass].filter(Boolean).join(" · ")}
                   </p>
                   {child.activityNotes && (
-                    <p className="text-[11px] font-medium text-slate-400 line-clamp-1">
+                    <p className="line-clamp-1 text-xs text-kids-ink/60">
                       {child.activityNotes}
                     </p>
                   )}
@@ -167,17 +168,19 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
                   type="button"
                   onClick={() => startEdit(child)}
                   aria-label={`Edit ${child.displayName}`}
-                  className="rounded-lg p-2 text-kids-ink/60 hover:bg-slate-100 hover:text-kids-ink"
+                  disabled={isPending}
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-kids-ink/65 hover:bg-kids-ink/5 hover:text-kids-ink disabled:opacity-50"
                 >
-                  <Edit2 className="h-4 w-4" />
+                  <Edit2 className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDelete(child.id)}
-                  aria-label={`Delete ${child.displayName}`}
-                  className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                  aria-label={`Remove ${child.displayName}`}
+                  disabled={isPending}
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-kids-ink/65 hover:bg-bad/5 hover:text-bad disabled:opacity-50"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -189,31 +192,36 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
       {isAdding ? (
         <form
           onSubmit={handleSave}
-          className="rounded-[20px] border border-kids-ink/10 bg-amber-50/70 p-4 space-y-3"
+          className="space-y-3 rounded-[20px] border border-kids-ink/10 bg-white p-4"
         >
-          <h3 className="text-sm font-semibold text-kids-ink">
-            {editingChild ? "Edit Child Profile" : "Add Child Profile"}
-          </h3>
+          <h2 className="text-base font-semibold text-kids-ink">
+            {editingChild ? "Edit child profile" : "Add a child"}
+          </h2>
 
           <div>
-            <label className="block text-[11px] font-bold text-kids-ink/80">Display Name / Nickname</label>
+            <label htmlFor="child-name" className="block text-sm font-semibold text-kids-ink">Name or nickname</label>
             <input
+              id="child-name"
               type="text"
               required
+              minLength={2}
+              maxLength={50}
+              autoComplete="off"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="e.g. Aarav, Ananya"
-              className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-3 py-2 text-xs font-bold text-kids-ink focus:outline-none focus:ring-2 focus:ring-amber-400"
+              placeholder="e.g. Aarav"
+              className="mt-1 w-full rounded-[12px] border border-kids-ink/15 bg-white px-3 py-2 text-base text-kids-ink placeholder:text-kids-ink/45"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[11px] font-bold text-kids-ink/80">Birth Year</label>
+              <label htmlFor="child-birth-year" className="block text-sm font-semibold text-kids-ink">Birth year</label>
               <select
+                id="child-birth-year"
                 value={birthYear}
                 onChange={(e) => setBirthYear(parseInt(e.target.value, 10))}
-                className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-2.5 py-2 text-xs font-bold text-kids-ink focus:outline-none"
+                className="mt-1 w-full rounded-[12px] border border-kids-ink/15 bg-white px-3 py-2 text-base text-kids-ink placeholder:text-kids-ink/45"
               >
                 {Array.from({ length: 14 }, (_, i) => new Date().getFullYear() - 3 - i).map((yr) => (
                   <option key={yr} value={yr}>
@@ -224,11 +232,12 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-kids-ink/80">School Class</label>
+              <label htmlFor="child-class" className="block text-sm font-semibold text-kids-ink">School class</label>
               <select
+                id="child-class"
                 value={schoolClass}
                 onChange={(e) => setSchoolClass(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-2.5 py-2 text-xs font-bold text-kids-ink focus:outline-none"
+                className="mt-1 w-full rounded-[12px] border border-kids-ink/15 bg-white px-3 py-2 text-base text-kids-ink placeholder:text-kids-ink/45"
               >
                 {STANDARD_SCHOOL_CLASSES.map((cls) => (
                   <option key={cls} value={cls}>
@@ -240,15 +249,17 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-kids-ink/80">
-              Activity Notes (Allergies, preferences)
+            <label htmlFor="child-notes" className="block text-sm font-semibold text-kids-ink">
+              Notes for teachers (optional)
             </label>
             <input
+              id="child-notes"
               type="text"
+              maxLength={500}
               value={activityNotes}
               onChange={(e) => setActivityNotes(e.target.value)}
-              placeholder="e.g. Loves building blocks, allergic to peanuts"
-              className="mt-1 w-full rounded-xl border border-kids-ink/10 bg-white px-3 py-2 text-xs font-semibold text-kids-ink focus:outline-none"
+              placeholder="Allergies, interests, anything a teacher should know"
+              className="mt-1 w-full rounded-[12px] border border-kids-ink/15 bg-white px-3 py-2 text-base text-kids-ink placeholder:text-kids-ink/45"
             />
           </div>
 
@@ -256,16 +267,16 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
             <button
               type="button"
               onClick={resetForm}
-              className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-bold text-kids-ink/80 hover:bg-slate-100"
+              className={kidsSecondaryButton}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="rounded-full border border-kids-ink/10 bg-kids-sunny px-4 py-1.5 text-xs font-semibold text-kids-ink active:scale-[0.98]"
+              className={cn(kidsPrimaryButton, "disabled:opacity-50")}
             >
-              {isPending ? "Saving..." : editingChild ? "Update Child" : "Save Child"}
+              {isPending ? "Saving…" : editingChild ? "Save changes" : "Add child"}
             </button>
           </div>
         </form>
@@ -273,10 +284,10 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildIte
         <button
           type="button"
           onClick={() => setIsAdding(true)}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-[20px] border border-dashed border-kids-ink/20 bg-amber-50 p-3 text-xs font-semibold text-kids-ink hover:bg-amber-100 transition"
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[20px] border border-dashed border-kids-ink/25 bg-white px-3 text-sm font-semibold text-kids-ink transition-colors hover:border-kids-ink/45"
         >
-          <Plus className="h-4 w-4" />
-          <span>Add Another Child Profile</span>
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          <span>{children.length === 0 ? "Add a child" : "Add another child"}</span>
         </button>
       )}
     </div>

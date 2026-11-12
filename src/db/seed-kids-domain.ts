@@ -262,22 +262,20 @@ async function seedKidsDomain() {
 
   for (const ws of WORKSHOPS) {
     const { sessions, ...wsData } = ws;
-    let [wsRow] = await scriptDb
+    const [wsRow] = await scriptDb
       .select({ id: kidsWorkshops.id })
       .from(kidsWorkshops)
       .where(and(eq(kidsWorkshops.vendorId, ws.vendorId), eq(kidsWorkshops.slug, ws.slug)))
       .limit(1);
 
     if (!wsRow) {
-      [wsRow] = await scriptDb.insert(kidsWorkshops).values(wsData).returning({ id: kidsWorkshops.id });
+      // Workshop and its sessions together, so a re-run never finds a workshop with no sessions.
+      await scriptDb.transaction(async (tx) => {
+        const [inserted] = await tx.insert(kidsWorkshops).values(wsData).returning({ id: kidsWorkshops.id });
+        if (!inserted) throw new Error(`Workshop insert returned no row: ${ws.slug}`);
+        await tx.insert(kidsWorkshopSessions).values(sessions.map((s) => ({ workshopId: inserted.id, ...s })));
+      });
       console.log("✓ Workshop:", ws.title);
-
-      for (const s of sessions) {
-        await scriptDb.insert(kidsWorkshopSessions).values({
-          workshopId: wsRow!.id,
-          ...s,
-        });
-      }
     }
   }
 
@@ -286,8 +284,8 @@ async function seedKidsDomain() {
 
 seedKidsDomain()
   .then(() => scriptPool.end())
-  .catch((err) => {
+  .catch(async (err) => {
     console.error(err);
-    scriptPool.end();
+    await scriptPool.end();
     process.exit(1);
   });

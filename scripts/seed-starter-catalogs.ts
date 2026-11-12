@@ -20,15 +20,20 @@ const all = await scriptDb.select({ id: vendors.id, slug: vendors.slug, vendorTy
 for (const v of all) {
   const type = toVendorType(v.vendorType, v.businessType);
   const kind = starterCatalog(type)?.kind;
-  const table = kind === "products" ? products : kind === "services" ? services : kidsServices;
-  const [{ n }] = await scriptDb.select({ n: count() }).from(table).where(and(eq(table.vendorId, v.id), isNull(table.archivedAt))) as [{ n: number }];
-  const [{ hours }] = await scriptDb.select({ hours: count() }).from(availabilityRules).where(eq(availabilityRules.vendorId, v.id)) as [{ hours: number }];
-  const needsHours = VENDOR_TYPE_INFO[type].fulfilment === "booking" && hours === 0;
-  if (n > 0 && !needsHours) continue;
-  console.log(`${v.slug} (${type}): ${n === 0 ? "add starter menu" : ""}${n === 0 && needsHours ? " + " : ""}${needsHours ? "add default hours" : ""}`);
+  // A type with no starter catalogue never "needs" a menu; don't count it against an unrelated table.
+  let needsMenu = false;
+  if (kind) {
+    const table = kind === "products" ? products : kind === "services" ? services : kidsServices;
+    const [items] = await scriptDb.select({ n: count() }).from(table).where(and(eq(table.vendorId, v.id), isNull(table.archivedAt)));
+    needsMenu = (items?.n ?? 0) === 0;
+  }
+  const [rules] = await scriptDb.select({ n: count() }).from(availabilityRules).where(eq(availabilityRules.vendorId, v.id));
+  const needsHours = VENDOR_TYPE_INFO[type].fulfilment === "booking" && (rules?.n ?? 0) === 0;
+  if (!needsMenu && !needsHours) continue;
+  console.log(`${v.slug} (${type}): ${[needsMenu && "add starter menu", needsHours && "add default hours"].filter(Boolean).join(" + ")}`);
   if (!execute) continue;
   await scriptDb.transaction(async (tx) => {
-    if (n === 0) await seedStarterCatalog(tx, { id: v.id, vendorType: type, categoryId: v.categoryId });
+    if (needsMenu) await seedStarterCatalog(tx, { id: v.id, vendorType: type, categoryId: v.categoryId });
     if (needsHours) await tx.insert(availabilityRules).values(DEFAULT_WEEK.map((weekday) => ({ vendorId: v.id, weekday, startTime: "10:00", endTime: "19:00" })));
   });
 }

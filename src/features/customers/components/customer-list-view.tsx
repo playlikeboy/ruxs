@@ -40,11 +40,12 @@ export function CustomerListView({
       {/* Search Input */}
       <div>
         <input
-          type="text"
-          placeholder="Search by name, flat, society or phone..."
+          type="search"
+          aria-label="Search households"
+          placeholder="Search by name, flat, society or phone…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full px-3.5 py-2.5 text-sm bg-surface border border-line rounded-[10px] text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-accent"
+          className="w-full px-3.5 py-2.5 text-sm bg-surface border border-line rounded-control text-ink placeholder:text-muted focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
         />
       </div>
 
@@ -61,30 +62,30 @@ export function CustomerListView({
           <Link
             key={c.id}
             href={`/merchant-panel/${slug}/customers/${c.id}`}
-            className="block p-3.5 bg-surface border border-line rounded-[12px] hover:border-accent active:scale-[0.99] transition-all shadow-xs"
+            className="block rounded-2xl border border-line bg-surface p-3.5 transition hover:border-accent active:scale-[0.99]"
           >
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-sm font-semibold text-ink">{c.name}</h3>
-                  <span className="text-xs font-mono tabular-nums text-muted">
+                  <span className="text-xs tabular-nums text-muted">
                     Flat {c.flat}
                   </span>
                 </div>
                 <div className="text-xs text-muted mt-0.5">
                   {c.society} {c.tower ? `• Tower ${c.tower}` : ""}
                 </div>
-                <div className="text-xs text-muted mt-0.5 font-mono">
+                <div className="mt-0.5 text-xs tabular-nums text-muted">
                   {c.phone}
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-xs text-muted">Khata Balance</div>
+                <div className="text-xs text-muted">Khata balance</div>
                 <div
-                  className={`text-sm font-bold font-mono tabular-nums mt-0.5 ${
+                  className={`mt-0.5 text-sm font-bold tabular-nums ${
                     c.balancePaise > 0
-                      ? "text-[#B42318]"
+                      ? "text-bad"
                       : c.balancePaise < 0
                         ? "text-good"
                         : "text-ink"
@@ -98,7 +99,7 @@ export function CustomerListView({
         ))}
 
         {filtered.length === 0 && (
-          <div className="p-8 text-center text-xs text-muted bg-surface border border-line rounded-[12px]">
+          <div className="rounded-2xl border border-line bg-surface p-8 text-center text-sm text-muted">
             No households match &quot;{query}&quot;.
           </div>
         )}

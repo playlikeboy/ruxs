@@ -74,8 +74,8 @@ export function MerchantAppCard({ vapidPublicKey, testPath, variant = "full" }: 
       <div className="flex items-center justify-between gap-3">
         <h2 id="merchant-app-title" className="text-base font-semibold text-ink">Your shop on your phone</h2>
         {variant === "nudge" && (
-          <button type="button" onClick={dismiss} aria-label="Hide" className="flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-bg hover:text-ink">
-            <X className="h-4 w-4" />
+          <button type="button" onClick={dismiss} aria-label="Hide phone setup" className="flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-bg hover:text-ink">
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -95,7 +95,7 @@ export function MerchantAppCard({ vapidPublicKey, testPath, variant = "full" }: 
           done={installed}
         >
           {installState === "ready" && (
-            <button type="button" onClick={() => void install()} className={cn(button, "bg-ink text-bg hover:bg-[#383D36]")}>
+            <button type="button" onClick={() => void install()} className={cn(button, "bg-ink text-bg hover:bg-ink/90")}>
               Install
             </button>
           )}
@@ -110,7 +110,7 @@ export function MerchantAppCard({ vapidPublicKey, testPath, variant = "full" }: 
                 else toast.success("Alerts are on for this phone");
               })}
               disabled={pending}
-              className={cn(button, "bg-accent text-white hover:bg-[#A53F22]")}
+              className={cn(button, "bg-accent text-white hover:bg-accent/90")}
             >
               Turn on
             </button>
@@ -121,14 +121,21 @@ export function MerchantAppCard({ vapidPublicKey, testPath, variant = "full" }: 
                 type="button"
                 disabled={pending}
                 onClick={() => startTransition(async () => {
-                  await sendMyTestAlert({ path: testPath });
-                  toast.success("Test alert sent. Check your notifications and email.");
+                  try {
+                    await sendMyTestAlert({ path: testPath });
+                    toast.success("Test alert sent. Check your notifications and email.");
+                  } catch {
+                    toast.error("Couldn't send a test alert. Please try again.");
+                  }
                 })}
                 className={cn(button, "border border-line bg-bg text-ink hover:border-ink/30")}
               >
                 Send test
               </button>
-              <button type="button" disabled={pending} onClick={() => startTransition(() => push.disable())} className={cn(button, "text-muted hover:text-ink")}>
+              <button type="button" disabled={pending} onClick={() => startTransition(async () => {
+                const error = await push.disable();
+                if (error) toast.error(error);
+              })} className={cn(button, "text-muted hover:text-ink")}>
                 Turn off
               </button>
             </div>

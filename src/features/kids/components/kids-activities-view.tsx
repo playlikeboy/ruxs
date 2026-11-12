@@ -81,7 +81,7 @@ export function KidsActivitiesView({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Dance, chess, robotics, art…"
-            className="min-h-12 w-full rounded-full border border-kids-ink/15 bg-white pl-10 pr-3 text-base text-kids-ink placeholder:text-kids-ink/40 focus:border-kids-ink focus:outline-none"
+            className="min-h-12 w-full rounded-full border border-kids-ink/15 bg-white pl-10 pr-3 text-base text-kids-ink placeholder:text-kids-ink/50 focus:border-kids-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-kids-ink/30"
           />
         </label>
         <button
@@ -129,12 +129,12 @@ export function KidsActivitiesView({
         </span>
         {ageBracket !== "all" && (
           <button type="button" onClick={() => setAgeBracket("all")} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-kids-mint/50 px-3 text-xs font-medium text-kids-ink">
-            {ageLabel} <X className="h-3 w-3" aria-label="Remove" />
+            {ageLabel} <X className="h-3 w-3" aria-hidden="true" /><span className="sr-only">(remove filter)</span>
           </button>
         )}
         {format !== "all" && (
           <button type="button" onClick={() => setFormat("all")} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-kids-mint/50 px-3 text-xs font-medium text-kids-ink">
-            {KIDS_FORMATS[format].label} <X className="h-3 w-3" aria-label="Remove" />
+            {KIDS_FORMATS[format].label} <X className="h-3 w-3" aria-hidden="true" /><span className="sr-only">(remove filter)</span>
           </button>
         )}
         {anyFilter && (

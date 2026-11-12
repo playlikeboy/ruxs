@@ -13,11 +13,14 @@ const DEFAULT_SCHEDULE = [
   { day: "Sunday", lunch: "Chef's Special Thali: Paneer Butter Masala, Dal Makhani, Naan, Kheer", dinner: "Light Dinner: Dal Tadka, Seasonal Sabzi, Phulkas" },
 ];
 
+/** Today's weekday in IST, so the server render and the browser agree (no hydration mismatch). */
+function todayWeekdayIST(): string {
+  return new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "Asia/Kolkata" }).format(new Date());
+}
+
 export function WeeklyMenuSchedule() {
-  const [activeDay, setActiveDay] = useState(() => {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    return days[new Date().getDay()] || "Monday";
-  });
+  const [today] = useState(todayWeekdayIST);
+  const [activeDay, setActiveDay] = useState(today);
 
   const current = DEFAULT_SCHEDULE.find((s) => s.day === activeDay) ?? DEFAULT_SCHEDULE[0]!;
 
@@ -25,11 +28,11 @@ export function WeeklyMenuSchedule() {
     <div className="rounded-[18px] border border-line bg-surface p-5 shadow-2xs space-y-4">
       <div className="flex items-center justify-between border-b border-line pb-3">
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-accent" />
+          <Calendar className="h-4 w-4 text-accent" aria-hidden="true" />
           <h3 className="text-sm font-bold text-ink">Weekly Rotating Menu Planner</h3>
         </div>
         <span className="text-xs font-semibold text-accent font-mono bg-peach/80 px-2.5 py-0.5 rounded-full">
-          Today: {activeDay}
+          {activeDay === today ? `Today: ${activeDay}` : activeDay}
         </span>
       </div>
 
@@ -41,6 +44,8 @@ export function WeeklyMenuSchedule() {
             <button
               key={s.day}
               type="button"
+              aria-pressed={isSelected}
+              aria-label={s.day}
               onClick={() => setActiveDay(s.day)}
               className={
                 "shrink-0 rounded-[10px] px-3 py-1.5 text-xs font-semibold transition " +
@@ -60,7 +65,7 @@ export function WeeklyMenuSchedule() {
         <div className="rounded-[12px] bg-bg/80 p-3 border border-line/60 space-y-1">
           <div className="flex items-center justify-between text-muted">
             <span className="font-bold uppercase tracking-wider text-[10px] text-amber-700">Lunch Thali</span>
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
           </div>
           <p className="font-medium text-ink leading-relaxed mt-1">
             {current.lunch}
@@ -70,7 +75,7 @@ export function WeeklyMenuSchedule() {
         <div className="rounded-[12px] bg-bg/80 p-3 border border-line/60 space-y-1">
           <div className="flex items-center justify-between text-muted">
             <span className="font-bold uppercase tracking-wider text-[10px] text-purple-700">Dinner Thali</span>
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
           </div>
           <p className="font-medium text-ink leading-relaxed mt-1">
             {current.dinner}

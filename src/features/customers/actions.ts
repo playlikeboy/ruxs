@@ -5,8 +5,9 @@ import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db";
 import { customers } from "@/db/schema";
-import { requireVendorAccess } from "@/lib/auth/session";
+import { hashToken, requireVendorAccess } from "@/lib/auth/session";
 import { importCustomersSchema, resetCustomerLinkSchema } from "./schemas";
+import { APP_URL } from "@/lib/app-url";
 
 function normalizeIndianPhone(input: string): string | null {
   const cleaned = input.replace(/[\s\-\(\)\.]/g, "");
@@ -22,9 +23,6 @@ function normalizeIndianPhone(input: string): string | null {
   return null;
 }
 
-function hashToken(raw: string): string {
-  return crypto.createHash("sha256").update(raw).digest("hex");
-}
 
 export interface ImportResultRow {
   name: string;
@@ -37,6 +35,8 @@ export interface ImportResultRow {
   error?: string;
 }
 
+const MAX_IMPORT_LINES = 500;
+
 export async function importCustomers(input: unknown) {
   const parsed = importCustomersSchema.safeParse(input);
   if (!parsed.success) {
@@ -46,10 +46,19 @@ export async function importCustomers(input: unknown) {
   const { slug, rawText } = parsed.data;
   const access = await requireVendorAccess(slug, ["owner", "staff"]);
   const db = getDb();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in";
 
   const lines = rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length > MAX_IMPORT_LINES) {
+    return { ok: false, error: `Import up to ${MAX_IMPORT_LINES} customers at a time` };
+  }
   const results: ImportResultRow[] = [];
+
+  // One read for the duplicate check instead of one query per line.
+  const known = await db
+    .select({ phone: customers.phone })
+    .from(customers)
+    .where(eq(customers.vendorId, access.vendorId));
+  const takenPhones = new Set(known.map((c) => c.phone));
 
   for (let idx = 0; idx < lines.length; idx++) {
     const line = lines[idx]!.trim();
@@ -82,6 +91,11 @@ export async function importCustomers(input: unknown) {
       continue;
     }
 
+    if (name.length > 80 || society!.length > 120 || tower!.length > 40 || floor!.length > 20 || flat!.length > 40) {
+      results.push({ name, phone: rawPhone!, society: society!, tower: tower!, floor: floor!, flat: flat!, error: "A field is too long" });
+      continue;
+    }
+
     if (!phone) {
       results.push({
         name: name!,
@@ -95,14 +109,7 @@ export async function importCustomers(input: unknown) {
       continue;
     }
 
-    // Check duplicate phone for this vendor
-    const [existing] = await db
-      .select({ id: customers.id })
-      .from(customers)
-      .where(and(eq(customers.vendorId, access.vendorId), eq(customers.phone, phone)))
-      .limit(1);
-
-    if (existing) {
+    if (takenPhones.has(phone)) {
       results.push({
         name: name!,
         phone,
@@ -130,6 +137,7 @@ export async function importCustomers(input: unknown) {
         flat: flat!,
         linkTokenHash,
       });
+      takenPhones.add(phone);
 
       results.push({
         name: name!,
@@ -138,11 +146,12 @@ export async function importCustomers(input: unknown) {
         tower: tower!,
         floor: floor!,
         flat: flat!,
-        rawLink: `${appUrl}/c/${rawToken}`,
+        rawLink: `${APP_URL}/c/${rawToken}`,
       });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Insert failed";
-      results.push({ name: name!, phone, society: society!, tower: tower!, floor: floor!, flat: flat!, error: msg });
+      // Database errors stay in the server log; the merchant sees a plain reason.
+      console.error("importCustomers insert failed:", err);
+      results.push({ name: name!, phone, society: society!, tower: tower!, floor: floor!, flat: flat!, error: "Could not add this customer" });
     }
   }
 
@@ -160,7 +169,6 @@ export async function resetCustomerLink(input: unknown) {
   const { slug, customerId } = parsed.data;
   const access = await requireVendorAccess(slug, ["owner", "staff"]);
   const db = getDb();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in";
 
   const rawToken = crypto.randomBytes(32).toString("hex");
   const linkTokenHash = hashToken(rawToken);
@@ -177,9 +185,9 @@ export async function resetCustomerLink(input: unknown) {
     }
 
     revalidatePath(`/merchant-panel/${slug}/customers/${customerId}`);
-    return { ok: true, rawLink: `${appUrl}/c/${rawToken}` };
+    return { ok: true, rawLink: `${APP_URL}/c/${rawToken}` };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Update failed";
-    return { ok: false, error: msg };
+    console.error("resetCustomerLink failed:", err);
+    return { ok: false, error: "Could not reset the link. Please try again." };
   }
 }

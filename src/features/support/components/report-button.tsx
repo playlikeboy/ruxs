@@ -19,11 +19,11 @@ export function ReportReviewButton({
       reviewId={reviewId}
       vendorId={vendorId}
       vendorName={vendorName}
-      modalTitle="Report Inappropriate Review"
+      modalTitle="Report this review"
       triggerVariant="compact"
       triggerText="Report"
-      triggerIcon={<Flag className="h-3 w-3 text-neutral-400 group-hover:text-rose-500" aria-hidden="true" />}
-      triggerClassName="group inline-flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-rose-600 transition-colors"
+      triggerIcon={<Flag className="h-3 w-3" aria-hidden="true" />}
+      triggerClassName="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted transition-colors hover:text-bad"
     />
   );
 }
@@ -41,11 +41,11 @@ export function ReportStoreButton({
       lockCategory={true}
       vendorId={vendorId}
       vendorName={vendorName}
-      modalTitle={`Report Store: ${vendorName}`}
+      modalTitle={`Report ${vendorName}`}
       triggerVariant="compact"
       triggerText="Report store"
-      triggerIcon={<Flag className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />}
-      triggerClassName="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-rose-600 transition-colors"
+      triggerIcon={<Flag className="h-3.5 w-3.5" aria-hidden="true" />}
+      triggerClassName="inline-flex min-h-10 items-center gap-1.5 text-xs text-muted transition-colors hover:text-bad"
     />
   );
 }
@@ -71,7 +71,7 @@ export function RaiseDisputeButton({
       orderId={orderId}
       vendorId={vendorId}
       vendorName={vendorName}
-      modalTitle="Raise Order Dispute / Issue"
+      modalTitle="Report a problem with this order"
       triggerVariant={variant}
       triggerText={label}
       triggerClassName={className}

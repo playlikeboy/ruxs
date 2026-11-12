@@ -1,11 +1,10 @@
 "use client";
 
-import { AppIcon } from "@/components/ui/app-icon";
-
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CalendarCheck, CalendarX2, Check, Clock, Lock, Power } from "lucide-react";
+import { CalendarCheck, CalendarX2, Clock, Lock, Power } from "lucide-react";
+import { AppIcon } from "@/components/ui/app-icon";
 import { setMyDay, skipAllToday } from "@/features/consumer/actions";
 
 export interface ScheduledTodayPlan {
@@ -33,9 +32,9 @@ export function TodayPlansOffControl({
 
   if (items.length === 0) {
     return (
-      <div className="mx-4 mt-4 rounded-2xl border border-black/5 bg-white p-4 text-xs text-neutral-500 shadow-xs">
-        <p className="flex items-center gap-1.5 font-medium text-neutral-700">
-          <CalendarCheck className="h-4 w-4 text-good" /> No deliveries scheduled for today
+      <div className="mx-4 mt-4 rounded-2xl border border-line bg-surface p-4 text-xs text-muted">
+        <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+          <CalendarCheck className="h-4 w-4 text-good" aria-hidden="true" /> No deliveries scheduled for today
         </p>
         <p className="mt-0.5">Your active subscriptions deliver on their scheduled days.</p>
       </div>
@@ -66,8 +65,8 @@ export function TodayPlansOffControl({
       }
       toast.success(
         item.skipped
-          ? `${item.productName} is back ON for today!`
-          : `Turned OFF for today. ${item.vendorName} has been notified.`
+          ? `${item.productName} is back on for today`
+          : `Skipped today. ${item.vendorName} has been told.`
       );
       router.refresh();
     });
@@ -89,24 +88,28 @@ export function TodayPlansOffControl({
         toast.error(res.error);
         return;
       }
-      toast.success(`You're off today! Skipped ${res.skipped} deliveries.`);
+      toast.success(
+        res.skipped
+          ? `Skipped ${res.skipped} for today. Stores have been told.` + (res.locked ? ` ${res.locked} already past cutoff.` : "")
+          : "Nothing left to skip today"
+      );
       router.refresh();
     });
   };
 
   return (
-    <section className="mx-4 mt-4 overflow-hidden rounded-3xl border border-black/10 bg-white p-4.5 shadow-sm">
-      <div className="flex items-start justify-between gap-3 border-b border-black/5 pb-3.5">
+    <section className="mx-4 mt-4 overflow-hidden rounded-2xl border border-line bg-surface p-4">
+      <div className="flex items-start justify-between gap-3 border-b border-line pb-3">
         <div>
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-peach text-accent">
-              <Power className="h-4 w-4" />
+              <Power className="h-4 w-4" aria-hidden="true" />
             </span>
             <div>
-              <h2 className="text-[15px] font-bold text-ink">Today&apos;s Deliveries &amp; Skip Controls</h2>
-              <p className="text-xs text-neutral-500">
+              <h2 className="text-[15px] font-bold text-ink">Today&apos;s deliveries</h2>
+              <p className="text-xs text-muted">
                 {allSkipped
-                  ? "You are OFF for today. No deliveries coming."
+                  ? "You're off today. No deliveries."
                   : `${receivingCount} of ${items.length} coming today`}
               </p>
             </div>
@@ -118,14 +121,14 @@ export function TodayPlansOffControl({
             type="button"
             disabled={pending}
             onClick={handleSkipAll}
-            className="inline-flex h-8 items-center gap-1 rounded-xl bg-ink px-3 text-xs font-semibold text-white shadow-xs hover:bg-neutral-800 active:scale-95 disabled:opacity-50"
+            className="inline-flex h-10 shrink-0 items-center gap-1 rounded-xl bg-ink px-3 text-xs font-semibold text-white hover:bg-ink/90 active:scale-95 disabled:opacity-50"
           >
-            <CalendarX2 className="h-3.5 w-3.5" /> Skip all today
+            <CalendarX2 className="h-3.5 w-3.5" aria-hidden="true" /> Skip all today
           </button>
         )}
       </div>
 
-      <div className="mt-3.5 divide-y divide-black/5">
+      <div className="mt-3 divide-y divide-line">
         {items.map((item) => {
           const isBusy = busyId === item.subscriptionId;
 
@@ -142,11 +145,11 @@ export function TodayPlansOffControl({
                   <p className="truncate text-sm font-semibold text-ink">
                     {item.productName}
                   </p>
-                  <p className="truncate text-xs text-neutral-500">
+                  <p className="truncate text-xs text-muted">
                     {item.vendorName} · {item.qty} {item.unit}
                   </p>
-                  <p className="mt-0.5 flex items-center gap-1 text-[11px] text-neutral-400">
-                    <Clock className="h-3 w-3" />
+                  <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+                    <Clock className="h-3 w-3" aria-hidden="true" />
                     Cutoff: {item.cutoffAt} IST
                   </p>
                 </div>
@@ -154,27 +157,29 @@ export function TodayPlansOffControl({
 
               <div className="flex items-center gap-2 shrink-0">
                 {item.locked ? (
-                  <span className="flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-400">
-                    <Lock className="h-3 w-3" /> Locked
+                  <span className="flex items-center gap-1 rounded-full bg-app-canvas px-2.5 py-1 text-xs font-medium text-muted">
+                    <Lock className="h-3 w-3" aria-hidden="true" /> {item.skipped ? "Off · locked" : "Coming · locked"}
                   </span>
                 ) : item.skipped ? (
                   <button
                     type="button"
                     disabled={pending || isBusy}
                     onClick={() => handleToggleSingle(item)}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-black/10 bg-neutral-100 px-3 text-xs font-semibold text-neutral-700 hover:bg-neutral-200 active:scale-95 disabled:opacity-50"
+                    aria-label={`${item.productName} is off today. Resume delivery`}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-line bg-app-canvas px-3 text-xs font-semibold text-ink hover:bg-line/60 active:scale-95 disabled:opacity-50"
                   >
-                    Off today <span className="text-accent underline font-bold">Resume</span>
+                    Off today <span className="font-bold text-accent underline">Resume</span>
                   </button>
                 ) : (
                   <button
                     type="button"
                     disabled={pending || isBusy}
                     onClick={() => handleToggleSingle(item)}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-bad/20 bg-blush px-3 text-xs font-semibold text-bad hover:bg-red-100 active:scale-95 disabled:opacity-50"
+                    aria-label={`${item.productName} is coming today. Skip today`}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-bad/20 bg-bad/5 px-3 text-xs font-semibold text-bad hover:bg-bad/10 active:scale-95 disabled:opacity-50"
                   >
-                    <Check className="h-3.5 w-3.5 text-good" />
-                    <span>Off today?</span>
+                    <CalendarX2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Skip today</span>
                   </button>
                 )}
               </div>

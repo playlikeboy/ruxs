@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Star } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/components/ui/cn";
 
@@ -59,6 +59,22 @@ export function KidsTag({ children, tone = "plain" }: { children: ReactNode; ton
       )}
     >
       {children}
+    </span>
+  );
+}
+
+/** Provider rating chip. With no reviews it says "New" rather than inventing a score. */
+export function KidsRating({ rating, reviewCount }: { rating: number; reviewCount: number }) {
+  if (reviewCount <= 0) {
+    return <span className="inline-flex items-center rounded-full bg-kids-mint/60 px-2 py-0.5 font-semibold text-good">New</span>;
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-kids-sunny/40 px-2 py-0.5 font-bold text-kids-ink">
+      <Star className="h-3 w-3 fill-kids-sunny text-warn" aria-hidden="true" />
+      <span className="tabular-nums">{rating.toFixed(1)}</span>
+      <span className="font-normal text-kids-ink/70">
+        ({reviewCount}<span className="sr-only"> {reviewCount === 1 ? "review" : "reviews"}</span>)
+      </span>
     </span>
   );
 }

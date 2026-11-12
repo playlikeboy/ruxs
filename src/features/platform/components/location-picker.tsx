@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ExternalLink, Link2, LocateFixed } from "lucide-react";
+import { buttonClass } from "@/components/ui/button";
 import { resolveMapsLink } from "@/features/platform/actions";
 
 export interface LocationValue {
@@ -11,7 +12,7 @@ export interface LocationValue {
   mapsUrl: string;
 }
 
-const input = "w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+const input = "w-full rounded-[12px] border border-line bg-surface px-3 py-2.5 text-[15px] text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15";
 
 /** Three ways to set a place: this device's GPS, a Google Maps link, or typed coordinates. */
 export function LocationPicker({ value, onChange }: { value: LocationValue; onChange: (v: LocationValue) => void }) {
@@ -53,8 +54,8 @@ export function LocationPicker({ value, onChange }: { value: LocationValue; onCh
     <div className="space-y-3 rounded-[12px] bg-bg p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">Location</p>
-        <button type="button" onClick={detect} disabled={locating} className="flex h-9 items-center gap-1.5 rounded-[10px] border border-line bg-surface px-3 text-xs font-semibold disabled:opacity-60">
-          <LocateFixed className={"h-4 w-4 " + (locating ? "animate-spin" : "")} aria-hidden="true" /> {locating ? "Detecting…" : "Use my current location"}
+        <button type="button" onClick={detect} disabled={locating} className={buttonClass("secondary", "sm", "text-xs")}>
+          <LocateFixed className={"h-4 w-4 " + (locating ? "animate-spin motion-reduce:animate-none" : "")} aria-hidden="true" /> {locating ? "Detecting…" : "Use my current location"}
         </button>
       </div>
       <label className="block text-xs font-medium text-ink">
@@ -71,7 +72,7 @@ export function LocationPicker({ value, onChange }: { value: LocationValue; onCh
               className={input + " pl-9"}
             />
           </span>
-          <button type="button" disabled={pending || !value.mapsUrl.trim()} onClick={() => readLink(value.mapsUrl)} className="h-[42px] shrink-0 rounded-[10px] bg-ink px-3 text-xs font-semibold text-white disabled:opacity-50">
+          <button type="button" disabled={pending || !value.mapsUrl.trim()} onClick={() => readLink(value.mapsUrl)} className={buttonClass("dark", "sm", "shrink-0 text-xs")}>
             {pending ? "Reading…" : "Read pin"}
           </button>
         </span>
@@ -89,10 +90,10 @@ export function LocationPicker({ value, onChange }: { value: LocationValue; onCh
       </div>
       {hasPoint && (
         <a
-          href={`https://www.google.com/maps/search/?api=1&query=${value.latitude},${value.longitude}`}
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${value.latitude.trim()},${value.longitude.trim()}`)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-accent"
+          className="inline-flex items-center gap-1 rounded-[4px] text-xs font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Check this pin on Google Maps <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
         </a>

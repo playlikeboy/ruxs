@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { APP_URL } from "@/lib/app-url";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in";
+const BASE_URL = APP_URL;
 
 interface MetadataOptions {
   title: string;

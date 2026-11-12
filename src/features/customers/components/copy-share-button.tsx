@@ -28,16 +28,18 @@ export function CopyShareButton({
         });
         toast.success("Link shared");
         return;
-      } catch {
+      } catch (err) {
+        // The person closed the share sheet: respect that and don't copy.
+        if (err instanceof DOMException && err.name === "AbortError") return;
         // Fall back to copy if cancelled or unsupported
       }
     }
 
     try {
       await navigator.clipboard.writeText(fullUrl);
-      toast.success("Link copied to clipboard!");
+      toast.success("Link copied");
     } catch {
-      toast.error("Failed to copy link");
+      toast.error("Could not copy the link");
     }
   };
 
@@ -47,7 +49,7 @@ export function CopyShareButton({
       onClick={handleShare}
       className={
         className ??
-        "inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#FAFAF7] hover:bg-white border border-line text-xs font-medium text-ink rounded-[8px] active:scale-95 transition-all"
+        "inline-flex min-h-10 items-center gap-1 rounded-lg border border-line bg-app-canvas px-3 py-1.5 text-xs font-medium text-ink transition hover:bg-surface active:scale-95"
       }
     >
       <svg

@@ -67,7 +67,15 @@ export function ServiceForm({
       </button>
       {open &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="service-title">
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="service-title"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setOpen(false);
+            }}
+          >
             <form
               className="max-h-[92dvh] w-full max-w-md space-y-4 overflow-y-auto rounded-t-[20px] bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:rounded-[16px]"
               onSubmit={(e) => {
@@ -101,8 +109,8 @@ export function ServiceForm({
                   <h3 id="service-title" className="text-lg font-semibold text-ink">{service ? "Edit service" : "New service"}</h3>
                   <p className="text-xs text-muted">Clients book this as a timed session from your free hours.</p>
                 </div>
-                <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="rounded-full p-1.5 text-muted hover:bg-bg">
-                  <X className="h-5 w-5" />
+                <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-bg hover:text-ink">
+                  <X className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
 
@@ -118,7 +126,7 @@ export function ServiceForm({
 
               <div>
                 <label htmlFor="sv-name" className={label}>Service name</label>
-                <input id="sv-name" required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Personal training (60 min)" className={input} />
+                <input id="sv-name" autoFocus required minLength={2} maxLength={80} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Personal training (60 min)" className={input} />
               </div>
               <div>
                 <label htmlFor="sv-desc" className={label}>What&apos;s included</label>
@@ -143,7 +151,7 @@ export function ServiceForm({
                     const on = f.modes.includes(m.id);
                     return (
                       <label key={m.id} className={"flex cursor-pointer items-center gap-2 rounded-[10px] border px-3 py-2 text-sm " + (on ? "border-ink bg-bg font-semibold" : "border-line")}>
-                        <input type="checkbox" checked={on} onChange={() => setF({ ...f, modes: on ? f.modes.filter((x) => x !== m.id) : [...f.modes, m.id] })} className="h-4 w-4 accent-[#BD4B2A]" />
+                        <input type="checkbox" checked={on} onChange={() => setF({ ...f, modes: on ? f.modes.filter((x) => x !== m.id) : [...f.modes, m.id] })} className="h-4 w-4 accent-accent" />
                         {m.label}
                       </label>
                     );
@@ -155,7 +163,7 @@ export function ServiceForm({
                 <input id="sv-img" type="url" value={f.imageUrl} onChange={(e) => setF({ ...f, imageUrl: e.target.value })} placeholder="https://…" className={input} />
               </div>
               <label className="flex items-center gap-2 text-sm font-medium">
-                <input type="checkbox" checked={f.isActive} onChange={(e) => setF({ ...f, isActive: e.target.checked })} className="h-4 w-4 accent-[#BD4B2A]" />
+                <input type="checkbox" checked={f.isActive} onChange={(e) => setF({ ...f, isActive: e.target.checked })} className="h-4 w-4 accent-accent" />
                 Bookable now
               </label>
               <button type="submit" disabled={pending} className="w-full rounded-[12px] bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60">
@@ -187,9 +195,10 @@ export function ArchiveServiceButton({ slug, id, name }: { slug: string; id: str
           }
         });
       }}
-      className="text-xs font-semibold text-bad disabled:opacity-60"
+      aria-label={`Remove ${name}`}
+      className="min-h-10 px-1 text-xs font-semibold text-bad disabled:opacity-60"
     >
-      Remove
+      {pending ? "Removing…" : "Remove"}
     </button>
   );
 }

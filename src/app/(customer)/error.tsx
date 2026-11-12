@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { TriangleAlert } from "lucide-react";
 import { reloadIfStaleDeploy } from "@/lib/stale-deploy";
+import { Button } from "@/components/ui/button";
 
 export default function CustomerError({
   error,
@@ -16,24 +18,22 @@ export default function CustomerError({
   }, [error]);
 
   return (
-    <div className="p-6 my-8 text-center space-y-4 bg-surface border border-line rounded-[12px] max-w-sm mx-auto shadow-xs">
-      <div className="w-10 h-10 mx-auto rounded-full bg-[#FCE4EC] text-[#B42318] flex items-center justify-center font-bold">
-        !
+    <div className="p-4 sm:p-6">
+      <div role="alert" className="mx-auto my-8 max-w-sm space-y-4 rounded-card border border-line bg-surface p-6 text-center">
+        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-bad/5 text-bad">
+          <TriangleAlert className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <div>
+          <h1 className="text-base font-semibold text-ink">Could not load this page</h1>
+          <p className="mt-1 text-sm text-muted">
+            We couldn’t load your private service link. Try again, or contact your service provider if it keeps happening.
+          </p>
+        </div>
+        {error.digest ? <p className="text-xs text-muted">Reference: {error.digest}</p> : null}
+        <Button type="button" size="sm" onClick={() => reset()}>
+          Try again
+        </Button>
       </div>
-      <div>
-        <h2 className="text-base font-semibold text-ink">Could not load household link</h2>
-        <p className="text-xs text-muted mt-1">
-          We couldn’t load this private service link. Retry, or contact your service provider if the problem continues.
-        </p>
-      </div>
-      {error.digest ? <p className="text-[11px] text-muted">Reference: {error.digest}</p> : null}
-      <button
-        type="button"
-        onClick={() => reset()}
-        className="py-2 px-4 bg-accent text-white text-xs font-semibold rounded-[8px] hover:opacity-90 active:scale-95 transition-all shadow-xs"
-      >
-        Retry
-      </button>
     </div>
   );
 }

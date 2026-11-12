@@ -1,12 +1,12 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import type { PricingRules } from "@/core/pricing";
 
 /**
  * The cart lives in the browser like any food app. It holds one store at a
  * time; prices here are for display only and are re-read on the server.
  */
-import type { PricingRules } from "@/core/pricing";
 
 export interface CartItem {
   productId: string;
@@ -77,6 +77,13 @@ function getSnapshot() {
 
 export function useCart(): Cart | null {
   return useSyncExternalStore(subscribe, getSnapshot, () => null);
+}
+
+const noopSubscribe = () => () => {};
+
+/** False during server render and hydration, true once the browser cart can be read. */
+export function useCartReady(): boolean {
+  return useSyncExternalStore(noopSubscribe, () => true, () => false);
 }
 
 export type StoreInfo = Omit<Cart, "items">;

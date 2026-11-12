@@ -17,6 +17,15 @@ export default {
       method: "POST",
       headers: { authorization: `Bearer ${env.CRON_SECRET}` },
     });
-    ctx.waitUntil(handler.fetch(req, env, ctx));
+    ctx.waitUntil(
+      Promise.resolve(handler.fetch(req, env, ctx)).then(
+        (res: Response) => {
+          if (!res.ok) console.error(`[scheduled] cron tick returned HTTP ${res.status}`);
+        },
+        (err: unknown) => {
+          console.error("[scheduled] cron tick failed", err);
+        }
+      )
+    );
   },
 } satisfies ExportedHandler<CloudflareEnv>;

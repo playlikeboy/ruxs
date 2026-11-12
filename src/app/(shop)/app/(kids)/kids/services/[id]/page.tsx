@@ -80,7 +80,7 @@ export default async function KidsServiceDetailPage({ params }: { params: Promis
             description: data.service.description,
             minAge: data.service.minAge,
             maxAge: data.service.maxAge,
-            suitableClasses: data.service.suitableClasses as string[],
+            suitableClasses: classes,
             durationMinutes: data.service.durationMinutes,
             deliveryModes: data.service.deliveryModes,
             pricePaise: data.service.pricePaise,

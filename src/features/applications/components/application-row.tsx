@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Phone } from "lucide-react";
 import { toast } from "sonner";
+import { buttonClass } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
+import { inputClass } from "@/components/ui/field";
 import { adminUpdateApplication } from "@/features/applications/actions";
 
 const STATUS_STYLE: Record<string, string> = {
@@ -54,10 +56,10 @@ export function ApplicationRow({ a }: { a: ApplicationRowData }) {
       </div>
       {a.details && <p className="text-sm leading-relaxed text-ink">{a.details}</p>}
       <div className="flex flex-wrap items-center gap-2">
-        <a href={`tel:${a.phone}`} className="inline-flex min-h-10 items-center gap-1.5 rounded-[10px] border border-line px-3 text-sm font-semibold text-ink hover:border-ink/40">
+        <a href={`tel:${a.phone}`} className={buttonClass("secondary", "sm", "font-mono")}>
           <Phone className="h-4 w-4" aria-hidden="true" /> {a.phone}
         </a>
-        {a.email && <a href={`mailto:${a.email}`} className="text-sm text-accent hover:underline">{a.email}</a>}
+        {a.email && <a href={`mailto:${a.email}`} className="break-all rounded-[4px] text-sm text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">{a.email}</a>}
       </div>
       <label className="block text-xs font-medium text-muted" htmlFor={`notes-${a.id}`}>Call notes</label>
       <textarea
@@ -68,16 +70,16 @@ export function ApplicationRow({ a }: { a: ApplicationRowData }) {
         rows={2}
         maxLength={1000}
         placeholder="Spoke on… verified address… documents seen…"
-        className="w-full rounded-[10px] border border-line bg-bg px-3 py-2 text-sm"
+        className={cn(inputClass, "min-h-20 py-2.5")}
       />
       <div className="flex flex-wrap gap-2">
         {a.status === "approved" && a.vendorId ? (
-          <Link href={`/admin/vendors/${a.vendorId}`} className="inline-flex min-h-10 items-center rounded-[10px] bg-ink px-3.5 text-sm font-semibold text-white">Open store & login</Link>
+          <Link href={`/admin/vendors/${a.vendorId}`} className={buttonClass("dark", "sm")}>Open store & login</Link>
         ) : (
           <>
-            <Link href={`/admin/vendors/new?application=${a.id}`} className="inline-flex min-h-10 items-center rounded-[10px] bg-accent px-3.5 text-sm font-semibold text-white">Approve & create login</Link>
-            {a.status !== "contacted" && <button type="button" disabled={pending} onClick={() => update({ status: "contacted" })} className="min-h-10 rounded-[10px] border border-line px-3.5 text-sm font-semibold text-ink">Mark called</button>}
-            {a.status !== "rejected" && <button type="button" disabled={pending} onClick={() => update({ status: "rejected" })} className="min-h-10 rounded-[10px] px-3.5 text-sm font-semibold text-bad">Reject</button>}
+            <Link href={`/admin/vendors/new?application=${a.id}`} className={buttonClass("primary", "sm")}>Approve & create login</Link>
+            {a.status !== "contacted" && <button type="button" disabled={pending} onClick={() => update({ status: "contacted" })} className={buttonClass("secondary", "sm")}>Mark called</button>}
+            {a.status !== "rejected" && <button type="button" disabled={pending} onClick={() => window.confirm(`Reject ${a.businessName}'s application?`) && update({ status: "rejected" })} className={"inline-flex min-h-10 select-none items-center justify-center rounded-control px-3 text-[13px] font-semibold text-bad transition hover:bg-bad/5 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"}>Reject</button>}
           </>
         )}
       </div>

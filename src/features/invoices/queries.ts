@@ -1,10 +1,10 @@
 import "server-only";
 
-import { and, desc, eq, ilike, or, count, sum, lte, gte } from "drizzle-orm";
+import { and, desc, eq, ilike, or, count, sum, lt, gte } from "drizzle-orm";
 import { getDb } from "@/db";
 import { invoices, customers, vendors, ledgerEntries } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
-import { istDateTime } from "@/core/time";
+import { periodBounds } from "@/features/billing/period";
 
 export interface AdminInvoiceFilters {
   period?: string;
@@ -18,8 +18,9 @@ export async function getAdminInvoices(filters: AdminInvoiceFilters = {}) {
   await requireAdmin();
   const db = getDb();
 
-  const page = Math.max(1, filters.page ?? 1);
-  const limit = Math.max(1, Math.min(100, filters.limit ?? 20));
+  // Page/limit come from the URL; NaN or fractions would otherwise reach OFFSET/LIMIT.
+  const page = Math.max(1, Math.floor(Number.isFinite(filters.page) ? filters.page! : 1));
+  const limit = Math.max(1, Math.min(100, Math.floor(Number.isFinite(filters.limit) ? filters.limit! : 20)));
   const offset = (page - 1) * limit;
 
   const conditions = [];
@@ -31,7 +32,8 @@ export async function getAdminInvoices(filters: AdminInvoiceFilters = {}) {
     conditions.push(eq(invoices.status, filters.status));
   }
   if (filters.q?.trim()) {
-    const term = `%${filters.q.trim()}%`;
+    // Escape LIKE wildcards so a search for "50%" matches literally.
+    const term = `%${filters.q.trim().replace(/[\\%_]/g, "\\$&")}%`;
     conditions.push(
       or(
         ilike(invoices.number, term),
@@ -138,15 +140,7 @@ export async function getAdminInvoiceDetail(invoiceId: string) {
   if (!row) return null;
 
   // Ledger entries within this billing period
-  const period = row.invoice.period;
-  const [yearStr, monthStr] = period.split("-");
-  const year = parseInt(yearStr!, 10);
-  const month = parseInt(monthStr!, 10);
-  const nextYear = month === 12 ? year + 1 : year;
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const nextMonthStr = nextMonth.toString().padStart(2, "0");
-  const monthStart = istDateTime(`${yearStr}-${monthStr}-01`, "00:00:00");
-  const monthEnd = istDateTime(`${nextYear}-${nextMonthStr}-01`, "00:00:00");
+  const { start: monthStart, end: monthEnd } = periodBounds(row.invoice.period);
 
   const entries = await db
     .select()
@@ -156,7 +150,7 @@ export async function getAdminInvoiceDetail(invoiceId: string) {
         eq(ledgerEntries.vendorId, row.vendor.id),
         eq(ledgerEntries.customerId, row.customer.id),
         gte(ledgerEntries.createdAt, monthStart),
-        lte(ledgerEntries.createdAt, monthEnd)
+        lt(ledgerEntries.createdAt, monthEnd)
       )
     )
     .orderBy(desc(ledgerEntries.createdAt));

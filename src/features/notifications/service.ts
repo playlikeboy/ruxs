@@ -5,11 +5,12 @@ import { notificationPreferences } from "@/db/schema";
 import { getServerEnv } from "@/lib/env";
 import { escapeHtml, safeHttpUrl } from "@/core/html";
 import type { NotificationCategory } from "./types";
+import { APP_URL } from "@/lib/app-url";
 
 const DEFAULT_CF_ACCOUNT_ID = "02e7b7636139de49a9b2ae68293d8f89";
 const EMAIL_DOMAIN = "notifications.ruxs.in";
 
-export const CATEGORY_SENDERS: Record<NotificationCategory, string> = {
+const CATEGORY_SENDERS: Record<NotificationCategory, string> = {
   orders: `orders@${EMAIL_DOMAIN}`,
   plans: `plans@${EMAIL_DOMAIN}`,
   bills: `bills@${EMAIL_DOMAIN}`,
@@ -36,13 +37,13 @@ export function renderEmailHtml({
   details = details?.map((d) => ({ label: escapeHtml(d.label), value: escapeHtml(d.value) }));
   const safeUrl = actionUrl ? safeHttpUrl(actionUrl) : null;
   const detailsHtml = details && details.length
-    ? `<div style="margin: 20px 0; background: #fafaf7; border-radius: 12px; padding: 16px; border: 1px solid #e7e5df;">
+    ? `<div style="margin: 20px 0; background: #F7F4ED; border-radius: 12px; padding: 16px; border: 1px solid #E9E3D8;">
         ${details
           .map(
             (d) =>
               `<div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
-                <span style="color: #6b6862;">${d.label}</span>
-                <strong style="color: #1c1b19;">${d.value}</strong>
+                <span style="color: #716C62;">${d.label}</span>
+                <strong style="color: #20241F;">${d.value}</strong>
               </div>`
           )
           .join("")}
@@ -51,7 +52,7 @@ export function renderEmailHtml({
 
   const actionHtml = actionText && safeUrl
     ? `<div style="margin: 24px 0;">
-        <a href="${escapeHtml(safeUrl)}" style="background: #1c1b19; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; font-size: 14px; display: inline-block;">
+        <a href="${escapeHtml(safeUrl)}" style="background: #20241F; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; font-size: 14px; display: inline-block;">
           ${escapeHtml(actionText)}
         </a>
       </div>`
@@ -64,20 +65,20 @@ export function renderEmailHtml({
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${heading}</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #fafaf7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1c1b19;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fafaf7; padding: 32px 16px;">
+<body style="margin: 0; padding: 0; background-color: #F7F4ED; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #20241F;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F7F4ED; padding: 32px 16px;">
     <tr>
       <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; background: #ffffff; border-radius: 16px; border: 1px solid #e7e5df; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; background: #ffffff; border-radius: 16px; border: 1px solid #E9E3D8; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
           <tr>
-            <td style="padding: 24px 32px; border-bottom: 1px solid #f0eee6; background: #ffffff;">
+            <td style="padding: 24px 32px; border-bottom: 1px solid #E9E3D8; background: #ffffff;">
               <table width="100%">
                 <tr>
                   <td>
-                    <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #1c1b19;">RUXs</span>
+                    <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #20241F;">RUXs</span>
                   </td>
                   <td align="right">
-                    <span style="font-size: 12px; color: #6b6862; background: #f0eee6; padding: 4px 8px; border-radius: 6px; font-weight: 500;">Household OS</span>
+                    <span style="font-size: 12px; color: #716C62; background: #E9E3D8; padding: 4px 8px; border-radius: 6px; font-weight: 500;">Household OS</span>
                   </td>
                 </tr>
               </table>
@@ -85,13 +86,13 @@ export function renderEmailHtml({
           </tr>
           <tr>
             <td style="padding: 32px;">
-              <h1 style="margin: 0 0 12px; font-size: 22px; font-weight: 700; line-height: 1.3; color: #1c1b19; letter-spacing: -0.3px;">${heading}</h1>
-              <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.5; color: #403e39;">${lead}</p>
+              <h1 style="margin: 0 0 12px; font-size: 22px; font-weight: 700; line-height: 1.3; color: #20241F; letter-spacing: -0.3px;">${heading}</h1>
+              <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.5; color: #20241F;">${lead}</p>
               ${detailsHtml}
               ${actionHtml}
-              <hr style="border: none; border-top: 1px solid #e7e5df; margin: 28px 0 20px;">
-              <p style="margin: 0; font-size: 12px; line-height: 1.4; color: #8c8980;">
-                You received this email because you are registered with RUXs. You can manage your notification preferences anytime under <a href="https://ruxs.in/app/account" style="color: #bd4b2a; text-decoration: none;">Account Settings</a>.
+              <hr style="border: none; border-top: 1px solid #E9E3D8; margin: 28px 0 20px;">
+              <p style="margin: 0; font-size: 12px; line-height: 1.4; color: #716C62;">
+                You received this email because you are registered with RUXs. You can manage your notification preferences anytime under <a href="${APP_URL}/app/account" style="color: #BD4B2A; text-decoration: none;">Account Settings</a>.
               </p>
             </td>
           </tr>

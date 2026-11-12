@@ -1,19 +1,18 @@
 "use client";
 
-
-import { AppIcon, UiIcon } from "@/components/ui/app-icon";
-
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { AppIcon, UiIcon } from "@/components/ui/app-icon";
+import { buttonClass } from "@/components/ui/button";
 import { adminCreateVendor, adminUpdateVendor, type Credentials } from "@/features/admin/actions";
 import { CredentialsView } from "./credentials-panel";
 import { LocationPicker } from "@/features/platform/components/location-picker";
 import { VendorTypePicker } from "./vendor-type-picker";
 import type { OnboardCategory, VendorFormValues } from "./vendor-form-values";
 
-const input = "mt-1 w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+const input = "mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2.5 text-[15px] text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15";
 const labelCls = "block text-xs font-medium text-ink";
 
 /** Accepts 98765 43210, 098765 43210 or +91 98765 43210; the server wants +919876543210. */
@@ -48,17 +47,17 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <UiIcon name="check" className="h-6 w-6 text-accent" />
+          <UiIcon name="check" className="h-6 w-6 text-good" />
           <h2 className="text-lg font-semibold text-ink">{f.name} is live</h2>
         </div>
         {created.credentials ? (
           <CredentialsView credentials={created.credentials} />
         ) : (
-          <p className="rounded-[10px] bg-butter p-3 text-sm text-warn">Store created, but the login could not be generated: {created.warning}. Open the vendor and try again.</p>
+          <p role="alert" className="rounded-[12px] bg-butter p-3 text-sm text-warn">Store created, but the login could not be generated: {created.warning}. Open the vendor and try again.</p>
         )}
-        <div className="flex gap-3">
-          <Link href={`/admin/vendors/${created.vendorId}`} className="flex h-11 items-center rounded-[10px] bg-ink px-4 text-sm font-semibold text-white">Open vendor</Link>
-          <Link href="/admin/vendors" className="flex h-11 items-center rounded-[10px] border border-line px-4 text-sm font-semibold">Back to list</Link>
+        <div className="flex flex-wrap gap-3">
+          <Link href={`/admin/vendors/${created.vendorId}`} className={buttonClass("dark", "md")}>Open vendor</Link>
+          <Link href="/admin/vendors" className={buttonClass("secondary", "md")}>Back to list</Link>
         </div>
       </div>
     );
@@ -135,7 +134,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
             <span className="block truncate text-sm font-semibold text-ink">{chosen?.label ?? f.categoryId}</span>
             <span className="block text-xs text-muted">{booking ? "Bookable sessions" : "Delivery store"}</span>
           </span>
-          <Link href={`/admin/vendors/new${appQuery}`} className="flex h-9 items-center rounded-[8px] border border-line bg-surface px-3 text-xs font-semibold text-ink hover:border-ink/40">
+          <Link href={`/admin/vendors/new${appQuery}`} className={buttonClass("secondary", "sm")}>
             Change type
           </Link>
         </div>
@@ -199,7 +198,7 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
             </select>
           </label>
           <label className="flex items-center gap-2 self-end pb-3 text-sm font-medium">
-            <input type="checkbox" checked={f.acceptingOrders} onChange={(e) => setF({ ...f, acceptingOrders: e.target.checked })} className="h-4 w-4 accent-[#BD4B2A]" />
+            <input type="checkbox" checked={f.acceptingOrders} onChange={(e) => setF({ ...f, acceptingOrders: e.target.checked })} className="h-4 w-4 accent-accent" />
             Taking one-time orders
           </label>
         </fieldset>
@@ -207,11 +206,11 @@ export function VendorForm({ initial, categories = [] }: { initial: VendorFormVa
 
       <div className="sticky bottom-0 space-y-2 border-t border-line bg-surface py-3 sm:static sm:border-0 sm:p-0">
         {error && (
-          <p role="alert" className="rounded-[10px] bg-blush px-3 py-2 text-sm font-medium text-bad">
+          <p role="alert" className="rounded-[12px] border border-bad/20 bg-bad/5 px-3 py-2 text-sm font-medium text-bad">
             {error}
           </p>
         )}
-        <button type="submit" disabled={pending} className="h-12 w-full rounded-[12px] bg-accent text-sm font-bold text-white disabled:opacity-60 sm:w-auto sm:px-8">
+        <button type="submit" disabled={pending} className={buttonClass("primary", "lg", "w-full sm:w-auto sm:px-8")}>
           {pending ? "Saving…" : isNew ? "Create vendor & generate login" : "Save changes"}
         </button>
       </div>

@@ -168,7 +168,7 @@ function TagsInput({ id, field, value, onChange }: { id: string; field: FieldSpe
       {value.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
           {value.map((t) => (
-            <button key={t} type="button" onClick={() => onChange(value.filter((x) => x !== t))} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-bg px-3 text-[13px] text-ink ring-1 ring-line hover:ring-bad/40" aria-label={`Remove ${t}`}>
+            <button key={t} type="button" onClick={() => onChange(value.filter((x) => x !== t))} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-bg px-3 text-[13px] text-ink ring-1 ring-line hover:ring-bad/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label={`Remove ${t}`}>
               {t} <span aria-hidden="true" className="text-muted">×</span>
             </button>
           ))}

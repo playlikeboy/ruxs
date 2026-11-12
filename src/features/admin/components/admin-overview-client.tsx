@@ -78,25 +78,20 @@ export function AdminOverviewClient({ data }: { data: AdminOverviewData }) {
   return (
     <div className="space-y-6">
       {/* Platform Executive GMV Card */}
-      <div className="relative overflow-hidden rounded-[20px] bg-ink p-6 text-white shadow-md">
-        {/* Subtle decorative glow */}
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent/15 blur-3xl" />
-
-        <div className="relative z-10 flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-5">
+      <section aria-labelledby="gmv-title" className="rounded-[16px] bg-ink p-5 text-white sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-5">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-[6px] bg-white/10 text-xs">
-                <TrendingUp className="h-3.5 w-3.5 text-accent" />
-              </span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">
-                30-Day Gross Merchandise Volume
-              </span>
+              <TrendingUp className="h-4 w-4 text-white/70" />
+              <h2 id="gmv-title" className="text-xs font-semibold uppercase tracking-wider text-white/80">
+                30-day gross merchandise volume
+              </h2>
             </div>
-            <p className="mt-2 font-mono text-3xl font-black tabular-nums tracking-tight sm:text-4xl text-white">
+            <p className="mt-2 font-mono text-3xl font-bold tabular-nums tracking-tight text-white sm:text-4xl">
               {formatINR(totalGMV)}
             </p>
-            <p className="mt-1 text-xs text-white/60">
-              Combined direct shop orders, subscription runs &amp; booking sessions across all categories.
+            <p className="mt-1 text-xs text-white/70">
+              Delivered shop orders, billed plan deliveries and booked sessions across all categories.
             </p>
           </div>
 
@@ -105,80 +100,72 @@ export function AdminOverviewClient({ data }: { data: AdminOverviewData }) {
               filename="ruxs-platform-report"
               title="Export Report"
               getData={getExportData}
-              className="bg-white/10 text-white border-white/20 hover:bg-white/20 transition text-xs"
+              className="border-white/20 bg-white/10 text-white hover:bg-white/20 focus-visible:outline-white"
             />
           </div>
         </div>
 
         {/* GMV Channels Breakdown */}
-        <div className="relative z-10 mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-          <div className="rounded-[14px] bg-white/5 p-3.5 border border-white/5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/60">
-              Marketplace Orders
-            </p>
-            <p className="mt-1.5 font-mono text-xl font-bold text-white tabular-nums">
-              {formatINR(data.shopValuePaise)}
-            </p>
-            <p className="mt-0.5 text-[11px] text-white/50">One-time / instant pay &amp; COD</p>
+        <dl className="mt-5 grid grid-cols-1 divide-y divide-white/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <div className="py-3 sm:py-0 sm:pr-4">
+            <dt className="text-xs font-semibold text-white/70">Marketplace orders</dt>
+            <dd className="mt-1 font-mono text-xl font-bold tabular-nums text-white">{formatINR(data.shopValuePaise)}</dd>
+            <dd className="mt-0.5 text-xs text-white/70">One-time orders, paid online or on delivery</dd>
           </div>
 
-          <div className="rounded-[14px] bg-white/5 p-3.5 border border-white/5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/60">
-              Daily Subscriptions
-            </p>
-            <p className="mt-1.5 font-mono text-xl font-bold text-white tabular-nums">
-              {formatINR(data.planValuePaise)}
-            </p>
-            <p className="mt-0.5 text-[11px] text-white/50">Billed monthly recurring plans</p>
+          <div className="py-3 sm:px-4 sm:py-0">
+            <dt className="text-xs font-semibold text-white/70">Daily plans</dt>
+            <dd className="mt-1 font-mono text-xl font-bold tabular-nums text-white">{formatINR(data.planValuePaise)}</dd>
+            <dd className="mt-0.5 text-xs text-white/70">Deliveries billed to monthly plans</dd>
           </div>
 
-          <div className="rounded-[14px] bg-white/5 p-3.5 border border-white/5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/60">
-              Session Bookings
-            </p>
-            <p className="mt-1.5 font-mono text-xl font-bold text-white tabular-nums">
-              {formatINR(data.bookingStats.valuePaise)}
-            </p>
-            <p className="mt-0.5 text-[11px] text-white/50">{data.bookingStats.count} total client bookings</p>
+          <div className="py-3 sm:py-0 sm:pl-4">
+            <dt className="text-xs font-semibold text-white/70">Session bookings</dt>
+            <dd className="mt-1 font-mono text-xl font-bold tabular-nums text-white">{formatINR(data.bookingStats.valuePaise)}</dd>
+            <dd className="mt-0.5 text-xs text-white/70">{data.bookingStats.count} bookings</dd>
           </div>
-        </div>
+        </dl>
 
         {/* Invoice Health Mini Bar */}
-        <div className="relative z-10 mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 text-xs text-white/70">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 text-xs text-white/70">
           <div className="flex items-center gap-2">
-            <Receipt className="h-4 w-4 text-accent" />
+            <Receipt className="h-4 w-4 text-white/70" />
             <span>
-              All-Time Collections: <strong className="font-mono text-white">{formatINR(data.invoiceStats.paidPaise)}</strong> of{" "}
+              All-time collections: <strong className="font-mono text-white">{formatINR(data.invoiceStats.paidPaise)}</strong> of{" "}
               <span className="font-mono">{formatINR(data.invoiceStats.chargesPaise)}</span> invoiced
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="h-2 w-24 rounded-full bg-white/20 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-accent transition-all duration-500"
-                style={{ width: `${collectionRate}%` }}
-              />
+            <div
+              role="progressbar"
+              aria-label="Invoices collected"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={collectionRate}
+              className="h-2 w-24 overflow-hidden rounded-full bg-white/20"
+            >
+              <div className="h-full rounded-full bg-brand-coral" style={{ width: `${collectionRate}%` }} />
             </div>
             <span className="font-mono text-[11px] font-bold text-white">{collectionRate}% collected</span>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Category Ecosystem Section */}
-      <section className="space-y-3">
+      <section aria-labelledby="category-title" className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Layers className="h-4 w-4 text-accent" aria-hidden="true" />
-            <h2 className="text-sm font-bold text-ink uppercase tracking-wider">
-              Category Distribution
+            <h2 id="category-title" className="text-sm font-semibold uppercase tracking-wider text-ink">
+              Active stores by category
             </h2>
           </div>
           <Link
             href="/admin/vendors"
-            className="text-xs font-semibold text-accent hover:underline flex items-center gap-1"
+            className="flex items-center gap-1 rounded-[4px] text-xs font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            <span>View all stores</span> →
+            <span>View all stores</span> <span aria-hidden="true">→</span>
           </Link>
         </div>
 
@@ -192,8 +179,8 @@ export function AdminOverviewClient({ data }: { data: AdminOverviewData }) {
             return (
               <Link
                 key={cat.categoryId}
-                href={`/admin/vendors?categoryId=${cat.categoryId}`}
-                className="group rounded-[14px] border border-line bg-surface p-3.5 transition hover:border-ink/40 hover:shadow-2xs"
+                href={`/admin/vendors?categoryId=${encodeURIComponent(cat.categoryId)}`}
+                className="group rounded-[16px] border border-line bg-surface p-3.5 transition hover:border-ink/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 <div className="flex items-center justify-between text-muted group-hover:text-ink">
                   <span className="text-xs font-semibold truncate">{meta.label}</span>
@@ -202,7 +189,7 @@ export function AdminOverviewClient({ data }: { data: AdminOverviewData }) {
                 <p className="mt-2 font-mono text-xl font-bold tabular-nums text-ink">
                   {cat.count}
                 </p>
-                <p className="text-[10px] text-muted">active stores</p>
+                <p className="text-xs text-muted">active stores</p>
               </Link>
             );
           })}

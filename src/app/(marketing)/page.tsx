@@ -23,13 +23,11 @@ const exampleBill = [
 ];
 const exampleTotal = exampleBill.reduce((sum, line) => sum + line.paise, 0);
 
-const kidsTopics = ["Dance", "Art and craft", "Tutors", "STEM and robotics", "Chess", "Holiday camps"];
-
 const primaryButton =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-[12px] bg-accent px-6 text-base font-semibold text-white transition-colors duration-150 hover:bg-[#A53F22]";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-accent px-6 text-base font-semibold text-white transition-colors duration-150 hover:bg-accent/90";
 
 const inkButton =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-[12px] bg-ink px-6 text-base font-semibold text-bg transition-colors duration-150 hover:bg-[#383D36]";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-ink px-6 text-base font-semibold text-bg transition-colors duration-150 hover:bg-ink/90";
 
 function DirectoryList({ title, items }: { title: string; items: { name: string; detail: string; href: string }[] }) {
   return (
@@ -76,7 +74,7 @@ export default function HomePage() {
             <span className="block text-balance text-brand-deep">Run it from one place.</span>
           </h1>
           <div className="mt-8 grid gap-6 lg:mt-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
-            <p className="max-w-xl text-lg leading-relaxed text-[#4A463F]">
+            <p className="max-w-xl text-lg leading-relaxed text-ink/80">
               Daily tiffin meals, 20L water cans, fresh dairy, and verified kids&apos; classes — from dance, robotics and chess to pottery — from trusted people in your neighbourhood.
             </p>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -87,7 +85,7 @@ export default function HomePage() {
                 href="/app/kids"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[12px] border border-line bg-surface px-5 text-base font-semibold text-ink transition-colors hover:border-accent hover:text-accent"
               >
-                Kids Zone &amp; Classes 🎨
+                Kids Zone &amp; Classes <span aria-hidden="true">🎨</span>
               </Link>
               <Link href="/apply" className="text-base font-semibold text-ink underline decoration-line decoration-2 underline-offset-4 hover:decoration-accent sm:ml-2">
                 I run a business
@@ -97,29 +95,30 @@ export default function HomePage() {
 
           {/* Quick service discovery chips */}
           <div className="mt-8 flex flex-wrap items-center gap-2 border-t border-line/60 pt-4">
-            <span className="mr-1 text-xs font-semibold uppercase tracking-wider text-muted">Explore:</span>
+            <span className="mr-1 text-xs font-semibold text-muted">Explore</span>
             {[
-              { label: "🍱 Tiffin meals", href: "/app/category/tiffin" },
-              { label: "💧 20L Water cans", href: "/app/category/water" },
-              { label: "🥛 Fresh milk", href: "/app/category/milk" },
-              { label: "💃 Dance classes", href: "/app/kids" },
-              { label: "🤖 Robotics & STEM", href: "/app/kids" },
-              { label: "♟️ Chess coaching", href: "/app/kids" },
-              { label: "🎨 Art & Pottery", href: "/app/kids" },
-              { label: "📦 DIY activity kits", href: "/app/kids/kits" },
+              { emoji: "🍱", label: "Tiffin meals", href: "/app/category/tiffin" },
+              { emoji: "💧", label: "20L Water cans", href: "/app/category/water" },
+              { emoji: "🥛", label: "Fresh milk", href: "/app/category/milk" },
+              { emoji: "💃", label: "Dance classes", href: "/app/kids" },
+              { emoji: "🤖", label: "Robotics & STEM", href: "/app/kids" },
+              { emoji: "♟️", label: "Chess coaching", href: "/app/kids" },
+              { emoji: "🎨", label: "Art & Pottery", href: "/app/kids" },
+              { emoji: "📦", label: "DIY activity kits", href: "/app/kids/kits" },
             ].map((chip) => (
               <Link
                 key={chip.label}
                 href={chip.href}
-                className="inline-flex items-center rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
               >
+                <span aria-hidden="true">{chip.emoji}</span>
                 {chip.label}
               </Link>
             ))}
           </div>
         </div>
 
-        <div className="border-y border-[#CFE3CB] bg-brand-leaf">
+        <div className="border-y border-brand-deep/15 bg-brand-leaf">
           <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-12">
             <h2 className="sr-only">A day with RUXs</h2>
             <DayRibbon />
@@ -136,10 +135,10 @@ export default function HomePage() {
           <h2 id="skip-title" className="text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
             Change any day before the cutoff.
           </h2>
-          <p className="mt-5 text-lg leading-relaxed text-[#4A463F]">
+          <p className="mt-5 text-lg leading-relaxed text-ink/80">
             Every store sets a daily cutoff, like 10:00 AM for lunch. Before it, skip a day, add an extra or pause your plan. After it, the kitchen is already cooking.
           </p>
-          <p className="mt-4 text-lg leading-relaxed text-[#4A463F]">
+          <p className="mt-4 text-lg leading-relaxed text-ink/80">
             Stores can also send your home a private link, so anyone in the family can tap Deliver or Skip without signing in.
           </p>
         </div>
@@ -160,12 +159,12 @@ export default function HomePage() {
 
       {/* Kids Zone & Activities */}
       <section aria-labelledby="kids-title" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
-        <div className="rounded-[24px] border border-line bg-surface p-6 shadow-xs sm:p-10 lg:p-12">
+        <div>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#CFE3CB] bg-brand-leaf px-3.5 py-1 text-xs font-bold text-brand-deep">
-              <span>🎨</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-deep/15 bg-brand-leaf px-3.5 py-1 text-xs font-bold text-brand-deep">
+              <span aria-hidden="true">🎨</span>
               <span>RUXs Kids Zone</span>
-              <span className="text-brand-deep/40">•</span>
+              <span className="text-brand-deep/40" aria-hidden="true">•</span>
               <span>Classes, Camps &amp; DIY Kits</span>
             </div>
             <Link
@@ -181,37 +180,37 @@ export default function HomePage() {
               <h2 id="kids-title" className="text-balance text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-ink sm:text-4xl lg:text-5xl">
                 Dance, robotics, chess, pottery and camps for your child.
               </h2>
-              <p className="mt-4 text-base leading-relaxed text-[#4A463F] sm:text-lg">
+              <p className="mt-4 text-base leading-relaxed text-ink/80 sm:text-lg">
                 Discover verified neighbourhood dance academies, STEM labs, art studios, and music teachers. Whether it&apos;s an evening hip-hop or Kathak class, weekly robotics workshop, pottery wheel session, chess coaching, or holiday camp — explore and book directly.
               </p>
 
               {/* Age brackets */}
               <div className="mt-6">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted">Curated by Age Group</span>
-                <div className="mt-2.5 flex flex-wrap gap-2">
+                <h3 id="kids-ages" className="text-sm font-semibold text-ink">By age group</h3>
+                <ul aria-labelledby="kids-ages" className="mt-2.5 flex flex-wrap gap-2">
                   {[
                     { label: "Toddlers (2–4 yrs)", emoji: "🧸" },
                     { label: "Early Years (4–7 yrs)", emoji: "🎨" },
                     { label: "Young Explorers (7–10 yrs)", emoji: "🚀" },
                     { label: "Pre-Teens (10–14+ yrs)", emoji: "💡" },
                   ].map((bracket) => (
-                    <span
+                    <li
                       key={bracket.label}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-line bg-[#FAFAF7] px-3.5 py-1 text-xs font-medium text-ink"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-1 text-xs font-medium text-ink"
                     >
-                      <span>{bracket.emoji}</span>
+                      <span aria-hidden="true">{bracket.emoji}</span>
                       <span>{bracket.label}</span>
-                    </span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             </div>
 
-            <div className="flex flex-col justify-between rounded-2xl border border-line bg-[#FAFAF7] p-5 sm:p-6">
+            <div className="flex flex-col justify-between rounded-card border border-line bg-surface p-5 sm:p-6">
               <ul className="space-y-3.5">
                 {[
-                  "Verified teachers & academies: background checked and reviewed by RUXs before listing.",
-                  "Request your preferred time slot: the teacher confirms availability with instant booking updates.",
+                  "Reviewed providers: kids teachers and academies are reviewed by RUXs before they can take bookings.",
+                  "Request your preferred time slot: the provider confirms it, and you see the status in your bookings.",
                   "Pay per session: cash or direct UPI at the studio, home, or academy.",
                   "Activity passes & holiday camps: multi-session packs and weekend creative camps.",
                 ].map((point) => (
@@ -225,13 +224,13 @@ export default function HomePage() {
               <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-4">
                 <Link
                   href="/app/kids"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-ink px-5 text-sm font-semibold text-bg transition hover:bg-[#383D36]"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-ink px-5 text-sm font-semibold text-bg transition-colors hover:bg-ink/90"
                 >
                   Browse all classes <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
                 <Link
                   href="/app/kids/kits"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-line bg-surface px-4 text-sm font-semibold text-ink transition-colors hover:border-accent hover:text-accent"
                 >
                   DIY activity kits
                 </Link>
@@ -246,61 +245,67 @@ export default function HomePage() {
                 title: "Dance & Performing Arts",
                 desc: "Kathak, Bharatnatyam, Western Hip-Hop, Contemporary & Bollywood dance classes with trained instructors.",
                 tag: "Studio or Home",
-                badge: "💃 Dance",
+                emoji: "💃",
+                badge: "Dance",
                 href: "/app/kids",
               },
               {
                 title: "Robotics, STEM & Coding",
                 desc: "Build working robots, code Scratch & Python games, and explore hands-on science experiments.",
                 tag: "Labs & Online",
-                badge: "🤖 STEM",
+                emoji: "🤖",
+                badge: "STEM",
                 href: "/app/kids",
               },
               {
                 title: "Art, Pottery & Craft",
                 desc: "Pottery wheel workshops, clay modeling, acrylic painting, sketching and handmade craft courses.",
                 tag: "Workshops",
-                badge: "🎨 Creative",
+                emoji: "🎨",
+                badge: "Creative",
                 href: "/app/kids",
               },
               {
                 title: "Chess Academy & Logic",
                 desc: "From beginner moves to tournament strategies, plus abacus, Olympiad math and mental logic.",
                 tag: "Coaching",
-                badge: "♟️ Chess",
+                emoji: "♟️",
+                badge: "Chess",
                 href: "/app/kids",
               },
               {
                 title: "Music & Vocal Lessons",
                 desc: "Guitar, keyboard, Hindustani classical vocals, Western singing, and rhythm fundamentals.",
                 tag: "Academy",
-                badge: "🎵 Music",
+                emoji: "🎵",
+                badge: "Music",
                 href: "/app/kids",
               },
               {
                 title: "Holiday Camps & DIY Kits",
                 desc: "Action-packed holiday camps, science experiment kits and craft materials delivered home.",
                 tag: "Camps & Kits",
-                badge: "⛺ Camps",
+                emoji: "⛺",
+                badge: "Camps",
                 href: "/app/kids/kits",
               },
             ].map((activity) => (
               <Link
                 key={activity.title}
                 href={activity.href}
-                className="group flex flex-col justify-between rounded-xl border border-line bg-[#FFFDF8] p-4 transition-all hover:border-accent hover:shadow-xs"
+                className="group flex flex-col justify-between rounded-card border border-line bg-surface p-4 transition-colors hover:border-accent"
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink">
-                      {activity.badge}
+                      <span aria-hidden="true">{activity.emoji}</span> {activity.badge}
                     </span>
                     <span className="text-xs font-medium text-muted">{activity.tag}</span>
                   </div>
                   <h3 className="mt-3 text-base font-bold text-ink transition-colors group-hover:text-accent">
                     {activity.title}
                   </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-[#5A564F]">{activity.desc}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink/75">{activity.desc}</p>
                 </div>
                 <div className="mt-4 flex items-center justify-end text-xs font-semibold text-accent group-hover:underline">
                   <span>Explore classes</span>
@@ -339,7 +344,7 @@ export default function HomePage() {
           <h2 id="bill-title" className="text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
             One bill at the end of the month.
           </h2>
-          <p className="mt-5 text-lg leading-relaxed text-[#4A463F]">
+          <p className="mt-5 text-lg leading-relaxed text-ink/80">
             Every delivery is recorded as it happens, and your bill is worked out from those records. Skipped days stay off it. Pay online or in cash to the store.
           </p>
           <p className="mt-4 text-base text-muted">
@@ -350,13 +355,13 @@ export default function HomePage() {
 
       {/* The neighbourhood, and the people who run it */}
       <section aria-labelledby="merchant-title" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
-        <NeighbourhoodScene className="h-auto w-full rounded-[24px]" />
+        <NeighbourhoodScene />
         <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:gap-20">
           <h2 id="merchant-title" className="text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
             Run by people in your neighbourhood.
           </h2>
           <div>
-            <p className="text-lg leading-relaxed text-[#4A463F]">
+            <p className="text-lg leading-relaxed text-ink/80">
               Run a home kitchen, water depot, dairy, shop or class? RUXs gives you the tools to serve the homes around you.
             </p>
             <ul className="mt-5 space-y-3">
@@ -387,9 +392,9 @@ export default function HomePage() {
             <details key={faq.question} className="group border-b border-line">
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-[17px] font-semibold text-ink [&::-webkit-details-marker]:hidden">
                 {faq.question}
-                <Plus className="h-5 w-5 shrink-0 text-accent transition-transform duration-200 group-open:rotate-45" aria-hidden="true" />
+                <Plus className="h-5 w-5 shrink-0 text-accent transition-transform duration-200 group-open:rotate-45 motion-reduce:transition-none" aria-hidden="true" />
               </summary>
-              <p className="pb-5 text-base leading-relaxed text-[#4A463F]">{faq.answer}</p>
+              <p className="pb-5 text-base leading-relaxed text-ink/80">{faq.answer}</p>
             </details>
           ))}
         </div>
@@ -411,7 +416,7 @@ export default function HomePage() {
             <div className="flex flex-col gap-2.5 sm:shrink-0">
               <a
                 href="mailto:adminruxs@gmail.com"
-                className="inline-flex items-center gap-2 rounded-xl border border-line bg-[#FAFAF7] px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
+                className="inline-flex items-center gap-2 min-h-11 rounded-control border border-line bg-bg px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-accent hover:text-accent"
               >
                 <Mail className="h-4 w-4 text-accent" aria-hidden="true" />
                 <span>adminruxs@gmail.com</span>
@@ -420,10 +425,10 @@ export default function HomePage() {
                 href="https://wa.me/919610201507"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl border border-good/20 bg-good/10 px-4 py-2.5 text-sm font-semibold text-good transition hover:bg-good/15"
+                className="inline-flex items-center gap-2 min-h-11 rounded-control border border-good/20 bg-good/10 px-4 py-2.5 text-sm font-semibold text-good transition-colors hover:bg-good/15"
               >
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                <span>9610201507 <span className="text-xs font-normal text-muted">(Contact Only on WhatsApp)</span></span>
+                <span><span className="tabular-nums">9610201507</span> <span className="text-xs font-normal text-ink/70">(WhatsApp messages only)</span><span className="sr-only"> (opens WhatsApp in a new tab)</span></span>
               </a>
             </div>
           </div>

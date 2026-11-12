@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Clock, MapPin, Phone, Video, X, Home, Building2, CalendarClock, StickyNote } from "lucide-react";
 import { formatINR } from "@/core/money";
@@ -105,30 +105,29 @@ export function BookingCalendar(p: {
                 Today
               </Link>
               <div className="flex items-center rounded-control border border-line bg-surface">
-                <Link href={href(p.slug, { view: p.view, date: p.prev })} aria-label="Previous" className="flex h-9 w-9 items-center justify-center text-muted hover:text-ink">
-                  <ChevronLeft className="h-4 w-4" />
+                <Link href={href(p.slug, { view: p.view, date: p.prev })} aria-label={p.view === "day" ? "Previous day" : "Previous week"} className="flex h-9 w-9 items-center justify-center text-muted hover:text-ink">
+                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                 </Link>
-                <Link href={href(p.slug, { view: p.view, date: p.next })} aria-label="Next" className="flex h-9 w-9 items-center justify-center border-l border-line text-muted hover:text-ink">
-                  <ChevronRight className="h-4 w-4" />
+                <Link href={href(p.slug, { view: p.view, date: p.next })} aria-label={p.view === "day" ? "Next day" : "Next week"} className="flex h-9 w-9 items-center justify-center border-l border-line text-muted hover:text-ink">
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </div>
             </>
           )}
           <h2 className="text-[15px] font-semibold text-ink">{p.view === "list" ? "All bookings" : p.rangeLabel}</h2>
         </div>
-        <div role="tablist" aria-label="Calendar view" className="flex rounded-control bg-bg p-0.5 ring-1 ring-line">
+        <nav aria-label="Calendar view" className="flex rounded-control bg-bg p-0.5 ring-1 ring-line">
           {(["day", "week", "list"] as const).map((v) => (
             <Link
               key={v}
-              role="tab"
-              aria-selected={p.view === v}
+              aria-current={p.view === v ? "page" : undefined}
               href={href(p.slug, v === "list" ? { view: v, tab: p.tab } : { view: v, date: p.date })}
               className={cn("flex h-8 items-center rounded-[8px] px-3 text-[13px] font-semibold capitalize", p.view === v ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}
             >
               {v}
             </Link>
           ))}
-        </div>
+        </nav>
       </div>
 
       {p.view === "list" ? (
@@ -215,6 +214,7 @@ function GridView(p: Parameters<typeof BookingCalendar>[0] & { nowMin: number | 
                         key={e.id}
                         type="button"
                         onClick={() => p.onSelect(e)}
+                        aria-label={`${e.serviceName ?? "Session"} at ${formatSlotTime(new Date(e.start))} with ${e.customerName}, ${tone.label}`}
                         className={cn("absolute overflow-hidden rounded-md border-l-[3px] px-1.5 py-1 text-left shadow-sm transition hover:z-20 hover:shadow-md focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40", tone.block)}
                         style={{ top: top(item.start) + 1, height: h, left: `calc(${(lane / lanes) * 100}% + 2px)`, width: `calc(${100 / lanes}% - 4px)` }}
                       >
@@ -248,17 +248,18 @@ function ListView(p: Parameters<typeof BookingCalendar>[0] & { onSelect: (e: Cal
   }
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 border-b border-line">
+      <nav aria-label="Booking list" className="flex gap-1 border-b border-line">
         {(["upcoming", "past", "cancelled"] as const).map((t) => (
           <Link
             key={t}
             href={href(p.slug, { view: "list", tab: t })}
+            aria-current={p.tab === t ? "page" : undefined}
             className={cn("-mb-px border-b-2 px-3 pb-2 text-sm font-semibold capitalize", p.tab === t ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink")}
           >
             {t}
           </Link>
         ))}
-      </div>
+      </nav>
       {p.events.length === 0 ? (
         <div className="rounded-card border border-dashed border-line bg-surface p-8 text-center">
           <CalendarClock className="mx-auto h-8 w-8 text-muted" aria-hidden="true" />
@@ -291,7 +292,7 @@ function ListView(p: Parameters<typeof BookingCalendar>[0] & { onSelect: (e: Cal
                           </p>
                         </div>
                         <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-2 py-0.5 text-[11px] font-semibold text-muted">
-                          <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} />
+                          <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} aria-hidden="true" />
                           {tone.label}
                         </span>
                       </button>
@@ -312,7 +313,7 @@ function Legend() {
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
       {(["confirmed", "held", "done", "no_show", "cancelled"] as const).map((s) => (
         <span key={s} className="inline-flex items-center gap-1.5">
-          <span className={cn("h-2 w-2 rounded-full", STATUS[s]!.dot)} /> {STATUS[s]!.label}
+          <span className={cn("h-2 w-2 rounded-full", STATUS[s]!.dot)} aria-hidden="true" /> {STATUS[s]!.label}
         </span>
       ))}
       <span className="inline-flex items-center gap-1.5">
@@ -326,14 +327,23 @@ function DetailSheet({ slug, event: e, onClose }: { slug: string; event: CalEven
   const tone = STATUS[e.status] ?? STATUS.confirmed!;
   const start = new Date(e.start);
   const ModeIcon = MODE_ICON[e.mode] ?? Clock;
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  // Move focus into the sheet while it is open and hand it back to the booking that opened it.
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    return () => previous?.focus();
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-stretch sm:justify-end" role="dialog" aria-modal="true" aria-labelledby="booking-sheet-title">
-      <button type="button" aria-label="Close" className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" onClick={onClose} />
+      <button type="button" aria-label="Close" tabIndex={-1} className="absolute inset-0 bg-ink/30" onClick={onClose} />
       <div className="relative max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl sm:max-h-none sm:w-[400px] sm:rounded-none sm:pb-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-2 py-0.5 text-[11px] font-semibold text-muted">
-              <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} /> {tone.label}
+              <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} aria-hidden="true" /> {tone.label}
             </span>
             <h3 id="booking-sheet-title" className="mt-2 text-lg font-semibold text-ink">{e.serviceName ?? "Session"}</h3>
             <p className="text-sm text-muted">
@@ -343,8 +353,8 @@ function DetailSheet({ slug, event: e, onClose }: { slug: string; event: CalEven
               {formatSlotTime(start)} – {formatSlotTime(new Date(e.end))}
             </p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="flex h-9 w-9 items-center justify-center rounded-full bg-bg text-muted hover:text-ink">
-            <X className="h-4 w-4" />
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="flex h-9 w-9 items-center justify-center rounded-full bg-bg text-muted hover:text-ink">
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -358,7 +368,7 @@ function DetailSheet({ slug, event: e, onClose }: { slug: string; event: CalEven
               <dt className="w-20 shrink-0 text-muted">Phone</dt>
               <dd>
                 <a href={`tel:${e.customerPhone}`} className="inline-flex items-center gap-1.5 font-semibold text-accent">
-                  <Phone className="h-3.5 w-3.5" /> {e.customerPhone}
+                  <Phone className="h-3.5 w-3.5" aria-hidden="true" /> {e.customerPhone}
                 </a>
               </dd>
             </div>
@@ -366,7 +376,7 @@ function DetailSheet({ slug, event: e, onClose }: { slug: string; event: CalEven
           <div className="flex gap-3">
             <dt className="w-20 shrink-0 text-muted">Where</dt>
             <dd className="text-ink">
-              <span className="inline-flex items-center gap-1.5"><ModeIcon className="h-3.5 w-3.5 text-muted" /> {MODE_LABEL[e.mode] ?? e.mode}</span>
+              <span className="inline-flex items-center gap-1.5"><ModeIcon className="h-3.5 w-3.5 text-muted" aria-hidden="true" /> {MODE_LABEL[e.mode] ?? e.mode}</span>
               {e.address && (
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.address)}`}
@@ -374,7 +384,7 @@ function DetailSheet({ slug, event: e, onClose }: { slug: string; event: CalEven
                   rel="noopener noreferrer"
                   className="mt-1 flex items-start gap-1.5 text-xs text-muted hover:text-ink"
                 >
-                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {e.address}
+                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {e.address}
                 </a>
               )}
             </dd>
@@ -382,13 +392,13 @@ function DetailSheet({ slug, event: e, onClose }: { slug: string; event: CalEven
           <div className="flex gap-3">
             <dt className="w-20 shrink-0 text-muted">Payment</dt>
             <dd className="text-ink tabular-nums">
-              {formatINR(e.pricePaise)} · {e.paymentMode === "online" ? "Online" : "Pay at session"} <span className="text-muted">({e.paymentStatus.replace("_", " ")})</span>
+              {formatINR(e.pricePaise)} · {e.paymentMode === "online" ? "Online" : "Pay at session"} <span className="text-muted">({e.paymentStatus.replaceAll("_", " ")})</span>
             </dd>
           </div>
           {e.notes && (
             <div className="flex gap-3">
               <dt className="w-20 shrink-0 text-muted">Notes</dt>
-              <dd className="flex items-start gap-1.5 text-ink"><StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" /> {e.notes}</dd>
+              <dd className="flex items-start gap-1.5 text-ink"><StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" /> {e.notes}</dd>
             </div>
           )}
           <div className="flex gap-3">

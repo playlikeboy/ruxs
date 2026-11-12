@@ -1,9 +1,9 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
-import { vendors } from "@/db/schema";
-import { requireVendorAccess } from "@/lib/auth/session";
-import { toVendorType, type VendorType } from "@/core/vendor-types";
+import { availabilityRules, kidsServices, products, services, vendors } from "@/db/schema";
+import { requireVendorAccess, requireVendorModule } from "@/lib/auth/session";
+import { VENDOR_TYPE_INFO, canUseModule, toVendorType, type VendorType } from "@/core/vendor-types";
 import { ITEM_FIELDS, PROFILE_FIELDS, chipsFor, type FieldValues } from "./fields";
 import { readItemDetails, readTypeProfile } from "./tables";
 
@@ -39,6 +39,51 @@ export async function getPublicTypeDetails(vendorId: string, itemIds: string[]) 
     highlights: chipsFor(PROFILE_FIELDS[type], profile),
     itemChips: new Map(Array.from(items, ([id, row]) => [id, chipsFor(itemFields, row)])),
     itemRows: items,
+  };
+}
+
+/**
+ * Owner's "get ready to sell" steps for Today. Null for staff and drivers.
+ * Counts the live catalogue, weekly hours (bookable types) and filled profile fields.
+ */
+export async function getSetupChecklist(slug: string) {
+  const access = await requireVendorModule(slug, "today");
+  if (access.role !== "owner") return null;
+  const type = access.vendorType;
+  const info = VENDOR_TYPE_INFO[type];
+  const v = access.vendor;
+  const db = getDb();
+  const booking = info.fulfilment === "booking";
+  const kidsClasses = canUseModule(type, "kids");
+
+  const catalogueQuery = kidsClasses
+    ? db.select({ n: count() }).from(kidsServices).where(and(eq(kidsServices.vendorId, v.id), isNull(kidsServices.archivedAt)))
+    : booking
+      ? db.select({ n: count() }).from(services).where(and(eq(services.vendorId, v.id), isNull(services.archivedAt)))
+      : db.select({ n: count() }).from(products).where(and(eq(products.vendorId, v.id), isNull(products.archivedAt)));
+
+  const [[catalogue], [hours], profile] = await Promise.all([
+    catalogueQuery,
+    booking ? db.select({ n: count() }).from(availabilityRules).where(eq(availabilityRules.vendorId, v.id)) : Promise.resolve([{ n: 1 }]),
+    readTypeProfile(db, v.id, type),
+  ]);
+
+  const fields = PROFILE_FIELDS[type].filter((f) => f.kind !== "bool");
+  const filledFields = fields.filter((f) => {
+    const value = profile?.[f.key];
+    return value != null && value !== "" && !(Array.isArray(value) && value.length === 0);
+  }).length;
+
+  return {
+    type,
+    info,
+    vendor: v,
+    booking,
+    kidsClasses,
+    catalogueCount: catalogue?.n ?? 0,
+    hoursCount: hours?.n ?? 0,
+    profileFieldCount: fields.length,
+    filledFields,
   };
 }
 

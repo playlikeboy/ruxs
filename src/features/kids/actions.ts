@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   kidsChildren,
@@ -23,6 +23,7 @@ import { purchaseHolidayPass, redeemPassCredit } from "./holiday-pass-service";
 import { recordGuardianConsent, updateProviderVerification } from "./safety-service";
 import {
   adminVerifyProviderSchema,
+  archiveKidsServiceSchema,
   bookKidsServiceSchema,
   cancelKidsBookingSchema,
   cancelWorkshopEnrollmentSchema,
@@ -41,6 +42,26 @@ import {
 function fail(error: string) {
   return { ok: false as const, error };
 }
+
+/** Keeps owner access only when the vendor's type may list kids classes. `vendorId` comes only from requireVendorAccess. */
+function kidsOwnerAccess(access: Awaited<ReturnType<typeof requireVendorAccess>>) {
+  if (!canUseModule(toVendorType(access.vendor.vendorType, access.vendor.businessType), "kids")) return null;
+  return access;
+}
+
+/** URL-safe listing slug with a short random suffix so two listings never collide. */
+function listingSlug(title: string) {
+  const base = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return `${base}-${crypto.randomUUID().slice(0, 4)}`;
+}
+
+/** Postgres unique_violation, unwrapped from the driver/ORM error. */
+function isUniqueViolation(err: unknown): boolean {
+  const e = err as { code?: unknown; cause?: { code?: unknown } } | null;
+  return e?.code === "23505" || e?.cause?.code === "23505";
+}
+
+const NOT_KIDS_PROVIDER = "Only kids class providers can list classes";
 
 /* -------------------------------------------------------------------------- */
 /* Child Profile Management (Guardian Scoped)                                */
@@ -111,6 +132,7 @@ export async function deleteChildAction(input: unknown) {
     .where(
       and(
         eq(kidsServiceBookings.childId, parsed.data.childId),
+        eq(kidsServiceBookings.guardianUserId, user.id),
         inArray(kidsServiceBookings.bookingStatus, ["held", "confirmed"])
       )
     )
@@ -256,7 +278,7 @@ export async function purchasePassAction(input: unknown) {
   if (!parsed.success) return fail("Invalid pass selection.");
 
   const user = await requireUser();
-  const clientKey = parsed.data.clientKey || `pass-buy-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const clientKey = parsed.data.clientKey ?? `pass-buy-${crypto.randomUUID()}`;
   const result = await purchaseHolidayPass({
     guardianUserId: user.id,
     passId: parsed.data.passId,
@@ -374,9 +396,10 @@ export async function submitKidsReviewAction(input: unknown) {
         moderationStatus: "published",
       })
       .returning({ id: kidsReviews.id });
-  } catch {
+  } catch (err) {
     // Unique index (migration 0015) catches a concurrent double submit.
-    return fail("You have already reviewed this session.");
+    if (isUniqueViolation(err)) return fail("You have already reviewed this session.");
+    throw err;
   }
 
   revalidatePath("/app/kids");
@@ -392,17 +415,16 @@ export async function saveKidsServiceAction(input: unknown) {
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid service.");
 
   const data = parsed.data;
-  const access = await requireVendorAccess(data.slug, ["owner"]);
-  if (!canUseModule(toVendorType(access.vendor.vendorType, access.vendor.businessType), "kids")) return { ok: false as const, error: "Only kids class providers can list classes" };
+  const access = kidsOwnerAccess(await requireVendorAccess(data.slug, ["owner"]));
+  if (!access) return fail(NOT_KIDS_PROVIDER);
   const db = getDb();
 
   const pricePaise = rupeesToPaise(data.priceRupees);
   const materialFeePaise = rupeesToPaise(data.materialFeeRupees);
-  const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
   if (data.id) {
-    // Update existing
-    await db
+    // Update existing; scoped to this vendor so another vendor's id is a no-op.
+    const updated = await db
       .update(kidsServices)
       .set({
         categoryId: data.categoryId,
@@ -419,7 +441,9 @@ export async function saveKidsServiceAction(input: unknown) {
         materialFeePaise,
         updatedAt: new Date(),
       })
-      .where(and(eq(kidsServices.id, data.id), eq(kidsServices.vendorId, access.vendorId)));
+      .where(and(eq(kidsServices.id, data.id), eq(kidsServices.vendorId, access.vendorId), isNull(kidsServices.archivedAt)))
+      .returning({ id: kidsServices.id });
+    if (updated.length === 0) return fail("Class not found.");
 
     revalidatePath(`/merchant-panel/${data.slug}/kids`);
     return { ok: true as const, serviceId: data.id };
@@ -432,7 +456,7 @@ export async function saveKidsServiceAction(input: unknown) {
       vendorId: access.vendorId,
       categoryId: data.categoryId,
       title: data.title,
-      slug: `${slug}-${Math.random().toString(36).slice(2, 6)}`,
+      slug: listingSlug(data.title),
       description: data.description || null,
       imageUrl: data.imageUrl || null,
       minAge: data.minAge,
@@ -451,8 +475,11 @@ export async function saveKidsServiceAction(input: unknown) {
 }
 
 export async function archiveKidsServiceAction(input: { slug: string; serviceId: string }) {
-  const access = await requireVendorAccess(input.slug, ["owner"]);
-  if (!canUseModule(toVendorType(access.vendor.vendorType, access.vendor.businessType), "kids")) return { ok: false as const, error: "Only kids class providers can list classes" };
+  const parsed = archiveKidsServiceSchema.safeParse(input);
+  if (!parsed.success) return fail("Invalid class.");
+
+  const access = kidsOwnerAccess(await requireVendorAccess(parsed.data.slug, ["owner"]));
+  if (!access) return fail(NOT_KIDS_PROVIDER);
   const db = getDb();
 
   await db
@@ -462,9 +489,9 @@ export async function archiveKidsServiceAction(input: { slug: string; serviceId:
       archivedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(and(eq(kidsServices.id, input.serviceId), eq(kidsServices.vendorId, access.vendorId)));
+    .where(and(eq(kidsServices.id, parsed.data.serviceId), eq(kidsServices.vendorId, access.vendorId)));
 
-  revalidatePath(`/merchant-panel/${input.slug}/kids`);
+  revalidatePath(`/merchant-panel/${parsed.data.slug}/kids`);
   return { ok: true as const };
 }
 
@@ -473,15 +500,14 @@ export async function saveKidsWorkshopAction(input: unknown) {
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid workshop details.");
 
   const data = parsed.data;
-  const access = await requireVendorAccess(data.slug, ["owner"]);
-  if (!canUseModule(toVendorType(access.vendor.vendorType, access.vendor.businessType), "kids")) return { ok: false as const, error: "Only kids class providers can list classes" };
+  const access = kidsOwnerAccess(await requireVendorAccess(data.slug, ["owner"]));
+  if (!access) return fail(NOT_KIDS_PROVIDER);
   const db = getDb();
 
   const pricePaise = rupeesToPaise(data.priceRupees);
-  const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
   if (data.id) {
-    await db
+    const updated = await db
       .update(kidsWorkshops)
       .set({
         categoryId: data.categoryId,
@@ -502,7 +528,9 @@ export async function saveKidsWorkshopAction(input: unknown) {
         cancellationPolicy: data.cancellationPolicy || "Standard cancellation policy applies.",
         updatedAt: new Date(),
       })
-      .where(and(eq(kidsWorkshops.id, data.id), eq(kidsWorkshops.vendorId, access.vendorId)));
+      .where(and(eq(kidsWorkshops.id, data.id), eq(kidsWorkshops.vendorId, access.vendorId)))
+      .returning({ id: kidsWorkshops.id });
+    if (updated.length === 0) return fail("Workshop not found.");
 
     revalidatePath(`/merchant-panel/${data.slug}/kids`);
     return { ok: true as const, workshopId: data.id };
@@ -514,7 +542,7 @@ export async function saveKidsWorkshopAction(input: unknown) {
       vendorId: access.vendorId,
       categoryId: data.categoryId,
       title: data.title,
-      slug: `${slug}-${Math.random().toString(36).slice(2, 6)}`,
+      slug: listingSlug(data.title),
       description: data.description || null,
       minAge: data.minAge,
       maxAge: data.maxAge,

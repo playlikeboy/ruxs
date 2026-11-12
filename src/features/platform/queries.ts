@@ -311,36 +311,29 @@ export const DEFAULT_CATEGORIES: Category[] = [
   },
 ];
 
-export const DEFAULT_KIDS_CATEGORIES: Category[] = DEFAULT_CATEGORIES.filter(
-  (c) => c.id === "kids" || c.id === "kids-kits" || c.id.startsWith("kids_")
-);
-
 function mergeDefaultCategories(dbRows: Category[]): Category[] {
   const existingIds = new Set(dbRows.map((r) => r.id));
   const missing = DEFAULT_CATEGORIES.filter((d) => !existingIds.has(d.id));
   return [...dbRows, ...missing].sort((a, b) => a.sort - b.sort);
 }
 
-/** Active categories in display order. Per request, so admin edits show at once. */
-export const getCategories = cache(async (): Promise<Category[]> => {
-  const db = getDb();
-  try {
-    const rows = await db.select().from(categories).where(eq(categories.isActive, true)).orderBy(asc(categories.sort), asc(categories.label));
-    return mergeDefaultCategories(rows);
-  } catch {
-    return DEFAULT_CATEGORIES.filter((c) => c.isActive);
-  }
-});
-
+/** Every category (DB rows plus code defaults not yet saved), in display order. */
 export const getAllCategories = cache(async (): Promise<Category[]> => {
   const db = getDb();
   try {
     const rows = await db.select().from(categories).orderBy(asc(categories.sort), asc(categories.label));
     return mergeDefaultCategories(rows);
-  } catch {
+  } catch (err) {
+    console.error("getAllCategories failed, using defaults", err);
     return DEFAULT_CATEGORIES;
   }
 });
+
+/**
+ * Active categories in display order. Per request, so admin edits show at once.
+ * Filters after merging so a default an admin switched off stays off.
+ */
+export const getCategories = cache(async (): Promise<Category[]> => (await getAllCategories()).filter((c) => c.isActive));
 
 /** Lookup that never fails: unknown ids get a neutral placeholder. */
 export const getCategoryMap = cache(async () => {

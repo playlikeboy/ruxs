@@ -21,30 +21,39 @@ const recordOnly = args.includes("--record-only");
 const tags = args.filter((a) => !a.startsWith("--"));
 if (tags.length === 0) throw new Error("Pass at least one migration tag");
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-for (const tag of tags) {
-  const entry = journal.entries.find((e) => e.tag === tag);
-  if (!entry) throw new Error(`${tag} is not in meta/_journal.json`);
-  const sql = fs.readFileSync(path.join(dir, tag + ".sql"), "utf8");
-  const hash = crypto.createHash("sha256").update(sql).digest("hex");
+const url = process.env.DATABASE_URL;
+if (!url) throw new Error("DATABASE_URL is required");
 
-  const client = await pool.connect();
-  try {
-    const done = await client.query("select 1 from drizzle.__drizzle_migrations where created_at = $1", [entry.when]);
-    if (done.rowCount) {
-      console.log(`${tag}: already recorded, skipped`);
-      continue;
+const pool = new Pool({ connectionString: url });
+try {
+  for (const tag of tags) {
+    const entry = journal.entries.find((e) => e.tag === tag);
+    if (!entry) throw new Error(`${tag} is not in meta/_journal.json`);
+    const sql = fs.readFileSync(path.join(dir, tag + ".sql"), "utf8");
+    const hash = crypto.createHash("sha256").update(sql).digest("hex");
+
+    const client = await pool.connect();
+    let inTransaction = false;
+    try {
+      const done = await client.query("select 1 from drizzle.__drizzle_migrations where created_at = $1", [entry.when]);
+      if (done.rowCount) {
+        console.log(`${tag}: already recorded, skipped`);
+        continue;
+      }
+      await client.query("begin");
+      inTransaction = true;
+      if (!recordOnly) await client.query(sql.replaceAll("--> statement-breakpoint", ""));
+      await client.query("insert into drizzle.__drizzle_migrations (hash, created_at) values ($1, $2)", [hash, entry.when]);
+      await client.query("commit");
+      console.log(`${tag}: ${recordOnly ? "recorded" : "applied"}`);
+    } catch (err) {
+      // Roll back only an open transaction, and never let a failed rollback hide the original error.
+      if (inTransaction) await client.query("rollback").catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
     }
-    await client.query("begin");
-    if (!recordOnly) await client.query(sql.replaceAll("--> statement-breakpoint", ""));
-    await client.query("insert into drizzle.__drizzle_migrations (hash, created_at) values ($1, $2)", [hash, entry.when]);
-    await client.query("commit");
-    console.log(`${tag}: ${recordOnly ? "recorded" : "applied"}`);
-  } catch (err) {
-    await client.query("rollback");
-    throw err;
-  } finally {
-    client.release();
   }
+} finally {
+  await pool.end();
 }
-await pool.end();

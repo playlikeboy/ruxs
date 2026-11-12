@@ -52,11 +52,11 @@ export async function getVendorShopOrders(slug: string, view: "open" | "done") {
 
 export async function countOpenShopOrders(vendorId: string) {
   const db = getDb();
-  const rows = await db
-    .select({ id: shopOrders.id })
+  const [row] = await db
+    .select({ n: count() })
     .from(shopOrders)
     .where(and(eq(shopOrders.vendorId, vendorId), eq(shopOrders.status, "placed")));
-  return rows.length;
+  return Number(row?.n ?? 0);
 }
 
 export interface AdminOrdersQueryOptions {

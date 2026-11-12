@@ -20,7 +20,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
   const { booking: b } = row;
   const now = new Date();
   const ModeIcon = b.mode === "home" ? Home : b.mode === "online" ? Video : MapPin;
-  const holdLive = b.status === "held" && b.heldUntil != null && b.heldUntil > now;
+  const heldUntil = b.status === "held" && b.heldUntil != null && b.heldUntil > now ? b.heldUntil : null;
   const cancellable = b.status === "held" || (b.status === "confirmed" && canCancelBooking(b.startsAt, now, row.cancelCutoffHours));
 
   return (
@@ -29,7 +29,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
       <div className="space-y-4 p-4">
         <section className="rounded-2xl bg-ink p-5 text-white">
           <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-wider opacity-70">Your session</p>
+            <p className="text-xs uppercase tracking-wider text-white/80">Your session</p>
             <BookingStatus status={b.status} />
           </div>
           <p className="mt-2 text-2xl font-bold">{dayLabelIST(todayIST(b.startsAt))}</p>
@@ -37,15 +37,15 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
           <p className="mt-3 flex items-center gap-2 text-sm opacity-90">
             <ModeIcon className="h-4 w-4" aria-hidden="true" /> {MODE_LABEL[b.mode] ?? b.mode}
           </p>
-          <p className="mt-1 text-sm opacity-70">
+          <p className="mt-1 text-sm text-white/80">
             {b.mode === "home" ? b.address : b.mode === "studio" ? `${row.vendorName}, ${row.vendorArea}, ${row.vendorCity}` : "The provider will share a video link before the session."}
           </p>
         </section>
 
         {b.status === "held" &&
-          (holdLive ? (
+          (heldUntil ? (
             <section className="space-y-2 rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-              <p className="text-sm text-neutral-600">Your slot is held until {formatSlotTime(b.heldUntil!)}. Pay to confirm it.</p>
+              <p className="text-sm text-neutral-600">Your slot is held until {formatSlotTime(heldUntil)}. Pay to confirm it.</p>
               <PayBookingButton bookingId={b.id} pricePaise={b.pricePaise} />
             </section>
           ) : (
@@ -73,7 +73,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
           </div>
         )}
         {b.status === "done" && (
-          <Link href={`/app/store/${row.vendorSlug}#reviews`} className="flex h-12 items-center justify-center rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink"><UiIcon name="star" /> Rate {row.vendorName}</Link>
+          <Link href={`/app/store/${row.vendorSlug}#reviews`} className="flex h-12 items-center justify-center gap-2 rounded-xl border border-black/10 bg-white text-sm font-semibold text-ink transition-colors hover:bg-neutral-50"><UiIcon name="star" /> Rate {row.vendorName}</Link>
         )}
         {["done", "cancelled", "no_show"].includes(b.status) && (
           <Link href={`/app/store/${row.vendorSlug}`} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-ink text-sm font-semibold text-white">

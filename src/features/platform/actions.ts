@@ -27,7 +27,7 @@ export async function resolveMapsLink(input: unknown) {
       break;
     }
     if (!isMapsHost(host)) break;
-    const res = await fetch(url, { redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 RUXs" } }).catch(() => null);
+    const res = await fetch(url, { redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 RUXs" }, signal: AbortSignal.timeout(5000) }).catch(() => null);
     const next = res?.headers.get("location");
     if (!next) break;
     url = new URL(next, url).toString();

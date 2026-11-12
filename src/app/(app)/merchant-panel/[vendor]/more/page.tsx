@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { requireVendorModule } from "@/lib/auth/session";
-import { canUseModule, VENDOR_TYPE_INFO } from "@/core/vendor-types";
+import { canUseModule } from "@/core/vendor-types";
 import { vendorNav } from "@/components/nav/vendor-nav-items";
 import { MODULE_ICON } from "@/components/nav/vendor-icons";
 import { PageHeader } from "@/components/ui/card";
@@ -12,20 +12,19 @@ import { MerchantAppCard } from "@/features/notifications/components/merchant-ap
 export default async function MorePage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor: slug } = await params;
   const access = await requireVendorModule(slug, "more");
-  const info = VENDOR_TYPE_INFO[access.vendorType];
   const groups = vendorNav(access.vendorType, access.role);
   const publicHref = canUseModule(access.vendorType, "kids") ? "/app/kids/providers/" + slug : "/app/store/" + slug;
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <PageHeader eyebrow={info.label} title="All tools" description={`Everything for running ${access.vendor.name}.`} />
+      <PageHeader title="All tools" description={`Everything for running ${access.vendor.name}.`} />
       <MerchantAppCard vapidPublicKey={getServerEnv().VAPID_PUBLIC_KEY ?? null} testPath={`/merchant-panel/${slug}/today`} />
-      <div className="rounded-[16px] border border-line bg-surface px-4">
+      <div className="rounded-card border border-line bg-surface px-4">
         <TapFeedbackSwitch />
       </div>
       {groups.map((g) => (
         <section key={g.title} aria-labelledby={`more-${g.title}`}>
-          <h2 id={`more-${g.title}`} className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
+          <h2 id={`more-${g.title}`} className="mb-2 text-sm font-semibold text-muted">
             {g.title}
           </h2>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -42,7 +41,7 @@ export default async function MorePage({ params }: { params: Promise<{ vendor: s
                   </span>
                   <span className="min-w-0">
                     <span className="block font-semibold text-ink group-hover:text-accent">{item.label}</span>
-                    <span className="block truncate text-sm text-muted">{item.description}</span>
+                    <span className="block text-sm text-muted">{item.description}</span>
                   </span>
                 </Link>
               );
@@ -50,7 +49,7 @@ export default async function MorePage({ params }: { params: Promise<{ vendor: s
           </div>
         </section>
       ))}
-      <Link href={publicHref} className="flex items-center gap-2 text-sm font-semibold text-accent">
+      <Link href={publicHref} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-accent hover:underline">
         <ExternalLink className="h-4 w-4" aria-hidden="true" /> See your page as households see it
       </Link>
     </div>

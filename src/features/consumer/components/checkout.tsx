@@ -10,18 +10,21 @@ import { SLOT_LABEL } from "@/config/service-kinds";
 import { placeOrder } from "@/features/consumer/actions";
 import { startOrderPayment } from "@/features/payments/actions";
 import { useRazorpay } from "@/features/payments/components/use-razorpay";
-import { cartActions, cartSubtotal, useCart } from "./cart-store";
+import { cartActions, cartSubtotal, useCart, useCartReady } from "./cart-store";
 import { PriceBreakupList } from "./price-breakup";
 import { priceBreakup, type PricingRules } from "@/core/pricing";
+import { VegMark } from "./veg-mark";
 
 const NO_RULES: PricingRules = { gstBps: 0, pricesIncludeGst: true, discountBps: 0, commissionBps: 0 };
-import { VegMark } from "./veg-mark";
+/** One elevation per panel: a hairline border, no extra shadow. */
+const PANEL = "rounded-2xl border border-line bg-surface p-4";
 
 const SLOTS = ["asap", "morning", "lunch", "evening", "dinner"] as const;
 
 export function Checkout({ address, name, onlineEnabled }: { address: string | null; name: string | null; onlineEnabled: boolean }) {
   const router = useRouter();
   const cart = useCart();
+  const ready = useCartReady();
   const [clientKey] = useState(() => crypto.randomUUID());
   const [deliverOn, setDeliverOn] = useState<"today" | "tomorrow">("today");
   const [slot, setSlot] = useState<(typeof SLOTS)[number]>("asap");
@@ -30,6 +33,17 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
   const [notes, setNotes] = useState("");
   const [pending, startTransition] = useTransition();
 
+  // The cart lives in browser storage: hold a skeleton until it is read, so a
+  // full cart never flashes the empty state first.
+  if (!ready) {
+    return (
+      <div className="space-y-4 px-4 pt-2" aria-busy="true" aria-label="Loading your cart">
+        <div className="h-40 animate-pulse rounded-2xl bg-line/60" />
+        <div className="h-28 animate-pulse rounded-2xl bg-line/60" />
+      </div>
+    );
+  }
+
   if (!cart) {
     return (
       <div className="flex flex-col items-center px-6 pt-24 text-center">
@@ -37,8 +51,8 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
           <ShoppingBag className="h-9 w-9 text-accent" aria-hidden="true" />
         </div>
         <h2 className="mt-5 text-xl font-semibold text-ink">Your cart is empty</h2>
-        <p className="mt-1.5 max-w-xs text-sm text-neutral-500">Browse tiffin kitchens and water suppliers near you, then add what you need.</p>
-        <Link href="/app" className="mt-6 inline-flex h-12 items-center rounded-xl bg-accent px-6 font-semibold text-white">
+        <p className="mt-1.5 max-w-xs text-sm text-muted">Browse tiffin kitchens and water suppliers near you, then add what you need.</p>
+        <Link href="/app" className="mt-6 inline-flex h-12 items-center rounded-xl bg-accent px-6 font-semibold text-white hover:bg-accent/90">
           Explore stores
         </Link>
       </div>
@@ -88,24 +102,24 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
 
   return (
     <div className="space-y-4 px-4 pb-44 pt-2">
-      <section className="rounded-2xl border border-black/5 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+      <section className={PANEL}>
         <Link href={`/app/store/${cart.vendorSlug}`} className="text-[15px] font-semibold text-ink">
           {cart.vendorName}
         </Link>
-        <ul className="mt-3 divide-y divide-black/5">
+        <ul className="mt-3 divide-y divide-line">
           {cart.items.map((item) => (
             <li key={item.productId} className="flex items-center gap-3 py-3">
               <VegMark isVeg={item.isVeg} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-ink">{item.name}</p>
-                <p className="text-xs text-neutral-500 tabular-nums">{formatINR(item.unitPricePaise)}</p>
+                <p className="text-xs text-muted tabular-nums">{formatINR(item.unitPricePaise)}</p>
               </div>
               <div className="flex h-8 items-center rounded-lg border border-accent/30 text-accent">
-                <button type="button" aria-label="Remove one" className="flex h-full w-8 items-center justify-center" onClick={() => cartActions.setQty(item.productId, item.qty - 1)}>
+                <button type="button" aria-label={`Remove one ${item.name}`} className="flex h-full w-8 items-center justify-center" onClick={() => cartActions.setQty(item.productId, item.qty - 1)}>
                   <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
                 </button>
-                <span className="w-5 text-center text-sm font-bold tabular-nums">{item.qty}</span>
-                <button type="button" aria-label="Add one" className="flex h-full w-8 items-center justify-center disabled:opacity-40" disabled={item.qty >= 20} onClick={() => cartActions.setQty(item.productId, item.qty + 1)}>
+                <span className="w-5 text-center text-sm font-bold tabular-nums" aria-live="polite">{item.qty}</span>
+                <button type="button" aria-label={`Add one ${item.name}`} className="flex h-full w-8 items-center justify-center disabled:opacity-40" disabled={item.qty >= 20} onClick={() => cartActions.setQty(item.productId, item.qty + 1)}>
                   <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
                 </button>
               </div>
@@ -120,12 +134,12 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
             onChange={(e) => setNotes(e.target.value)}
             maxLength={300}
             placeholder="Add a note for the store (less spicy, ring bell…)"
-            className="h-11 w-full rounded-xl bg-neutral-100 px-3.5 text-sm text-ink placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-accent/40"
+            className="h-11 w-full rounded-xl bg-app-canvas px-3.5 text-sm text-ink placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           />
         </label>
       </section>
 
-      <section className="rounded-2xl border border-black/5 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+      <section className={PANEL}>
         <h2 className="text-[15px] font-semibold text-ink">When</h2>
         <div className="mt-3 grid grid-cols-2 gap-2">
           {(["today", "tomorrow"] as const).map((d) => (
@@ -134,7 +148,7 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
               type="button"
               onClick={() => setDeliverOn(d)}
               aria-pressed={deliverOn === d}
-              className={"h-11 rounded-xl border text-sm font-semibold capitalize transition " + (deliverOn === d ? "border-ink bg-ink text-white" : "border-black/10 bg-white text-ink")}
+              className={"h-11 rounded-xl border text-sm font-semibold capitalize transition " + (deliverOn === d ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:border-ink/30")}
             >
               {d}
             </button>
@@ -147,7 +161,7 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
               type="button"
               onClick={() => setSlot(s)}
               aria-pressed={slot === s}
-              className={"h-9 shrink-0 rounded-full border px-3.5 text-[13px] font-medium transition " + (slot === s ? "border-accent bg-peach text-accent" : "border-black/10 text-neutral-600")}
+              className={"h-9 shrink-0 rounded-full border px-3.5 text-[13px] font-medium transition " + (slot === s ? "border-accent bg-peach text-accent" : "border-line text-muted hover:border-ink/30")}
             >
               {SLOT_LABEL[s]}
             </button>
@@ -155,13 +169,13 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
         </div>
       </section>
 
-      <section className="rounded-2xl border border-black/5 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+      <section className={PANEL}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex gap-3">
             <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
             <div>
-              <h2 className="text-[15px] font-semibold text-ink">Deliver to {name ?? ""}</h2>
-              <p className="mt-0.5 text-sm text-neutral-500">{address ?? "No address saved yet"}</p>
+              <h2 className="text-[15px] font-semibold text-ink">{name ? `Deliver to ${name}` : "Deliver to"}</h2>
+              <p className="mt-0.5 text-sm text-muted">{address ?? "No address saved yet"}</p>
             </div>
           </div>
           <Link href="/app/account?next=/app/cart" className="shrink-0 text-sm font-semibold text-accent">
@@ -170,9 +184,9 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
         </div>
       </section>
 
-      <section className="rounded-2xl border border-black/5 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-        <h2 className="text-[15px] font-semibold text-ink">Payment</h2>
-        <div className="mt-3 space-y-2">
+      <section className={PANEL}>
+        <h2 id="checkout-payment" className="text-[15px] font-semibold text-ink">Payment</h2>
+        <div className="mt-3 space-y-2" role="radiogroup" aria-labelledby="checkout-payment">
           {[
             ...(onlineEnabled
               ? [{ id: "online" as const, title: "Pay online", text: "UPI, cards, netbanking · secured by Razorpay", Icon: CreditCard }]
@@ -180,20 +194,20 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
             { id: "cod" as const, title: "Pay on delivery", text: "Cash or UPI to the delivery person", Icon: Wallet },
             { id: "monthly_bill" as const, title: "Add to monthly bill", text: "Settle with your plan bill on the 1st", Icon: ReceiptIndianRupee },
           ].map(({ id, title, text, Icon }) => (
-            <label key={id} className={"flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition " + (paymentMode === id ? "border-ink" : "border-black/10")}>
+            <label key={id} className={"flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent " + (paymentMode === id ? "border-ink" : "border-line hover:border-ink/30")}>
               <input type="radio" name="payment" className="sr-only" checked={paymentMode === id} onChange={() => setPaymentMode(id)} />
-              <Icon className="h-5 w-5 text-neutral-600" aria-hidden="true" />
+              <Icon className="h-5 w-5 text-muted" aria-hidden="true" />
               <span className="flex-1">
                 <span className="block text-sm font-semibold text-ink">{title}</span>
-                <span className="block text-xs text-neutral-500">{text}</span>
+                <span className="block text-xs text-muted">{text}</span>
               </span>
-              <span className={"h-5 w-5 rounded-full border-2 " + (paymentMode === id ? "border-[6px] border-ink" : "border-neutral-300")} aria-hidden="true" />
+              <span className={"h-5 w-5 rounded-full border-2 " + (paymentMode === id ? "border-[6px] border-ink" : "border-muted/50")} aria-hidden="true" />
             </label>
           ))}
         </div>
       </section>
 
-      <section className="rounded-2xl border border-black/5 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+      <section className={PANEL}>
         <h2 className="text-[15px] font-semibold text-ink">Bill details</h2>
         <div className="mt-3">
           <PriceBreakupList breakup={bill} gstBps={rules.gstBps} gstIncluded={rules.pricesIncludeGst} discountBps={rules.discountBps} showFee={paymentMode === "online"} />
@@ -205,19 +219,20 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
         )}
       </section>
 
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-md border-t border-black/5 bg-white px-4 py-3">
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-md border-t border-line bg-surface px-4 py-3">
         {address ? (
           <button
             type="button"
             disabled={pending || paying || belowMin}
             onClick={submit}
-            className="flex h-14 w-full items-center justify-between rounded-2xl bg-accent px-5 text-white shadow-[0_10px_30px_rgba(189,75,42,0.3)] transition active:scale-[0.98] disabled:opacity-60"
+            aria-busy={pending || paying}
+            className="flex h-14 w-full items-center justify-between rounded-2xl bg-accent px-5 text-white shadow-[0_2px_5px_rgba(189,75,42,0.14)] transition hover:bg-accent/90 active:scale-[0.98] disabled:opacity-60"
           >
             <span className="text-left leading-tight">
               <span className="block text-[15px] font-bold tabular-nums">{formatINR(total)}</span>
-              <span className="block text-[11px] opacity-90">TOTAL</span>
+              <span className="block text-xs opacity-90">Total</span>
             </span>
-            <span className="text-[15px] font-bold">{pending || paying ? "Working…" : paymentMode === "online" ? "Pay & place order →" : "Place order →"}</span>
+            <span className="text-[15px] font-bold">{pending || paying ? "Placing order…" : paymentMode === "online" ? "Pay & place order" : "Place order"}</span>
           </button>
         ) : (
           <Link href="/app/account?next=/app/cart" className="flex h-14 w-full items-center justify-center rounded-2xl bg-ink text-[15px] font-bold text-white">

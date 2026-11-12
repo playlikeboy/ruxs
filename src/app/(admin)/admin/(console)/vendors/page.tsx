@@ -3,43 +3,49 @@ import { Plus, Search, Store, AlertCircle, CheckCircle2, PauseCircle, X } from "
 import { getAdminVendorList } from "@/features/admin/queries";
 import { AdminVendorsTable } from "@/features/admin/components/admin-vendors-table";
 import { AdminPagination } from "@/features/admin/components/admin-pagination";
+import { getCategories } from "@/features/platform/queries";
 
-export const metadata = { title: "Vendors · Admin" };
+export const metadata = { title: "Vendors" };
 
 const STATUS_FILTERS = [
-  { v: "", label: "All Stores", key: "total" as const },
+  { v: "", label: "All stores", key: "total" as const },
   { v: "active", label: "Active", key: "active" as const },
-  { v: "pending", label: "Pending Review", key: "pending" as const },
+  { v: "pending", label: "Pending review", key: "pending" as const },
   { v: "suspended", label: "Suspended", key: "suspended" as const },
 ];
 
-const CATEGORY_FILTERS = [
-  { v: "", label: "All Categories" },
-  { v: "tiffin", label: "Tiffin" },
-  { v: "water", label: "Water" },
-  { v: "milk", label: "Milk" },
-  { v: "fitness", label: "Fitness" },
-  { v: "physio", label: "Physio" },
-  { v: "mehndi", label: "Mehndi" },
-  { v: "kids", label: "Kids" },
-  { v: "gifts", label: "Gifts" },
-];
+/** Builds a vendor-list URL, keeping only the filters that are set. */
+function vendorsHref(filters: { q?: string; status?: string; categoryId?: string }) {
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  if (filters.categoryId) params.set("categoryId", filters.categoryId);
+  if (filters.q) params.set("q", filters.q);
+  const qs = params.toString();
+  return qs ? `/admin/vendors?${qs}` : "/admin/vendors";
+}
 
 export default async function AdminVendorsPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; status?: string; categoryId?: string; page?: string }>;
 }) {
-  const { q = "", status = "", categoryId = "", page } = await searchParams;
+  const { q = "", status: rawStatus = "", categoryId = "", page } = await searchParams;
+  const status = STATUS_FILTERS.some((s) => s.v === rawStatus) ? rawStatus : "";
   const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
 
-  const { rows, counts, total, totalPages, limit } = await getAdminVendorList({
-    q: q || undefined,
-    status: status || undefined,
-    categoryId: categoryId || undefined,
-    page: currentPage,
-    limit: 20,
-  });
+  // Categories come from platform settings, so stores in admin-added categories stay filterable.
+  const [{ rows, counts, total, totalPages, limit }, categories] = await Promise.all([
+    getAdminVendorList({
+      q: q || undefined,
+      status: status || undefined,
+      categoryId: categoryId || undefined,
+      page: currentPage,
+      limit: 20,
+    }),
+    getCategories(),
+  ]);
+  const categoryFilters = [{ v: "", label: "All categories" }, ...categories.map((c) => ({ v: c.id, label: c.label }))];
+  const hasFilters = Boolean(q || status || categoryId);
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -47,7 +53,7 @@ export default async function AdminVendorsPage({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-ink text-xs font-bold text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-ink text-xs font-bold text-white" aria-hidden="true">
               <Store className="h-4 w-4" />
             </span>
             <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Vendor stores</h1>
@@ -59,7 +65,7 @@ export default async function AdminVendorsPage({
 
         <Link
           href="/admin/vendors/new"
-          className="flex h-10 items-center gap-2 rounded-[10px] bg-accent px-4 text-xs sm:text-sm font-bold text-white shadow-2xs transition hover:opacity-95"
+          className="flex h-10 items-center gap-2 rounded-control bg-accent px-4 text-xs font-bold text-white shadow-2xs transition hover:bg-accent/90 sm:text-sm"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           <span>New vendor</span>
@@ -69,19 +75,20 @@ export default async function AdminVendorsPage({
       {/* KPI Status Summary Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Total Stores", count: counts.total, icon: Store, color: "text-ink", href: "/admin/vendors" },
-          { label: "Active & Live", count: counts.active, icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", href: "/admin/vendors?status=active" },
-          { label: "Pending Review", count: counts.pending, icon: AlertCircle, color: "text-amber-600 dark:text-amber-400", href: "/admin/vendors?status=pending" },
-          { label: "Suspended", count: counts.suspended, icon: PauseCircle, color: "text-rose-600 dark:text-rose-400", href: "/admin/vendors?status=suspended" },
+          { label: "All stores", count: counts.total, icon: Store, color: "text-ink", href: "/admin/vendors" },
+          { label: "Active", count: counts.active, icon: CheckCircle2, color: "text-good", href: "/admin/vendors?status=active" },
+          { label: "Pending review", count: counts.pending, icon: AlertCircle, color: "text-warn", href: "/admin/vendors?status=pending" },
+          { label: "Suspended", count: counts.suspended, icon: PauseCircle, color: "text-bad", href: "/admin/vendors?status=suspended" },
         ].map((k) => {
           const Icon = k.icon;
-          const isActive = (k.href === "/admin/vendors" && !status) || (status && k.href.includes(`status=${status}`));
+          const isActive = k.href === "/admin/vendors" ? !status : k.href.endsWith(`status=${status}`);
           return (
             <Link
               key={k.label}
               href={k.href}
+              aria-current={isActive ? "page" : undefined}
               className={
-                "rounded-[14px] border p-3.5 transition " +
+                "rounded-card border p-3.5 transition " +
                 (isActive
                   ? "border-ink bg-surface shadow-2xs ring-1 ring-ink/10"
                   : "border-line bg-surface hover:border-ink/30")
@@ -89,7 +96,7 @@ export default async function AdminVendorsPage({
             >
               <div className="flex items-center justify-between text-muted">
                 <span className="text-xs font-medium">{k.label}</span>
-                <Icon className={`h-4 w-4 ${k.color}`} />
+                <Icon className={`h-4 w-4 ${k.color}`} aria-hidden="true" />
               </div>
               <p className={`mt-1 font-mono text-2xl font-bold tabular-nums ${k.color}`}>
                 {k.count}
@@ -110,15 +117,15 @@ export default async function AdminVendorsPage({
               defaultValue={q}
               placeholder="Search store name, phone, city, login ID…"
               aria-label="Search vendors"
-              className="h-10 w-full rounded-[10px] border border-line bg-surface pl-9 pr-9 text-xs placeholder:text-muted focus:border-ink focus:outline-none"
+              className="h-10 w-full rounded-control border border-line bg-surface pl-9 pr-11 text-xs placeholder:text-muted focus:border-ink"
             />
             {q && (
               <Link
-                href={`/admin/vendors${status ? `?status=${status}` : ""}${categoryId ? `${status ? "&" : "?"}categoryId=${categoryId}` : ""}`}
+                href={vendorsHref({ status, categoryId })}
                 aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
+                className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-control text-muted hover:text-ink"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             )}
             {status && <input type="hidden" name="status" value={status} />}
@@ -126,17 +133,14 @@ export default async function AdminVendorsPage({
           </form>
 
           {/* Status filter tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+          <nav aria-label="Filter by status" className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
             {STATUS_FILTERS.map((s) => {
               const active = status === s.v;
-              const params = new URLSearchParams();
-              if (s.v) params.set("status", s.v);
-              if (categoryId) params.set("categoryId", categoryId);
-              if (q) params.set("q", q);
               return (
                 <Link
                   key={s.label}
-                  href={`/admin/vendors?${params.toString()}`}
+                  href={vendorsHref({ q, status: s.v, categoryId })}
+                  aria-current={active ? "page" : undefined}
                   className={
                     "shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition " +
                     (active
@@ -148,24 +152,21 @@ export default async function AdminVendorsPage({
                 </Link>
               );
             })}
-          </div>
+          </nav>
         </div>
 
         {/* Category filter pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none]">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted mr-1 shrink-0">
-            Category:
+        <nav aria-labelledby="vendor-category-filter" className="flex items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none]">
+          <span id="vendor-category-filter" className="mr-1 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-muted">
+            Category
           </span>
-          {CATEGORY_FILTERS.map((c) => {
+          {categoryFilters.map((c) => {
             const active = categoryId === c.v;
-            const params = new URLSearchParams();
-            if (c.v) params.set("categoryId", c.v);
-            if (status) params.set("status", status);
-            if (q) params.set("q", q);
             return (
               <Link
-                key={c.label}
-                href={`/admin/vendors?${params.toString()}`}
+                key={c.v || "all"}
+                href={vendorsHref({ q, status, categoryId: c.v })}
+                aria-current={active ? "page" : undefined}
                 className={
                   "shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold transition " +
                   (active
@@ -177,22 +178,26 @@ export default async function AdminVendorsPage({
               </Link>
             );
           })}
-        </div>
+        </nav>
       </div>
 
       {/* Main Vendor Data Table */}
       {rows.length === 0 ? (
-        <div className="rounded-[16px] border border-line bg-surface p-12 text-center text-sm text-muted space-y-3">
-          <Store className="mx-auto h-8 w-8 text-muted/60" />
+        <div className="space-y-3 rounded-card border border-line bg-surface p-12 text-center text-sm text-muted">
+          <Store className="mx-auto h-8 w-8 text-muted" aria-hidden="true" />
           <p className="font-semibold text-ink">No vendor stores found</p>
-          <p className="text-xs text-muted max-w-sm mx-auto">
-            No stores match your current search &ldquo;{q}&rdquo; or selected filters.
+          <p className="mx-auto max-w-sm text-xs text-muted">
+            {q
+              ? <>No stores match &ldquo;{q}&rdquo; with the selected filters.</>
+              : hasFilters
+                ? "No stores match the selected filters."
+                : "Add the first store to start onboarding merchants."}
           </p>
           <Link
-            href="/admin/vendors"
-            className="inline-block rounded-[10px] border border-line px-3.5 py-1.5 text-xs font-semibold text-ink hover:bg-bg transition"
+            href={hasFilters ? "/admin/vendors" : "/admin/vendors/new"}
+            className="inline-flex min-h-10 items-center rounded-control border border-line px-3.5 text-xs font-semibold text-ink transition hover:bg-bg"
           >
-            Clear filters
+            {hasFilters ? "Clear filters" : "Add vendor"}
           </Link>
         </div>
       ) : (

@@ -4,7 +4,10 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { buttonClass } from "@/components/ui/button";
+import { Input } from "@/components/ui/field";
 import { adminDeleteVendor } from "@/features/admin/actions";
+import { AdminDialog } from "./admin-dialog";
 
 interface VendorDangerZoneProps {
   vendorId: string;
@@ -18,6 +21,11 @@ export function VendorDangerZone({ vendorId, vendorName }: VendorDangerZoneProps
   const [confirmText, setConfirmText] = useState("");
   const [pending, startTransition] = useTransition();
 
+  const close = () => {
+    setOpen(false);
+    setConfirmText("");
+  };
+
   const handleDelete = () => {
     startTransition(async () => {
       const res = await adminDeleteVendor({ vendorId });
@@ -27,114 +35,80 @@ export function VendorDangerZone({ vendorId, vendorName }: VendorDangerZoneProps
             description: res.error,
             duration: 8000,
           });
-          setOpen(false);
+          close();
           router.refresh();
         } else {
           toast.error(res.error || "Failed to delete store");
         }
       } else {
         toast.success(res.message || "Store deleted permanently");
-        setOpen(false);
+        close();
         router.push("/admin/vendors");
       }
     });
   };
 
+  const confirmed = confirmText.trim().toLowerCase() === vendorName.trim().toLowerCase();
+
   return (
-    <div className="rounded-[16px] border border-bad/30 bg-bad/5 p-5">
+    <section aria-labelledby="danger-zone-title" className="rounded-[16px] border border-bad/20 bg-bad/5 p-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h3 className="text-sm font-bold text-bad flex items-center gap-1.5">
-            <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Danger Zone
+          <h3 id="danger-zone-title" className="flex items-center gap-1.5 text-sm font-semibold text-bad">
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Delete store
           </h3>
-          <p className="mt-1 text-xs text-muted max-w-xl">
-            Deleting this store will permanently remove its menu items, delivery settings, and staff access.
-            If this store has financial ledger history, database rules will automatically suspend and deactivate it instead to preserve audit records.
+          <p className="mt-1 max-w-xl text-sm text-muted">
+            Deleting removes this store&apos;s menu, delivery settings and staff access for good. A store with money history in the ledger is suspended and paused instead, so its records stay intact.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="flex items-center gap-1.5 rounded-[10px] border border-bad/40 bg-white px-3.5 py-2 text-xs font-bold text-bad shadow-2xs hover:bg-bad hover:text-white transition"
-        >
+        <button type="button" onClick={() => setOpen(true)} className={buttonClass("danger", "sm")}>
           <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Delete store
         </button>
       </div>
 
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in"
+      <AdminDialog
+        open={open}
+        onClose={close}
+        busy={pending}
+        icon={<Trash2 className="h-5 w-5" />}
+        title={`Delete ${vendorName}?`}
+        description="This can't be undone."
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (confirmed) handleDelete();
+          }}
         >
-          <div className="w-full max-w-md rounded-[18px] border border-line bg-surface p-6 shadow-xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bad/10 text-bad">
-                <Trash2 className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div>
-                <h4 className="text-base font-bold text-ink">Delete {vendorName}?</h4>
-                <p className="text-xs text-muted">This action cannot be undone.</p>
-              </div>
-            </div>
-
-            <div className="rounded-[12px] bg-bg p-3.5 text-xs text-muted space-y-2">
-              <p>
-                • Uncommitted stores &amp; test data will be permanently wiped from the database.
-              </p>
-              <p>
-                • Stores with active or historical financial transactions will be safely deactivated and suspended.
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="confirm-vendor-name" className="text-xs font-medium text-ink">
-                Type <span className="font-mono font-bold select-all text-bad">{vendorName}</span> to confirm:
-              </label>
-              <input
-                id="confirm-vendor-name"
-                type="text"
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder={vendorName}
-                className="h-10 w-full rounded-[10px] border border-line bg-surface px-3 text-xs placeholder:text-muted focus:border-bad focus:outline-none"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => {
-                  setOpen(false);
-                  setConfirmText("");
-                }}
-                className="rounded-[10px] border border-line px-3.5 py-2 text-xs font-semibold text-muted hover:text-ink hover:bg-bg transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={pending || confirmText.trim().toLowerCase() !== vendorName.trim().toLowerCase()}
-                onClick={handleDelete}
-                className="flex items-center gap-1.5 rounded-[10px] bg-bad px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-bad/90 disabled:opacity-40 transition"
-              >
-                {pending ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                    <span>Deleting…</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Confirm Delete</span>
-                  </>
-                )}
-              </button>
-            </div>
+          <ul className="list-disc space-y-1.5 rounded-[12px] bg-bg py-3 pl-8 pr-3.5 text-sm text-muted">
+            <li>A store with no ledger history is deleted permanently.</li>
+            <li>A store with ledger history is suspended and paused instead.</li>
+          </ul>
+          <div className="space-y-1.5">
+            <label htmlFor="confirm-vendor-name" className="block text-sm font-medium text-ink">
+              Type <span className="select-all font-mono font-semibold text-bad">{vendorName}</span> to confirm
+            </label>
+            <Input
+              id="confirm-vendor-name"
+              autoComplete="off"
+              autoFocus
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={vendorName}
+            />
           </div>
-        </div>
-      )}
-    </div>
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+            <button type="button" disabled={pending} onClick={close} className={buttonClass("secondary", "sm")}>
+              Cancel
+            </button>
+            <button type="submit" disabled={pending || !confirmed} className={"inline-flex min-h-10 select-none items-center justify-center gap-1.5 rounded-control px-3 text-[13px] font-semibold text-white transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent bg-bad hover:bg-bad/90"}>
+              {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />}
+              {pending ? "Deleting…" : "Delete store"}
+            </button>
+          </div>
+        </form>
+      </AdminDialog>
+    </section>
   );
 }

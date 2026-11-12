@@ -2,13 +2,14 @@
 
 import { UiIcon } from "@/components/ui/app-icon";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShieldAlert,
   ShieldCheck,
   Star,
 } from "lucide-react";
+import { buttonClass } from "@/components/ui/button";
 import { formatINR } from "@/core/money";
 import { adminVerifyProviderAction } from "../actions";
 
@@ -54,6 +55,17 @@ interface ReviewRow {
   };
 }
 
+type VerificationStatus = "pending" | "approved" | "rejected" | "suspended";
+type SafetyStatus = "pending" | "passed" | "flagged";
+
+const VERIFICATION: VerificationStatus[] = ["pending", "approved", "rejected", "suspended"];
+const SAFETY: SafetyStatus[] = ["pending", "passed", "flagged"];
+// Fail closed: an unknown or missing status is shown as pending, never as approved/passed.
+const asVerification = (v: string | undefined): VerificationStatus => (VERIFICATION as string[]).includes(v ?? "") ? (v as VerificationStatus) : "pending";
+const asSafety = (v: string | undefined): SafetyStatus => (SAFETY as string[]).includes(v ?? "") ? (v as SafetyStatus) : "pending";
+
+const dateFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
+
 export function AdminKidsConsoleManager({
   providers,
   passes,
@@ -66,20 +78,25 @@ export function AdminKidsConsoleManager({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"providers" | "passes" | "reviews">("providers");
   const [editingProvider, setEditingProvider] = useState<ProviderRow | null>(null);
-  const [status, setStatus] = useState<"approved" | "rejected" | "suspended">("approved");
-  const [safetyReviewStatus, setSafetyReviewStatus] = useState<"passed" | "failed" | "pending_inspection">("passed");
+  const [status, setStatus] = useState<VerificationStatus>("pending");
+  const [safetyReviewStatus, setSafetyReviewStatus] = useState<SafetyStatus>("pending");
   const [safetyNotes, setSafetyNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // Native dialog: focus trap, Escape to close, inert page behind it.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (editingProvider && !dialog.open) dialog.showModal();
+    if (!editingProvider && dialog.open) dialog.close();
+  }, [editingProvider]);
 
   const openEditModal = (p: ProviderRow) => {
     setEditingProvider(p);
-    setStatus(
-      (p.profile?.verificationStatus as "approved" | "rejected" | "suspended") || "approved"
-    );
-    setSafetyReviewStatus(
-      (p.profile?.safetyReviewStatus as "passed" | "failed" | "pending_inspection") || "passed"
-    );
+    setStatus(asVerification(p.profile?.verificationStatus));
+    setSafetyReviewStatus(asSafety(p.profile?.safetyReviewStatus));
     setSafetyNotes(p.profile?.safetyNotes || "");
     setErrorMsg(null);
   };
@@ -111,19 +128,20 @@ export function AdminKidsConsoleManager({
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-black text-ink">Kids Zone Safety & Verification Console</h1>
-          <p className="mt-0.5 text-xs text-muted">
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">Kids safety and verification</h1>
+          <p className="mt-0.5 text-sm text-muted">
             Audit partner mentor credentials, child safety compliance, holiday passes, and reviews.
           </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-line pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-line pb-3">
         <button
           type="button"
           onClick={() => setActiveTab("providers")}
-          className={`rounded-full px-4 py-1.5 text-xs font-black transition ${
+          aria-pressed={activeTab === "providers"}
+          className={`min-h-10 rounded-full px-4 text-sm font-semibold transition ${
             activeTab === "providers"
               ? "bg-ink text-white"
               : "bg-surface text-muted hover:text-ink border border-line"
@@ -135,7 +153,8 @@ export function AdminKidsConsoleManager({
         <button
           type="button"
           onClick={() => setActiveTab("passes")}
-          className={`rounded-full px-4 py-1.5 text-xs font-black transition ${
+          aria-pressed={activeTab === "passes"}
+          className={`min-h-10 rounded-full px-4 text-sm font-semibold transition ${
             activeTab === "passes"
               ? "bg-ink text-white"
               : "bg-surface text-muted hover:text-ink border border-line"
@@ -147,7 +166,8 @@ export function AdminKidsConsoleManager({
         <button
           type="button"
           onClick={() => setActiveTab("reviews")}
-          className={`rounded-full px-4 py-1.5 text-xs font-black transition ${
+          aria-pressed={activeTab === "reviews"}
+          className={`min-h-10 rounded-full px-4 text-sm font-semibold transition ${
             activeTab === "reviews"
               ? "bg-ink text-white"
               : "bg-surface text-muted hover:text-ink border border-line"
@@ -168,49 +188,47 @@ export function AdminKidsConsoleManager({
               return (
                 <div
                   key={p.vendor.id}
-                  className="flex flex-col justify-between rounded-2xl border border-line bg-surface p-4 shadow-2xs"
+                  className="flex flex-col justify-between rounded-[16px] border border-line bg-surface p-4"
                 >
                   <div>
                     <div className="flex items-center justify-between">
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
-                          isApproved
-                            ? "bg-emerald-100 text-emerald-900"
-                            : "bg-amber-100 text-amber-900"
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${
+                          isApproved ? "bg-brand-leaf text-good" : "bg-brand-butter text-warn"
                         }`}
                       >
                         {isApproved ? (
-                          <ShieldCheck className="h-3 w-3 text-emerald-700" />
+                          <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
                         ) : (
-                          <ShieldAlert className="h-3 w-3 text-amber-700" />
+                          <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
                         )}
-                        <span>{p.profile?.verificationStatus ?? "Not Setup"}</span>
+                        <span>{p.profile?.verificationStatus ?? "Not set up"}</span>
                       </span>
 
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${
-                          safetyCleared ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-700"
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          safetyCleared ? "bg-brand-leaf text-good" : "bg-app-canvas text-muted"
                         }`}
                       >
                         Safety: {p.profile?.safetyReviewStatus ?? "Pending"}
                       </span>
                     </div>
 
-                    <h3 className="mt-2 text-sm font-black text-ink">{p.vendor.name}</h3>
-                    <p className="mt-0.5 text-xs font-medium text-muted">Area: {p.vendor.area}</p>
+                    <h3 className="mt-2 text-base font-semibold text-ink">{p.vendor.name}</h3>
+                    <p className="mt-0.5 text-sm text-muted">Area: {p.vendor.area}</p>
 
-                    <div className="mt-3 rounded-xl bg-bg p-2.5 text-[11px] font-medium text-muted space-y-1">
+                    <div className="mt-3 space-y-1 rounded-[12px] bg-app-canvas p-2.5 text-xs text-muted">
                       <div>
-                        <span className="font-bold text-ink">Qualifications: </span>
+                        <span className="font-semibold text-ink">Qualifications: </span>
                         {p.profile?.qualifications || "Not specified"}
                       </div>
                       <div>
-                        <span className="font-bold text-ink">Experience: </span>
+                        <span className="font-semibold text-ink">Experience: </span>
                         {p.profile?.experienceYears ? `${p.profile.experienceYears} Years` : "—"}
                       </div>
                       {p.profile?.safetyNotes && (
                         <div>
-                          <span className="font-bold text-ink">Audit Note: </span>
+                          <span className="font-semibold text-ink">Audit note: </span>
                           {p.profile.safetyNotes}
                         </div>
                       )}
@@ -221,9 +239,9 @@ export function AdminKidsConsoleManager({
                     <button
                       type="button"
                       onClick={() => openEditModal(p)}
-                      className="rounded-full border border-line bg-surface px-3 py-1 text-xs font-bold text-ink hover:bg-bg shadow-2xs"
+                      className="inline-flex min-h-10 items-center rounded-[12px] border border-line bg-surface px-3 text-sm font-semibold text-ink hover:bg-app-canvas"
                     >
-                      Audit & Verify →
+                      Review provider
                     </button>
                   </div>
                 </div>
@@ -240,24 +258,24 @@ export function AdminKidsConsoleManager({
             {passes.map((pass) => (
               <div
                 key={pass.id}
-                className="rounded-2xl border border-line bg-surface p-4 shadow-2xs"
+                className="rounded-[16px] border border-line bg-surface p-4"
               >
                 <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-peach/80 px-2.5 py-0.5 text-[10px] font-bold text-accent">
+                  <span className="rounded-full bg-brand-peach px-2.5 py-0.5 text-xs font-semibold text-accent">
                     {pass.creditsTotal} Credits
                   </span>
-                  <span className="text-sm font-black text-ink">
+                  <span className="text-sm font-semibold tabular-nums text-ink">
                     {formatINR(pass.pricePaise)}
                   </span>
                 </div>
 
-                <h3 className="mt-2 text-sm font-black text-ink">{pass.name}</h3>
-                <p className="mt-1 text-xs text-muted">{pass.description}</p>
+                <h3 className="mt-2 text-base font-semibold text-ink">{pass.name}</h3>
+                {pass.description && <p className="mt-1 text-sm text-muted">{pass.description}</p>}
 
-                <div className="mt-3 flex items-center justify-between text-[11px] font-semibold text-muted">
-                  <span>Validity: {pass.validityDays} Days</span>
-                  <span className={pass.isActive ? "text-emerald-700" : "text-slate-400"}>
-                    {pass.isActive ? "● Active" : "○ Inactive"}
+                <div className="mt-3 flex items-center justify-between text-xs text-muted">
+                  <span>Valid for {pass.validityDays} days</span>
+                  <span className={pass.isActive ? "font-semibold text-good" : "font-semibold text-muted"}>
+                    {pass.isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
               </div>
@@ -270,28 +288,27 @@ export function AdminKidsConsoleManager({
       {activeTab === "reviews" && (
         <div className="space-y-3">
           {reviews.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-line bg-surface p-6 text-center text-xs text-muted">
-              No parent reviews posted yet.
+            <div className="rounded-[16px] border border-dashed border-line bg-surface p-6 text-center text-sm text-muted">
+              No parent reviews yet.
             </div>
           ) : (
             <div className="space-y-2.5">
               {reviews.map(({ review, vendor }) => (
                 <div
                   key={review.id}
-                  className="rounded-2xl border border-line bg-surface p-4 shadow-2xs"
+                  className="rounded-[16px] border border-line bg-surface p-4"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-ink">
-                      Vendor: {vendor.name}
+                    <span className="text-sm font-semibold text-ink">
+                      {vendor.name}
                     </span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1" role="img" aria-label={`${review.rating} out of 5 stars`}>
                       {[1, 2, 3, 4, 5].map((s) => (
                         <Star
                           key={s}
-                          className={`h-3 w-3 ${
-                            s <= review.rating
-                              ? "fill-amber-400 text-amber-400"
-                              : "text-slate-200"
+                          aria-hidden="true"
+                          className={`h-3.5 w-3.5 ${
+                            s <= review.rating ? "fill-warn text-warn" : "text-line"
                           }`}
                         />
                       ))}
@@ -299,13 +316,13 @@ export function AdminKidsConsoleManager({
                   </div>
 
                   {review.reviewText && (
-                    <p className="mt-2 text-xs font-medium text-slate-700">
+                    <p className="mt-2 text-sm text-ink">
                       &ldquo;{review.reviewText}&rdquo;
                     </p>
                   )}
 
-                  <div className="mt-2 text-[10px] text-muted">
-                    Posted on {new Date(review.createdAt).toLocaleDateString()} · Status: {review.moderationStatus}
+                  <div className="mt-2 text-xs text-muted">
+                    Posted {dateFmt.format(new Date(review.createdAt))} · <span className="capitalize">{review.moderationStatus}</span>
                   </div>
                 </div>
               ))}
@@ -314,91 +331,91 @@ export function AdminKidsConsoleManager({
         </div>
       )}
 
-      {/* Audit & Verification Modal */}
-      {editingProvider && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <form
-            onSubmit={handleUpdateVerification}
-            className="w-full max-w-md rounded-3xl border border-line bg-surface p-6 shadow-xl space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-black text-ink">
-                  Verify Mentor: {editingProvider.vendor.name}
-                </h3>
-                <p className="text-xs text-muted">Set platform verification status & safety review</p>
+      {/* Audit & verification dialog */}
+      <dialog
+        ref={dialogRef}
+        aria-labelledby="kids-verify-title"
+        onClose={() => setEditingProvider(null)}
+        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-[16px] border border-line bg-surface p-0 text-ink backdrop:bg-black/50"
+      >
+        {editingProvider && (
+          <form onSubmit={handleUpdateVerification} className="space-y-4 p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 id="kids-verify-title" className="text-lg font-semibold text-ink">
+                  Review {editingProvider.vendor.name}
+                </h2>
+                <p className="text-sm text-muted">Parents only see providers that are approved with a passed safety review.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingProvider(null)}
-                className="text-xs font-bold text-muted hover:text-ink"
+                aria-label="Close"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-app-canvas hover:text-ink"
               >
-                <UiIcon name="close" /> Close
+                <UiIcon name="close" />
               </button>
             </div>
 
             {errorMsg && (
-              <div className="rounded-xl border border-rose-300 bg-rose-50 p-2.5 text-xs font-bold text-rose-800">
+              <p role="alert" className="rounded-[12px] bg-bad/5 p-2.5 text-sm font-medium text-bad">
                 {errorMsg}
-              </div>
+              </p>
             )}
 
             <div>
-              <label className="block text-xs font-bold text-ink">Verification Status</label>
+              <label htmlFor="kids-verify-status" className="block text-sm font-semibold text-ink">Verification</label>
               <select
+                id="kids-verify-status"
                 value={status}
-                onChange={(e) => setStatus(e.target.value as any)}
-                className="mt-1 w-full rounded-xl border border-line px-3 py-2 text-xs font-semibold text-ink"
+                onChange={(e) => setStatus(asVerification(e.target.value))}
+                className="mt-1 min-h-11 w-full rounded-[12px] border border-line bg-surface px-3 text-base text-ink"
               >
-                <option value="approved">Approved (Verified Provider Badge)</option>
-                <option value="rejected">Rejected (Requirements Not Met)</option>
-                <option value="suspended">Suspended (Temporarily Paused)</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected (requirements not met)</option>
+                <option value="suspended">Suspended (temporarily paused)</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-ink">Child Safety Review</label>
+              <label htmlFor="kids-verify-safety" className="block text-sm font-semibold text-ink">Child safety review</label>
               <select
+                id="kids-verify-safety"
                 value={safetyReviewStatus}
-                onChange={(e) => setSafetyReviewStatus(e.target.value as any)}
-                className="mt-1 w-full rounded-xl border border-line px-3 py-2 text-xs font-semibold text-ink"
+                onChange={(e) => setSafetyReviewStatus(asSafety(e.target.value))}
+                className="mt-1 min-h-11 w-full rounded-[12px] border border-line bg-surface px-3 text-base text-ink"
               >
-                <option value="passed">Passed (Background check & premises clear)</option>
-                <option value="pending_inspection">Pending Inspection</option>
-                <option value="failed">Failed Safety Compliance</option>
+                <option value="pending">Pending</option>
+                <option value="passed">Passed (background check and premises clear)</option>
+                <option value="flagged">Flagged</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-ink">Safety & Verification Notes</label>
+              <label htmlFor="kids-verify-notes" className="block text-sm font-semibold text-ink">Notes (internal)</label>
               <textarea
+                id="kids-verify-notes"
                 value={safetyNotes}
                 onChange={(e) => setSafetyNotes(e.target.value)}
-                placeholder="e.g. Identity verified via government ID, child-safe studio check passed on 2026-10-15..."
+                maxLength={1000}
+                placeholder="e.g. ID checked, studio visited on 15 Oct"
                 rows={3}
-                className="mt-1 w-full rounded-xl border border-line px-3 py-2 text-xs font-semibold text-ink"
+                className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-muted"
               />
             </div>
 
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setEditingProvider(null)}
-                className="w-1/2 rounded-xl border border-line py-2 text-xs font-bold text-ink hover:bg-black/5"
-              >
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button type="button" onClick={() => setEditingProvider(null)} className={buttonClass("secondary", "md")}>
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-1/2 rounded-xl bg-ink py-2 text-xs font-bold text-white shadow-2xs disabled:opacity-50"
-              >
-                {isSubmitting ? "Saving..." : "Save Audit Decision"}
+              <button type="submit" disabled={isSubmitting} className={buttonClass("primary", "md")}>
+                {isSubmitting ? "Saving…" : "Save decision"}
               </button>
             </div>
           </form>
-        </div>
-      )}
+        )}
+      </dialog>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { requireUser } from "@/lib/auth/session";
 import { renderEmailHtml, sendEmail } from "./service";
 import { notifyUsers } from "./dispatch";
 import type { NotificationPreferences } from "./types";
+import { APP_URL } from "@/lib/app-url";
 
 export async function getMyNotificationPreferences(): Promise<NotificationPreferences> {
   const user = await requireUser();
@@ -43,40 +44,29 @@ export async function getMyNotificationPreferences(): Promise<NotificationPrefer
   };
 }
 
-export async function updateNotificationPreferences(input: {
-  emailOrders: boolean;
-  emailPlans: boolean;
-  emailBills: boolean;
-  emailReviews: boolean;
-  pwaPush: boolean;
-}) {
+const preferencesSchema = z.object({
+  emailOrders: z.boolean(),
+  emailPlans: z.boolean(),
+  emailBills: z.boolean(),
+  emailReviews: z.boolean(),
+  pwaPush: z.boolean(),
+});
+
+export async function updateNotificationPreferences(input: z.infer<typeof preferencesSchema>) {
+  const parsed = preferencesSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Invalid preferences" };
   const user = await requireUser();
-  const db = getDb();
+  const prefs = { ...parsed.data, updatedAt: new Date() };
 
-  const values = {
-    userId: user.id,
-    emailOrders: input.emailOrders,
-    emailPlans: input.emailPlans,
-    emailBills: input.emailBills,
-    emailReviews: input.emailReviews,
-    pwaPush: input.pwaPush,
-    updatedAt: new Date(),
-  };
-
-  await db
-    .insert(notificationPreferences)
-    .values(values)
-    .onConflictDoUpdate({
-      target: notificationPreferences.userId,
-      set: {
-        emailOrders: input.emailOrders,
-        emailPlans: input.emailPlans,
-        emailBills: input.emailBills,
-        emailReviews: input.emailReviews,
-        pwaPush: input.pwaPush,
-        updatedAt: new Date(),
-      },
-    });
+  try {
+    await getDb()
+      .insert(notificationPreferences)
+      .values({ userId: user.id, ...prefs })
+      .onConflictDoUpdate({ target: notificationPreferences.userId, set: prefs });
+  } catch (err) {
+    console.error("Failed to save notification preferences", err instanceof Error ? err.message : err);
+    return { ok: false as const, error: "Could not save your preferences. Please try again." };
+  }
 
   revalidatePath("/app/account");
   return { ok: true as const };
@@ -86,11 +76,11 @@ export async function sendTestNotificationEmail() {
   const user = await requireUser();
   const email = user.primaryEmail;
   if (!email) {
-    return { ok: false, error: "No primary email associated with your account" };
+    return { ok: false as const, error: "Add an email address to your account first." };
   }
 
   const html = renderEmailHtml({
-    heading: "Notifications are working! 🎉",
+    heading: "Notifications are working",
     lead: "You're all set to receive timely updates on your deliveries, subscriptions, and orders from RUXs.",
     details: [
       { label: "Delivery address updates", value: "Active" },
@@ -98,20 +88,21 @@ export async function sendTestNotificationEmail() {
       { label: "Household member", value: user.displayName || user.primaryEmail || "Customer" },
     ],
     actionText: "Open RUXs App",
-    actionUrl: "https://ruxs.in/app",
+    actionUrl: `${APP_URL}/app`,
   });
 
-  const text = `Hi ${user.displayName || "there"},\n\nNotifications are working!\nYou are all set to receive timely updates on your deliveries, subscriptions, and orders from RUXs.\n\nOpen RUXs App: https://ruxs.in/app`;
+  const text = `Hi ${user.displayName || "there"},\n\nNotifications are working!\nYou are all set to receive timely updates on your deliveries, subscriptions, and orders from RUXs.\n\nOpen RUXs App: ${APP_URL}/app`;
 
   const res = await sendEmail({
     to: email,
     fromType: "welcome",
-    subject: "Test Notification from RUXs",
+    subject: "Test notification from RUXs",
     html,
     text,
   });
 
-  return res;
+  // The provider's raw error stays in the server log; the person gets a plain next step.
+  return res.ok ? { ok: true as const } : { ok: false as const, error: "Could not send the test email. Please try again later." };
 }
 
 const pushSubscriptionSchema = z.object({
@@ -144,7 +135,8 @@ export async function removePushSubscription(input: unknown) {
 
 /** Sends a test email and push to the signed-in user so they can see alerts working. */
 export async function sendMyTestAlert(input: unknown) {
-  const parsed = z.object({ path: z.string().startsWith("/").max(200) }).safeParse(input);
+  // Same-site paths only: "//host" would make the push notification open another site.
+  const parsed = z.object({ path: z.string().max(200).regex(/^\/(?![/\\])/) }).safeParse(input);
   const user = await requireUser();
   await notifyUsers([user.id], { kind: "account.test", path: parsed.success ? parsed.data.path : "/" });
   return { ok: true as const };

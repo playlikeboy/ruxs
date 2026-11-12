@@ -64,14 +64,17 @@ export async function saveProduct(input: unknown) {
         .returning({ id: products.id });
       if (!updated) return { ok: false, error: "Item not found" };
     } else {
-      const [created] = await db.insert(products).values({ ...values, vendorId: access.vendorId, kind: data.kind }).returning({ id: products.id });
-      // Every item gets its type's detail row (tiffin_meals, water_cans…) straight away.
-      if (created && hasItemTable(type)) await provisionItemDetails(db, access.vendorId, type, created.id);
+      // Every item gets its type's detail row (tiffin_meals, water_cans…) in the same transaction.
+      await db.transaction(async (tx) => {
+        const [created] = await tx.insert(products).values({ ...values, vendorId: access.vendorId, kind: data.kind }).returning({ id: products.id });
+        if (created && hasItemTable(type)) await provisionItemDetails(tx, access.vendorId, type, created.id);
+      });
     }
 
     revalidateMenu(slug);
     return { ok: true };
-  } catch {
+  } catch (err) {
+    console.error("saveProduct failed:", err);
     return { ok: false, error: "Could not save the item. Check the details and try again." };
   }
 }
@@ -83,10 +86,12 @@ export async function setProductAvailability(input: unknown) {
   const { slug, id, isAvailable } = parsed.data;
   const access = await requireVendorAccess(slug, ["owner", "staff"]);
   const db = getDb();
-  await db
+  const [updated] = await db
     .update(products)
     .set({ isAvailable })
-    .where(and(eq(products.id, id), eq(products.vendorId, access.vendorId)));
+    .where(and(eq(products.id, id), eq(products.vendorId, access.vendorId), isNull(products.archivedAt)))
+    .returning({ id: products.id });
+  if (!updated) return { ok: false, error: "Item not found" };
 
   revalidateMenu(slug);
   return { ok: true };
@@ -119,10 +124,12 @@ export async function archiveProduct(input: unknown) {
     };
   }
 
-  await db
+  const [archived] = await db
     .update(products)
     .set({ archivedAt: new Date(), isAvailable: false })
-    .where(and(eq(products.id, id), eq(products.vendorId, access.vendorId)));
+    .where(and(eq(products.id, id), eq(products.vendorId, access.vendorId), isNull(products.archivedAt)))
+    .returning({ id: products.id });
+  if (!archived) return { ok: false, error: "Item not found" };
 
   revalidateMenu(slug);
   return { ok: true };

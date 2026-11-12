@@ -5,19 +5,15 @@ import { products } from "@/db/schema";
 import { requireVendorAccess } from "@/lib/auth/session";
 
 /** Every product, including archived ones, so today's counts still show them. */
-export async function getProductsForVendor(slug: string) {
+export async function getVendorProducts(slug: string) {
   const access = await requireVendorAccess(slug);
   const db = getDb();
 
-  const rows = await db
+  return db
     .select()
     .from(products)
     .where(eq(products.vendorId, access.vendorId));
-
-  return rows;
 }
-
-export const getVendorProducts = getProductsForVendor;
 
 /** The live menu: everything not archived, grouped order. */
 export async function getMenuForVendor(slug: string) {

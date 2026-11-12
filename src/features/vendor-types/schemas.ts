@@ -4,6 +4,9 @@ import type { Field } from "./fields";
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+/** Uploaded media is an https link or a same-site path. Blocks javascript:, data: and "//host" URLs, which end up in src/href. */
+const isSafeMediaUrl = (v: string) => (v.startsWith("/") && !v.startsWith("//")) || /^https:\/\/[^\s]+$/i.test(v);
+
 /** zod for one field. Empty text becomes null; rupees become integer paise. */
 function fieldSchema(f: Field): z.ZodType<unknown> {
   switch (f.kind) {
@@ -48,13 +51,14 @@ function fieldSchema(f: Field): z.ZodType<unknown> {
         .string()
         .trim()
         .max(2000, "URL is too long")
+        .refine((v) => v === "" || isSafeMediaUrl(v), `${f.label} must be an https:// link`)
         .transform((v) => (v === "" ? null : v))
         .nullable()
         .optional()
         .transform((v) => v ?? null);
     case "images":
       return z
-        .array(z.string().trim().max(2000))
+        .array(z.string().trim().max(2000).refine((v) => v === "" || isSafeMediaUrl(v), "Images must be https:// links"))
         .max(f.max ?? 10, `Up to ${f.max ?? 10} images`)
         .default([])
         .transform((arr) => arr.filter((x) => typeof x === "string" && x.trim().length > 0));

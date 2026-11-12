@@ -40,11 +40,11 @@ export function PlanDays({ subscriptionId, days }: { subscriptionId: string; day
             type="button"
             disabled={pending || !d.scheduled || d.locked}
             onClick={() => change(d.date, d.skipped ? "deliver" : "skip")}
-            aria-label={`${d.weekday} ${d.dayNum}: ${!d.scheduled ? "no delivery" : d.skipped ? "skipped, tap to restore" : "delivering, tap to skip"}`}
+            aria-label={`${d.weekday} ${d.dayNum}: ${!d.scheduled ? "no delivery" : d.locked ? (on ? "delivering, changes closed" : "skipped, changes closed") : d.skipped ? "skipped, tap to restore" : "delivering, tap to skip"}`}
             className={
               "flex w-[60px] shrink-0 flex-col items-center rounded-2xl border py-2.5 transition active:scale-95 disabled:active:scale-100 " +
               (!d.scheduled
-                ? "border-dashed border-black/10 text-neutral-300"
+                ? "border-dashed border-line text-muted/60"
                 : on
                   ? "border-good/30 bg-mint text-good"
                   : "border-bad/20 bg-blush text-bad")
@@ -78,7 +78,7 @@ export function EndPlanButton({ subscriptionId }: { subscriptionId: string }) {
           }
         });
       }}
-      className="text-sm font-semibold text-neutral-500 underline-offset-4 hover:underline disabled:opacity-60"
+      className="text-sm font-semibold text-muted underline-offset-4 hover:text-bad hover:underline disabled:opacity-60"
     >
       {pending ? "Ending…" : "End plan"}
     </button>

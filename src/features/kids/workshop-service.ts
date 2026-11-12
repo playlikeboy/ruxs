@@ -10,6 +10,10 @@ import {
 } from "@/db/schema";
 import { canEnrollInWorkshop } from "@/core/kids/workshop-capacity";
 import { calculateAge, isAgeEligible, isClassEligible } from "@/core/kids/age-eligibility";
+import { todayIST } from "@/core/time";
+
+/** A rule the guardian can act on; its message is safe to show. */
+class EnrollmentRuleError extends Error {}
 
 export interface EnrollWorkshopInput {
   guardianUserId: string;
@@ -96,7 +100,7 @@ export async function enrollInWorkshop(input: EnrollWorkshopInput) {
         .limit(1);
 
       if (alreadyEnrolled) {
-        throw new Error("This child is already enrolled in this workshop.");
+        throw new EnrollmentRuleError("This child is already enrolled in this workshop.");
       }
 
       // Count existing active enrollments
@@ -114,7 +118,7 @@ export async function enrollInWorkshop(input: EnrollWorkshopInput) {
       const enrollmentCheck = canEnrollInWorkshop(ws.capacity, enrolledCount, ws.enrollmentDeadline);
 
       if (!enrollmentCheck.canEnroll) {
-        throw new Error(enrollmentCheck.reason || "Workshop is full or registration is closed.");
+        throw new EnrollmentRuleError(enrollmentCheck.reason || "Workshop is full or registration is closed.");
       }
 
       const [enrollment] = await tx
@@ -135,8 +139,10 @@ export async function enrollInWorkshop(input: EnrollWorkshopInput) {
 
     return { ok: true as const, enrollmentId: result!.id };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Failed to complete enrollment.";
-    return { ok: false as const, error: message };
+    if (err instanceof EnrollmentRuleError) return { ok: false as const, error: err.message };
+    // Never surface raw database errors to the guardian.
+    console.error("enrollInWorkshop failed", err);
+    return { ok: false as const, error: "Could not reserve the seat. Please try again." };
   }
 }
 
@@ -153,8 +159,10 @@ export async function cancelWorkshopEnrollment(input: {
       workshopId: kidsWorkshopEnrollments.workshopId,
       status: kidsWorkshopEnrollments.status,
       paymentStatus: kidsWorkshopEnrollments.paymentStatus,
+      startDate: kidsWorkshops.startDate,
     })
     .from(kidsWorkshopEnrollments)
+    .innerJoin(kidsWorkshops, eq(kidsWorkshopEnrollments.workshopId, kidsWorkshops.id))
     .where(
       and(
         eq(kidsWorkshopEnrollments.id, input.enrollmentId),
@@ -169,6 +177,11 @@ export async function cancelWorkshopEnrollment(input: {
 
   if (enrollment.status === "cancelled") {
     return { ok: true as const, message: "Already cancelled." };
+  }
+
+  // Once the workshop has started the seat was used; it can no longer be cancelled.
+  if (enrollment.startDate <= todayIST()) {
+    return { ok: false as const, error: "This workshop has already started, so the seat can't be cancelled." };
   }
 
   const nextPaymentStatus =

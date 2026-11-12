@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CreditCard, Home, MapPin, Video, Wallet } from "lucide-react";
+import { ArrowRight, CreditCard, Home, MapPin, Video, Wallet } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { bookSession } from "@/features/bookings/actions";
 import { startBookingPayment } from "@/features/payments/actions";
@@ -15,7 +15,6 @@ const MODE_META: Record<string, { label: string; Icon: typeof Home }> = {
   studio: { label: "At gym / clinic", Icon: MapPin },
   online: { label: "Online", Icon: Video },
 };
-
 
 export function BookingPicker({
   serviceId,
@@ -118,7 +117,7 @@ export function BookingPicker({
             ...(onlineEnabled ? [{ id: "online" as const, title: "Pay online now", text: "UPI, cards · secured by Razorpay", Icon: CreditCard }] : []),
             { id: "pay_at_session" as const, title: "Pay at the session", text: "Cash or UPI to the provider", Icon: Wallet },
           ].map(({ id, title, text, Icon }) => (
-            <label key={id} className={"flex cursor-pointer items-center gap-3 rounded-xl border p-3 " + (paymentMode === id ? "border-ink" : "border-black/10")}>
+            <label key={id} className={"flex cursor-pointer items-center gap-3 rounded-xl border p-3 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent " + (paymentMode === id ? "border-ink" : "border-black/10")}>
               <input type="radio" name="pay" className="sr-only" checked={paymentMode === id} onChange={() => setPaymentMode(id)} />
               <Icon className="h-5 w-5 text-neutral-600" aria-hidden="true" />
               <span className="flex-1">
@@ -128,12 +127,14 @@ export function BookingPicker({
             </label>
           ))}
         </div>
+        <label htmlFor="booking-notes" className="sr-only">Notes for the provider</label>
         <input
+          id="booking-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           maxLength={300}
           placeholder="Goals or health notes for the provider (optional)"
-          className="mt-3 h-11 w-full rounded-xl bg-neutral-100 px-3.5 text-sm text-ink placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-accent/40"
+          className="mt-3 h-11 w-full rounded-xl bg-neutral-100 px-3.5 text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
       </section>
 
@@ -148,7 +149,10 @@ export function BookingPicker({
             <span className="block text-[15px] font-bold tabular-nums">{formatINR(pricePaise)}</span>
             <span className="block text-[11px] opacity-90">{slot ? slotTimeFmt.format(new Date(slot)).toLowerCase() : "Pick a time"}</span>
           </span>
-          <span className="text-[15px] font-bold">{pending || busy ? "Booking…" : hasProfile ? "Book session →" : "Add address to book"}</span>
+          <span className="flex items-center gap-1.5 text-[15px] font-bold">
+            {pending || busy ? "Booking…" : hasProfile ? "Book session" : "Add address to book"}
+            {!(pending || busy) && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
+          </span>
         </button>
       </div>
     </div>

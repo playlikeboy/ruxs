@@ -2,14 +2,13 @@ import Link from "next/link";
 import { CalendarCheck } from "lucide-react";
 import { formatINR } from "@/core/money";
 import { isLate } from "@/core/cutoff";
-import { addDaysIST, istDateTime, weekdayIST } from "@/core/time";
+import { addDaysIST, dayLabelIST, istDateTime, todayIST, weekdayIST } from "@/core/time";
 import { getMyPlans } from "@/features/consumer/queries";
 import { getCategoryMap } from "@/features/platform/queries";
 import { PayDuesButton } from "@/features/payments/components/pay-buttons";
 import { getMyBookings } from "@/features/bookings/queries";
 import { CancelBookingButton } from "@/features/bookings/components/booking-buttons";
 import { MODE_LABEL, canCancelBooking, formatSlotTime } from "@/core/booking";
-import { dayLabelIST, todayIST } from "@/core/time";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { StoreCover } from "@/features/consumer/components/store-cover";
 import { EndPlanButton, PlanDays, type PlanDay } from "@/features/consumer/components/plan-days";
@@ -54,8 +53,8 @@ export default async function PlansPage() {
       {upcoming.length > 0 && (
         <section className="space-y-2 px-4 pt-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-500">Upcoming sessions</h2>
-            <Link href="/app/bookings" className="text-xs font-semibold text-accent">All bookings →</Link>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-muted">Upcoming sessions</h2>
+            <Link href="/app/bookings" className="inline-flex min-h-10 items-center text-xs font-semibold text-accent hover:underline">All bookings</Link>
           </div>
           <ul className="space-y-2">
             {upcoming.map(({ booking, vendorName, serviceName, cancelCutoffHours }) => (
@@ -71,7 +70,7 @@ export default async function PlansPage() {
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs">
-                  <Link href={`/app/bookings/${booking.id}`} className="font-semibold text-accent">{booking.status === "held" ? "Pay to confirm →" : "Details →"}</Link>
+                  <Link href={`/app/bookings/${booking.id}`} className="inline-flex min-h-10 items-center font-semibold text-accent hover:underline">{booking.status === "held" ? "Pay to confirm" : "Details"}</Link>
                   {canCancelBooking(booking.startsAt, now, cancelCutoffHours) && <CancelBookingButton bookingId={booking.id} />}
                 </div>
               </li>
@@ -92,13 +91,13 @@ export default async function PlansPage() {
         <div className="space-y-4 p-4">
           {plans.map((p) => {
             const days: PlanDay[] = dates.map((date) => {
-              const weekday = weekdayIST(date);
+              const dateWeekday = weekdayIST(date);
               const scheduled =
-                p.sub.days.includes(weekday) && date >= p.sub.startsOn && (!p.sub.endsOn || date <= p.sub.endsOn);
+                p.sub.days.includes(dateWeekday) && date >= p.sub.startsOn && (!p.sub.endsOn || date <= p.sub.endsOn);
               const change = p.changes.find((c) => c.serviceDate === date);
               return {
                 date,
-                weekday: weekday.slice(0, 3),
+                weekday: dateWeekday.slice(0, 3),
                 dayNum: dayNumFmt.format(istDateTime(date, "12:00")),
                 scheduled,
                 skipped: change?.kind === "skip",
@@ -133,9 +132,9 @@ export default async function PlansPage() {
           {Array.from(balances.values())
             .filter((b) => b.balancePaise > 0)
             .map((b) => (
-              <section key={b.name} className="flex items-center justify-between rounded-2xl bg-ink p-4 text-white">
-                <div>
-                  <p className="text-xs opacity-80">Due to {b.name}</p>
+              <section key={b.vendorId} className="flex items-center justify-between gap-3 rounded-2xl bg-ink p-4 text-white">
+                <div className="min-w-0">
+                  <p className="truncate text-xs text-white/80">Due to {b.name}</p>
                   <p className="text-xl font-bold tabular-nums">{formatINR(b.balancePaise)}</p>
                 </div>
                 <PayDuesButton vendorId={b.vendorId} label="Pay online" />

@@ -77,9 +77,14 @@ export const submitKidsReviewSchema = z
     message: "Pick the completed session or workshop you are reviewing.",
   });
 
+export const archiveKidsServiceSchema = z.object({
+  slug: z.string().min(1).max(120),
+  serviceId: z.string().uuid(),
+});
+
 export const saveKidsServiceSchema = z.object({
   id: z.string().uuid().optional(),
-  slug: z.string().min(2), // vendor slug
+  slug: z.string().min(2).max(120), // vendor slug
   categoryId: z.string().min(2),
   title: z.string().trim().min(3).max(100),
   description: z.string().max(1000).optional(),
@@ -92,11 +97,11 @@ export const saveKidsServiceSchema = z.object({
   priceRupees: z.coerce.number().int().min(0).max(50000),
   materialFeePolicy: z.enum(["included", "extra", "required"]).default("included"),
   materialFeeRupees: z.coerce.number().int().min(0).max(10000).default(0),
-});
+}).refine((d) => d.minAge <= d.maxAge, { message: "Minimum age can't be above maximum age.", path: ["maxAge"] });
 
 export const saveKidsWorkshopSchema = z.object({
   id: z.string().uuid().optional(),
-  slug: z.string().min(2), // vendor slug
+  slug: z.string().min(2).max(120), // vendor slug
   categoryId: z.string().min(2),
   title: z.string().trim().min(3).max(120),
   description: z.string().max(2000).optional(),
@@ -113,11 +118,14 @@ export const saveKidsWorkshopSchema = z.object({
   materialsDescription: z.string().max(500).optional(),
   publicationState: z.enum(["draft", "published", "archived"]).default("published"),
   cancellationPolicy: z.string().max(500).optional(),
-});
+})
+  .refine((d) => d.minAge <= d.maxAge, { message: "Minimum age can't be above maximum age.", path: ["maxAge"] })
+  .refine((d) => d.endDate >= d.startDate, { message: "The workshop can't end before it starts.", path: ["endDate"] });
 
 export const adminVerifyProviderSchema = z.object({
   vendorId: z.string().uuid(),
   status: z.enum(["approved", "rejected", "suspended", "pending"]),
-  safetyReviewStatus: z.enum(["passed", "flagged", "pending"]).default("passed"),
+  // No default: a missing value must never be read as a passed child-safety review.
+  safetyReviewStatus: z.enum(["passed", "flagged", "pending"]),
   safetyNotes: z.string().max(1000).optional(),
 });

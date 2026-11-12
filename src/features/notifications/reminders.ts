@@ -13,22 +13,23 @@ export async function sendTomorrowReminders(now: Date) {
   const db = getDb();
   const { date, from, until } = tomorrowRangeIST(now);
 
-  const kids = await db
-    .select({ b: kidsServiceBookings, serviceName: kidsServices.title, vendorName: vendors.name, slug: vendors.slug, childName: kidsChildren.displayName })
-    .from(kidsServiceBookings)
-    .innerJoin(vendors, eq(kidsServiceBookings.vendorId, vendors.id))
-    .innerJoin(kidsChildren, eq(kidsServiceBookings.childId, kidsChildren.id))
-    .leftJoin(kidsServices, eq(kidsServiceBookings.serviceId, kidsServices.id))
-    .where(and(eq(kidsServiceBookings.bookingStatus, "confirmed"), gte(kidsServiceBookings.startsAt, from), lt(kidsServiceBookings.startsAt, until)))
-    .orderBy(asc(kidsServiceBookings.startsAt));
-
-  const sessions = await db
-    .select({ b: bookings, serviceName: services.name, vendorName: vendors.name, slug: vendors.slug })
-    .from(bookings)
-    .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
-    .leftJoin(services, eq(bookings.serviceId, services.id))
-    .where(and(eq(bookings.status, "confirmed"), gte(bookings.startsAt, from), lt(bookings.startsAt, until)))
-    .orderBy(asc(bookings.startsAt));
+  const [kids, sessions] = await Promise.all([
+    db
+      .select({ b: kidsServiceBookings, serviceName: kidsServices.title, vendorName: vendors.name, slug: vendors.slug, childName: kidsChildren.displayName })
+      .from(kidsServiceBookings)
+      .innerJoin(vendors, eq(kidsServiceBookings.vendorId, vendors.id))
+      .innerJoin(kidsChildren, eq(kidsServiceBookings.childId, kidsChildren.id))
+      .leftJoin(kidsServices, eq(kidsServiceBookings.serviceId, kidsServices.id))
+      .where(and(eq(kidsServiceBookings.bookingStatus, "confirmed"), gte(kidsServiceBookings.startsAt, from), lt(kidsServiceBookings.startsAt, until)))
+      .orderBy(asc(kidsServiceBookings.startsAt)),
+    db
+      .select({ b: bookings, serviceName: services.name, vendorName: vendors.name, slug: vendors.slug })
+      .from(bookings)
+      .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
+      .leftJoin(services, eq(bookings.serviceId, services.id))
+      .where(and(eq(bookings.status, "confirmed"), gte(bookings.startsAt, from), lt(bookings.startsAt, until)))
+      .orderBy(asc(bookings.startsAt)),
+  ]);
 
   for (const k of kids) {
     await notifyUsers(

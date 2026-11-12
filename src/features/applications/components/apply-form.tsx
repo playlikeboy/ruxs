@@ -22,7 +22,7 @@ export function ApplyForm({ categories }: { categories: Category[] }) {
       <div role="status" className="rounded-[16px] border border-line bg-surface p-6">
         <CheckCircle2 className="h-8 w-8 text-good" aria-hidden="true" />
         <h2 className="mt-3 text-xl font-semibold text-ink">{done.duplicate ? "We already have your application" : "Application received"}</h2>
-        <p className="mt-2 text-base leading-relaxed text-[#4A463F]">
+        <p className="mt-2 text-base leading-relaxed text-ink/80">
           Our team will call you within two working days to verify your business. Once verified, you get a login ID and password for the merchant panel.
         </p>
       </div>
@@ -61,7 +61,7 @@ export function ApplyForm({ categories }: { categories: Category[] }) {
             <label
               key={c.id}
               className={cn(
-                "flex min-h-12 cursor-pointer items-center rounded-[12px] border px-3 py-2 text-sm font-medium transition-colors",
+                "flex min-h-12 cursor-pointer items-center rounded-[12px] border px-3 py-2 text-sm font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
                 categoryId === c.id ? "border-ink bg-ink text-bg" : "border-line bg-surface text-ink hover:border-ink/40"
               )}
             >
@@ -91,7 +91,7 @@ export function ApplyForm({ categories }: { categories: Category[] }) {
       </div>
 
       {error && <p role="alert" className="rounded-[12px] bg-blush px-3.5 py-2.5 text-sm font-medium text-bad">{error}</p>}
-      <button type="submit" disabled={pending} className="inline-flex min-h-12 w-full items-center justify-center rounded-[12px] bg-accent px-6 text-base font-semibold text-white transition-colors hover:bg-[#A53F22] disabled:opacity-60 sm:w-auto">
+      <button type="submit" disabled={pending} className="inline-flex min-h-12 w-full items-center justify-center rounded-[12px] bg-accent px-6 text-base font-semibold text-white transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60 sm:w-auto">
         {pending ? "Sending…" : "Send application"}
       </button>
       <p className="text-sm text-muted">No account needed. We call you to verify, then send your login.</p>

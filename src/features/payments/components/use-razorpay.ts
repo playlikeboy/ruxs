@@ -61,12 +61,17 @@ export function useRazorpay() {
           theme: { color: "#BD4B2A" },
           modal: { ondismiss: () => resolve({ status: "dismissed" }) },
           handler: async (res: RazorpayResponse) => {
-            const confirmed = await confirmCheckout({
-              razorpayOrderId: res.razorpay_order_id,
-              razorpayPaymentId: res.razorpay_payment_id,
-              razorpaySignature: res.razorpay_signature,
-            });
-            resolve(confirmed.ok ? { status: "paid" } : { status: "failed", error: confirmed.error });
+            try {
+              const confirmed = await confirmCheckout({
+                razorpayOrderId: res.razorpay_order_id,
+                razorpayPaymentId: res.razorpay_payment_id,
+                razorpaySignature: res.razorpay_signature,
+              });
+              resolve(confirmed.ok ? { status: "paid" } : { status: "failed", error: confirmed.error });
+            } catch {
+              // A network drop here must not leave the button stuck busy; the webhook still settles the payment.
+              resolve({ status: "failed", error: "Payment is being confirmed. Refresh in a minute to see it." });
+            }
           },
         });
         rzp.on("payment.failed", (res) => resolve({ status: "failed", error: res.error?.description ?? "Payment failed" }));

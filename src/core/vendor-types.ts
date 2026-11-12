@@ -221,7 +221,7 @@ export function isVendorType(value: unknown): value is VendorType {
 }
 
 export function isKidsVendorType(value: unknown): boolean {
-  return typeof value === "string" && (value === "kids" || value.startsWith("kids_") || (KIDS_VENDOR_TYPES as readonly string[]).includes(value as any));
+  return typeof value === "string" && (value === "kids" || value.startsWith("kids_") || (KIDS_VENDOR_TYPES as readonly string[]).includes(value));
 }
 
 /** Unknown or legacy values fall back to the safest type for their fulfilment. */

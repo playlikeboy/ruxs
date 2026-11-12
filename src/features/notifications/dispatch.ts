@@ -7,8 +7,8 @@ import { getServerEnv } from "@/lib/env";
 import { sendWebPush } from "@/lib/webpush";
 import { notificationCopy, type NotifyEvent } from "@/core/notify-copy";
 import { renderEmailHtml, sendUserEmailIfAllowed } from "./service";
+import { APP_URL } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in";
 
 type Options = { onceKey?: string };
 

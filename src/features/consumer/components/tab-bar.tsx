@@ -36,6 +36,7 @@ export function TabBar() {
             <li key={tab.href}>
               <Link
                 href={tab.href}
+                aria-current={active ? "page" : undefined}
                 onClick={() => {
                   try {
                     navigator.vibrate?.(10);
@@ -50,8 +51,9 @@ export function TabBar() {
                   <Icon className="h-[21px] w-[21px]" strokeWidth={active ? 2.3 : 1.8} aria-hidden="true" />
                 </span>
                 <span>{tab.label}</span>
+                {tab.href === "/app/cart" && count > 0 && <span className="sr-only">, {count} {count === 1 ? "item" : "items"}</span>}
                 {tab.href === "/app/cart" && count > 0 && (
-                  <span className="absolute right-[calc(50%-20px)] top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white tabular-nums">
+                  <span aria-hidden="true" className="absolute right-[calc(50%-20px)] top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white tabular-nums">
                     {count}
                   </span>
                 )}

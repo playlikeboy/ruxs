@@ -8,7 +8,7 @@ import type { KidsWorkshopValues } from "./components/kids-workshop-form";
 
 /** Everything a /merchant-panel/[vendor]/kids page needs, behind the kids module gate. */
 export async function loadKidsWorkspace(slug: string) {
-  const access = await requireVendorModule(slug, "kids");
+  const access = await requireVendorModule(slug, "kids", ["owner", "staff"]);
   const [workspace, categories] = await Promise.all([getProviderKidsWorkspace(slug), getKidsCategories()]);
   const pendingReview = !(workspace.profile?.verificationStatus === "approved" && workspace.profile.safetyReviewStatus === "passed");
   const counts = { classes: workspace.services.length, workshops: workspace.workshops.length, children: workspace.bookings.length + workspace.enrollments.length };

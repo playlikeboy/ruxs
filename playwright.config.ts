@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// A remote base URL (staging/preview) is tested as-is; locally we start the dev server.
+const remoteBaseURL = process.env.PLAYWRIGHT_TEST_BASE_URL;
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -8,7 +11,7 @@ export default defineConfig({
   workers: 1,
   reporter: "list",
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || "http://127.0.0.1:3000",
+    baseURL: remoteBaseURL || "http://127.0.0.1:3000",
     trace: "on-first-retry",
   },
   projects: [
@@ -21,10 +24,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
-    command: "bun run dev",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  webServer: remoteBaseURL
+    ? undefined
+    : {
+        command: "bun run dev",
+        url: "http://127.0.0.1:3000",
+        reuseExistingServer: !process.env.CI,
+        timeout: 120000,
+      },
 });

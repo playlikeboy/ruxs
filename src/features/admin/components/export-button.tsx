@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Download, FileSpreadsheet, FileText, Printer, Check } from "lucide-react";
+import { useId, useState } from "react";
+import { Download, FileSpreadsheet, FileText, Printer } from "lucide-react";
 import { toast } from "sonner";
+
+/** Text a spreadsheet would run as a formula (CSV/formula injection). Numbers are left alone. */
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+function neutralise(val: unknown): string {
+  if (val === null || val === undefined) return "";
+  const str = String(val);
+  return typeof val === "string" && FORMULA_START.test(str) ? `'${str}` : str;
+}
 
 export interface ExportData {
   headers: string[];
@@ -21,11 +30,10 @@ export function ExportButton({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const menuId = useId();
 
   const formatCSVCell = (val: unknown): string => {
-    if (val === null || val === undefined) return "";
-    const str = String(val);
+    const str = neutralise(val);
     if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
       return `"${str.replace(/"/g, '""')}"`;
     }
@@ -48,7 +56,7 @@ export function ExportButton({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      toast.success("CSV export downloaded successfully!");
+      toast.success("CSV downloaded");
       setOpen(false);
     } catch {
       toast.error("Failed to export CSV");
@@ -62,13 +70,11 @@ export function ExportButton({
       const tsvLines = [
         data.headers.map((h) => String(h).replace(/\t|\r|\n/g, " ")).join("\t"),
         ...data.rows.map((row) =>
-          row.map((c) => (c === null || c === undefined ? "" : String(c).replace(/\t|\r|\n/g, " "))).join("\t")
+          row.map((c) => neutralise(c).replace(/\t|\r|\n/g, " ")).join("\t")
         ),
       ];
       await navigator.clipboard.writeText(tsvLines.join("\n"));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-      toast.success("Copied to clipboard in Google Sheets format! Paste with Ctrl+V.");
+      toast.success("Copied. Paste into Google Sheets or Excel.");
       setOpen(false);
     } catch {
       toast.error("Could not copy to clipboard");
@@ -81,12 +87,22 @@ export function ExportButton({
   };
 
   return (
-    <div className="relative inline-block text-left">
+    <div
+      className="relative inline-block text-left"
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && open) {
+          e.stopPropagation();
+          setOpen(false);
+        }
+      }}
+    >
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
         className={
-          "flex h-10 items-center gap-2 rounded-[10px] border border-line bg-surface px-3.5 text-xs font-semibold text-ink shadow-2xs transition hover:bg-bg " +
+          "flex h-10 items-center gap-2 rounded-[12px] border border-line bg-surface px-3.5 text-xs font-semibold text-ink transition hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
           className
         }
       >
@@ -96,12 +112,12 @@ export function ExportButton({
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-50 mt-1.5 w-52 rounded-[12px] border border-line bg-surface p-1.5 shadow-lg animate-in fade-in zoom-in-95">
+          <div aria-hidden="true" className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div id={menuId} className="absolute right-0 z-50 mt-1.5 w-56 rounded-[12px] border border-line bg-surface p-1.5 shadow-lg">
             <button
               type="button"
               onClick={handleExportCSV}
-              className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-xs font-medium text-ink hover:bg-bg transition"
+              className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-xs font-medium text-ink transition hover:bg-bg focus-visible:bg-bg focus-visible:outline-none"
             >
               <FileSpreadsheet className="h-4 w-4 text-good" aria-hidden="true" />
               <span>Download CSV file</span>
@@ -110,20 +126,16 @@ export function ExportButton({
             <button
               type="button"
               onClick={handleCopyForSheets}
-              className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-xs font-medium text-ink hover:bg-bg transition"
+              className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-xs font-medium text-ink transition hover:bg-bg focus-visible:bg-bg focus-visible:outline-none"
             >
-              {copied ? (
-                <Check className="h-4 w-4 text-good" aria-hidden="true" />
-              ) : (
-                <FileText className="h-4 w-4 text-accent" aria-hidden="true" />
-              )}
+              <FileText className="h-4 w-4 text-accent" aria-hidden="true" />
               <span>Copy for Google Sheets</span>
             </button>
 
             <button
               type="button"
               onClick={handlePrint}
-              className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-xs font-medium text-ink hover:bg-bg transition"
+              className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-xs font-medium text-ink transition hover:bg-bg focus-visible:bg-bg focus-visible:outline-none"
             >
               <Printer className="h-4 w-4 text-muted" aria-hidden="true" />
               <span>Print / Save PDF</span>
