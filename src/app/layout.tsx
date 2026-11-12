@@ -17,12 +17,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://ruxs.in"),
   applicationName: "RUXs",
   title: { default: "RUXs — Local Services for Everyday Life", template: "%s | RUXs" },
-  description: "Discover neighbourhood meals, water and dairy delivery, kids' learning and activities, DIY kits, gifts, mehndi artists, fitness and physiotherapy.",
+  description: "Book kids' classes and workshops, shop learning kits from the RUXs Store, and discover neighbourhood meals, water and dairy delivery, local stores, gifts, mehndi artists, fitness and physiotherapy.",
   keywords: [
     "local services", "tiffin service", "20L water can delivery", "fresh milk and dairy delivery",
     "neighbourhood grocery stores", "kids tutoring", "kids robotics and STEM classes",
     "kids coding classes", "kids chess academy", "kids art and pottery", "kids dance and music classes",
-    "holiday camps for children", "DIY learning kits", "school project materials", "mehndi artist",
+    "holiday camps for children", "DIY learning kits", "RUXs Store", "robotics kits for kids", "science kits for kids", "art and painting supplies", "puzzles for kids", "school project materials", "mehndi artist",
     "henna designer", "custom gifts", "fitness trainer", "physiotherapist", "recurring household services", "Ranchi",
   ],
   icons: {
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
   openGraph: {
     title: "RUXs — Local Services for Everyday Life",
-    description: "Meals, water and dairy, kids' classes and camps, gifts, mehndi artists and wellness providers from your neighbourhood.",
+    description: "Kids' classes, workshops and learning kits, the RUXs Store, plus meals, water, dairy, gifts, mehndi artists and wellness providers from your neighbourhood.",
     url: "https://ruxs.in",
     siteName: "RUXs",
     locale: "en_IN",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "RUXs — Local Services for Everyday Life",
-    description: "Discover neighbourhood essentials, kids' learning, gifts and local specialists with RUXs.",
+    description: "Kids' classes, learning kits from the RUXs Store, neighbourhood essentials and local specialists with RUXs.",
     images: ["https://ruxs.in/og.jpg"],
   },
 };

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/app",
     name: "RUXs — Neighbourhood Services",
     short_name: "RUXs",
-    description: "Explore meals, water, dairy, kids' learning, gifts, local specialists and everyday services near you.",
+    description: "Kids' classes, workshops and learning kits, the RUXs Store, and meals, water, dairy, gifts, local specialists and everyday services near you.",
     start_url: "/app",
     scope: "/",
     display: "standalone",
@@ -141,7 +141,7 @@ export default function manifest(): MetadataRoute.Manifest {
         name: "Explore Services",
         short_name: "Explore",
         url: "/app",
-        description: "Browse local meals, water, dairy, stores and specialists",
+        description: "Browse kids' classes, local stores, meals, water, dairy and specialists",
         icons: [{ src: "/brand/ruxs-app-icon-192.png", sizes: "192x192", type: "image/png" }],
       },
       {

@@ -9,7 +9,7 @@ export function SearchBar({ defaultValue = "" }: { defaultValue?: string }) {
         name="q"
         type="search"
         defaultValue={defaultValue}
-        placeholder="Search tiffin, water cans, thali…"
+        placeholder="Search classes, kits, tiffin, stores…"
         aria-label="Search stores and items"
         className="h-14 w-full rounded-2xl border border-line bg-white pl-12 pr-4 text-base text-ink placeholder:text-muted transition-colors focus:border-accent focus:outline-2 focus:outline-offset-2 focus:outline-accent"
       />

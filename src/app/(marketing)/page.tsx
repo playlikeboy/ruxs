@@ -1,16 +1,42 @@
 import Link from "next/link";
 import { NeighbourhoodScene } from "@/components/marketing/neighbourhood-scene";
-import { ArrowRight, ArrowUpRight, Check, Mail, MessageCircle, Plus } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Bot,
+  Brain,
+  CalendarDays,
+  Check,
+  CookingPot,
+  Droplets,
+  Dumbbell,
+  Gift,
+  GraduationCap,
+  Guitar,
+  HeartPulse,
+  Mail,
+  MessageCircle,
+  Milk,
+  Music,
+  Package,
+  Palette,
+  Plus,
+  ShoppingBag,
+  Sparkles,
+  Store,
+  Tent,
+  type LucideIcon,
+} from "lucide-react";
 import { buildMetadata, organizationJsonLd, faqJsonLd } from "@/lib/seo";
 import { formatINR } from "@/core/money";
 import { DayRibbon } from "@/components/marketing/day-ribbon";
 import { SkipDemo } from "@/components/marketing/skip-demo";
-import { everyday, family, faqs, merchantTools } from "@/components/marketing/home-content";
+import { everyday, family, faqs, merchantTools, specialists } from "@/components/marketing/home-content";
 
 export const metadata = buildMetadata({
-  title: "Tiffin, water, milk and kids' classes from your neighbourhood",
+  title: "Kids' classes, learning kits and everyday services near you",
   description:
-    "Order daily essentials and book family services from people nearby. Skip any day before the cutoff and pay on delivery or on one monthly bill.",
+    "Book kids' classes and workshops, shop learning kits from the RUXs Store, and set up tiffin, water and milk from people nearby. Plus local stores, gifts, mehndi, fitness and physio.",
   path: "",
 });
 
@@ -22,6 +48,26 @@ const exampleBill = [
   { label: "Lunch skipped before cutoff", qty: "2 days", paise: 0 },
 ];
 const exampleTotal = exampleBill.reduce((sum, line) => sum + line.paise, 0);
+
+const exploreChips: { icon: LucideIcon; label: string; href: string }[] = [
+  { icon: GraduationCap, label: "Kids classes", href: "/app/kids/activities" },
+  { icon: CalendarDays, label: "Workshops & camps", href: "/app/kids/workshops" },
+  { icon: Package, label: "Learning kits", href: "/app/kids/kits" },
+  { icon: ShoppingBag, label: "RUXs Store", href: "/app/kids/shop" },
+  { icon: Bot, label: "Robotics & STEM", href: "/app/kids" },
+  { icon: Palette, label: "Art & pottery", href: "/app/kids" },
+  { icon: CookingPot, label: "Tiffin meals", href: "/app/category/tiffin" },
+  { icon: Droplets, label: "20L water cans", href: "/app/category/water" },
+  { icon: Milk, label: "Fresh milk", href: "/app/category/milk" },
+  { icon: Store, label: "Local stores", href: "/app/category/other" },
+  { icon: Gift, label: "Gifts", href: "/app/category/gifts" },
+  { icon: Sparkles, label: "Mehndi", href: "/app/category/mehndi" },
+  { icon: Dumbbell, label: "Fitness", href: "/app/category/fitness" },
+  { icon: HeartPulse, label: "Physio", href: "/app/category/physio" },
+];
+
+// What the RUXs Store (RUXs's own shop) carries. Keep in step with the seeded store categories.
+const storeShelves = ["DIY & craft kits", "Robotics & electronics", "Science & lab kits", "Art & painting supplies", "Puzzles & brain games"];
 
 const primaryButton =
   "inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-accent px-6 text-base font-semibold text-white transition-colors duration-150 hover:bg-accent/90";
@@ -70,12 +116,12 @@ export default function HomePage() {
             </span>
           </div>
           <h1 id="hero-title" className="text-[44px] font-bold leading-[1.02] tracking-[-0.035em] text-ink sm:text-6xl lg:text-[72px]">
-            <span className="block text-balance">Your home runs on a routine.</span>
-            <span className="block text-balance text-brand-deep">Run it from one place.</span>
+            <span className="block text-balance">Classes and kits for your kids.</span>
+            <span className="block text-balance text-brand-deep">Everyday help for your home.</span>
           </h1>
           <div className="mt-8 grid gap-6 lg:mt-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
             <p className="max-w-xl text-lg leading-relaxed text-ink/80">
-              Daily tiffin meals, 20L water cans, fresh dairy, and verified kids&apos; classes — from dance, robotics and chess to pottery — from trusted people in your neighbourhood.
+              Book kids&apos; classes and workshops — dance, robotics, chess, art and more — and order learning kits from the RUXs Store. Set up tiffin, water cans and milk, and find local stores, gifts, mehndi, fitness and physio from people in your neighbourhood.
             </p>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
               <Link href="/app" className={primaryButton}>
@@ -85,7 +131,7 @@ export default function HomePage() {
                 href="/app/kids"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[12px] border border-line bg-surface px-5 text-base font-semibold text-ink transition-colors hover:border-accent hover:text-accent"
               >
-                Kids Zone &amp; Classes <span aria-hidden="true">🎨</span>
+                <GraduationCap className="h-4 w-4" aria-hidden="true" /> Kids Zone &amp; classes
               </Link>
               <Link href="/apply" className="text-base font-semibold text-ink underline decoration-line decoration-2 underline-offset-4 hover:decoration-accent sm:ml-2">
                 I run a business
@@ -96,22 +142,13 @@ export default function HomePage() {
           {/* Quick service discovery chips */}
           <div className="mt-8 flex flex-wrap items-center gap-2 border-t border-line/60 pt-4">
             <span className="mr-1 text-xs font-semibold text-muted">Explore</span>
-            {[
-              { emoji: "🍱", label: "Tiffin meals", href: "/app/category/tiffin" },
-              { emoji: "💧", label: "20L Water cans", href: "/app/category/water" },
-              { emoji: "🥛", label: "Fresh milk", href: "/app/category/milk" },
-              { emoji: "💃", label: "Dance classes", href: "/app/kids" },
-              { emoji: "🤖", label: "Robotics & STEM", href: "/app/kids" },
-              { emoji: "♟️", label: "Chess coaching", href: "/app/kids" },
-              { emoji: "🎨", label: "Art & Pottery", href: "/app/kids" },
-              { emoji: "📦", label: "DIY activity kits", href: "/app/kids/kits" },
-            ].map((chip) => (
+            {exploreChips.map((chip) => (
               <Link
                 key={chip.label}
                 href={chip.href}
                 className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
               >
-                <span aria-hidden="true">{chip.emoji}</span>
+                <chip.icon className="h-3.5 w-3.5 text-brand-deep" aria-hidden="true" />
                 {chip.label}
               </Link>
             ))}
@@ -125,48 +162,14 @@ export default function HomePage() {
           </div>
         </div>
         <p className="mx-auto max-w-6xl px-4 pt-4 text-sm text-muted sm:px-6">
-          Meals, water, and dairy with simple daily skips — plus verified kids&apos; classes you can book and pay per session.
+          Kids&apos; classes you can book with reviewed providers, plus meals, water and dairy with simple daily skips.
         </p>
-      </section>
-
-      {/* The mechanism only RUXs has: change tomorrow before the cutoff */}
-      <section aria-labelledby="skip-title" className="mx-auto mt-24 grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:mt-32 lg:grid-cols-[1fr_400px] lg:gap-20">
-        <div className="max-w-xl">
-          <h2 id="skip-title" className="text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
-            Change any day before the cutoff.
-          </h2>
-          <p className="mt-5 text-lg leading-relaxed text-ink/80">
-            Every store sets a daily cutoff, like 10:00 AM for lunch. Before it, skip a day, add an extra or pause your plan. After it, the kitchen is already cooking.
-          </p>
-          <p className="mt-4 text-lg leading-relaxed text-ink/80">
-            Stores can also send your home a private link, so anyone in the family can tap Deliver or Skip without signing in.
-          </p>
-        </div>
-        <SkipDemo />
-      </section>
-
-      {/* Everything RUXs carries, as a directory rather than a card grid */}
-      <section aria-labelledby="services-title" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
-        <h2 id="services-title" className="max-w-2xl text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
-          Daily essentials and family services, close by.
-        </h2>
-        <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-14">
-          <DirectoryList title="Every day" items={everyday} />
-          <DirectoryList title="For the family" items={family} />
-        </div>
-        <p className="mt-6 text-sm text-muted">What you see depends on who delivers to your area. Each store sets its own prices.</p>
       </section>
 
       {/* Kids Zone & Activities */}
       <section aria-labelledby="kids-title" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
         <div>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-deep/15 bg-brand-leaf px-3.5 py-1 text-xs font-bold text-brand-deep">
-              <span aria-hidden="true">🎨</span>
-              <span>RUXs Kids Zone</span>
-              <span className="text-brand-deep/40" aria-hidden="true">•</span>
-              <span>Classes, Camps &amp; DIY Kits</span>
-            </div>
+          <div className="flex flex-wrap items-center justify-end gap-4">
             <Link
               href="/app/kids"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline"
@@ -178,28 +181,19 @@ export default function HomePage() {
           <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:gap-12">
             <div>
               <h2 id="kids-title" className="text-balance text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-ink sm:text-4xl lg:text-5xl">
-                Dance, robotics, chess, pottery and camps for your child.
+                Classes, workshops, camps and kits for your child.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-ink/80 sm:text-lg">
-                Discover verified neighbourhood dance academies, STEM labs, art studios, and music teachers. Whether it&apos;s an evening hip-hop or Kathak class, weekly robotics workshop, pottery wheel session, chess coaching, or holiday camp — explore and book directly.
+                Discover neighbourhood dance academies, STEM labs, art studios, music teachers and tutors in RUXs Kids Zone. Whether it&apos;s an evening hip-hop or Kathak class, a weekly robotics workshop, a pottery session, chess coaching or a holiday camp — explore and book directly. For projects at home, order kits from the RUXs Store.
               </p>
 
               {/* Age brackets */}
               <div className="mt-6">
                 <h3 id="kids-ages" className="text-sm font-semibold text-ink">By age group</h3>
                 <ul aria-labelledby="kids-ages" className="mt-2.5 flex flex-wrap gap-2">
-                  {[
-                    { label: "Toddlers (2–4 yrs)", emoji: "🧸" },
-                    { label: "Early Years (4–7 yrs)", emoji: "🎨" },
-                    { label: "Young Explorers (7–10 yrs)", emoji: "🚀" },
-                    { label: "Pre-Teens (10–14+ yrs)", emoji: "💡" },
-                  ].map((bracket) => (
-                    <li
-                      key={bracket.label}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-1 text-xs font-medium text-ink"
-                    >
-                      <span aria-hidden="true">{bracket.emoji}</span>
-                      <span>{bracket.label}</span>
+                  {["Toddlers (2–4 yrs)", "Early Years (4–7 yrs)", "Young Explorers (7–10 yrs)", "Pre-Teens (10–14+ yrs)"].map((bracket) => (
+                    <li key={bracket} className="inline-flex items-center rounded-full border border-line bg-surface px-3.5 py-1 text-xs font-medium text-ink">
+                      {bracket}
                     </li>
                   ))}
                 </ul>
@@ -232,7 +226,7 @@ export default function HomePage() {
                   href="/app/kids/kits"
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-line bg-surface px-4 text-sm font-semibold text-ink transition-colors hover:border-accent hover:text-accent"
                 >
-                  DIY activity kits
+                  Learning kits
                 </Link>
               </div>
             </div>
@@ -245,7 +239,7 @@ export default function HomePage() {
                 title: "Dance & Performing Arts",
                 desc: "Kathak, Bharatnatyam, Western Hip-Hop, Contemporary & Bollywood dance classes with trained instructors.",
                 tag: "Studio or Home",
-                emoji: "💃",
+                icon: Music,
                 badge: "Dance",
                 href: "/app/kids",
               },
@@ -253,7 +247,7 @@ export default function HomePage() {
                 title: "Robotics, STEM & Coding",
                 desc: "Build working robots, code Scratch & Python games, and explore hands-on science experiments.",
                 tag: "Labs & Online",
-                emoji: "🤖",
+                icon: Bot,
                 badge: "STEM",
                 href: "/app/kids",
               },
@@ -261,7 +255,7 @@ export default function HomePage() {
                 title: "Art, Pottery & Craft",
                 desc: "Pottery wheel workshops, clay modeling, acrylic painting, sketching and handmade craft courses.",
                 tag: "Workshops",
-                emoji: "🎨",
+                icon: Palette,
                 badge: "Creative",
                 href: "/app/kids",
               },
@@ -269,7 +263,7 @@ export default function HomePage() {
                 title: "Chess Academy & Logic",
                 desc: "From beginner moves to tournament strategies, plus abacus, Olympiad math and mental logic.",
                 tag: "Coaching",
-                emoji: "♟️",
+                icon: Brain,
                 badge: "Chess",
                 href: "/app/kids",
               },
@@ -277,15 +271,15 @@ export default function HomePage() {
                 title: "Music & Vocal Lessons",
                 desc: "Guitar, keyboard, Hindustani classical vocals, Western singing, and rhythm fundamentals.",
                 tag: "Academy",
-                emoji: "🎵",
+                icon: Guitar,
                 badge: "Music",
                 href: "/app/kids",
               },
               {
                 title: "Holiday Camps & DIY Kits",
-                desc: "Action-packed holiday camps, science experiment kits and craft materials delivered home.",
+                desc: "Holiday camps, plus science experiment kits and craft materials from kit providers near you.",
                 tag: "Camps & Kits",
-                emoji: "⛺",
+                icon: Tent,
                 badge: "Camps",
                 href: "/app/kids/kits",
               },
@@ -298,7 +292,8 @@ export default function HomePage() {
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink">
-                      <span aria-hidden="true">{activity.emoji}</span> {activity.badge}
+                      <activity.icon className="mr-1 inline h-3.5 w-3.5 align-[-2px] text-brand-deep" aria-hidden="true" />
+                      {activity.badge}
                     </span>
                     <span className="text-xs font-medium text-muted">{activity.tag}</span>
                   </div>
@@ -314,7 +309,61 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+
+          {/* RUXs Store: RUXs's own shop, inside Kids Zone */}
+          <section aria-labelledby="store-title" className="mt-8 rounded-card bg-brand-peach p-5 sm:p-8">
+            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-12">
+              <div>
+                <h3 id="store-title" className="flex items-center gap-2 text-2xl font-bold tracking-[-0.02em] text-ink sm:text-3xl">
+                  <ShoppingBag className="h-6 w-6 shrink-0 text-accent" aria-hidden="true" />
+                  RUXs Store
+                </h3>
+                <p className="mt-3 max-w-2xl text-base leading-relaxed text-ink/80">
+                  Our own shop for hands-on learning at home, run by RUXs. RUXs sets the prices and handles your order. Delivering in Ranchi for now.
+                </p>
+                <ul aria-label="What the RUXs Store sells" className="mt-4 flex flex-wrap gap-2">
+                  {storeShelves.map((shelf) => (
+                    <li key={shelf} className="inline-flex items-center rounded-full border border-ink/10 bg-surface px-3.5 py-1 text-sm font-medium text-ink">
+                      {shelf}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Link href="/app/kids/shop" className={primaryButton}>
+                Shop the RUXs Store <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
+          </section>
         </div>
+      </section>
+
+      {/* The mechanism only RUXs has: change tomorrow before the cutoff */}
+      <section aria-labelledby="skip-title" className="mx-auto mt-24 grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:mt-32 lg:grid-cols-[1fr_400px] lg:gap-20">
+        <div className="max-w-xl">
+          <h2 id="skip-title" className="text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
+            Change any day before the cutoff.
+          </h2>
+          <p className="mt-5 text-lg leading-relaxed text-ink/80">
+            Every store sets a daily cutoff, like 10:00 AM for lunch. Before it, skip a day, add an extra or pause your plan. After it, the kitchen is already cooking.
+          </p>
+          <p className="mt-4 text-lg leading-relaxed text-ink/80">
+            Stores can also send your home a private link, so anyone in the family can tap Deliver or Skip without signing in.
+          </p>
+        </div>
+        <SkipDemo />
+      </section>
+
+      {/* Everything RUXs carries, as a directory rather than a card grid */}
+      <section aria-labelledby="services-title" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
+        <h2 id="services-title" className="max-w-2xl text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
+          Family services and daily essentials, close by.
+        </h2>
+        <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-14 lg:grid-cols-3">
+          <DirectoryList title="For the kids" items={family} />
+          <DirectoryList title="Every day" items={everyday} />
+          <DirectoryList title="Local specialists" items={specialists} />
+        </div>
+        <p className="mt-6 text-sm text-muted">What you see depends on who serves your area. Each provider sets its own prices; the RUXs Store sets its own.</p>
       </section>
 
       {/* One monthly bill */}
@@ -362,7 +411,7 @@ export default function HomePage() {
           </h2>
           <div>
             <p className="text-lg leading-relaxed text-ink/80">
-              Run a home kitchen, water depot, dairy, shop or class? RUXs gives you the tools to serve the homes around you.
+              Teach kids, run a home kitchen, water depot, dairy or shop, or work as a trainer, physio or mehndi artist? RUXs gives you the tools to serve the families around you.
             </p>
             <ul className="mt-5 space-y-3">
               {merchantTools.map((tool) => (
@@ -410,7 +459,7 @@ export default function HomePage() {
                 Need help or have questions?
               </h3>
               <p className="mt-1 text-sm text-muted">
-                Reach out for support with daily deliveries, kids&apos; classes, billing, or listing your business.
+                Reach out for support with kids&apos; classes, RUXs Store orders, daily deliveries, billing, or listing your business.
               </p>
             </div>
             <div className="flex flex-col gap-2.5 sm:shrink-0">
@@ -439,7 +488,7 @@ export default function HomePage() {
       <section className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
         <div className="flex flex-col gap-6 border-t-2 border-ink pt-10 sm:flex-row sm:items-end sm:justify-between">
           <p className="max-w-xl text-balance text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-ink sm:text-4xl">
-            See who delivers to your street.
+            See who serves your street.
           </p>
           <Link href="/app" className={primaryButton}>
             Find services near you <ArrowRight className="h-4 w-4" aria-hidden="true" />

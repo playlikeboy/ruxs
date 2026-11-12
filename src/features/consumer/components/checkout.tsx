@@ -51,7 +51,7 @@ export function Checkout({ address, name, onlineEnabled }: { address: string | n
           <ShoppingBag className="h-9 w-9 text-accent" aria-hidden="true" />
         </div>
         <h2 className="mt-5 text-xl font-semibold text-ink">Your cart is empty</h2>
-        <p className="mt-1.5 max-w-xs text-sm text-muted">Browse tiffin kitchens and water suppliers near you, then add what you need.</p>
+        <p className="mt-1.5 max-w-xs text-sm text-muted">Browse kids classes, meals, water and local stores near you, then add what you need.</p>
         <Link href="/app" className="mt-6 inline-flex h-12 items-center rounded-xl bg-accent px-6 font-semibold text-white hover:bg-accent/90">
           Explore stores
         </Link>

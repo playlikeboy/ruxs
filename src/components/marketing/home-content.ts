@@ -25,12 +25,19 @@ export const everyday = [
 ];
 
 export const family = [
+  { name: "RUXs Store", detail: "DIY kits, robotics, science kits, art supplies and puzzles. Delivering in Ranchi for now", href: "/app/kids/shop" },
   { name: "Dance & music classes", detail: "Kathak, western, hip-hop, guitar and vocals", href: "/app/kids" },
   { name: "STEM, robotics & coding", detail: "Hands-on robotics, programming and science", href: "/app/kids" },
   { name: "Art, pottery & craft", detail: "Clay modeling, sketching and creative workshops", href: "/app/kids" },
   { name: "Chess & academic tutors", detail: "Strategy, abacus, math and subject mentors", href: "/app/kids" },
   { name: "Holiday camps & DIY kits", detail: "Weekend bootcamps and learning kits delivered home", href: "/app/kids/kits" },
-  { name: "Local specialists", detail: "Gifts, mehndi artists, fitness trainers and physio", href: "/app" },
+];
+
+export const specialists = [
+  { name: "Gifts", detail: "Gift shops and hampers from nearby sellers", href: "/app/category/gifts" },
+  { name: "Mehndi artists", detail: "Book a local artist for an occasion", href: "/app/category/mehndi" },
+  { name: "Fitness trainers", detail: "Sessions and packages from trainers near you", href: "/app/category/fitness" },
+  { name: "Physiotherapy", detail: "Book a session with a local physio", href: "/app/category/physio" },
 ];
 
 export const merchantTools = [
@@ -38,18 +45,24 @@ export const merchantTools = [
   "A delivery run sheet for your route",
   "Monthly bills worked out from every delivery",
   "A bookings calendar for classes and sessions",
+  "Class, workshop and kit listings for kids providers",
 ];
 
 export const faqs = [
   {
     question: "What does RUXs stand for?",
     answer:
-      "RUXs stands for Recurring Utility eXperience. It connects your home with trusted neighbourhood services—from daily tiffin, fresh milk and water cans to kids' classes and local stores—with simple daily scheduling and one monthly bill.",
+      "RUXs stands for Recurring Utility eXperience. It connects your family with neighbourhood services: kids' classes, workshops and learning kits, daily tiffin, water cans and milk, local stores, gifts, mehndi artists, fitness trainers and physio. RUXs also runs its own RUXs Store for kids' kits and supplies.",
   },
   {
     question: "What classes and activities are available for children on RUXs?",
     answer:
-      "RUXs Kids Zone includes dance classes (Kathak, Bharatnatyam, Western, Hip-Hop), robotics and STEM coding, pottery and painting workshops, chess coaching, academic tutors, musical instrument lessons, holiday camps, and DIY activity kits delivered to your doorstep.",
+      "RUXs Kids Zone includes dance classes (Kathak, Bharatnatyam, Western, Hip-Hop), robotics and STEM coding, pottery and painting workshops, chess coaching, academic tutors, musical instrument lessons, holiday camps, and DIY activity kits delivered to your doorstep. What you see depends on the providers in your area.",
+  },
+  {
+    question: "What is the RUXs Store?",
+    answer:
+      "The RUXs Store is a shop run by RUXs itself, inside Kids Zone. It sells DIY kits, robotics and electronics kits, science and lab kits, art and painting supplies and puzzles. RUXs sets the prices. It delivers in Ranchi for now.",
   },
   {
     question: "How can I contact RUXs support?",

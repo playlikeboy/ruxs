@@ -84,7 +84,7 @@ export default async function PlansPage() {
             <CalendarCheck className="h-9 w-9 text-good" aria-hidden="true" />
           </div>
           <h2 className="mt-5 text-xl font-semibold text-ink">No plans yet</h2>
-          <p className="mt-1.5 max-w-xs text-sm text-neutral-500">Subscribe to a daily tiffin or water can and manage every delivery from here.</p>
+          <p className="mt-1.5 max-w-xs text-sm text-neutral-500">Subscribe to a regular delivery, like tiffin, water or milk, and manage every day from here.</p>
           <Link href="/app" className="mt-6 inline-flex h-12 items-center rounded-xl bg-accent px-6 font-semibold text-white">Find a plan</Link>
         </div>
       ) : (

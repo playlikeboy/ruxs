@@ -1,4 +1,4 @@
-import { UiIcon } from "@/components/ui/app-icon";
+import { AppIcon, UiIcon } from "@/components/ui/app-icon";
 import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import {
@@ -14,16 +14,16 @@ import {
 } from "@/components/marketing/illustrations";
 
 export const metadata = buildMetadata({
-  title: "About RUXs — Everyday Essentials From Your Neighbourhood",
+  title: "About RUXs — Kids' Classes, Kits and Everyday Services Near You",
   description:
-    "RUXs helps households discover everyday local services such as tiffin subscriptions and 20L water-can delivery, while giving independent merchants their own operations portal.",
+    "RUXs helps families find kids' classes, workshops and learning kits, shop the RUXs Store, and set up everyday local services such as tiffin, water and milk, while giving independent merchants their own operations portal.",
   path: "/about",
 });
 
 const principles = [
   {
-    title: "Everyday essentials should be easy to find",
-    body: "From a regular lunch dabba to the next water can, household essentials are often delivered by neighbourhood businesses people already trust. RUXs is building a simpler way to discover those services and choose the routine that fits your home.",
+    title: "Family life should be easy to organise",
+    body: "From a child's dance class or robotics workshop to a regular lunch dabba or the next water can, much of family life runs through neighbourhood businesses people already trust. RUXs is building a simpler way to discover those services and choose the routine that fits your home.",
   },
   {
     title: "Local businesses keep their independence",
@@ -36,6 +36,18 @@ const principles = [
 ];
 
 const features = [
+  {
+    title: "Kids' classes and workshops",
+    text: "Find dance, music, robotics, art, chess and tutoring near you. Kids providers are reviewed by RUXs before they can take bookings.",
+    illustration: <AppIcon name="kids" className="h-9 w-9 text-brand-deep" />,
+    tint: "bg-mint",
+  },
+  {
+    title: "The RUXs Store",
+    text: "Our own shop for DIY kits, robotics and science kits, art and painting supplies and puzzles. Delivering in Ranchi for now.",
+    illustration: <AppIcon name="kids-kits" className="h-9 w-9 text-accent" />,
+    tint: "bg-peach",
+  },
   {
     title: "Tiffin and meal subscriptions",
     text: "Explore recurring meal routines from neighbourhood kitchens, with merchant-specific plans and prices.",
@@ -88,7 +100,7 @@ export default function AboutPage() {
             Everyday life, <span className="text-accent">made a little easier.</span>
           </h1>
           <p className="max-w-xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
-            RUXs helps you discover recurring essentials such as tiffin subscriptions and 20L water-can delivery from local businesses. Behind the scenes, those businesses get a dedicated workspace to keep their daily service running smoothly.
+            RUXs helps you find kids&apos; classes, workshops and learning kits, shop the RUXs Store, and set up everyday essentials like tiffin, water cans and milk from local businesses. Gifts, local stores, mehndi artists, fitness trainers and physios are here too. Behind the scenes, those businesses get a dedicated workspace to keep their service running smoothly.
           </p>
           <div className="flex flex-col gap-3 pt-1 sm:flex-row">
             <ButtonLink href="/app" size="lg" className="px-6">
@@ -100,7 +112,7 @@ export default function AboutPage() {
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-xs font-medium text-muted">
             <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-4 w-4 text-accent" /> Merchant-set prices</span>
-            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-4 w-4 text-accent" /> Recurring services</span>
+            <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-4 w-4 text-accent" /> Kids &amp; everyday services</span>
             <span className="inline-flex items-center gap-2"><UiIcon name="check" className="h-4 w-4 text-accent" /> Local businesses</span>
           </div>
         </div>
@@ -116,6 +128,13 @@ export default function AboutPage() {
               <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-peach text-sm font-extrabold text-accent">R</span>
             </div>
             <div className="mt-5 flex items-center gap-4 rounded-[16px] bg-bg p-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px] bg-mint"><AppIcon name="kids" className="h-8 w-8 text-brand-deep" /></div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-ink">A class for after school</p>
+                <p className="text-xs leading-5 text-muted">Book with a reviewed provider and see the status in your bookings.</p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-4 rounded-[16px] bg-bg p-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px] bg-brand-peach"><TiffinDabbaIllustration className="h-14 w-14" /></div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-ink">A meal plan for your week</p>
@@ -136,7 +155,7 @@ export default function AboutPage() {
 
       <section className="border-y border-line bg-surface">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-9 sm:grid-cols-3 sm:gap-10 sm:px-6 sm:py-12">
-          <div><p className="text-sm font-semibold text-ink">For households</p><p className="mt-1 text-sm leading-6 text-muted">Find everyday services and subscription options from local merchants.</p></div>
+          <div><p className="text-sm font-semibold text-ink">For households</p><p className="mt-1 text-sm leading-6 text-muted">Find kids&apos; classes, learning kits and everyday services from local merchants.</p></div>
           <div><p className="text-sm font-semibold text-ink">For independent merchants</p><p className="mt-1 text-sm leading-6 text-muted">Operate your business with your own catalogue, customers and delivery routines.</p></div>
           <div><p className="text-sm font-semibold text-ink">Prices stay local</p><p className="mt-1 text-sm leading-6 text-muted">Each business sets its own rates, service areas and subscription terms.</p></div>
         </div>
@@ -163,7 +182,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="max-w-2xl space-y-3">
             <h2 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Little routines that make a big difference.</h2>
-            <p className="text-sm leading-7 text-ink/80 sm:text-base">Start with the essentials people order on repeat, then discover more neighbourhood services as coverage grows.</p>
+            <p className="text-sm leading-7 text-ink/80 sm:text-base">From kids&apos; classes and kits to the essentials people order on repeat, what you see depends on who serves your area.</p>
           </div>
           <div className="mt-9 grid gap-4 sm:grid-cols-2">
             {features.map((feature) => (
@@ -184,7 +203,7 @@ export default function AboutPage() {
       <section className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-24">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[18px] bg-peach"><TiffinDabbaIllustration className="h-14 w-14" /></div>
         <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-semibold tracking-tight text-ink sm:text-5xl">Your next great local routine starts here.</h2>
-        <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted sm:text-base">Explore local services for your home—or open the merchant portal if you run a neighbourhood business.</p>
+        <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted sm:text-base">Explore classes, kits and local services for your family—or open the merchant portal if you run a neighbourhood business or teach kids.</p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <ButtonLink href="/app" size="lg" className="px-7">
             Find services near me <ArrowRight className="h-4 w-4" aria-hidden="true" />

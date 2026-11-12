@@ -17,9 +17,9 @@ export default function MarketingLayout({
           </Link>
 
           <nav aria-label="Main navigation" className="hidden items-center gap-4 text-sm font-medium text-muted lg:flex">
+            <Link href="/for/kids" className="transition-colors hover:text-ink">Kids &amp; learning</Link>
+            <Link href="/app/kids/shop" className="transition-colors hover:text-ink">RUXs Store</Link>
             <Link href="/for/tiffin-services" className="transition-colors hover:text-ink">Meals</Link>
-            <Link href="/for/water-suppliers" className="transition-colors hover:text-ink">Water</Link>
-            <Link href="/app/kids" className="transition-colors hover:text-ink">Kids &amp; learning</Link>
             <Link href="/app" className="transition-colors hover:text-ink">All services</Link>
             <Link href="/merchant-panel" className="transition-colors hover:text-ink">For merchants</Link>
             <Link href="/pricing" className="transition-colors hover:text-ink">Pricing</Link>
@@ -51,7 +51,7 @@ export default function MarketingLayout({
                 <span className="font-extrabold tracking-[-0.03em] text-accent">RUXs</span>
               </Link>
               <p className="max-w-sm text-sm leading-6 text-muted">
-                Neighbourhood services for more of everyday life — from meals, water and dairy to kids&apos; learning, gifts and local specialists.
+                Kids&apos; classes, workshops and learning kits, the RUXs Store, and neighbourhood services for everyday life — meals, water, dairy, local stores, gifts and specialists.
               </p>
             </div>
 
@@ -60,6 +60,8 @@ export default function MarketingLayout({
               <nav aria-label="Customer links" className="flex flex-col items-start gap-2.5 text-sm text-muted">
                 <Link href="/app" className="hover:text-ink">All local services</Link>
                 <Link href="/app/kids" className="hover:text-ink">Kids Zone &amp; classes</Link>
+                <Link href="/for/kids" className="hover:text-ink">Kids classes, workshops &amp; kits</Link>
+                <Link href="/app/kids/shop" className="hover:text-ink">RUXs Store</Link>
                 <Link href="/app/category/gifts" className="hover:text-ink">Gifts &amp; hampers</Link>
                 <Link href="/app/category/mehndi" className="hover:text-ink">Mehndi &amp; henna</Link>
                 <Link href="/pricing" className="hover:text-ink">How pricing works</Link>

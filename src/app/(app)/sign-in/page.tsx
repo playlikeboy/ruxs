@@ -16,8 +16,8 @@ export default async function SignInPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <RuxsMark className="mx-auto h-14 w-14" aria-hidden="true" />
-          <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink">Home essentials, on repeat</h1>
-          <p className="mt-1 text-sm text-muted">Tiffins, water cans and more from kitchens near you.</p>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink">Your neighbourhood, in one app</h1>
+          <p className="mt-1 text-sm text-muted">Kids classes, learning kits, meals, water and local stores near you.</p>
         </div>
         <SignIn fullPage={false} automaticRedirect />
         <p className="mt-6 text-center text-sm text-muted">
@@ -27,9 +27,9 @@ export default async function SignInPage() {
           </Link>
         </p>
         <p className="mt-2 text-center text-sm text-muted">
-          Run a kitchen or water business?{" "}
+          Run a local business or teach kids?{" "}
           <Link href="/merchant-panel/sign-in" className="font-semibold text-ink underline-offset-4 hover:underline">
-            Merchant sign in
+            Go to the merchant panel
           </Link>
         </p>
         <InstallAppPrompt variant="banner" className="mt-6" />

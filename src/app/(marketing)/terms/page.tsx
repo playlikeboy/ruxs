@@ -4,7 +4,7 @@ import { buildMetadata, breadcrumbsJsonLd } from "@/lib/seo";
 export const metadata = buildMetadata({
   title: "Terms of Service",
   description:
-    "Terms of service for RUXs software. Clear commercial terms, zero commission, and software responsibilities.",
+    "Terms of service for RUXs: the marketplace for local services and kids' activity providers, the merchant tools, and orders from the RUXs Store.",
   path: "/terms",
 });
 
@@ -36,7 +36,10 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-ink">1. Software Role & Disclaimers</h2>
           <p>
-            RUXs provides software tools for neighborhood tiffin kitchens and water suppliers to manage daily schedules, delivery run sheets, and customer khatas. RUXs is not a food caterer, restaurant, or water filtration provider. All meal preparation, water purification, delivery execution, and hygiene standards remain the sole responsibility of the independent vendor.
+            RUXs is a marketplace and set of software tools for independent local businesses: tiffin kitchens, water suppliers, dairies, local stores, gift sellers, fitness trainers, physiotherapists, mehndi artists and kids&apos; class, workshop and learning-kit providers. Merchants use RUXs to manage their listings, orders, bookings, subscriptions, delivery run sheets and customer khatas. RUXs is not a food caterer, water filtration provider, clinic, trainer or class provider. Each independent vendor remains solely responsible for the service they provide, including meal preparation, water purification, hygiene, delivery, instruction, and the supervision and safety of children in their care.
+          </p>
+          <p>
+            The RUXs Store is the one exception: RUXs itself sells the kids&apos; kits and supplies listed there, sets their prices, and is responsible for fulfilling those orders. It delivers in Ranchi for now.
           </p>
         </section>
 
@@ -48,16 +51,16 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-semibold text-ink">3. Payments & Zero Commission</h2>
+          <h2 className="text-lg font-semibold text-ink">3. Payments & Commission</h2>
           <p>
-            RUXs charges zero payment commission. Transactions occur peer-to-peer via universal UPI deep links directly into the vendor&apos;s verified UPI ID. Any transaction disputes, bank failures, or refunds must be settled directly between the household and the vendor.
+            RUXs charges no commission on pay-on-delivery or monthly-bill orders, which are paid directly to the vendor. Online payments are processed by Razorpay and may carry a small fee, shown before you pay. Questions about a vendor&apos;s service, refunds or bank failures on vendor orders are settled between the household and the vendor; you can also raise a support ticket in the app. Payments and refunds for RUXs Store orders are handled by RUXs.
           </p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-ink">4. Acceptable Use & Account Suspension</h2>
           <p>
-            Vendors must maintain valid local registrations and deliver legitimate services. Any abuse, harassment, fraudulent claims, or unauthorized spamming will result in immediate suspension of vendor access by the platform admin.
+            Vendors must maintain valid local registrations and deliver legitimate services. Kids&apos; activity providers must pass RUXs review before they can take bookings. Any abuse, harassment, fraudulent claims, or unauthorized spamming will result in immediate suspension of vendor access by the platform admin.
           </p>
         </section>
 

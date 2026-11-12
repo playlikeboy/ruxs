@@ -85,10 +85,14 @@ export default async function ExplorePage() {
   // One grid for everything households can get, kids included.
   // "store" (code default) and "other" (DB) are both labelled "More"; show one tile per label.
   const daily = categories.filter((k, i, all) => !isKidsVendorType(k.vendorType) && k.id !== "kids-kits" && all.findIndex((x) => x.shortLabel === k.shortLabel) === i);
+  // Kids first: Kids Zone, the RUXs Store, classes and kits fill the top row, above the fold.
+  // Tile ids pick the icon (see CategoryTile / AppIcon).
   const tiles = [
-    ...daily.map((k) => ({ id: k.id, label: k.shortLabel, href: "/app/category/" + k.id, tint: k.tint })),
-    { id: "kids", label: "Kids classes", href: "/app/kids/activities", tint: "#E9F4E7" },
+    { id: "kids", label: "Kids Zone", href: "/app/kids", tint: "#E9F4E7" },
+    { id: "kids_stem", label: "RUXs Store", href: "/app/kids/shop", tint: "#FFF0E8" },
+    { id: "kids_academics", label: "Kids classes", href: "/app/kids/activities", tint: "#E9F4E7" },
     { id: "kids-kits", label: "Learning kits", href: "/app/kids/kits", tint: "#FFF4D8" },
+    ...daily.map((k) => ({ id: k.id, label: k.shortLabel, href: "/app/category/" + k.id, tint: k.tint })),
   ];
   const kidsRail = kidsActivities.slice(0, 8);
 
@@ -108,8 +112,17 @@ export default async function ExplorePage() {
 
       <div className="px-4">
         <h1 className="mt-3 text-[22px] font-bold leading-tight tracking-tight text-ink">
-          {firstName ? `Hi ${firstName}, what does home need today?` : "What does home need today?"}
+          {firstName ? `Hi ${firstName}, what does your family need today?` : "What does your family need today?"}
         </h1>
+
+        <section className="mt-4" aria-labelledby="categories-heading">
+          <h2 id="categories-heading" className="sr-only">Categories</h2>
+          <div className="grid grid-cols-4 gap-x-2 gap-y-4">
+            {tiles.map((t) => (
+              <CategoryTile key={t.id} {...t} />
+            ))}
+          </div>
+        </section>
 
         <HeroCarousel slides={banners} />
 
@@ -123,14 +136,6 @@ export default async function ExplorePage() {
           </div>
         )}
 
-        <section className="mt-6" aria-labelledby="categories-heading">
-          <h2 id="categories-heading" className="sr-only">Categories</h2>
-          <div className="grid grid-cols-4 gap-x-2 gap-y-4">
-            {tiles.map((t) => (
-              <CategoryTile key={t.id} {...t} />
-            ))}
-          </div>
-        </section>
 
         {kidsRail.length > 0 && (
           <section className="mt-8" aria-labelledby="kids-heading">
@@ -188,13 +193,13 @@ export default async function ExplorePage() {
             <div className="mt-4 rounded-[16px] bg-app-canvas p-6 text-center">
               <MapPin className="mx-auto h-8 w-8 text-accent" aria-hidden="true" />
               <p className="mt-2 font-semibold text-ink">Share your location to see stores</p>
-              <p className="mt-1 text-sm text-muted">We only show kitchens and suppliers within {radius} km of you. Tap your location above, or add your address.</p>
+              <p className="mt-1 text-sm text-muted">We only show stores, classes and providers within {radius} km of you. Tap your location above, or add your address.</p>
             </div>
           ) : stores.length === 0 ? (
             <div className="mt-4 rounded-[16px] bg-app-canvas p-6 text-center">
               <House className="mx-auto h-8 w-8 text-brand-deep" aria-hidden="true" />
               <p className="mt-2 font-semibold text-ink">No stores within {radius} km yet</p>
-              <p className="mt-1 text-sm text-muted">Try a wider radius, or check your location above. We&apos;re adding kitchens and suppliers every week.</p>
+              <p className="mt-1 text-sm text-muted">Try a wider radius, or check your location above.</p>
             </div>
           ) : (
             <div className="mt-4">
