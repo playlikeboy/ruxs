@@ -56,7 +56,7 @@ jobs:
         run: bun run build
         env:
           NEXT_PUBLIC_APP_URL: "https://ruxs.in"
-          NEXT_PUBLIC_HEXCLAVE_API_URL: "https://api.hexclave.com"
+          NEXT_PUBLIC_HEXCLAVE_API_URL: ${{ secrets.NEXT_PUBLIC_HEXCLAVE_API_URL || 'https://api.hexclave.com' }}
           NEXT_PUBLIC_HEXCLAVE_PROJECT_ID: "afdff151-7a3c-49b3-830f-abfcc23d8d61"
           DATABASE_URL: ${{ secrets.DATABASE_URL || env.TEST_DATABASE_URL }}
           HEXCLAVE_SECRET_SERVER_KEY: ${{ secrets.HEXCLAVE_SECRET_SERVER_KEY || 'ssk_placeholder' }}
@@ -79,13 +79,37 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # Runtime secrets live on the Worker, not in the bundle. Sync them from
+      # GitHub secrets on every deploy so the Worker never runs without them.
+      - name: Sync Worker runtime secrets
+        run: |
+          jq -n 'env | with_entries(select(.key | IN(
+            "HEXCLAVE_SECRET_SERVER_KEY","CRON_SECRET",
+            "RAZORPAY_KEY_ID","RAZORPAY_KEY_SECRET","RAZORPAY_WEBHOOK_SECRET",
+            "CLOUDFLARE_EMAIL_TOKEN","IMGBB_API_KEY",
+            "VAPID_PUBLIC_KEY","VAPID_PRIVATE_KEY")) | select(.value != ""))' > "$RUNNER_TEMP/worker-secrets.json"
+          bunx wrangler secret bulk "$RUNNER_TEMP/worker-secrets.json"
+          rm -f "$RUNNER_TEMP/worker-secrets.json"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          HEXCLAVE_SECRET_SERVER_KEY: ${{ secrets.HEXCLAVE_SECRET_SERVER_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID }}
+          RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET }}
+          RAZORPAY_WEBHOOK_SECRET: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
+          CLOUDFLARE_EMAIL_TOKEN: ${{ secrets.CLOUDFLARE_EMAIL_TOKEN }}
+          IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+
       - name: Build & Deploy to Cloudflare
         run: bun run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '02e7b7636139de49a9b2ae68293d8f89' }}
           NEXT_PUBLIC_APP_URL: "https://ruxs.in"
-          NEXT_PUBLIC_HEXCLAVE_API_URL: "https://api.hexclave.com"
+          NEXT_PUBLIC_HEXCLAVE_API_URL: ${{ secrets.NEXT_PUBLIC_HEXCLAVE_API_URL || 'https://api.hexclave.com' }}
           NEXT_PUBLIC_HEXCLAVE_PROJECT_ID: "afdff151-7a3c-49b3-830f-abfcc23d8d61"
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           HEXCLAVE_SECRET_SERVER_KEY: ${{ secrets.HEXCLAVE_SECRET_SERVER_KEY || 'ssk_placeholder' }}
