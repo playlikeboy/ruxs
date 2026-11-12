@@ -33,6 +33,7 @@ export default async function AdminConsoleLayout({ children }: { children: React
   const badges = {
     "/admin/vendors": b.pendingVendors,
     "/admin/payouts": b.openPayouts + b.refunds,
+    "/admin/store/orders": b.newStoreOrders,
   };
 
   return (

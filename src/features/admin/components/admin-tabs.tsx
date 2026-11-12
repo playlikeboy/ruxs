@@ -8,11 +8,16 @@ import {
   Inbox,
   GalleryHorizontal,
   LayoutDashboard,
+  Package,
+  PackageCheck,
   Receipt,
   Settings,
   ShieldAlert,
+  ShoppingBag,
+  SlidersHorizontal,
   Sparkles,
   Store,
+  Tags,
   Users,
   Wallet,
   type LucideIcon,
@@ -23,6 +28,8 @@ interface TabItem {
   label: string;
   icon: LucideIcon;
   exact?: boolean;
+  /** Label for the flat mobile tab bar, where the group title isn't shown. */
+  mobileLabel?: string;
 }
 
 interface NavGroup {
@@ -40,6 +47,16 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/orders", label: "Orders", icon: ClipboardList },
       { href: "/admin/bookings", label: "Bookings", icon: CalendarClock },
       { href: "/admin/households", label: "Households", icon: Users },
+    ],
+  },
+  {
+    title: "RUXs Store",
+    items: [
+      { href: "/admin/store", label: "Overview", mobileLabel: "Store", icon: ShoppingBag, exact: true },
+      { href: "/admin/store/products", label: "Products", mobileLabel: "Store products", icon: Package },
+      { href: "/admin/store/orders", label: "Orders", mobileLabel: "Store orders", icon: PackageCheck },
+      { href: "/admin/store/categories", label: "Categories", mobileLabel: "Store categories", icon: Tags },
+      { href: "/admin/store/settings", label: "Settings", mobileLabel: "Store settings", icon: SlidersHorizontal },
     ],
   },
   {
@@ -150,7 +167,7 @@ export function AdminTabs({ badges }: { badges: Record<string, number> }) {
                 : "border-transparent text-muted hover:text-ink")
             }
           >
-            {t.label}
+            {t.mobileLabel ?? t.label}
             {badge > 0 && (
               <span className="rounded-full bg-accent px-1.5 text-[10px] font-bold text-white tabular-nums">
                 {badge}
