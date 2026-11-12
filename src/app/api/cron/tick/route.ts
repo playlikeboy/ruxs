@@ -8,6 +8,7 @@ import { lockCutoffForProduct } from "@/features/orders/cutoff-service";
 import { generateBillsForVendor } from "@/features/billing/generate-bills";
 import { sendTomorrowReminders } from "@/features/notifications/reminders";
 import { isEveningReminderWindow } from "@/core/reminders";
+import { releaseExpiredStoreOrders } from "@/features/store/settle";
 
 /** Constant-time compare of two secrets; hashing first hides the length too. */
 function secretMatches(given: string, expected: string): boolean {
@@ -94,6 +95,17 @@ export async function POST(req: Request) {
     }
   }
 
+  // 4. RUXs Store: release stock held by online orders that were never paid
+  let storeReleased = 0;
+  try {
+    const released = await releaseExpiredStoreOrders(db, now);
+    storeReleased = released.released;
+    failures.push(...released.failures);
+  } catch (err) {
+    console.error("[cron] store hold release failed", { error: errorMessage(err) });
+    failures.push("store-holds");
+  }
+
   return Response.json(
     {
       ok: failures.length === 0,
@@ -101,6 +113,7 @@ export async function POST(req: Request) {
       lockedProducts: lockedProductsCount,
       billedVendors: billedVendorsCount,
       reminders,
+      storeReleased,
       failures,
     },
     { status: failures.length === 0 ? 200 : 500 }

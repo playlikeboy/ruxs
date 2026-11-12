@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { verifyWebhookSignature } from "@/lib/razorpay";
 import { failPayment, settlePayment } from "@/features/payments/settle";
+import { failStorePayment, isStoreRazorpayOrder, settleStorePayment } from "@/features/store/settle";
 
 const webhookEvent = z.object({
   event: z.string().optional(),
@@ -57,7 +58,18 @@ export async function POST(request: Request) {
   const event = parsed.data;
 
   const payment = event.payload?.payment?.entity;
-  if (payment?.order_id && payment.id) {
+  if (payment?.order_id && payment.id && (await isStoreRazorpayOrder(payment.order_id))) {
+    // RUXs Store orders have their own payments table, kept apart from vendor payouts.
+    if (event.event === "payment.captured" || event.event === "order.paid") {
+      await settleStorePayment({
+        razorpayOrderId: payment.order_id,
+        razorpayPaymentId: payment.id,
+        amountPaise: payment.amount,
+      });
+    } else if (event.event === "payment.failed") {
+      await failStorePayment(payment.order_id, payment.error_description ?? "Payment failed");
+    }
+  } else if (payment?.order_id && payment.id) {
     if (event.event === "payment.captured" || event.event === "order.paid") {
       await settlePayment({
         razorpayOrderId: payment.order_id,

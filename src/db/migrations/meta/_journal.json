@@ -169,6 +169,13 @@
       "when": 1793900000000,
       "tag": "0023_home_banners",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794000000000,
+      "tag": "0024_ruxs_store",
+      "breakpoints": true
     }
   ]
 }
