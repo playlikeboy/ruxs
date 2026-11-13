@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { RuxsMark } from "@/components/marketing/ruxs-mark";
-import { ExternalLink, Plus, Store, Home } from "lucide-react";
+import { ExternalLink, Plus, ShoppingBag, Store, Home } from "lucide-react";
 import { UserNav } from "@/components/auth/user-nav";
 import { requireAdmin } from "@/lib/auth/session";
 import { getAdminBadges } from "@/features/admin/queries";
@@ -33,7 +33,6 @@ export default async function AdminConsoleLayout({ children }: { children: React
   const badges = {
     "/admin/vendors": b.pendingVendors,
     "/admin/payouts": b.openPayouts + b.refunds,
-    "/admin/store/orders": b.newStoreOrders,
   };
 
   return (
@@ -62,6 +61,13 @@ export default async function AdminConsoleLayout({ children }: { children: React
             className="flex h-9 items-center gap-2.5 rounded-control bg-accent/10 px-3 text-xs font-bold text-accent transition hover:bg-accent hover:text-white"
           >
             <Plus className="h-4 w-4" aria-hidden="true" /> Add vendor store
+          </Link>
+
+          <Link
+            href="/seller-portal"
+            className="flex h-9 items-center gap-2 rounded-control px-3 text-xs font-medium text-muted transition hover:bg-bg hover:text-ink"
+          >
+            <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" /> Seller portal
           </Link>
 
           <Link

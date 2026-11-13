@@ -24,7 +24,6 @@ import {
 import { requireAdmin } from "@/lib/auth/session";
 import { addDaysIST, todayIST } from "@/core/time";
 import { getCategories } from "@/features/platform/queries";
-import { getStoreNewOrdersCount } from "@/features/store/queries";
 
 /** ILIKE pattern for a free-text search; escapes %, _ and \ so they match literally. */
 function containsPattern(q: string) {
@@ -322,21 +321,15 @@ export async function getAdminSettings() {
 export const getAdminBadges = cache(async () => {
   await requireAdmin();
   const db = getDb();
-  const [[pendingVendors], [openPayouts], [refunds], newStoreOrders] = await Promise.all([
+  const [[pendingVendors], [openPayouts], [refunds]] = await Promise.all([
     db.select({ n: count() }).from(vendors).where(eq(vendors.status, "pending")),
     db.select({ n: count() }).from(vendorPayouts).where(eq(vendorPayouts.status, "requested")),
     db.select({ n: count() }).from(shopOrders).where(eq(shopOrders.paymentStatus, "refund_due")),
-    // The store tables arrive with migration 0024; a missing table must not take the console down.
-    getStoreNewOrdersCount().catch((err: unknown) => {
-      console.error("[admin] store badge failed", err instanceof Error ? err.message : err);
-      return 0;
-    }),
   ]);
   return {
     pendingVendors: pendingVendors?.n ?? 0,
     openPayouts: openPayouts?.n ?? 0,
     refunds: refunds?.n ?? 0,
-    newStoreOrders,
   };
 });
 
