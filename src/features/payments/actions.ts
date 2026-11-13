@@ -66,14 +66,27 @@ export async function startOrderPayment(input: unknown): Promise<StartResult> {
     } catch {
       return { ok: false, error: "Could not start the payment. Please try again." };
     }
-    await db.insert(payments).values({
-      vendorId: order.order.vendorId,
-      customerId: order.order.customerId,
-      userId: user.id,
-      purpose: "shop_order",
-      shopOrderId: order.order.id,
-      amountPaise: order.order.totalPaise,
-      razorpayOrderId,
+    // Two taps at once would each insert an open payment for the same order and
+    // show two checkouts. The lock makes the second tap reuse the first one's order.
+    const created = razorpayOrderId;
+    razorpayOrderId = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"pay:order:" + order.order.id}))`);
+      const [open] = await tx
+        .select({ razorpayOrderId: payments.razorpayOrderId })
+        .from(payments)
+        .where(and(eq(payments.shopOrderId, order.order.id), eq(payments.status, "created")))
+        .limit(1);
+      if (open) return open.razorpayOrderId;
+      await tx.insert(payments).values({
+        vendorId: order.order.vendorId,
+        customerId: order.order.customerId,
+        userId: user.id,
+        purpose: "shop_order",
+        shopOrderId: order.order.id,
+        amountPaise: order.order.totalPaise,
+        razorpayOrderId: created,
+      });
+      return created;
     });
   }
 
@@ -130,14 +143,26 @@ export async function startBookingPayment(input: unknown): Promise<StartResult> 
     } catch {
       return { ok: false, error: "Could not start the payment. Please try again." };
     }
-    await db.insert(payments).values({
-      vendorId: b.vendorId,
-      customerId: b.customerId,
-      userId: user.id,
-      purpose: "booking",
-      bookingId: b.id,
-      amountPaise: b.pricePaise,
-      razorpayOrderId,
+    // Same guard as orders: concurrent taps share one open payment.
+    const created = razorpayOrderId;
+    razorpayOrderId = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"pay:booking:" + b.id}))`);
+      const [open] = await tx
+        .select({ razorpayOrderId: payments.razorpayOrderId })
+        .from(payments)
+        .where(and(eq(payments.bookingId, b.id), eq(payments.status, "created")))
+        .limit(1);
+      if (open) return open.razorpayOrderId;
+      await tx.insert(payments).values({
+        vendorId: b.vendorId,
+        customerId: b.customerId,
+        userId: user.id,
+        purpose: "booking",
+        bookingId: b.id,
+        amountPaise: b.pricePaise,
+        razorpayOrderId: created,
+      });
+      return created;
     });
   }
   return {

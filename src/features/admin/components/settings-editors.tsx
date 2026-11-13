@@ -144,13 +144,18 @@ function LocalityEditor({ row, isNew }: { row: LocalityRow | null; isNew?: boole
         <button
           type="button"
           disabled={pending}
-          onClick={() =>
+          onClick={() => {
+            // Number("") is 0: a blank field would otherwise save the locality at 0°, 0°.
+            if (f.latitude.trim() === "" || f.longitude.trim() === "") {
+              toast.error("Enter latitude and longitude");
+              return;
+            }
             run(
               () => adminSaveLocality({ ...f, latitude: Number(f.latitude), longitude: Number(f.longitude) }),
               isNew ? "Locality added" : "Saved",
               () => isNew && setF(BLANK_LOCALITY)
-            )
-          }
+            );
+          }}
           className={saveButton}
         >
           {isNew ? "Add" : "Save"}

@@ -23,7 +23,7 @@ export default function OpenGraphImage() {
           width={1200}
           height={630}
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          alt="RUXs — Local Services for Everyday Life"
+          alt="RUXs — Kids' classes, learning kits and local services for everyday life"
         />
       </div>
     ),

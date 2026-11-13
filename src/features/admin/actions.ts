@@ -2,9 +2,9 @@
 
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
-import { eq, inArray, ne } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
-import { availabilityRules, categories, kidsProviderProfiles, ledgerEntries, localities, platformAdmins, platformSettings, vendorApplications, vendorMembers, vendors } from "@/db/schema";
+import { availabilityRules, bookings, categories, kidsProviderProfiles, ledgerEntries, localities, payments, platformAdmins, platformSettings, shopOrders, vendorApplications, vendorMembers, vendorPayouts, vendors } from "@/db/schema";
 import { VENDOR_TYPE_INFO, canUseModule, isVendorType, vendorTypeForCategory } from "@/core/vendor-types";
 import { provisionTypeProfile } from "@/features/vendor-types/tables";
 import { seedStarterCatalog } from "@/features/vendor-types/starter";
@@ -166,6 +166,14 @@ export async function adminCreateVendor(input: unknown) {
           .onConflictDoNothing();
       }
       if (parsed.data.applicationId) {
+        // Lock the application so two admins approving it at once cannot each create a store.
+        const [app] = await tx
+          .select({ status: vendorApplications.status, vendorId: vendorApplications.vendorId })
+          .from(vendorApplications)
+          .where(eq(vendorApplications.id, parsed.data.applicationId))
+          .limit(1)
+          .for("update");
+        if (app?.status === "approved" && app.vendorId) throw new Error("this application is already approved and has a store");
         await tx
           .update(vendorApplications)
           .set({ status: "approved", vendorId: row!.id, updatedAt: new Date() })
@@ -280,12 +288,29 @@ async function deleteLoginAccount(userId: string | null) {
 }
 
 /**
- * Permanently deletes a vendor with no ledger history (FK cascades remove its catalog, profiles and members).
- * A vendor with ledger rows, or one the database refuses to delete, is suspended and paused instead,
- * because ledger rows are immutable (0001_ledger_immutability.sql).
+ * Vendors among `ids` that have money or order history. Their rows cascade from vendors, so a hard delete
+ * would silently erase collected payments, refunds due, payouts, app orders and bookings.
  */
-async function deleteOrSuspendVendor(db: Db, vendor: { id: string; loginUserId: string | null }, hasLedger: boolean): Promise<"deleted" | "suspended"> {
-  if (!hasLedger) {
+async function vendorsWithHistory(db: Db, ids: string[]) {
+  const [ledger, paid, payouts, orders, booked] = await Promise.all([
+    db.selectDistinct({ vendorId: ledgerEntries.vendorId }).from(ledgerEntries).where(inArray(ledgerEntries.vendorId, ids)),
+    db.selectDistinct({ vendorId: payments.vendorId }).from(payments).where(inArray(payments.vendorId, ids)),
+    db.selectDistinct({ vendorId: vendorPayouts.vendorId }).from(vendorPayouts).where(inArray(vendorPayouts.vendorId, ids)),
+    db.selectDistinct({ vendorId: shopOrders.vendorId }).from(shopOrders).where(inArray(shopOrders.vendorId, ids)),
+    db.selectDistinct({ vendorId: bookings.vendorId }).from(bookings).where(inArray(bookings.vendorId, ids)),
+  ]);
+  const withLedger = new Set(ledger.map((r) => r.vendorId));
+  const withHistory = new Set([...ledger, ...paid, ...payouts, ...orders, ...booked].map((r) => r.vendorId));
+  return { withLedger, withHistory };
+}
+
+/**
+ * Permanently deletes a vendor with no money or order history (FK cascades remove its catalog, profiles and members).
+ * A vendor with history, or one the database refuses to delete, is suspended and paused instead,
+ * because ledger rows are immutable (0001_ledger_immutability.sql) and payments, orders and bookings must be kept.
+ */
+async function deleteOrSuspendVendor(db: Db, vendor: { id: string; loginUserId: string | null }, hasHistory: boolean): Promise<"deleted" | "suspended"> {
+  if (!hasHistory) {
     try {
       await db.delete(vendors).where(eq(vendors.id, vendor.id));
       await deleteLoginAccount(vendor.loginUserId);
@@ -304,13 +329,14 @@ export async function adminDeleteVendor(input: unknown) {
   await requireAdmin();
   const db = getDb();
 
-  const [[vendor], [hasLedger]] = await Promise.all([
+  const [[vendor], history] = await Promise.all([
     db.select({ id: vendors.id, name: vendors.name, loginUserId: vendors.loginUserId }).from(vendors).where(eq(vendors.id, parsed.data.vendorId)).limit(1),
-    db.select({ id: ledgerEntries.id }).from(ledgerEntries).where(eq(ledgerEntries.vendorId, parsed.data.vendorId)).limit(1),
+    vendorsWithHistory(db, [parsed.data.vendorId]),
   ]);
   if (!vendor) return fail("Vendor not found");
+  const hasLedger = history.withLedger.has(vendor.id);
 
-  const outcome = await deleteOrSuspendVendor(db, vendor, !!hasLedger);
+  const outcome = await deleteOrSuspendVendor(db, vendor, history.withHistory.has(vendor.id));
   revalidatePath("/admin", "layout");
   revalidatePath("/admin/vendors");
 
@@ -350,17 +376,16 @@ export async function adminBulkDeleteVendors(input: unknown) {
   const db = getDb();
   const ids = Array.from(new Set(parsed.data.vendorIds));
 
-  // Two queries for the whole selection instead of two per vendor.
-  const [rows, withLedger] = await Promise.all([
+  // A fixed number of queries for the whole selection instead of several per vendor.
+  const [rows, { withHistory }] = await Promise.all([
     db.select({ id: vendors.id, loginUserId: vendors.loginUserId }).from(vendors).where(inArray(vendors.id, ids)),
-    db.selectDistinct({ vendorId: ledgerEntries.vendorId }).from(ledgerEntries).where(inArray(ledgerEntries.vendorId, ids)),
+    vendorsWithHistory(db, ids),
   ]);
-  const ledgerVendors = new Set(withLedger.map((r) => r.vendorId));
 
   let deletedCount = 0;
   let suspendedCount = 0;
   for (const vendor of rows) {
-    const outcome = await deleteOrSuspendVendor(db, vendor, ledgerVendors.has(vendor.id));
+    const outcome = await deleteOrSuspendVendor(db, vendor, withHistory.has(vendor.id));
     if (outcome === "deleted") deletedCount++;
     else suspendedCount++;
   }
@@ -380,8 +405,11 @@ export async function adminSaveCategory(input: unknown) {
   await requireAdmin();
   const db = getDb();
   const { id, vendorType, ...rest } = parsed.data;
-  // Fulfilment always follows the vendor type; the type itself is fixed after creation.
-  const values = { ...rest, fulfilment: VENDOR_TYPE_INFO[vendorType].fulfilment };
+  // Fulfilment always follows the vendor type; the type itself is fixed after creation,
+  // so an existing category keeps the fulfilment of its stored type whatever the form sent.
+  const [existing] = await db.select({ vendorType: categories.vendorType }).from(categories).where(eq(categories.id, id)).limit(1);
+  const fixedType = existing && isVendorType(existing.vendorType) ? existing.vendorType : vendorType;
+  const values = { ...rest, fulfilment: VENDOR_TYPE_INFO[fixedType].fulfilment };
   await db.insert(categories).values({ id, vendorType, ...values }).onConflictDoUpdate({ target: categories.id, set: values });
   revalidatePath("/admin/settings");
   revalidatePath("/app", "layout");
@@ -415,14 +443,23 @@ export async function adminRemoveAdmin(input: unknown) {
   const { user } = await requireAdmin();
   const db = getDb();
 
-  const [row] = await db.select().from(platformAdmins).where(eq(platformAdmins.id, parsed.data.id)).limit(1);
-  if (!row) return fail("Admin not found");
-  const self = row.userId === user.id || (!!row.email && row.email === user.primaryEmail?.toLowerCase());
-  if (self) return fail("You can't remove yourself");
-  const others = await db.select({ id: platformAdmins.id }).from(platformAdmins).where(ne(platformAdmins.id, row.id));
-  if (others.length === 0) return fail("Keep at least one admin");
-
-  await db.delete(platformAdmins).where(eq(platformAdmins.id, row.id));
+  // Lock every admin row (in a fixed order) so two admins removing each other at the same
+  // moment run one after the other; the second then sees a single row left and is refused.
+  const error = await db.transaction(async (tx) => {
+    const all = await tx.select().from(platformAdmins).orderBy(asc(platformAdmins.id)).for("update");
+    const row = all.find((a) => a.id === parsed.data.id);
+    if (!row) return "Admin not found";
+    const self = row.userId === user.id || (!!row.email && row.email === user.primaryEmail?.toLowerCase());
+    if (self) return "You can't remove yourself";
+    // The caller passed requireAdmin before the lock; make sure nobody removed them while this waited.
+    const callerEmail = user.primaryEmailVerified ? user.primaryEmail?.toLowerCase() : undefined;
+    const callerStillAdmin = all.some((a) => a.userId === user.id || (!!callerEmail && a.email === callerEmail));
+    if (!callerStillAdmin) return "You no longer have admin access";
+    if (all.length <= 1) return "Keep at least one admin";
+    await tx.delete(platformAdmins).where(eq(platformAdmins.id, row.id));
+    return null;
+  });
+  if (error) return fail(error);
   revalidatePath("/admin/settings");
   return { ok: true as const };
 }

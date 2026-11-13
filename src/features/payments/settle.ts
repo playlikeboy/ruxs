@@ -1,9 +1,9 @@
 import "server-only";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, gt, ne, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { bookings, customers, ledgerEntries, payments, services, shopOrders, vendors } from "@/db/schema";
+import { bookings, customers, invoices, ledgerEntries, payments, services, shopOrders, vendors } from "@/db/schema";
 import { notifyAfter, notifyVendorAfter } from "@/features/notifications/dispatch";
-import { razorpayPaymentKey } from "@/core/ledger";
+import { balance, razorpayPaymentKey } from "@/core/ledger";
 
 /**
  * Records a captured Razorpay payment exactly once. Both the browser callback
@@ -83,6 +83,31 @@ export async function settlePayment(input: {
           createdBy: payment.userId,
         })
         .onConflictDoNothing();
+
+      // A dues payment clears the whole balance, so every open bill is now paid.
+      // Without this the merchant and the household's bill link keep showing the
+      // bill as unpaid and it gets collected a second time.
+      const owed = await tx
+        .select({ amountPaise: ledgerEntries.amountPaise })
+        .from(ledgerEntries)
+        .where(and(eq(ledgerEntries.vendorId, payment.vendorId), eq(ledgerEntries.customerId, payment.customerId)));
+      if (balance(owed) <= 0) {
+        await tx
+          .update(invoices)
+          .set({
+            status: "paid",
+            paymentsPaise: sql`${invoices.paymentsPaise} + ${invoices.closingPaise}`,
+            closingPaise: 0,
+            paidAt: new Date(),
+          })
+          .where(
+            and(
+              eq(invoices.vendorId, payment.vendorId),
+              eq(invoices.customerId, payment.customerId),
+              gt(invoices.closingPaise, 0)
+            )
+          );
+      }
     }
   });
 

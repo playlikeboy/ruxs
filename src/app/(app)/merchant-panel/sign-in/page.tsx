@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
-import { vendorMembers } from "@/db/schema";
+import { vendorInvites, vendorMembers } from "@/db/schema";
 import { hexclave } from "@/lib/auth/hexclave";
 import { MerchantSignInForm } from "@/features/vendors/components/merchant-sign-in-form";
 import { NotMerchantCard } from "@/features/vendors/components/not-merchant-card";
@@ -19,6 +19,17 @@ export default async function MerchantSignInPage({ searchParams }: { searchParam
     const db = getDb();
     const [membership] = await db.select({ v: vendorMembers.vendorId }).from(vendorMembers).where(eq(vendorMembers.userId, user.id)).limit(1);
     if (membership) redirect(next);
+    // An invited teammate who is already signed in has no membership yet: the
+    // panel entry page accepts the invite (or asks them to verify their email).
+    const email = user.primaryEmail?.toLowerCase();
+    if (email) {
+      const [invite] = await db
+        .select({ id: vendorInvites.id })
+        .from(vendorInvites)
+        .where(and(eq(vendorInvites.email, email), isNull(vendorInvites.acceptedAt)))
+        .limit(1);
+      if (invite) redirect("/merchant-panel");
+    }
     signedInHousehold = true;
   }
 

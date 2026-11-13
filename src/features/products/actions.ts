@@ -37,6 +37,9 @@ export async function saveProduct(input: unknown) {
     .limit(1);
   if (!category) return { ok: false, error: "Pick a valid category" };
 
+  // 0.004 rupees passes "greater than zero" but rounds to a free item.
+  if (rupeesToPaise(data.priceRupees) < 1) return { ok: false, error: "Price must be at least 1 paisa" };
+
   const values = {
     name: data.name,
     description: data.description || null,

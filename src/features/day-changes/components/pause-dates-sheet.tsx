@@ -35,7 +35,11 @@ export function PauseDatesSheet({
       if (!res.ok) {
         toast.error(res.error ?? "Failed to pause deliveries");
       } else {
-        toast.success(`Deliveries paused from ${startDate} to ${endDate}`);
+        toast.success(
+          "lockedToday" in res && res.lockedToday
+            ? `Deliveries paused until ${endDate}. Today's cutoff has passed, so today's delivery still comes.`
+            : `Deliveries paused from ${startDate} to ${endDate}`
+        );
         setIsOpen(false);
       }
     });

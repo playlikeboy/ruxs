@@ -128,11 +128,12 @@ export const requireVendorModule = cache(async (slug: string, module: Module, al
 /**
  * Platform admin only. Signed-out visitors go to the hidden admin sign-in;
  * signed-in people who are not admins get a plain 404, so /admin reveals nothing.
+ * The seller portal passes its own sign-in path; every other caller keeps the default.
  */
-export const requireAdmin = cache(async () => {
+export const requireAdmin = cache(async (signInPath: "/admin/sign-in" | "/seller-portal/sign-in" = "/admin/sign-in") => {
   const user = await hexclave.getUser();
   if (!user) {
-    redirect("/admin/sign-in");
+    redirect(signInPath);
   }
   if (!(await isUserAdmin(user))) {
     notFound();

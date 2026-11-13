@@ -47,6 +47,11 @@ export async function createKidsBooking(input: CreateBookingInput) {
   if (input.paymentMode !== "pay_at_session") {
     return { ok: false as const, error: "Online payment is not available for kids sessions yet. Choose pay at session." };
   }
+  // A home visit needs somewhere to go; the form requires it, so enforce it here too.
+  const address = input.deliveryMode === "home" ? input.address?.trim() : undefined;
+  if (input.deliveryMode === "home" && !address) {
+    return { ok: false as const, error: "Add your home address for a home visit." };
+  }
   const db = getDb();
 
   // 1. Check idempotency first
@@ -204,7 +209,7 @@ export async function createKidsBooking(input: CreateBookingInput) {
           startsAt: input.startsAt,
           endsAt,
           deliveryMode: input.deliveryMode,
-          address: input.address || null,
+          address: address || null,
           priceSnapshotPaise: pricing.servicePaise,
           materialFeeSnapshotPaise: pricing.materialPaise,
           paymentStatus: "unpaid",

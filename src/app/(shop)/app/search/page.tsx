@@ -31,7 +31,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               <SearchRadiusPicker km={searchRadius.km} />
             </div>
             {stores.length === 0 ? (
-              <p className="mt-2 text-sm text-neutral-500">Try “thali”, “20L”, “Jain”, a store name, or a wider radius.</p>
+              <p className="mt-2 text-sm text-neutral-500">Try “robotics”, “art”, “thali”, “20L”, a store name, or a wider radius.</p>
             ) : (
               <div className="mt-5">
                 <StoreFilterList stores={stores} />
@@ -39,7 +39,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             )}
           </>
         ) : (
-          <p className="pt-6 text-center text-sm text-neutral-500">Search stores, meals and water cans near you.</p>
+          <p className="pt-6 text-center text-sm text-neutral-500">Search kids classes, learning kits, stores, meals and more near you.</p>
         )}
       </div>
     </div>

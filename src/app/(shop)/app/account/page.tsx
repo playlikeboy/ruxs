@@ -95,8 +95,8 @@ export default async function AccountPage({
         <Link href="/merchant-panel/sign-in" className="mt-6 flex items-center gap-3 rounded-2xl border border-black/10 p-4 transition-colors hover:border-ink/25">
           <Store className="h-6 w-6 text-accent" aria-hidden="true" />
           <span className="flex-1">
-            <span className="block text-[15px] font-semibold text-ink">Run a kitchen or water business?</span>
-            <span className="block text-sm text-muted">Go to the merchant panel</span>
+            <span className="block text-[15px] font-semibold text-ink">Run a local business or teach kids?</span>
+            <span className="block text-sm text-muted">Kitchens, stores, trainers and kids class providers: go to the merchant panel</span>
           </span>
           <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
         </Link>

@@ -11,6 +11,7 @@ import {
   Receipt,
   Settings,
   ShieldAlert,
+  ShoppingBag,
   Sparkles,
   Store,
   Users,
@@ -23,6 +24,8 @@ interface TabItem {
   label: string;
   icon: LucideIcon;
   exact?: boolean;
+  /** Label for the flat mobile tab bar, where the group title isn't shown. */
+  mobileLabel?: string;
 }
 
 interface NavGroup {
@@ -40,6 +43,8 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/orders", label: "Orders", icon: ClipboardList },
       { href: "/admin/bookings", label: "Bookings", icon: CalendarClock },
       { href: "/admin/households", label: "Households", icon: Users },
+      // RUXs Store has its own back office at /seller-portal (same admins).
+      { href: "/seller-portal", label: "Seller portal", icon: ShoppingBag },
     ],
   },
   {
@@ -150,7 +155,7 @@ export function AdminTabs({ badges }: { badges: Record<string, number> }) {
                 : "border-transparent text-muted hover:text-ink")
             }
           >
-            {t.label}
+            {t.mobileLabel ?? t.label}
             {badge > 0 && (
               <span className="rounded-full bg-accent px-1.5 text-[10px] font-bold text-white tabular-nums">
                 {badge}

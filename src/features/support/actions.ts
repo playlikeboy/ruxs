@@ -2,13 +2,13 @@
 
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { supportTickets, vendors } from "@/db/schema";
+import { bookings, customers, shopOrders, subscriptions, supportTickets, vendorReviews, vendors } from "@/db/schema";
 import { isUserAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
 import { loadProfile } from "@/features/consumer/household";
 import { todayIST } from "@/core/time";
-import { formatTicketNumber, suggestTicketPriority, TICKET_CATEGORIES } from "@/core/tickets";
+import { formatTicketNumber, suggestTicketPriority, TICKET_CATEGORIES, type TicketCategory } from "@/core/tickets";
 import { renderEmailHtml, sendEmail } from "@/features/notifications/service";
 import { raiseTicketSchema, updateTicketSchema } from "./schemas";
 
@@ -41,6 +41,50 @@ export async function raiseTicket(input: unknown) {
       .limit(1);
     if (!v) return fail("We couldn't find that store. Refresh and try again.");
     vendorName = v.name;
+  }
+
+  // Linked records must be the household's own (a review only has to exist), and
+  // must belong to the store the ticket is filed against. Ids come from the browser.
+  const linked: { vendorId: string }[] = [];
+  if (data.orderId) {
+    const [o] = await db
+      .select({ vendorId: shopOrders.vendorId })
+      .from(shopOrders)
+      .where(and(eq(shopOrders.id, data.orderId), eq(shopOrders.userId, user.id)))
+      .limit(1);
+    if (!o) return fail("We couldn't find that order. Refresh and try again.");
+    linked.push(o);
+  }
+  if (data.bookingId) {
+    const [b] = await db
+      .select({ vendorId: bookings.vendorId })
+      .from(bookings)
+      .where(and(eq(bookings.id, data.bookingId), eq(bookings.userId, user.id)))
+      .limit(1);
+    if (!b) return fail("We couldn't find that booking. Refresh and try again.");
+    linked.push(b);
+  }
+  if (data.subscriptionId) {
+    const [sub] = await db
+      .select({ vendorId: subscriptions.vendorId })
+      .from(subscriptions)
+      .innerJoin(customers, eq(subscriptions.customerId, customers.id))
+      .where(and(eq(subscriptions.id, data.subscriptionId), eq(customers.userId, user.id)))
+      .limit(1);
+    if (!sub) return fail("We couldn't find that plan. Refresh and try again.");
+    linked.push(sub);
+  }
+  if (data.reviewId) {
+    const [r] = await db
+      .select({ vendorId: vendorReviews.vendorId })
+      .from(vendorReviews)
+      .where(eq(vendorReviews.id, data.reviewId))
+      .limit(1);
+    if (!r) return fail("We couldn't find that review. Refresh and try again.");
+    linked.push(r);
+  }
+  if (data.vendorId && linked.some((l) => l.vendorId !== data.vendorId)) {
+    return fail("That doesn't belong to this store. Refresh and try again.");
   }
 
   const today = todayIST();
@@ -125,7 +169,7 @@ export async function updateTicketStatus(input: unknown) {
   const { ticketId, status, priority, adminNotes, resolution } = parsed.data;
 
   const [existing] = await db
-    .select({ vendorId: supportTickets.vendorId, vendorSlug: vendors.slug, resolvedAt: supportTickets.resolvedAt })
+    .select({ vendorId: supportTickets.vendorId, vendorSlug: vendors.slug, resolvedAt: supportTickets.resolvedAt, category: supportTickets.category })
     .from(supportTickets)
     .leftJoin(vendors, eq(supportTickets.vendorId, vendors.id))
     .where(eq(supportTickets.id, ticketId))
@@ -135,7 +179,10 @@ export async function updateTicketStatus(input: unknown) {
   const isAdmin = await isUserAdmin(user);
   let merchantSlug: string | null = null;
   if (!isAdmin) {
-    if (!existing.vendorSlug) return fail("Unauthorized to update this ticket");
+    // Reports about a store or a review are for RUXs to judge, never the reported store.
+    if (!existing.vendorSlug || TICKET_CATEGORIES[existing.category as TicketCategory]?.isReport) {
+      return fail("Unauthorized to update this ticket");
+    }
     // Throws (not found) unless this user is the store's owner or staff.
     await requireVendorAccess(existing.vendorSlug, ["owner", "staff"]);
     merchantSlug = existing.vendorSlug;
