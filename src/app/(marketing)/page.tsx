@@ -1,42 +1,19 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { NeighbourhoodScene } from "@/components/marketing/neighbourhood-scene";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Bot,
-  Brain,
-  CalendarDays,
-  Check,
-  CookingPot,
-  Droplets,
-  Dumbbell,
-  Gift,
-  GraduationCap,
-  Guitar,
-  HeartPulse,
-  Mail,
-  MessageCircle,
-  Milk,
-  Music,
-  Package,
-  Palette,
-  Plus,
-  ShoppingBag,
-  Sparkles,
-  Store,
-  Tent,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, Check, PackageCheck, Plus } from "lucide-react";
 import { buildMetadata, organizationJsonLd, faqJsonLd } from "@/lib/seo";
 import { formatINR } from "@/core/money";
-import { DayRibbon } from "@/components/marketing/day-ribbon";
+import { CoverArt } from "@/components/ui/cover-art";
+import { AppPreview } from "@/components/marketing/app-preview";
+import { NeighbourhoodScene } from "@/components/marketing/neighbourhood-scene";
 import { SkipDemo } from "@/components/marketing/skip-demo";
-import { everyday, family, faqs, merchantTools, specialists } from "@/components/marketing/home-content";
+import { StoreShelf } from "@/components/marketing/store-shelf";
+import { everydayRail, faqs, kidsFacts, kidsRail } from "@/components/marketing/home-content";
 
 export const metadata = buildMetadata({
   title: "Kids' classes, learning kits and everyday services near you",
   description:
-    "Book kids' classes and workshops, shop learning kits from the RUXs Store, and set up tiffin, water and milk from people nearby. Plus local stores, gifts, mehndi, fitness and physio.",
+    "One app for your neighbourhood. Book kids' classes and workshops, shop DIY, robotics and science kits from the RUXs Store, and set up tiffin, water and milk from people nearby.",
   path: "",
 });
 
@@ -49,393 +26,166 @@ const exampleBill = [
 ];
 const exampleTotal = exampleBill.reduce((sum, line) => sum + line.paise, 0);
 
-const exploreChips: { icon: LucideIcon; label: string; href: string }[] = [
-  { icon: GraduationCap, label: "Kids classes", href: "/app/kids/activities" },
-  { icon: CalendarDays, label: "Workshops & camps", href: "/app/kids/workshops" },
-  { icon: Package, label: "Learning kits", href: "/app/kids/kits" },
-  { icon: ShoppingBag, label: "RUXs Store", href: "/app/kids/shop" },
-  { icon: Bot, label: "Robotics & STEM", href: "/app/kids" },
-  { icon: Palette, label: "Art & pottery", href: "/app/kids" },
-  { icon: CookingPot, label: "Tiffin meals", href: "/app/category/tiffin" },
-  { icon: Droplets, label: "20L water cans", href: "/app/category/water" },
-  { icon: Milk, label: "Fresh milk", href: "/app/category/milk" },
-  { icon: Store, label: "Local stores", href: "/app/category/other" },
-  { icon: Gift, label: "Gifts", href: "/app/category/gifts" },
-  { icon: Sparkles, label: "Mehndi", href: "/app/category/mehndi" },
-  { icon: Dumbbell, label: "Fitness", href: "/app/category/fitness" },
-  { icon: HeartPulse, label: "Physio", href: "/app/category/physio" },
-];
+// The page's only two actions. They appear in the hero and once more at the close.
+const bigButton =
+  "inline-flex min-h-14 items-center justify-center gap-2 rounded-[14px] px-7 text-lg font-semibold transition-[background-color,transform] duration-150 ease-out active:scale-[0.98] motion-reduce:transform-none";
+const openAppButton = `${bigButton} bg-accent text-white hover:bg-[#A63F21]`;
+const applyButton = `${bigButton} bg-ink text-bg hover:bg-[#343A33]`;
 
-// What the RUXs Store (RUXs's own shop) carries. Keep in step with the seeded store categories.
-const storeShelves = ["DIY & craft kits", "Robotics & electronics", "Science & lab kits", "Art & painting supplies", "Puzzles & brain games"];
-
-const primaryButton =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-accent px-6 text-base font-semibold text-white transition-colors duration-150 hover:bg-accent/90";
-
-const inkButton =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-ink px-6 text-base font-semibold text-bg transition-colors duration-150 hover:bg-ink/90";
-
-function DirectoryList({ title, items }: { title: string; items: { name: string; detail: string; href: string }[] }) {
-  return (
-    <div>
-      <h3 className="border-b-2 border-ink pb-3 text-xl font-semibold text-ink">{title}</h3>
-      <ul>
-        {items.map((item) => (
-          <li key={item.name} className="border-b border-line">
-            <Link href={item.href} className="group flex items-center justify-between gap-4 py-4">
-              <span>
-                <span className="block text-[17px] font-semibold text-ink group-hover:text-accent">{item.name}</span>
-                <span className="mt-0.5 block text-sm text-muted">{item.detail}</span>
-              </span>
-              <ArrowUpRight className="h-5 w-5 shrink-0 text-muted transition-colors group-hover:text-accent" aria-hidden="true" />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+const sectionHeading = "text-balance text-4xl font-bold leading-[1.05] tracking-[-0.03em] text-ink sm:text-5xl";
 
 export default function HomePage() {
   return (
-    <div className="pb-20">
+    <div className="pb-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
 
-      {/* A day at home: the headline over one timetable of the household day */}
-      <section aria-labelledby="hero-title">
-        <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6 sm:pt-16 lg:pb-14 lg:pt-20">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink shadow-2xs sm:mb-6 sm:text-sm">
-            <span className="inline-block h-2 w-2 rounded-full bg-brand-coral" aria-hidden="true" />
-            <span className="font-bold tracking-tight text-ink">
-              RU<span className="text-brand-coral font-extrabold">X</span>s
-            </span>
-            <span className="text-muted/60" aria-hidden="true">·</span>
-            <span className="font-medium text-muted">
-              Recurring Utility e<span className="font-bold text-brand-coral">X</span>perience
-            </span>
-          </div>
-          <h1 id="hero-title" className="text-[44px] font-bold leading-[1.02] tracking-[-0.035em] text-ink sm:text-6xl lg:text-[72px]">
-            <span className="block text-balance">Classes and kits for your kids.</span>
-            <span className="block text-balance text-brand-deep">Everyday help for your home.</span>
-          </h1>
-          <div className="mt-8 grid gap-6 lg:mt-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
-            <p className="max-w-xl text-lg leading-relaxed text-ink/80">
-              Book kids&apos; classes and workshops — dance, robotics, chess, art and more — and order learning kits from the RUXs Store. Set up tiffin, water cans and milk, and find local stores, gifts, mehndi, fitness and physio from people in your neighbourhood.
+      {/* Hero: the app, standing on the street it serves */}
+      <section aria-labelledby="hero-title" className="relative overflow-hidden bg-brand-butter">
+        <NeighbourhoodScene
+          priority
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[clamp(190px,30vw,400px)] [mask-image:linear-gradient(to_bottom,transparent,black_28%)]"
+          imgClassName="h-full object-cover object-[50%_70%]"
+        />
+        <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pb-28 pt-10 sm:px-6 sm:pb-36 sm:pt-14 lg:grid-cols-[1fr_auto] lg:gap-8 lg:pb-10 lg:pt-20">
+          <div className="lg:pb-72 xl:pb-80">
+            <h1 id="hero-title" className="text-[clamp(2.125rem,10.4vw,2.75rem)] font-bold leading-[1.02] tracking-[-0.035em] text-ink sm:text-6xl lg:text-[56px] xl:text-[68px]">
+              One app for your <span className="block text-brand-deep">neighbourhood.</span>
+            </h1>
+            <p className="mt-5 max-w-md text-lg leading-relaxed text-ink/85 sm:text-xl">
+              Kids&apos; classes and learning kits. The RUXs Store. Daily tiffin, water and milk.
             </p>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-              <Link href="/app" className={primaryButton}>
-                Find services near you <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
+              <Link href="/app" className={openAppButton}>
+                Open App <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
-              <Link
-                href="/app/kids"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[12px] border border-line bg-surface px-5 text-base font-semibold text-ink transition-colors hover:border-accent hover:text-accent"
-              >
-                <GraduationCap className="h-4 w-4" aria-hidden="true" /> Kids Zone &amp; classes
-              </Link>
-              <Link href="/apply" className="text-base font-semibold text-ink underline decoration-line decoration-2 underline-offset-4 hover:decoration-accent sm:ml-2">
-                I run a business
+              <Link href="/apply" className={applyButton}>
+                Apply as business
               </Link>
             </div>
           </div>
-
-          {/* Quick service discovery chips */}
-          <div className="mt-8 flex flex-wrap items-center gap-2 border-t border-line/60 pt-4">
-            <span className="mr-1 text-xs font-semibold text-muted">Explore</span>
-            {exploreChips.map((chip) => (
-              <Link
-                key={chip.label}
-                href={chip.href}
-                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
-              >
-                <chip.icon className="h-3.5 w-3.5 text-brand-deep" aria-hidden="true" />
-                {chip.label}
-              </Link>
-            ))}
-          </div>
+          <AppPreview className="mx-auto lg:mx-24 lg:self-end" />
         </div>
-
-        <div className="border-y border-brand-deep/15 bg-brand-leaf">
-          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-12">
-            <h2 className="sr-only">A day with RUXs</h2>
-            <DayRibbon />
-          </div>
-        </div>
-        <p className="mx-auto max-w-6xl px-4 pt-4 text-sm text-muted sm:px-6">
-          Kids&apos; classes you can book with reviewed providers, plus meals, water and dairy with simple daily skips.
-        </p>
       </section>
 
-      {/* Kids Zone & Activities */}
-      <section aria-labelledby="kids-title" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
-        <div>
-          <div className="flex flex-wrap items-center justify-end gap-4">
-            <Link
-              href="/app/kids"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline"
-            >
-              Open Kids Zone <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
+      {/* Kids Zone */}
+      <section aria-labelledby="kids-title" className="mx-auto mt-20 grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:mt-28 lg:grid-cols-[380px_1fr] lg:gap-16">
+        <div className="relative mx-auto w-full max-w-[380px]">
+          <div aria-hidden="true" className="absolute inset-0 rotate-3 rounded-[24px] bg-brand-peach" />
+          <img
+            src="/banners/kids-act.jpg"
+            alt="Illustration of a happy child with a tablet, imagining games, dinosaurs, storybooks and painting"
+            width={440}
+            height={440}
+            loading="lazy"
+            decoding="async"
+            className="relative block aspect-square w-full -rotate-2 rounded-[24px] object-cover"
+          />
+        </div>
+        <div className="min-w-0">
+          <h2 id="kids-title" className={sectionHeading}>
+            Dance, robots, chess, clay.
+          </h2>
+          <p className="mt-4 max-w-lg text-lg leading-relaxed text-ink/80">Classes, workshops and holiday camps for ages 2 to 14, from teachers near you.</p>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:gap-12">
-            <div>
-              <h2 id="kids-title" className="text-balance text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-ink sm:text-4xl lg:text-5xl">
-                Classes, workshops, camps and kits for your child.
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-ink/80 sm:text-lg">
-                Discover neighbourhood dance academies, STEM labs, art studios, music teachers and tutors in RUXs Kids Zone. Whether it&apos;s an evening hip-hop or Kathak class, a weekly robotics workshop, a pottery session, chess coaching or a holiday camp — explore and book directly. For projects at home, order kits from the RUXs Store.
-              </p>
-
-              {/* Age brackets */}
-              <div className="mt-6">
-                <h3 id="kids-ages" className="text-sm font-semibold text-ink">By age group</h3>
-                <ul aria-labelledby="kids-ages" className="mt-2.5 flex flex-wrap gap-2">
-                  {["Toddlers (2–4 yrs)", "Early Years (4–7 yrs)", "Young Explorers (7–10 yrs)", "Pre-Teens (10–14+ yrs)"].map((bracket) => (
-                    <li key={bracket} className="inline-flex items-center rounded-full border border-line bg-surface px-3.5 py-1 text-xs font-medium text-ink">
-                      {bracket}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="flex flex-col justify-between rounded-card border border-line bg-surface p-5 sm:p-6">
-              <ul className="space-y-3.5">
-                {[
-                  "Reviewed providers: kids teachers and academies are reviewed by RUXs before they can take bookings.",
-                  "Request your preferred time slot: the provider confirms it, and you see the status in your bookings.",
-                  "Pay per session: cash or direct UPI at the studio, home, or academy.",
-                  "Activity passes & holiday camps: multi-session packs and weekend creative camps.",
-                ].map((point) => (
-                  <li key={point} className="flex items-start gap-3 text-sm leading-relaxed text-ink sm:text-base">
-                    <Check className="mt-1 h-4 w-4 shrink-0 text-good" aria-hidden="true" />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-4">
-                <Link
-                  href="/app/kids"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-ink px-5 text-sm font-semibold text-bg transition-colors hover:bg-ink/90"
-                >
-                  Browse all classes <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          <ul className="-mx-4 mt-8 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
+            {kidsRail.map((item) => (
+              <li key={item.label} className="w-[46%] shrink-0 snap-start sm:w-auto">
+                <Link href={item.href} className="group block rounded-card">
+                  <CoverArt theme={item.theme} className="aspect-[4/3] w-full rounded-card" />
+                  <span className="mt-2 block text-[15px] font-semibold leading-tight text-ink group-hover:text-accent">{item.label}</span>
                 </Link>
-                <Link
-                  href="/app/kids/kits"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-line bg-surface px-4 text-sm font-semibold text-ink transition-colors hover:border-accent hover:text-accent"
-                >
-                  Learning kits
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Cards for key activities */}
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: "Dance & Performing Arts",
-                desc: "Kathak, Bharatnatyam, Western Hip-Hop, Contemporary & Bollywood dance classes with trained instructors.",
-                tag: "Studio or Home",
-                icon: Music,
-                badge: "Dance",
-                href: "/app/kids",
-              },
-              {
-                title: "Robotics, STEM & Coding",
-                desc: "Build working robots, code Scratch & Python games, and explore hands-on science experiments.",
-                tag: "Labs & Online",
-                icon: Bot,
-                badge: "STEM",
-                href: "/app/kids",
-              },
-              {
-                title: "Art, Pottery & Craft",
-                desc: "Pottery wheel workshops, clay modeling, acrylic painting, sketching and handmade craft courses.",
-                tag: "Workshops",
-                icon: Palette,
-                badge: "Creative",
-                href: "/app/kids",
-              },
-              {
-                title: "Chess Academy & Logic",
-                desc: "From beginner moves to tournament strategies, plus abacus, Olympiad math and mental logic.",
-                tag: "Coaching",
-                icon: Brain,
-                badge: "Chess",
-                href: "/app/kids",
-              },
-              {
-                title: "Music & Vocal Lessons",
-                desc: "Guitar, keyboard, Hindustani classical vocals, Western singing, and rhythm fundamentals.",
-                tag: "Academy",
-                icon: Guitar,
-                badge: "Music",
-                href: "/app/kids",
-              },
-              {
-                title: "Holiday Camps & DIY Kits",
-                desc: "Holiday camps, plus science experiment kits and craft materials from kit providers near you.",
-                tag: "Camps & Kits",
-                icon: Tent,
-                badge: "Camps",
-                href: "/app/kids/kits",
-              },
-            ].map((activity) => (
-              <Link
-                key={activity.title}
-                href={activity.href}
-                className="group flex flex-col justify-between rounded-card border border-line bg-surface p-4 transition-colors hover:border-accent"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink">
-                      <activity.icon className="mr-1 inline h-3.5 w-3.5 align-[-2px] text-brand-deep" aria-hidden="true" />
-                      {activity.badge}
-                    </span>
-                    <span className="text-xs font-medium text-muted">{activity.tag}</span>
-                  </div>
-                  <h3 className="mt-3 text-base font-bold text-ink transition-colors group-hover:text-accent">
-                    {activity.title}
-                  </h3>
-                  <p className="mt-1 text-sm leading-relaxed text-ink/75">{activity.desc}</p>
-                </div>
-                <div className="mt-4 flex items-center justify-end text-xs font-semibold text-accent group-hover:underline">
-                  <span>Explore classes</span>
-                  <ArrowUpRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
-                </div>
-              </Link>
+              </li>
             ))}
-          </div>
+          </ul>
 
-          {/* RUXs Store: RUXs's own shop, inside Kids Zone */}
-          <section aria-labelledby="store-title" className="mt-8 rounded-card bg-brand-peach p-5 sm:p-8">
-            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-12">
-              <div>
-                <h3 id="store-title" className="flex items-center gap-2 text-2xl font-bold tracking-[-0.02em] text-ink sm:text-3xl">
-                  <ShoppingBag className="h-6 w-6 shrink-0 text-accent" aria-hidden="true" />
-                  RUXs Store
-                </h3>
-                <p className="mt-3 max-w-2xl text-base leading-relaxed text-ink/80">
-                  Our own shop for hands-on learning at home, run by RUXs. RUXs sets the prices and handles your order. Delivering in Ranchi for now.
-                </p>
-                <ul aria-label="What the RUXs Store sells" className="mt-4 flex flex-wrap gap-2">
-                  {storeShelves.map((shelf) => (
-                    <li key={shelf} className="inline-flex items-center rounded-full border border-ink/10 bg-surface px-3.5 py-1 text-sm font-medium text-ink">
-                      {shelf}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <Link href="/app/kids/shop" className={primaryButton}>
-                Shop the RUXs Store <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
-          </section>
-        </div>
-      </section>
-
-      {/* The mechanism only RUXs has: change tomorrow before the cutoff */}
-      <section aria-labelledby="skip-title" className="mx-auto mt-24 grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:mt-32 lg:grid-cols-[1fr_400px] lg:gap-20">
-        <div className="max-w-xl">
-          <h2 id="skip-title" className="text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
-            Change any day before the cutoff.
-          </h2>
-          <p className="mt-5 text-lg leading-relaxed text-ink/80">
-            Every store sets a daily cutoff, like 10:00 AM for lunch. Before it, skip a day, add an extra or pause your plan. After it, the kitchen is already cooking.
-          </p>
-          <p className="mt-4 text-lg leading-relaxed text-ink/80">
-            Stores can also send your home a private link, so anyone in the family can tap Deliver or Skip without signing in.
-          </p>
-        </div>
-        <SkipDemo />
-      </section>
-
-      {/* Everything RUXs carries, as a directory rather than a card grid */}
-      <section aria-labelledby="services-title" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
-        <h2 id="services-title" className="max-w-2xl text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
-          Family services and daily essentials, close by.
-        </h2>
-        <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-14 lg:grid-cols-3">
-          <DirectoryList title="For the kids" items={family} />
-          <DirectoryList title="Every day" items={everyday} />
-          <DirectoryList title="Local specialists" items={specialists} />
-        </div>
-        <p className="mt-6 text-sm text-muted">What you see depends on who serves your area. Each provider sets its own prices; the RUXs Store sets its own.</p>
-      </section>
-
-      {/* One monthly bill */}
-      <section id="monthly-bill" aria-labelledby="bill-title" className="mx-auto mt-24 grid max-w-6xl scroll-mt-24 items-center gap-12 px-4 sm:px-6 lg:mt-32 lg:grid-cols-[400px_1fr] lg:gap-20">
-        <figure className="order-2 w-full max-w-[400px] rounded-[16px] border border-line bg-surface p-5 sm:p-6 lg:order-1">
-          <figcaption className="flex items-baseline justify-between border-b border-line pb-3">
-            <span className="text-lg font-semibold text-ink">October bill</span>
-            <span className="text-xs font-medium text-muted">Example</span>
-          </figcaption>
-          <dl className="divide-y divide-line">
-            {exampleBill.map((line) => (
-              <div key={line.label} className="flex items-baseline justify-between gap-4 py-3">
-                <dt className="text-[15px] text-ink">
-                  {line.label}
-                  <span className="block text-sm text-muted">{line.qty}</span>
-                </dt>
-                <dd className="whitespace-nowrap text-[15px] font-semibold tabular-nums text-ink">{line.paise === 0 ? "Not charged" : formatINR(line.paise)}</dd>
-              </div>
+          <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-2">
+            {kidsFacts.map((fact) => (
+              <li key={fact} className="flex items-center gap-2 text-[15px] font-medium text-ink">
+                <Check className="h-4 w-4 shrink-0 text-good" aria-hidden="true" />
+                {fact}
+              </li>
             ))}
-          </dl>
-          <div className="mt-1 flex items-baseline justify-between border-t-2 border-ink pt-3">
-            <span className="text-base font-semibold text-ink">Total</span>
-            <span className="text-2xl font-bold tabular-nums tracking-[-0.02em] text-ink">{formatINR(exampleTotal)}</span>
-          </div>
-        </figure>
-        <div className="order-1 max-w-xl lg:order-2">
-          <h2 id="bill-title" className="text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
-            One bill at the end of the month.
-          </h2>
-          <p className="mt-5 text-lg leading-relaxed text-ink/80">
-            Every delivery is recorded as it happens, and your bill is worked out from those records. Skipped days stay off it. Pay online or in cash to the store.
-          </p>
-          <p className="mt-4 text-base text-muted">
-            No commission on pay-on-delivery or monthly-bill orders. Online payments may carry a small fee, shown before you pay.
-          </p>
+          </ul>
         </div>
       </section>
 
-      {/* The neighbourhood, and the people who run it */}
-      <section aria-labelledby="merchant-title" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
-        <NeighbourhoodScene />
-        <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:gap-20">
-          <h2 id="merchant-title" className="text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
-            Run by people in your neighbourhood.
-          </h2>
+      {/* RUXs Store: the one drenched band on the page */}
+      <section aria-labelledby="store-title" className="mt-20 bg-brand-deep lg:mt-28">
+        <div className="mx-auto grid max-w-6xl items-end gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16 lg:py-24">
           <div>
-            <p className="text-lg leading-relaxed text-ink/80">
-              Teach kids, run a home kitchen, water depot, dairy or shop, or work as a trainer, physio or mehndi artist? RUXs gives you the tools to serve the families around you.
+            <h2 id="store-title" className="text-5xl font-bold leading-[1.02] tracking-[-0.035em] text-white sm:text-6xl">
+              The RUXs Store.
+            </h2>
+            <p className="mt-5 max-w-md text-lg leading-relaxed text-brand-leaf">
+              DIY kits, robotics, science kits, art supplies and puzzles. A box of something to build, every time.
             </p>
-            <ul className="mt-5 space-y-3">
-              {merchantTools.map((tool) => (
-                <li key={tool} className="flex gap-3 text-base text-ink">
-                  <Check className="mt-0.5 h-5 w-5 shrink-0 text-good" aria-hidden="true" />
-                  {tool}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
-              <Link href="/apply" className={inkButton}>
-                List your business <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[15px] font-semibold text-white">
+              <PackageCheck className="h-5 w-5 text-kids-sunny" aria-hidden="true" />
+              Shipped across India by RUXs
+            </p>
+          </div>
+          <StoreShelf />
+        </div>
+      </section>
+
+      {/* Daily essentials and local services */}
+      <section aria-labelledby="daily-title" className="mx-auto mt-20 max-w-6xl px-4 sm:px-6 lg:mt-28">
+        <h2 id="daily-title" className={sectionHeading}>
+          Tiffin, water, milk. On repeat.
+        </h2>
+        <p className="mt-4 max-w-lg text-lg leading-relaxed text-ink/80">Plus stores, gifts, mehndi, fitness and physio from people nearby.</p>
+
+        <ul className="mt-8 grid grid-cols-4 gap-x-3 gap-y-5 lg:grid-cols-8 lg:gap-x-4">
+          {everydayRail.map((item) => (
+            <li key={item.label}>
+              <Link href={item.href} className="group block rounded-card text-center">
+                <CoverArt theme={item.theme} className="aspect-square w-full rounded-card" />
+                <span className="mt-2 block text-[13px] font-semibold text-ink group-hover:text-accent sm:text-[15px]">{item.label}</span>
               </Link>
-              <Link href="/merchant-panel/sign-in" className="text-base font-semibold text-ink underline decoration-line decoration-2 underline-offset-4 hover:decoration-accent">
-                Merchant sign in
-              </Link>
-            </div>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-14 grid gap-12 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <h3 className="text-2xl font-bold tracking-[-0.02em] text-ink">Skip a day in one tap.</h3>
+            <p className="mb-5 mt-1.5 text-base text-muted">Try it. Change tomorrow before the store&apos;s cutoff.</p>
+            <SkipDemo />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold tracking-[-0.02em] text-ink">One bill at month end.</h3>
+            <p className="mb-5 mt-1.5 text-base text-muted">Worked out from each delivery. Skipped days stay off it.</p>
+            <figure className="w-full max-w-[400px] rounded-[16px] border border-line bg-surface p-5 sm:p-6">
+              <figcaption className="flex items-baseline justify-between border-b border-line pb-3">
+                <span className="text-lg font-semibold text-ink">October bill</span>
+                <span className="text-xs font-medium text-muted">Example</span>
+              </figcaption>
+              <dl className="divide-y divide-line">
+                {exampleBill.map((line) => (
+                  <div key={line.label} className="flex items-baseline justify-between gap-4 py-3">
+                    <dt className="text-[15px] text-ink">
+                      {line.label}
+                      <span className="block text-sm text-muted">{line.qty}</span>
+                    </dt>
+                    <dd className="whitespace-nowrap text-[15px] font-semibold tabular-nums text-ink">{line.paise === 0 ? "Not charged" : formatINR(line.paise)}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-1 flex items-baseline justify-between border-t-2 border-ink pt-3">
+                <span className="text-base font-semibold text-ink">Total</span>
+                <span className="text-2xl font-bold tabular-nums tracking-[-0.02em] text-ink">{formatINR(exampleTotal)}</span>
+              </div>
+            </figure>
           </div>
         </div>
       </section>
 
       {/* Questions */}
-      <section aria-labelledby="faq-title" className="mx-auto mt-24 max-w-3xl px-4 sm:px-6 lg:mt-32">
-        <h2 id="faq-title" className="text-4xl font-bold tracking-[-0.03em] text-ink sm:text-5xl">Questions</h2>
+      <section aria-labelledby="faq-title" className="mx-auto mt-20 max-w-3xl px-4 sm:px-6 lg:mt-28">
+        <h2 id="faq-title" className={sectionHeading}>
+          Questions
+        </h2>
         <div className="mt-8 border-t-2 border-ink">
           {faqs.map((faq) => (
             <details key={faq.question} className="group border-b border-line">
@@ -447,51 +197,26 @@ export default function HomePage() {
             </details>
           ))}
         </div>
-
-        {/* Support & Contact Card */}
-        <div className="mt-12 rounded-[20px] border border-line bg-surface p-6 shadow-xs sm:p-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-peach bg-peach/60 px-3 py-1 text-xs font-semibold text-accent">
-                Customer &amp; Merchant Support
-              </span>
-              <h3 className="mt-2 text-xl font-bold tracking-tight text-ink sm:text-2xl">
-                Need help or have questions?
-              </h3>
-              <p className="mt-1 text-sm text-muted">
-                Reach out for support with kids&apos; classes, RUXs Store orders, daily deliveries, billing, or listing your business.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2.5 sm:shrink-0">
-              <a
-                href="mailto:adminruxs@gmail.com"
-                className="inline-flex items-center gap-2 min-h-11 rounded-control border border-line bg-bg px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-accent hover:text-accent"
-              >
-                <Mail className="h-4 w-4 text-accent" aria-hidden="true" />
-                <span>adminruxs@gmail.com</span>
-              </a>
-              <a
-                href="https://wa.me/919610201507"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 min-h-11 rounded-control border border-good/20 bg-good/10 px-4 py-2.5 text-sm font-semibold text-good transition-colors hover:bg-good/15"
-              >
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                <span><span className="tabular-nums">9610201507</span> <span className="text-xs font-normal text-ink/70">(WhatsApp messages only)</span><span className="sr-only"> (opens WhatsApp in a new tab)</span></span>
-              </a>
-            </div>
-          </div>
-        </div>
       </section>
 
-      {/* Close */}
-      <section className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:mt-32">
-        <div className="flex flex-col gap-6 border-t-2 border-ink pt-10 sm:flex-row sm:items-end sm:justify-between">
-          <p className="max-w-xl text-balance text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-ink sm:text-4xl">
-            See who serves your street.
-          </p>
-          <Link href="/app" className={primaryButton}>
-            Find services near you <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      {/* Close: the same two doors as the hero */}
+      <section aria-label="Get started" className="mx-auto mt-20 grid max-w-6xl gap-4 px-4 sm:px-6 md:grid-cols-2 lg:mt-28">
+        <div className="flex flex-col items-start justify-between gap-8 rounded-[24px] bg-brand-peach p-7 sm:p-10">
+          <div>
+            <h2 className="text-balance text-3xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-4xl">See who serves your street.</h2>
+            <p className="mt-3 text-base leading-relaxed text-ink/80">Runs in your browser. Nothing to download.</p>
+          </div>
+          <Link href="/app" className={openAppButton}>
+            Open App <ArrowRight className="h-5 w-5" aria-hidden="true" />
+          </Link>
+        </div>
+        <div className="flex flex-col items-start justify-between gap-8 rounded-[24px] bg-brand-leaf p-7 sm:p-10">
+          <div>
+            <h2 className="text-balance text-3xl font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-4xl">Run a class, kitchen or shop?</h2>
+            <p className="mt-3 text-base leading-relaxed text-ink/80">Orders, bookings, a delivery run sheet and monthly bills in one panel.</p>
+          </div>
+          <Link href="/apply" className={applyButton}>
+            Apply as business
           </Link>
         </div>
       </section>
