@@ -48,7 +48,7 @@ export default async function PlansPage() {
 
   return (
     <div className="min-h-dvh bg-neutral-50 pb-20">
-      <PageHeader title="Your plans" subtitle="Tap a day to skip it or bring it back" />
+      <PageHeader title="Your plans" back="/app/account" subtitle="Tap a day to skip it or bring it back" />
       {plans.length > 0 && <TodayPlansOffControl items={scheduledTodayItems} today={today} />}
       {upcoming.length > 0 && (
         <section className="space-y-2 px-4 pt-4">

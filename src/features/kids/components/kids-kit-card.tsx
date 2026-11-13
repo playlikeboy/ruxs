@@ -32,7 +32,7 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
   }, [justAdded]);
 
   return (
-    <article className="group flex gap-3.5 rounded-[20px] border border-kids-ink/10 bg-white p-3.5 transition-[border-color,box-shadow,transform] duration-200 hover:border-kids-ink/25 hover:shadow-[0_4px_16px_rgba(23,71,55,0.06)] hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none">
+    <article className="group flex gap-3.5 rounded-[20px] border border-kids-ink/10 bg-white p-3.5 transition-[border-color,box-shadow,transform] duration-200 hover:border-kids-ink/25 hover:shadow-[0_4px_16px_rgba(23,71,55,0.06)] motion-reduce:transform-none motion-reduce:transition-none">
       <CoverArt theme="kits" className="h-24 w-24 shrink-0 rounded-[16px] shadow-xs" />
       <div className="flex min-w-0 flex-1 flex-col py-0.5">
         <h3 className="line-clamp-2 font-kids text-base font-semibold leading-snug text-kids-ink">{item.name}</h3>
@@ -54,17 +54,17 @@ export function KidsKitCard({ item }: { item: KidsKitItem }) {
           <p className="mt-2 line-clamp-1 text-xs text-kids-ink/65"><span aria-hidden="true">📦</span> In the box: {item.features.join(", ")}</p>
         )}
         <div className="mt-auto flex items-end justify-between gap-2 pt-2.5">
-          <span className="whitespace-nowrap text-base font-extrabold tabular-nums text-kids-ink">{formatINR(item.pricePaise)}</span>
+          <span className="min-w-0 text-base font-extrabold tabular-nums text-kids-ink">{formatINR(item.pricePaise)}</span>
           <button
             type="button"
             onClick={add}
             className={cn(
-              "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-bold transition-colors shadow-xs",
+              "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold transition-colors shadow-xs",
               justAdded ? "bg-good text-white" : "bg-kids-ink text-white hover:bg-kids-ink/90"
             )}
           >
             {justAdded ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <Plus className="h-3.5 w-3.5" aria-hidden="true" />}
-            <span aria-live="polite">{justAdded ? "Added" : inCart ? `Add (${inCart.qty})` : "Add to box"}</span>
+            <span aria-live="polite">{justAdded ? "Added" : inCart ? `Add (${inCart.qty})` : "Add"}</span>
           </button>
         </div>
       </div>

@@ -36,7 +36,7 @@ export default async function KidsHomePage() {
   return (
     <div className="space-y-7">
       <ModeSwitch className="mb-1" />
-      <section className="group relative overflow-hidden rounded-[24px] bg-white ring-1 ring-kids-ink/10 shadow-xs">
+      <section className="relative overflow-hidden rounded-[24px] bg-white ring-1 ring-kids-ink/10 shadow-xs">
         <CoverArt theme="kids" live className="h-36 w-full sm:h-44" />
         <div className="p-5 pt-4">
           <h1 className="font-kids text-[28px] font-semibold leading-[1.1] tracking-tight text-kids-ink sm:text-[32px]">
@@ -50,8 +50,8 @@ export default async function KidsHomePage() {
               id="kids-search"
               name="q"
               type="search"
-              placeholder="Dance, chess, robotics, art, pottery… 🎨"
-              className="min-h-12 w-full rounded-full border border-kids-ink/15 bg-kids-cream pl-11 pr-24 text-base placeholder:text-kids-ink/55 focus:border-kids-ink"
+              placeholder="Dance, chess, robotics, art…"
+              className="min-h-12 w-full min-w-0 truncate rounded-full border border-kids-ink/15 bg-kids-cream pl-11 pr-[4.5rem] text-base placeholder:text-kids-ink/55 focus:border-kids-ink"
             />
             <button
               type="submit"
@@ -63,7 +63,19 @@ export default async function KidsHomePage() {
         </div>
       </section>
 
-      <Hint id="kids-home">💡 Pick an age or topic to explore. Booking sends a request directly to the teacher — pay at the session!</Hint>
+      <Link
+        href="/app/kids/shop"
+        className="flex items-center gap-3.5 rounded-[20px] border border-kids-ink/10 bg-white p-3.5 transition-colors hover:border-kids-ink/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kids-ink"
+      >
+        <CoverArt theme="kits" className="h-16 w-16 shrink-0 rounded-[14px]" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-kids text-[17px] font-semibold leading-tight text-kids-ink">RUXs Store</span>
+          <span className="mt-0.5 block text-[13px] leading-snug text-kids-ink/70">DIY kits, robotics, science kits, art supplies and puzzles</span>
+        </span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-kids-ink/40" aria-hidden="true" />
+      </Link>
+
+      <Hint id="kids-home">Pick an age or topic. Booking sends a request to the teacher, and you pay at the session.</Hint>
 
       {nothingNearby ? (
         <div className={`${kidsCard} p-6 text-center shadow-xs`}>
@@ -86,13 +98,13 @@ export default async function KidsHomePage() {
                   <Link
                     key={b.id}
                     href={`/app/kids/activities?age=${encodeURIComponent(b.id)}`}
-                    className={`group flex items-center gap-3 rounded-[18px] border ${tint} p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(23,71,55,0.06)] active:scale-[0.98]`}
+                    className={`group flex items-center gap-3 rounded-[18px] border ${tint} p-3.5 transition-colors active:scale-[0.98] motion-reduce:transform-none`}
                   >
-                    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6">
+                    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                       {b.emoji}
                     </span>
                     <span className="min-w-0">
-                      <span className="block font-kids text-[15px] font-semibold leading-tight text-kids-ink">{b.label}</span>
+                      <span className="block truncate font-kids text-[15px] font-semibold leading-tight text-kids-ink">{b.label}</span>
                       <span className="mt-0.5 block truncate text-xs font-medium leading-tight text-kids-ink/70">{b.tagline}</span>
                     </span>
                   </Link>
@@ -106,16 +118,16 @@ export default async function KidsHomePage() {
               <h2 id="topic-title" className="font-kids text-xl font-semibold tracking-tight text-kids-ink">Topics</h2>
               <span className="text-xs font-semibold text-kids-ink/70">{TOPICS.length} topics</span>
             </div>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5 min-[400px]:grid-cols-3">
               {TOPICS.map((id) => (
                 <Link
                   key={id}
                   href={id === "kits" ? "/app/kids/kits" : `/app/kids/activities?topic=${id}`}
-                  className="group overflow-hidden rounded-[18px] border border-kids-ink/10 bg-white transition-all duration-200 hover:border-kids-ink/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(23,71,55,0.06)] active:scale-[0.98]"
+                  className="group overflow-hidden rounded-[18px] border border-kids-ink/10 bg-white transition-colors hover:border-kids-ink/30 active:scale-[0.98] motion-reduce:transform-none"
                 >
                   <CoverArt theme={id} className="aspect-[4/3] w-full" />
-                  <span className="flex items-center justify-center gap-1.5 px-2 py-2 text-[13px] font-semibold leading-tight text-kids-ink">
-                    <span aria-hidden="true" className="text-sm transition-transform duration-200 group-hover:scale-125">{KIDS_CATEGORIES[id].emoji}</span>
+                  <span className="flex min-w-0 items-center justify-center gap-1.5 px-2 py-2 text-[13px] font-semibold leading-tight text-kids-ink">
+                    <span aria-hidden="true" className="text-sm">{KIDS_CATEGORIES[id].emoji}</span>
                     <span className="truncate">{KIDS_CATEGORIES[id].shortLabel}</span>
                   </span>
                 </Link>

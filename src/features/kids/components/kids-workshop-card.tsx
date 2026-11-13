@@ -13,7 +13,7 @@ export function KidsWorkshopCard({ item }: { item: KidsWorkshopItem }) {
   const href = `/app/kids/workshops/${item.id}`;
 
   return (
-    <article className="group relative overflow-hidden rounded-[20px] border border-kids-ink/10 bg-white transition-[border-color,box-shadow,transform] duration-200 hover:border-kids-ink/25 hover:shadow-[0_4px_16px_rgba(23,71,55,0.06)] hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none">
+    <article className="group relative overflow-hidden rounded-[20px] border border-kids-ink/10 bg-white transition-[border-color,box-shadow,transform] duration-200 hover:border-kids-ink/25 hover:shadow-[0_4px_16px_rgba(23,71,55,0.06)] motion-reduce:transform-none motion-reduce:transition-none">
       <CoverArt theme={item.category} className="h-32 w-full" />
       <div className="p-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -36,7 +36,7 @@ export function KidsWorkshopCard({ item }: { item: KidsWorkshopItem }) {
           <KidsRating rating={item.vendor.rating} reviewCount={item.vendor.reviewCount} />
         </p>
         <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-kids-ink/10 pt-3">
-          <p className="whitespace-nowrap">
+          <p className="min-w-0">
             <span className="text-base font-extrabold tabular-nums text-kids-ink">{formatINR(item.pricePaise)}</span>
             <span className="ml-1 text-[13px] text-kids-ink/60">per child</span>
           </p>

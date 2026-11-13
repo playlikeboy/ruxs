@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Store } from "lucide-react";
+import { CalendarCheck, CalendarClock, ChevronRight, Package, ReceiptIndianRupee, Store } from "lucide-react";
 import { getMyLocation, getMyProfile } from "@/features/consumer/queries";
 import { PageHeader } from "@/features/consumer/components/page-header";
 import { ProfileForm } from "@/features/consumer/components/profile-form";
@@ -10,6 +10,13 @@ import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
 import { TapFeedbackSwitch } from "@/components/ui/tap-feedback";
 
 export const metadata = { title: "Account" };
+
+const SHORTCUTS = [
+  { href: "/app/orders", label: "Orders", sub: "Cart orders", icon: ReceiptIndianRupee },
+  { href: "/app/plans", label: "Plans", sub: "Daily deliveries", icon: CalendarCheck },
+  { href: "/app/kids/shop/orders", label: "Store orders", sub: "RUXs Store", icon: Package },
+  { href: "/app/bookings", label: "Bookings", sub: "Sessions", icon: CalendarClock },
+];
 
 function num(v: string | undefined): number | null {
   const n = v ? Number(v) : NaN;
@@ -57,6 +64,27 @@ export default async function AccountPage({
             <p className="truncate text-sm text-muted">{user.primaryEmail}</p>
           </div>
         </div>
+
+        <nav aria-label="Your activity" className="mt-5">
+          <ul className="grid grid-cols-2 gap-2.5">
+            {SHORTCUTS.map(({ href, label, sub, icon: Icon }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="flex min-h-16 items-center gap-3 rounded-[16px] border border-line bg-surface px-3.5 py-3 transition-colors hover:border-ink/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-brand-peach text-accent">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[15px] font-semibold text-ink">{label}</span>
+                    <span className="block truncate text-xs text-muted">{sub}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
         <InstallAppPrompt variant="card" className="mt-5" />
         <div className="mt-5 rounded-[16px] border border-line bg-surface px-4">

@@ -14,7 +14,7 @@ export default async function OrdersPage() {
 
   return (
     <div>
-      <PageHeader title="Your orders" />
+      <PageHeader title="Your orders" back="/app/account" />
       <div className="px-4 pt-3">
         <Link href="/app/bookings" className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm">
           <span><span className="font-semibold text-ink">Trainer &amp; physio bookings</span><span className="block text-xs text-neutral-500">Sessions are listed separately</span></span>

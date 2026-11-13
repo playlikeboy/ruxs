@@ -14,7 +14,7 @@ export function KidsActivityCard({ item }: { item: KidsActivityItem }) {
   const href = `/app/kids/services/${item.id}`;
 
   return (
-    <article className="group relative flex gap-3.5 rounded-[20px] border border-kids-ink/10 bg-white p-3.5 transition-[border-color,box-shadow,transform] duration-200 hover:border-kids-ink/25 hover:shadow-[0_4px_16px_rgba(23,71,55,0.06)] hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none">
+    <article className="group relative flex gap-3.5 rounded-[20px] border border-kids-ink/10 bg-white p-3.5 transition-[border-color,box-shadow,transform] duration-200 hover:border-kids-ink/25 hover:shadow-[0_4px_16px_rgba(23,71,55,0.06)] motion-reduce:transform-none motion-reduce:transition-none">
       <CoverArt theme={item.category} className="h-24 w-24 shrink-0 rounded-[16px] shadow-xs" />
       <div className="flex min-w-0 flex-1 flex-col py-0.5">
         <h3 className="line-clamp-2 text-base font-semibold leading-snug text-kids-ink">
@@ -38,9 +38,9 @@ export function KidsActivityCard({ item }: { item: KidsActivityItem }) {
           <KidsRating rating={item.vendor.rating} reviewCount={item.vendor.reviewCount} />
         </p>
         <div className="mt-auto flex items-end justify-between gap-2 pt-2.5">
-          <p className="whitespace-nowrap leading-tight">
-            <span className="text-base font-extrabold tabular-nums text-kids-ink">{formatINR(price)}</span>
-            <span className="ml-1 rounded-md bg-kids-ink/[0.05] px-1.5 py-0.5 text-xs font-semibold text-kids-ink/70">{item.trialPricePaise ? "trial session" : "per session"}</span>
+          <p className="min-w-0 leading-tight">
+            <span className="block text-base font-extrabold tabular-nums text-kids-ink">{formatINR(price)}</span>
+            <span className="block text-xs font-semibold text-kids-ink/65">{item.trialPricePaise ? "trial session" : "per session"}</span>
           </p>
           <span className="relative z-10 shrink-0">
             <KidsVideoButton url={item.previewVideoUrl} title={item.name} />

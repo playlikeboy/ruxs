@@ -42,7 +42,7 @@ export default async function MyBookingsPage() {
 
   return (
     <div className="min-h-dvh bg-neutral-50">
-      <PageHeader title="Your bookings" subtitle="Trainers, physio and other sessions" />
+      <PageHeader title="Your bookings" back="/app/account" subtitle="Trainers, physio and other sessions" />
       {rows.length === 0 ? (
         <div className="flex flex-col items-center px-6 pt-24 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sky">

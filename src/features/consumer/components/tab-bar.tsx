@@ -2,16 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, CalendarCheck, ShoppingBag, ReceiptIndianRupee, UserRound } from "lucide-react";
+import { House, Store, ShoppingBag, UserRound } from "lucide-react";
 import { cartCount, useCart } from "./cart-store";
 
+const STORE = "/app/kids/shop";
+
 const TABS = [
-  { href: "/app", label: "Explore", icon: House, exact: true },
-  { href: "/app/plans", label: "Plans", icon: CalendarCheck },
+  { href: "/app", label: "Explore", icon: House },
+  { href: STORE, label: "Store", icon: Store },
   { href: "/app/cart", label: "Cart", icon: ShoppingBag },
-  { href: "/app/orders", label: "Orders", icon: ReceiptIndianRupee },
   { href: "/app/account", label: "Account", icon: UserRound },
 ];
+
+/** Which tab owns a path. Orders, plans and bookings live under Account. */
+function activeTab(pathname: string): string {
+  if (pathname.startsWith(STORE)) return STORE;
+  if (pathname.startsWith("/app/cart")) return "/app/cart";
+  if (["/app/account", "/app/orders", "/app/plans", "/app/bookings", "/app/tickets"].some((p) => pathname.startsWith(p))) {
+    return "/app/account";
+  }
+  return "/app";
+}
 
 export function TabBar() {
   const pathname = usePathname();
@@ -22,15 +33,9 @@ export function TabBar() {
       aria-label="App navigation"
       className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-line bg-white pb-[env(safe-area-inset-bottom)]"
     >
-      <ul className="grid h-16 grid-cols-5">
+      <ul className="grid h-16 grid-cols-4">
         {TABS.map((tab) => {
-          const active = tab.exact
-            ? pathname === tab.href ||
-              pathname.startsWith("/app/category") ||
-              pathname.startsWith("/app/search") ||
-              pathname.startsWith("/app/store") ||
-              pathname.startsWith("/app/kids")
-            : pathname.startsWith(tab.href);
+          const active = activeTab(pathname) === tab.href;
           const Icon = tab.icon;
           return (
             <li key={tab.href}>
