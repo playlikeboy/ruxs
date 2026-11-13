@@ -261,6 +261,13 @@ export async function placeOrder(input: unknown) {
     if (err instanceof Error && err.message === "PHONE_LINKED_ELSEWHERE") {
       return fail("Your phone number is linked to another RUXs account at this store.");
     }
+    // Two taps raced past the lookup above: the loser hits the unique client key. Return the winner's order.
+    const [raced] = await db
+      .select({ id: shopOrders.id })
+      .from(shopOrders)
+      .where(and(eq(shopOrders.clientKey, data.clientKey), eq(shopOrders.userId, user.id)))
+      .limit(1);
+    if (raced) return { ok: true as const, orderId: raced.id };
     return fail("Could not place your order. Please try again.");
   }
 }
@@ -296,6 +303,16 @@ export async function cancelMyOrder(input: unknown) {
 
   revalidatePath("/app/orders");
   revalidatePath(`/app/orders/${order.id}`);
+
+  // The store already saw a placed order: refresh its list and tell it, so nobody
+  // cooks a cancelled order. An unpaid online order never reached the store.
+  if (order.status !== "awaiting_payment") {
+    const [vendor] = await db.select({ slug: vendors.slug }).from(vendors).where(eq(vendors.id, order.vendorId)).limit(1);
+    if (vendor) {
+      revalidatePath(`/merchant-panel/${vendor.slug}/orders`);
+      notifyVendorAfter(order.vendorId, { kind: "vendor.order.cancelled", slug: vendor.slug, number: order.number, customerName: "A customer" });
+    }
+  }
   return { ok: true as const };
 }
 
@@ -360,7 +377,7 @@ export async function subscribe(input: unknown) {
       const customerId = await ensureCustomer(tx, vendor.id, profile);
 
       const [existing] = await tx
-        .select({ id: subscriptions.id })
+        .select({ id: subscriptions.id, startsOn: subscriptions.startsOn })
         .from(subscriptions)
         .where(
           and(
@@ -375,7 +392,8 @@ export async function subscribe(input: unknown) {
       if (existing) {
         await tx
           .update(subscriptions)
-          .set({ qty: data.qty, days: data.days, endsOn: null })
+          // A plan that has not started yet takes the newly picked start date; a running one keeps its own.
+          .set({ qty: data.qty, days: data.days, endsOn: null, ...(existing.startsOn > today ? { startsOn: data.startsOn } : {}) })
           .where(eq(subscriptions.id, existing.id));
         id = existing.id;
       } else {
@@ -444,6 +462,8 @@ export async function endMySubscription(input: unknown) {
   // Today's count may already be locked, so the plan ends after today.
   const today = todayIST();
   const endsOn = mine.sub.startsOn > today ? addDaysIST(mine.sub.startsOn, -1) : today;
+  // Already ending on or before that day: never push an ended plan's last day forward.
+  if (mine.sub.endsOn && mine.sub.endsOn <= endsOn) return { ok: true as const };
   const db = getDb();
   await db.update(subscriptions).set({ endsOn }).where(eq(subscriptions.id, mine.sub.id));
 
@@ -478,17 +498,21 @@ export async function setMyDay(input: unknown) {
 
     if (result.ok && user.primaryEmail) {
       const isSkip = kind === "skip";
+      // A skip after cutoff changes the charge, not the count: the store's late rule may still bill it.
+      const lateSkip = isSkip && result.isLate;
       const subject = isSkip
         ? `Delivery turned OFF for ${serviceDate}`
         : `Delivery confirmed ON for ${serviceDate}`;
       const emailHtml = renderEmailHtml({
         heading: isSkip ? "Delivery Off For Today" : "Delivery Back On",
         lead: isSkip
-          ? `You have turned off delivery for ${serviceDate}. Your store has been notified and you will not be charged.`
+          ? lateSkip
+            ? `You have turned off delivery for ${serviceDate}. This was after the store's cutoff, so the store's late-skip charge may still apply.`
+            : `You have turned off delivery for ${serviceDate}. Your store has been notified and you will not be charged.`
           : `Your delivery is active and confirmed for ${serviceDate}.`,
         details: [
           { label: "Service Date", value: serviceDate },
-          { label: "Status", value: isSkip ? "Off today" : "Delivering" },
+          { label: "Status", value: lateSkip ? "Off (after cutoff)" : isSkip ? "Off today" : "Delivering" },
         ],
         actionText: "View My Plans",
         actionUrl: `${APP_URL}/app/plans`,

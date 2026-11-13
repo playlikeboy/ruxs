@@ -40,6 +40,8 @@ export const enrollWorkshopSchema = z.object({
   workshopId: z.string().uuid(),
   childId: z.string().uuid(),
   clientKey: z.string().min(8).max(64),
+  // The form's guardian consent checkbox; enrolment is refused without it.
+  guardianConsent: z.boolean().refine((v) => v, "Please confirm guardian consent to proceed."),
 });
 
 export const cancelWorkshopEnrollmentSchema = z.object({

@@ -75,8 +75,9 @@ export async function getAdminShopOrders(optsOrStatus?: string | AdminOrdersQuer
       ? { status: optsOrStatus }
       : optsOrStatus ?? {};
 
-  const page = Math.max(1, options.page ?? 1);
-  const limit = Math.max(1, Math.min(100, options.limit ?? 25));
+  // Page/limit come from the URL; NaN or fractions would otherwise reach OFFSET/LIMIT.
+  const page = Math.max(1, Math.floor(Number.isFinite(options.page) ? options.page! : 1));
+  const limit = Math.max(1, Math.min(100, Math.floor(Number.isFinite(options.limit) ? options.limit! : 25)));
   const offset = (page - 1) * limit;
 
   const conditions = [];
@@ -84,7 +85,8 @@ export async function getAdminShopOrders(optsOrStatus?: string | AdminOrdersQuer
     conditions.push(eq(shopOrders.status, options.status));
   }
   if (options.q?.trim()) {
-    const term = `%${options.q.trim()}%`;
+    // Escape LIKE wildcards so a search for "50%" matches literally.
+    const term = `%${options.q.trim().replace(/[\\%_]/g, "\\$&")}%`;
     conditions.push(
       or(
         ilike(shopOrders.number, term),

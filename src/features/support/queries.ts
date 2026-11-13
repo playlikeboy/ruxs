@@ -1,9 +1,10 @@
 import "server-only";
 import { cache } from "react";
-import { and, desc, eq, count } from "drizzle-orm";
+import { and, desc, eq, count, notInArray } from "drizzle-orm";
 import { getDb } from "@/db";
 import { supportTickets } from "@/db/schema";
 import { requireAdmin, requireUser, requireVendorAccess } from "@/lib/auth/session";
+import { TICKET_CATEGORIES } from "@/core/tickets";
 
 type TicketRow = typeof supportTickets.$inferSelect;
 
@@ -36,6 +37,11 @@ export async function getMyTicket(ticketId: string) {
   return ticket ? withoutAdminNotes(ticket) : null;
 }
 
+/** Report categories: reviewed by RUXs only, so the reported store never learns who reported it. */
+const REPORT_CATEGORIES = Object.entries(TICKET_CATEGORIES)
+  .filter(([, meta]) => meta.isReport)
+  .map(([id]) => id);
+
 /** Vendor dispute view: vendorId strictly from requireVendorAccess */
 export async function getVendorTickets(slug: string) {
   const access = await requireVendorAccess(slug, ["owner", "staff"]);
@@ -43,7 +49,7 @@ export async function getVendorTickets(slug: string) {
   const rows = await db
     .select()
     .from(supportTickets)
-    .where(eq(supportTickets.vendorId, access.vendorId))
+    .where(and(eq(supportTickets.vendorId, access.vendorId), notInArray(supportTickets.category, REPORT_CATEGORIES)))
     .orderBy(desc(supportTickets.createdAt));
   return rows.map(withoutAdminNotes);
 }

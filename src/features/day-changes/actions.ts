@@ -100,7 +100,7 @@ export async function pauseDates(input: unknown) {
   const { token, slug, subscriptionId, startDate, endDate } = parsed.data;
   const db = getDb();
   let vendorId: string;
-  let targetSubIds: string[] = [];
+  let targets: { id: string; cutoffAt: string }[] = [];
 
   if (token) {
     const auth = await requireCustomerByToken(token);
@@ -108,8 +108,9 @@ export async function pauseDates(input: unknown) {
 
     if (subscriptionId) {
       const [owned] = await db
-        .select({ id: subscriptions.id })
+        .select({ id: subscriptions.id, cutoffAt: products.cutoffAt })
         .from(subscriptions)
+        .innerJoin(products, eq(subscriptions.productId, products.id))
         .where(
           and(
             eq(subscriptions.id, subscriptionId),
@@ -122,26 +123,28 @@ export async function pauseDates(input: unknown) {
       if (!owned) {
         return { ok: false, error: "Subscription not found or unauthorized" };
       }
-      targetSubIds = [owned.id];
+      targets = [owned];
     } else {
       const custSubs = await db
-        .select({ id: subscriptions.id })
+        .select({ id: subscriptions.id, cutoffAt: products.cutoffAt })
         .from(subscriptions)
+        .innerJoin(products, eq(subscriptions.productId, products.id))
         .where(
           and(
             eq(subscriptions.customerId, auth.customer.id),
             eq(subscriptions.vendorId, vendorId)
           )
         );
-      targetSubIds = custSubs.map((s) => s.id);
+      targets = custSubs;
     }
   } else if (slug && subscriptionId) {
     const access = await requireVendorAccess(slug, ["owner", "staff"]);
     vendorId = access.vendorId;
 
     const [vendorSub] = await db
-      .select({ id: subscriptions.id })
+      .select({ id: subscriptions.id, cutoffAt: products.cutoffAt })
       .from(subscriptions)
+      .innerJoin(products, eq(subscriptions.productId, products.id))
       .where(
         and(
           eq(subscriptions.id, subscriptionId),
@@ -153,7 +156,7 @@ export async function pauseDates(input: unknown) {
     if (!vendorSub) {
       return { ok: false, error: "Subscription not found or unauthorized" };
     }
-    targetSubIds = [vendorSub.id];
+    targets = [vendorSub];
   } else {
     return { ok: false, error: "Unauthorized" };
   }
@@ -178,12 +181,20 @@ export async function pauseDates(input: unknown) {
 
   // One multi-row upsert instead of a round trip per day per subscription.
   const rows: (typeof dayChanges.$inferInsert)[] = [];
+  // A pause is a free skip, so it can only cover days whose cutoff has not passed.
+  // After cutoff the order is already locked and charged: storing a skip for it
+  // would show the day as paused while the household is still billed.
+  let lockedCount = 0;
   for (const cur = new Date(startMs); cur.getTime() <= endMs; cur.setUTCDate(cur.getUTCDate() + 1)) {
     const serviceDate = cur.toISOString().slice(0, 10);
-    for (const subId of targetSubIds) {
+    for (const target of targets) {
+      if (isLate(now, serviceDate, target.cutoffAt)) {
+        lockedCount++;
+        continue;
+      }
       rows.push({
         vendorId,
-        subscriptionId: subId,
+        subscriptionId: target.id,
         serviceDate,
         kind: "skip",
         qty: 0,
@@ -192,6 +203,10 @@ export async function pauseDates(input: unknown) {
         isLate: false,
       });
     }
+  }
+
+  if (rows.length === 0 && lockedCount > 0) {
+    return { ok: false, error: "Today's cutoff has passed, so today's delivery is locked. Start the pause from tomorrow." };
   }
 
   try {
@@ -206,13 +221,14 @@ export async function pauseDates(input: unknown) {
             qty: 0,
             source: "pause",
             receivedAt: now,
+            isLate: false,
           },
         });
     }
 
     if (token) revalidatePath(`/c/${token}`);
     if (slug) revalidatePath(`/merchant-panel/${slug}/today`);
-    return { ok: true };
+    return { ok: true, lockedToday: lockedCount > 0 };
   } catch (err: unknown) {
     console.error("[day-changes] pause failed", { startDate, endDate, err });
     return { ok: false, error: "Could not pause deliveries. Please try again." };

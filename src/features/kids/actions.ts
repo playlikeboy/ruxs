@@ -246,6 +246,19 @@ export async function enrollWorkshopAction(input: unknown) {
 
   if (!result.ok) return fail(result.error);
 
+  // Keep the consent the guardian ticked on the form. The seat is already reserved,
+  // so a failed write is logged rather than undoing the enrolment.
+  try {
+    const consent = await recordGuardianConsent({
+      guardianUserId: user.id,
+      childId: data.childId,
+      consentType: "activity_participation",
+    });
+    if (!consent.ok) console.error("Guardian consent not recorded", result.enrollmentId, consent.error);
+  } catch (err) {
+    console.error("Guardian consent not recorded", result.enrollmentId, err instanceof Error ? err.message : err);
+  }
+
   revalidatePath(`/app/kids/workshops/${data.workshopId}`);
   revalidatePath("/app/kids/bookings");
   await announceEnrollment(result.enrollmentId);

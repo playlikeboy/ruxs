@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, and, lt } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { invoices, ledgerEntries } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { computeInvoice } from "@/core/billing";
+import { balance } from "@/core/ledger";
 import { periodBounds } from "@/features/billing/period";
 
 const markInvoicePaidSchema = z.object({
@@ -92,45 +93,74 @@ export async function regenerateAdminInvoice(input: unknown) {
   }
 
   const db = getDb();
-  const [invoice] = await db
-    .select()
-    .from(invoices)
-    .where(eq(invoices.id, parsed.data.invoiceId))
-    .limit(1);
+  // Row lock + one transaction: a payment recorded while this runs cannot be overwritten.
+  const invoice = await db.transaction(async (tx) => {
+    const [invoice] = await tx
+      .select()
+      .from(invoices)
+      .where(eq(invoices.id, parsed.data.invoiceId))
+      .limit(1)
+      .for("update");
+
+    if (!invoice) return null;
+
+    const { end: monthEnd } = periodBounds(invoice.period);
+
+    const entries = await tx
+      .select({
+        type: ledgerEntries.type,
+        amountPaise: ledgerEntries.amountPaise,
+        createdAt: ledgerEntries.createdAt,
+        invoiceId: ledgerEntries.invoiceId,
+      })
+      .from(ledgerEntries)
+      .where(and(eq(ledgerEntries.vendorId, invoice.vendorId), eq(ledgerEntries.customerId, invoice.customerId)));
+
+    const computed = computeInvoice(
+      entries.filter((e) => e.createdAt.getTime() < monthEnd.getTime()),
+      invoice.period
+    );
+
+    // A bill is normally paid after its month has closed. Those payments carry
+    // this bill's id; leaving them out would reopen a bill that is already paid.
+    let paidAfterPaise = 0;
+    for (const e of entries) {
+      if (e.invoiceId === invoice.id && e.amountPaise < 0 && e.createdAt.getTime() >= monthEnd.getTime()) {
+        paidAfterPaise += -e.amountPaise;
+      }
+    }
+
+    let closingPaise = computed.closingPaise - paidAfterPaise;
+    // Online dues payments are not tied to one bill: a bill can never be owed
+    // more than the household owes in total today.
+    if (closingPaise > 0) {
+      closingPaise = Math.min(closingPaise, Math.max(0, balance(entries)));
+    }
+    const settledAfterPaise = computed.closingPaise - closingPaise;
+    const paid = closingPaise <= 0;
+
+    let status = invoice.status === "paid" ? "generated" : invoice.status;
+    if (paid) status = "paid";
+    else if (settledAfterPaise > 0) status = "partially_paid";
+
+    await tx
+      .update(invoices)
+      .set({
+        openingPaise: computed.openingPaise,
+        chargesPaise: computed.chargesPaise,
+        paymentsPaise: computed.paymentsPaise + settledAfterPaise,
+        closingPaise,
+        status,
+        paidAt: paid ? (invoice.paidAt ?? new Date()) : null,
+      })
+      .where(eq(invoices.id, invoice.id));
+
+    return invoice;
+  });
 
   if (!invoice) {
     return { ok: false, error: "Invoice not found" };
   }
-
-  const { end: monthEnd } = periodBounds(invoice.period);
-
-  const entries = await db
-    .select({
-      type: ledgerEntries.type,
-      amountPaise: ledgerEntries.amountPaise,
-      createdAt: ledgerEntries.createdAt,
-    })
-    .from(ledgerEntries)
-    .where(
-      and(
-        eq(ledgerEntries.vendorId, invoice.vendorId),
-        eq(ledgerEntries.customerId, invoice.customerId),
-        lt(ledgerEntries.createdAt, monthEnd)
-      )
-    );
-
-  const computed = computeInvoice(entries, invoice.period);
-
-  await db
-    .update(invoices)
-    .set({
-      openingPaise: computed.openingPaise,
-      chargesPaise: computed.chargesPaise,
-      paymentsPaise: computed.paymentsPaise,
-      closingPaise: computed.closingPaise,
-      status: computed.closingPaise <= 0 ? "paid" : "generated",
-    })
-    .where(eq(invoices.id, invoice.id));
 
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${invoice.id}`);

@@ -305,7 +305,21 @@ export async function getStore(slug: string, point?: { latitude: number | null; 
 export async function getSubscribableProduct(productId: string) {
   const db = getDb();
   const [row] = await db
-    .select({ product: products, vendor: publicVendorFields })
+    // Only what the subscribe page shows: no late rule, poll time or store pricing settings.
+    .select({
+      product: {
+        id: products.id,
+        kind: products.kind,
+        name: products.name,
+        shift: products.shift,
+        pricePaise: products.pricePaise,
+        depositPaise: products.depositPaise,
+        assetName: products.assetName,
+        cutoffAt: products.cutoffAt,
+        isAvailable: products.isAvailable,
+      },
+      vendor: { id: vendors.id, slug: vendors.slug, name: vendors.name },
+    })
     .from(products)
     .innerJoin(vendors, eq(products.vendorId, vendors.id))
     .where(

@@ -2,7 +2,7 @@
 
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
-import { and, eq, gt, isNotNull, sql } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { categories, platformAdmins, vendorApplications } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
@@ -72,7 +72,14 @@ export async function adminUpdateApplication(input: unknown) {
   if (!parsed.success) return fail("Invalid update");
   await requireAdmin();
   const { id, ...set } = parsed.data;
-  await getDb().update(vendorApplications).set({ ...set, updatedAt: new Date() }).where(eq(vendorApplications.id, id));
+  // An approved application is tied to a live store: notes stay editable, its status does not move back.
+  const guard = set.status ? or(ne(vendorApplications.status, "approved"), isNull(vendorApplications.vendorId)) : undefined;
+  const [updated] = await getDb()
+    .update(vendorApplications)
+    .set({ ...set, updatedAt: new Date() })
+    .where(and(eq(vendorApplications.id, id), guard))
+    .returning({ id: vendorApplications.id });
+  if (!updated) return fail(set.status ? "This application is already approved, or no longer exists." : "Application not found");
   revalidatePath("/admin/applications");
   return { ok: true as const };
 }

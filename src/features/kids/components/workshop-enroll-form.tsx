@@ -61,6 +61,7 @@ export function WorkshopEnrollForm({
         workshopId,
         childId: selectedChildId,
         clientKey,
+        guardianConsent: consentAccepted,
       });
 
       if (!res.ok) {

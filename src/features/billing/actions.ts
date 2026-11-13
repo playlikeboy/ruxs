@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireVendorAccess } from "@/lib/auth/session";
+import { todayIST } from "@/core/time";
 import { generateMonthlyBillsSchema } from "./schemas";
 import { generateBillsForVendor } from "./generate-bills";
 
@@ -13,6 +14,12 @@ export async function generateMonthlyBillsAction(input: unknown) {
 
   const { slug, period } = parsed.data;
   const access = await requireVendorAccess(slug, ["owner"]);
+
+  // A bill for a month that has not started would be empty of that month's
+  // charges, and it blocks the real bill later (one bill per customer per month).
+  if (period > todayIST().slice(0, 7)) {
+    return { ok: false, error: "This month has not started yet" };
+  }
 
   try {
     const result = await generateBillsForVendor(access.vendorId, period);
