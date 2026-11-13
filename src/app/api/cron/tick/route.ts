@@ -9,6 +9,8 @@ import { generateBillsForVendor } from "@/features/billing/generate-bills";
 import { sendTomorrowReminders } from "@/features/notifications/reminders";
 import { isEveningReminderWindow } from "@/core/reminders";
 import { releaseExpiredStoreOrders } from "@/features/store/settle";
+import { autoForwardPendingOrders } from "@/features/store/fulfilment";
+import { sendBackInStockAlerts } from "@/features/store/stock-alerts";
 
 /** Constant-time compare of two secrets; hashing first hides the length too. */
 function secretMatches(given: string, expected: string): boolean {
@@ -106,6 +108,27 @@ export async function POST(req: Request) {
     failures.push("store-holds");
   }
 
+  // 5. RUXs Store: hand placed orders to fulfilment (when auto-forward is on) and
+  //    resend order sheets that never went out. Internal: nothing here reaches households.
+  let storeForwarded = 0;
+  try {
+    const forwarded = await autoForwardPendingOrders(db, now);
+    storeForwarded = forwarded.forwarded;
+    failures.push(...forwarded.failures);
+  } catch (err) {
+    console.error("[cron] store forwarding failed", { error: errorMessage(err) });
+    failures.push("store-forward");
+  }
+
+  // 6. RUXs Store: back-in-stock emails the request-time hook missed (each alert is sent once)
+  let storeStockAlerts = 0;
+  try {
+    storeStockAlerts = (await sendBackInStockAlerts(db)).notified;
+  } catch (err) {
+    console.error("[cron] store stock alerts failed", { error: errorMessage(err) });
+    failures.push("store-stock-alerts");
+  }
+
   return Response.json(
     {
       ok: failures.length === 0,
@@ -114,6 +137,8 @@ export async function POST(req: Request) {
       billedVendors: billedVendorsCount,
       reminders,
       storeReleased,
+      storeForwarded,
+      storeStockAlerts,
       failures,
     },
     { status: failures.length === 0 ? 200 : 500 }

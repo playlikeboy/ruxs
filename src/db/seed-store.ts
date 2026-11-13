@@ -1,13 +1,14 @@
 /**
- * RUXs Store starter data: the 15 categories (also seeded by migration 0024)
- * and a few sample products per aisle. Every sample product is INACTIVE and
+ * RUXs Store starter data: the 15 categories (also seeded by migration 0024),
+ * pan-India settings, starter shipping zones and a few sample products per aisle. Every sample product is INACTIVE and
  * has zero stock: an admin reviews the details, adds real photos and stock,
  * then switches it on. Safe to re-run: categories and products skip by id/SKU.
  *
  *   bun run db:seed:store
  */
+import { and, eq, isNull } from "drizzle-orm";
 import { scriptDb, scriptPool } from "./script-client";
-import { storeCategories, storeProducts, storeSettings } from "./schema";
+import { storeCategories, storeProducts, storeSettings, storeShippingZones } from "./schema";
 import { storeSlug } from "../core/store";
 
 const CATEGORIES: { id: string; name: string; description: string; emojiIcon: string }[] = [
@@ -26,6 +27,23 @@ const CATEGORIES: { id: string; name: string; description: string; emojiIcon: st
   { id: "school-stationery", name: "School & stationery", description: "Notebooks, pencils and school supplies.", emojiIcon: "PencilRuler" },
   { id: "party-gift-hampers", name: "Party & gift hampers", description: "Return gifts and ready hampers.", emojiIcon: "Gift" },
   { id: "spare-parts-refills", name: "Spare parts & refills", description: "Batteries, motors, sensors and paint refills.", emojiIcon: "Wrench" },
+];
+
+// Placeholders for an admin to tune in /admin/store/shipping.
+const STARTER_ZONES: (typeof storeShippingZones.$inferInsert)[] = [
+  { name: "Ranchi", pinPrefixes: ["834", "835"], states: [], feePaise: 4000, freeAbovePaise: 49900, etaMinDays: 1, etaMaxDays: 2, codAllowed: true, sort: 0 },
+  { name: "Jharkhand", pinPrefixes: [], states: ["Jharkhand"], feePaise: 5000, freeAbovePaise: 69900, etaMinDays: 2, etaMaxDays: 4, codAllowed: true, sort: 1 },
+  {
+    name: "Remote areas",
+    pinPrefixes: [],
+    states: ["Andaman and Nicobar Islands", "Lakshadweep", "Ladakh", "Jammu and Kashmir", "Arunachal Pradesh", "Manipur", "Mizoram", "Nagaland", "Sikkim", "Tripura", "Meghalaya"],
+    feePaise: 12000,
+    freeAbovePaise: null,
+    etaMinDays: 6,
+    etaMaxDays: 12,
+    codAllowed: false,
+    sort: 2,
+  },
 ];
 
 type Sample = {
@@ -59,10 +77,24 @@ async function main() {
   await scriptDb.insert(storeCategories).values(CATEGORIES.map((c, i) => ({ ...c, sort: i }))).onConflictDoNothing();
   console.log(`✓ ${CATEGORIES.length} store categories`);
 
+  // Pan-India from day one: the same catalog ships everywhere, priced by shipping zone.
   await scriptDb
     .insert(storeSettings)
-    .values({ id: 1, codMaxPaise: 300000, deliveryFeePaise: 4000, freeDeliveryAbovePaise: 49900 })
+    .values({ id: 1, serviceability: "india", codMaxPaise: 300000, deliveryFeePaise: 4000, freeDeliveryAbovePaise: 49900, defaultEtaMinDays: 3, defaultEtaMaxDays: 7, returnWindowDays: 7 })
     .onConflictDoNothing();
+  // A settings row nobody has saved yet (seeded by migration 0024) becomes pan-India too.
+  await scriptDb
+    .update(storeSettings)
+    .set({ serviceability: "india" })
+    .where(and(eq(storeSettings.id, 1), eq(storeSettings.serviceability, "geofence"), isNull(storeSettings.updatedBy)));
+  console.log("✓ store settings (ships across India)");
+
+  // Starter shipping zones, only when none exist. Everything else uses the store defaults.
+  const [zone] = await scriptDb.select({ id: storeShippingZones.id }).from(storeShippingZones).limit(1);
+  if (!zone) {
+    await scriptDb.insert(storeShippingZones).values(STARTER_ZONES);
+    console.log(`✓ ${STARTER_ZONES.length} starter shipping zones`);
+  }
 
   const rows = SAMPLES.map((s) => ({
     ...s,

@@ -2,7 +2,22 @@ import "server-only";
 import { cache } from "react";
 import { and, asc, count, desc, eq, gte, ilike, inArray, isNotNull, isNull, lte, ne, or, sql, sum, type SQL } from "drizzle-orm";
 import { getDb } from "@/db";
-import { consumers, storeCategories, storeOrderItems, storeOrders, storePayments, storeProducts, storeStockMovements } from "@/db/schema";
+import {
+  consumers,
+  storeAuditLog,
+  storeCategories,
+  storeCollectionProducts,
+  storeCollections,
+  storeFulfilmentPartners,
+  storeOrderItems,
+  storeOrders,
+  storePayments,
+  storeProductReviews,
+  storeProducts,
+  storeStockAlerts,
+  storeStockMovements,
+  storeWishlist,
+} from "@/db/schema";
 import { requireAdmin, requireUser } from "@/lib/auth/session";
 import { readGpsCookie } from "@/lib/location";
 import { resolveCoordinates, type Coordinates } from "@/core/geo";
@@ -11,29 +26,40 @@ import { todayIST } from "@/core/time";
 import {
   ageBandMatches,
   ageRangeLabel,
-  canCustomerCancel,
+  canForwardStoreOrder,
+  codAmountToCollect,
   discountPercent,
+  etaLabel,
   isCodAllowed,
+  isValidPincode,
   maxOrderQty,
   mergeBagLines,
   nextAdminStatuses,
+  normalizeIndianMobile,
+  normalizeIndianState,
+  ratingAverage,
+  resolveShippingZone,
   stockLabel,
   storeAgeBand,
   storeCartTotals,
   storeServiceability,
   STORE_MAX_LINES,
-  STORE_PAYMENT_HOLD_MINUTES,
-  STORE_STATUS_LABELS,
-  STORE_TIMELINE,
   type StoreOrderStatus,
   type StorePaymentMode,
   type StorePaymentStatus,
+  type StoreReviewStatus,
   type StoreStockReason,
 } from "@/core/store";
 import { addressLine, loadProfile, type Profile } from "@/features/consumer/household";
 import { getLocalities } from "@/features/platform/queries";
-import { loadStoreSettings, toPublicSettings } from "./settle";
+import { deliveredOrdersByProduct } from "./engagement";
+import { suggestPartners } from "./fulfilment";
+import { toAdminOrderRow, toAdminProductRow as toAdminRow, toAdminReturn, toOrderDetail, toOrderSummary, type StoreOrderRow } from "./mappers";
+import { latestReturnsFor } from "./returns";
+import { loadShippingZones, loadStoreSettings, toPublicSettings } from "./settings";
+import { evaluateStoreCoupon } from "./settle";
 import type {
+  AdminAuditEntry,
   AdminStoreCategory,
   AdminStoreOrderDetail,
   AdminStoreOrderFilter,
@@ -44,13 +70,17 @@ import type {
   AdminStoreProductDetail,
   AdminStoreProductFilter,
   AdminStoreProductList,
-  AdminStoreProductRow,
+  MyStoreProductState,
   PublicStoreSettings,
   StoreAgeBandId,
   StoreBagQuote,
   StoreBagQuoteLine,
   StoreCategory,
   StoreCategoryPage,
+  StoreCheckoutPrefill,
+  StoreCollectionPage,
+  StoreCollectionRail,
+  StoreCouponQuote,
   StoreDeliveryCheck,
   StoreHome,
   StoreOrderDetail,
@@ -58,12 +88,16 @@ import type {
   StoreOrderSummary,
   StoreProductCard,
   StoreProductDetail,
+  StoreRating,
+  StoreReviewView,
   StoreSettings,
+  StoreShippingQuote,
   StoreSort,
+  StoreWishlistItem,
 } from "./types";
 
 type ProductRow = typeof storeProducts.$inferSelect;
-type OrderRow = typeof storeOrders.$inferSelect;
+type OrderRow = StoreOrderRow;
 
 /** ILIKE pattern for free text; escapes %, _ and \\ so they match literally. */
 function containsPattern(q: string) {
@@ -93,7 +127,22 @@ const categoryNames = cache(async () => {
   return new Map(rows.map((r) => [r.id, r]));
 });
 
-function toCard(p: ProductRow, categoryName: string): StoreProductCard {
+const NO_RATING: StoreRating = { average: null, count: 0 };
+
+/** Average and count of PUBLISHED reviews per product. */
+async function ratingsFor(productIds: string[]): Promise<Map<string, StoreRating>> {
+  const out = new Map<string, StoreRating>();
+  if (productIds.length === 0) return out;
+  const rows = await getDb()
+    .select({ productId: storeProductReviews.productId, n: count(), total: sum(storeProductReviews.rating) })
+    .from(storeProductReviews)
+    .where(and(inArray(storeProductReviews.productId, productIds), eq(storeProductReviews.status, "published")))
+    .groupBy(storeProductReviews.productId);
+  for (const r of rows) out.set(r.productId, { average: ratingAverage(Number(r.total ?? 0), r.n), count: r.n });
+  return out;
+}
+
+function toCard(p: ProductRow, categoryName: string, rating: StoreRating = NO_RATING): StoreProductCard {
   const s = stockLabel(p.stock, p.lowStockAt);
   return {
     id: p.id,
@@ -113,12 +162,13 @@ function toCard(p: ProductRow, categoryName: string): StoreProductCard {
     skills: p.skills,
     isFeatured: p.isFeatured,
     stock: { kind: s.kind, label: s.label, maxQty: maxOrderQty(p.stock) },
+    rating,
   };
 }
 
 async function toCards(rows: ProductRow[]): Promise<StoreProductCard[]> {
-  const names = await categoryNames();
-  return rows.map((p) => toCard(p, names.get(p.categoryId)?.name ?? ""));
+  const [names, ratings] = await Promise.all([categoryNames(), ratingsFor(rows.map((p) => p.id))]);
+  return rows.map((p) => toCard(p, names.get(p.categoryId)?.name ?? "", ratings.get(p.id)));
 }
 
 function filterAge(rows: ProductRow[], age: StoreAgeBandId | null): ProductRow[] {
@@ -167,7 +217,34 @@ async function activeCategories(): Promise<StoreCategory[]> {
 
 // ─── Household catalog ───────────────────────────────────────────────
 
-/** /app/kids/shop: featured strip, category chips, new arrivals and the (age-filtered) grid. */
+/** Active collections with their in-catalog products (in rail order), skipping empty ones. */
+async function collectionRails(visibleIds: Set<string> | null, perRail: number, age: StoreAgeBandId | null = null): Promise<StoreCollectionRail[]> {
+  const db = getDb();
+  const cols = await db.select().from(storeCollections).where(eq(storeCollections.isActive, true)).orderBy(asc(storeCollections.sort), asc(storeCollections.title));
+  if (cols.length === 0) return [];
+  const links = await db
+    .select({ collectionId: storeCollectionProducts.collectionId, p: storeProducts })
+    .from(storeCollectionProducts)
+    .innerJoin(storeProducts, eq(storeCollectionProducts.productId, storeProducts.id))
+    .where(and(inArray(storeCollectionProducts.collectionId, cols.map((c) => c.id)), inCatalog))
+    .orderBy(asc(storeCollectionProducts.sort), asc(storeProducts.name));
+  const byCol = new Map<string, ProductRow[]>();
+  for (const l of links) {
+    if (visibleIds && !visibleIds.has(l.p.id)) continue;
+    const list = byCol.get(l.collectionId) ?? [];
+    list.push(l.p);
+    byCol.set(l.collectionId, list);
+  }
+  const rails: StoreCollectionRail[] = [];
+  for (const c of cols) {
+    const rows = filterAge(byCol.get(c.id) ?? [], age).slice(0, perRail);
+    if (rows.length === 0) continue;
+    rails.push({ id: c.id, slug: c.slug, title: c.title, subtitle: c.subtitle, image: c.image, products: await toCards(rows) });
+  }
+  return rails;
+}
+
+/** /app/kids/shop: curated rails, featured strip, category chips, new arrivals and the (age-filtered) grid. */
 export async function getStoreHome(opts: { age?: StoreAgeBandId | null } = {}): Promise<StoreHome> {
   const db = getDb();
   const age = opts.age ?? null;
@@ -177,12 +254,44 @@ export async function getStoreHome(opts: { age?: StoreAgeBandId | null } = {}): 
     db.select().from(storeProducts).where(inCatalog).orderBy(desc(storeProducts.createdAt)).limit(500),
   ]);
   const activeCats = new Set(categories.map((c) => c.id));
-  const visible = filterAge(rows.filter((p) => activeCats.has(p.categoryId)), age);
+  const inActiveCats = rows.filter((p) => activeCats.has(p.categoryId));
+  const visible = filterAge(inActiveCats, age);
   const featured = sortProducts(visible.filter((p) => p.isFeatured), "featured").slice(0, 8);
   const newArrivals = sortProducts(visible, "new").slice(0, 8);
   const products = sortProducts(visible, "featured").slice(0, 60);
-  const [f, n, p] = await Promise.all([toCards(featured), toCards(newArrivals), toCards(products)]);
-  return { settings, categories, featured: f, newArrivals: n, products: p, age };
+  const [f, n, p, collections] = await Promise.all([
+    toCards(featured),
+    toCards(newArrivals),
+    toCards(products),
+    collectionRails(new Set(inActiveCats.map((r) => r.id)), 12, age),
+  ]);
+  return { settings, collections, categories, featured: f, newArrivals: n, products: p, age };
+}
+
+/** /app/kids/shop/c/[slug]: one curated collection. Null when missing, hidden or empty. `curated` keeps the admin's order. */
+export async function getStoreCollection(
+  slug: string,
+  opts: { age?: StoreAgeBandId | null; sort?: StoreSort | "curated" } = {}
+): Promise<StoreCollectionPage | null> {
+  const db = getDb();
+  const age = opts.age ?? null;
+  const sort = opts.sort ?? "curated";
+  const [c] = await db.select().from(storeCollections).where(and(eq(storeCollections.slug, slug), eq(storeCollections.isActive, true))).limit(1);
+  if (!c) return null;
+  const [settings, links] = await Promise.all([
+    getPublicStoreSettings(),
+    db
+      .select({ p: storeProducts })
+      .from(storeCollectionProducts)
+      .innerJoin(storeProducts, eq(storeCollectionProducts.productId, storeProducts.id))
+      .innerJoin(storeCategories, eq(storeProducts.categoryId, storeCategories.id))
+      .where(and(eq(storeCollectionProducts.collectionId, c.id), inCatalog, eq(storeCategories.isActive, true)))
+      .orderBy(asc(storeCollectionProducts.sort), asc(storeProducts.name)),
+  ]);
+  if (links.length === 0) return null;
+  const rows = filterAge(links.map((l) => l.p), age);
+  const products = await toCards(sort === "curated" ? rows : sortProducts(rows, sort));
+  return { settings, collection: { id: c.id, slug: c.slug, title: c.title, subtitle: c.subtitle, image: c.image, products }, age, sort };
 }
 
 /** /app/kids/shop/[category]. Null when the category is missing or hidden. */
@@ -212,14 +321,41 @@ export async function getStoreProduct(slug: string): Promise<StoreProductDetail 
     .limit(1);
   if (!row) return null;
   const { p, c } = row;
-  const relatedRows = await db
-    .select()
-    .from(storeProducts)
-    .where(and(inCatalog, eq(storeProducts.categoryId, p.categoryId), ne(storeProducts.id, p.id)))
-    .orderBy(desc(storeProducts.isFeatured), desc(storeProducts.createdAt))
-    .limit(8);
+  const [relatedRows, reviewRows, breakdownRows] = await Promise.all([
+    db
+      .select()
+      .from(storeProducts)
+      .where(and(inCatalog, eq(storeProducts.categoryId, p.categoryId), ne(storeProducts.id, p.id)))
+      .orderBy(desc(storeProducts.isFeatured), desc(storeProducts.createdAt))
+      .limit(8),
+    db
+      .select({ r: storeProductReviews, name: consumers.name })
+      .from(storeProductReviews)
+      .leftJoin(consumers, eq(consumers.userId, storeProductReviews.userId))
+      .where(and(eq(storeProductReviews.productId, p.id), eq(storeProductReviews.status, "published")))
+      .orderBy(desc(storeProductReviews.createdAt))
+      .limit(20),
+    db
+      .select({ rating: storeProductReviews.rating, n: count() })
+      .from(storeProductReviews)
+      .where(and(eq(storeProductReviews.productId, p.id), eq(storeProductReviews.status, "published")))
+      .groupBy(storeProductReviews.rating),
+  ]);
+  const related = sortProducts(relatedRows, "featured").slice(0, 4);
+  const ratings = await ratingsFor([p.id, ...related.map((r) => r.id)]);
+  const ratingBreakdown: [number, number, number, number, number] = [0, 0, 0, 0, 0];
+  for (const b of breakdownRows) if (b.rating >= 1 && b.rating <= 5) ratingBreakdown[b.rating - 1] = b.n;
+  const reviews: StoreReviewView[] = reviewRows.map(({ r, name }) => ({
+    id: r.id,
+    rating: r.rating,
+    title: r.title,
+    body: r.body,
+    // First name only: a review never shows a household's full name.
+    authorName: name?.trim().split(/\s+/)[0] || "RUXs customer",
+    createdAt: r.createdAt,
+  }));
   return {
-    ...toCard(p, c.name),
+    ...toCard(p, c.name, ratings.get(p.id)),
     description: p.description,
     images: p.images,
     boxContents: p.boxContents,
@@ -227,10 +363,64 @@ export async function getStoreProduct(slug: string): Promise<StoreProductDetail 
     weightGrams: p.weightGrams,
     gstBps: p.gstBps,
     category: { id: c.id, name: c.name, icon: c.emojiIcon },
-    related: sortProducts(relatedRows, "featured")
-      .slice(0, 4)
-      .map((r) => toCard(r, c.name)),
+    related: related.map((r) => toCard(r, c.name, ratings.get(r.id))),
+    reviews,
+    ratingBreakdown,
   };
+}
+
+/** Wishlist, back-in-stock and review state of one product for the signed-in household. */
+export async function getMyStoreProductState(productId: string): Promise<MyStoreProductState> {
+  const user = await requireUser();
+  const db = getDb();
+  const [[wish], [alert], [review], delivered] = await Promise.all([
+    db.select({ productId: storeWishlist.productId }).from(storeWishlist).where(and(eq(storeWishlist.userId, user.id), eq(storeWishlist.productId, productId))).limit(1),
+    db
+      .select({ productId: storeStockAlerts.productId })
+      .from(storeStockAlerts)
+      .where(and(eq(storeStockAlerts.userId, user.id), eq(storeStockAlerts.productId, productId), isNull(storeStockAlerts.notifiedAt)))
+      .limit(1),
+    db.select().from(storeProductReviews).where(and(eq(storeProductReviews.userId, user.id), eq(storeProductReviews.productId, productId))).limit(1),
+    deliveredOrdersByProduct(db, user.id, [productId]),
+  ]);
+  return {
+    wishlisted: !!wish,
+    stockAlert: !!alert,
+    canReview: delivered.has(productId) && !review,
+    myReview: review
+      ? { id: review.id, rating: review.rating, title: review.title, body: review.body, status: review.status as StoreReviewStatus, createdAt: review.createdAt }
+      : null,
+  };
+}
+
+/** Product ids on my wishlist, for the heart state on product grids. */
+export async function getMyStoreWishlistIds(): Promise<string[]> {
+  const user = await requireUser();
+  const rows = await getDb().select({ productId: storeWishlist.productId }).from(storeWishlist).where(eq(storeWishlist.userId, user.id));
+  return rows.map((r) => r.productId);
+}
+
+/** /app/kids/shop/wishlist: my saved products that are still sold, newest first. */
+export async function getMyStoreWishlist(): Promise<StoreWishlistItem[]> {
+  const user = await requireUser();
+  const db = getDb();
+  const [rows, alerts] = await Promise.all([
+    db
+      .select({ p: storeProducts, addedAt: storeWishlist.createdAt })
+      .from(storeWishlist)
+      .innerJoin(storeProducts, eq(storeWishlist.productId, storeProducts.id))
+      .innerJoin(storeCategories, eq(storeProducts.categoryId, storeCategories.id))
+      .where(and(eq(storeWishlist.userId, user.id), inCatalog, eq(storeCategories.isActive, true)))
+      .orderBy(desc(storeWishlist.createdAt))
+      .limit(200),
+    db
+      .select({ productId: storeStockAlerts.productId })
+      .from(storeStockAlerts)
+      .where(and(eq(storeStockAlerts.userId, user.id), isNull(storeStockAlerts.notifiedAt))),
+  ]);
+  const alertIds = new Set(alerts.map((a) => a.productId));
+  const cards = await toCards(rows.map((r) => r.p));
+  return cards.map((c, i) => ({ ...c, addedAt: rows[i]!.addedAt, stockAlert: alertIds.has(c.id) }));
 }
 
 // ─── Delivery check / bag quote ──────────────────────────────────────
@@ -249,10 +439,19 @@ export async function resolveStoreDeliveryPoint(profile: Profile): Promise<Coord
 async function deliveryCheckFor(userId: string | null, settings: StoreSettings): Promise<StoreDeliveryCheck | null> {
   if (!userId) return null;
   const profile = await loadProfile(userId);
+  const india = settings.serviceability === "india";
   if (!profile) {
-    return { hasProfile: false, name: null, phone: null, address: null, serviceable: false, message: "Add your delivery address to check out" };
+    return {
+      hasProfile: false,
+      name: null,
+      phone: null,
+      address: null,
+      // Pan-India checkout takes the address on the order itself: no saved profile needed.
+      serviceable: india,
+      message: india ? null : "Add your delivery address to check out",
+    };
   }
-  const reach = storeServiceability(await resolveStoreDeliveryPoint(profile), settings);
+  const reach = india ? ({ ok: true } as const) : storeServiceability(await resolveStoreDeliveryPoint(profile), settings);
   return {
     hasProfile: true,
     name: profile.name,
@@ -264,19 +463,78 @@ async function deliveryCheckFor(userId: string | null, settings: StoreSettings):
 }
 
 /**
- * Server-side price and stock check for the localStorage bag. The server is
- * the source of truth: unknown/archived items are removed, quantities are
- * capped to stock. Pass `userId` to include the delivery-address check.
+ * Starting values for the checkout address form: my last store order's ship-to
+ * address, else my RUXs profile (which has no PIN code or state), else blank.
+ */
+export async function getMyStoreCheckoutPrefill(): Promise<StoreCheckoutPrefill> {
+  const user = await requireUser();
+  const db = getDb();
+  const [[last], profile] = await Promise.all([
+    db
+      .select({
+        name: storeOrders.customerName,
+        phone: storeOrders.phone,
+        line1: storeOrders.shipLine1,
+        line2: storeOrders.shipLine2,
+        landmark: storeOrders.shipLandmark,
+        city: storeOrders.shipCity,
+        state: storeOrders.shipState,
+        pincode: storeOrders.shipPincode,
+      })
+      .from(storeOrders)
+      .where(and(eq(storeOrders.userId, user.id), isNotNull(storeOrders.shipPincode)))
+      .orderBy(desc(storeOrders.createdAt))
+      .limit(1),
+    loadProfile(user.id),
+  ]);
+  const email = user.primaryEmail ?? profile?.email ?? null;
+  if (last?.line1 && last.city && last.pincode) {
+    return {
+      source: "last_order",
+      name: last.name,
+      phone: last.phone,
+      line1: last.line1,
+      line2: last.line2 ?? "",
+      landmark: last.landmark ?? "",
+      city: last.city,
+      state: normalizeIndianState(last.state) ?? "",
+      pincode: last.pincode,
+      email,
+    };
+  }
+  if (profile) {
+    return {
+      source: "profile",
+      name: profile.name,
+      phone: normalizeIndianMobile(profile.phone) ?? profile.phone,
+      line1: [profile.flat, profile.floor && `Floor ${profile.floor}`, profile.tower && `Tower ${profile.tower}`, profile.society].filter(Boolean).join(", "),
+      line2: profile.area,
+      landmark: profile.landmark ?? "",
+      city: profile.city,
+      state: "",
+      pincode: "",
+      email,
+    };
+  }
+  return { source: "none", name: "", phone: "", line1: "", line2: "", landmark: "", city: "", state: "", pincode: "", email };
+}
+
+/**
+ * Server-side price, stock, delivery and coupon check for the localStorage bag.
+ * The server is the source of truth: unknown/archived items are removed and
+ * quantities are capped to stock. Pass the destination PIN code (and state) to
+ * price delivery by shipping zone, `couponCode` to try a code, and `userId` to
+ * include the saved-profile check and per-household coupon limits.
  */
 export async function quoteStoreBag(
   items: { productId: string; qty: number }[],
-  opts: { userId?: string | null } = {}
+  opts: { userId?: string | null; pincode?: string | null; state?: string | null; couponCode?: string | null } = {}
 ): Promise<StoreBagQuote> {
   const db = getDb();
   const lines = mergeBagLines(items).slice(0, STORE_MAX_LINES);
   const settings = await loadSettings();
   const ids = lines.map((l) => l.productId);
-  const [rows, delivery] = await Promise.all([
+  const [rows, delivery, zones] = await Promise.all([
     ids.length
       ? db
           .select({ p: storeProducts, catActive: storeCategories.isActive })
@@ -285,6 +543,7 @@ export async function quoteStoreBag(
           .where(inArray(storeProducts.id, ids))
       : Promise.resolve([]),
     deliveryCheckFor(opts.userId ?? null, settings),
+    loadShippingZones(db),
   ]);
   const byId = new Map(rows.map((r) => [r.p.id, r]));
 
@@ -317,18 +576,52 @@ export async function quoteStoreBag(
     });
   }
 
+  // Destination: fee, estimate and COD come from the shipping zone of the PIN code.
+  const pinText = opts.pincode?.trim() ?? "";
+  const pincode = isValidPincode(pinText) ? pinText : null;
+  const state = normalizeIndianState(opts.state);
+  const zone = resolveShippingZone({ pincode, state }, zones, settings);
+  const shipping: StoreShippingQuote = {
+    resolved: pincode != null,
+    pincode,
+    state,
+    feePaise: zone.feePaise,
+    freeAbovePaise: zone.freeAbovePaise,
+    etaMinDays: zone.etaMinDays,
+    etaMaxDays: zone.etaMaxDays,
+    etaLabel: etaLabel(zone.etaMinDays, zone.etaMaxDays),
+    codAllowed: zone.codAllowed,
+  };
+  const fees = { deliveryFeePaise: zone.feePaise, freeDeliveryAbovePaise: zone.freeAbovePaise };
+
   const buyable = quoteLines.filter((l) => l.qty > 0);
-  const totals = storeCartTotals(
-    buyable.map((l) => ({ unitPricePaise: l.unitPricePaise, qty: l.qty })),
-    settings
-  );
+  const pricedLines = buyable.map((l) => ({ unitPricePaise: l.unitPricePaise, qty: l.qty }));
+  const subtotalPaise = storeCartTotals(pricedLines, fees).subtotalPaise;
+
+  let coupon: StoreCouponQuote | null = null;
+  if (opts.couponCode && opts.couponCode.trim()) {
+    const code = opts.couponCode.trim().toUpperCase();
+    const evaluated = buyable.length
+      ? await evaluateStoreCoupon(db, { code, userId: opts.userId ?? null, subtotalPaise, now: new Date() })
+      : null;
+    if (!evaluated) {
+      coupon = { code, applied: false, discountPaise: 0, message: buyable.length ? "That code is not valid" : "Add items to use a code", description: "" };
+    } else if (!evaluated.check.ok) {
+      coupon = { code: evaluated.coupon.code, applied: false, discountPaise: 0, message: evaluated.check.message, description: evaluated.coupon.description };
+    } else {
+      coupon = { code: evaluated.coupon.code, applied: true, discountPaise: evaluated.check.discountPaise, message: null, description: evaluated.coupon.description };
+    }
+  }
+
+  const totals = storeCartTotals(pricedLines, fees, coupon?.applied ? coupon.discountPaise : 0);
   const paymentModes: StorePaymentMode[] = ["online"];
-  if (isCodAllowed(totals.totalPaise, settings)) paymentModes.push("cod");
+  if (zone.codAllowed && isCodAllowed(totals.totalPaise, settings)) paymentModes.push("cod");
 
   const blockers: string[] = [];
   if (!settings.isOpen) blockers.push(settings.closedMessage || "The RUXs Store is closed right now");
   if (buyable.length === 0) blockers.push("Your bag is empty");
   else if (totals.subtotalPaise < settings.minOrderPaise) blockers.push("Add a few more items to reach the minimum order");
+  if (pinText && !pincode) blockers.push("Enter a valid 6-digit PIN code");
   if (delivery && !delivery.serviceable && delivery.message) blockers.push(delivery.message);
 
   return {
@@ -336,6 +629,7 @@ export async function quoteStoreBag(
     removedProductIds,
     subtotalPaise: totals.subtotalPaise,
     deliveryFeePaise: totals.deliveryFeePaise,
+    discountPaise: totals.discountPaise,
     totalPaise: totals.totalPaise,
     itemCount: totals.itemCount,
     freeDeliveryGapPaise: totals.freeDeliveryGapPaise,
@@ -343,6 +637,8 @@ export async function quoteStoreBag(
     paymentModes,
     changed: removedProductIds.length > 0 || quoteLines.some((l) => l.issue !== null),
     blockers,
+    coupon,
+    shipping,
     delivery,
   };
 }
@@ -369,63 +665,12 @@ async function itemsFor(orderIds: string[]) {
       unitPricePaise: r.item.unitPricePaise,
       qty: r.item.qty,
       lineTotalPaise: r.item.lineTotalPaise,
+      canReview: false,
+      myRating: null,
     });
     out.set(r.item.orderId, list);
   }
   return out;
-}
-
-function toSummary(o: OrderRow, items: StoreOrderItemView[]): StoreOrderSummary {
-  const status = o.status as StoreOrderStatus;
-  return {
-    id: o.id,
-    orderNumber: o.orderNumber,
-    status,
-    statusLabel: STORE_STATUS_LABELS[status] ?? o.status,
-    paymentMode: o.paymentMode as StorePaymentMode,
-    paymentStatus: o.paymentStatus as StorePaymentStatus,
-    totalPaise: o.totalPaise,
-    itemCount: items.reduce((n, i) => n + i.qty, 0),
-    firstItemName: items[0]?.name ?? null,
-    firstItemImage: items[0]?.image ?? null,
-    createdAt: o.createdAt,
-  };
-}
-
-function toDetail(o: OrderRow, items: StoreOrderItemView[], dispatchDays: number, now = new Date()): StoreOrderDetail {
-  const status = o.status as StoreOrderStatus;
-  const at: Record<string, Date | null> = { placed: o.placedAt, packed: o.packedAt, out_for_delivery: o.shippedAt, delivered: o.deliveredAt };
-  const reached = STORE_TIMELINE.indexOf(status);
-  const payBy = o.paymentMode === "online" && status === "awaiting_payment" ? new Date(o.createdAt.getTime() + STORE_PAYMENT_HOLD_MINUTES * 60_000) : null;
-  return {
-    ...toSummary(o, items),
-    items,
-    subtotalPaise: o.subtotalPaise,
-    deliveryFeePaise: o.deliveryFeePaise,
-    customerName: o.customerName,
-    phone: o.phone,
-    address: o.address,
-    notes: o.notes,
-    courier: o.courier,
-    trackingNumber: o.trackingNumber,
-    cancelReason: o.cancelReason,
-    timeline: STORE_TIMELINE.map((s, i) => ({
-      status: s,
-      label: STORE_STATUS_LABELS[s],
-      at: at[s] ?? null,
-      done: (reached >= 0 && i <= reached) || at[s] != null,
-    })),
-    placedAt: o.placedAt,
-    packedAt: o.packedAt,
-    shippedAt: o.shippedAt,
-    deliveredAt: o.deliveredAt,
-    cancelledAt: o.cancelledAt,
-    returnedAt: o.returnedAt,
-    canCancel: canCustomerCancel(status),
-    canPay: payBy != null && payBy > now,
-    payBy,
-    dispatchDays,
-  };
 }
 
 /** The signed-in household's store orders, newest first (up to 50). */
@@ -438,45 +683,33 @@ export async function getMyStoreOrders(): Promise<StoreOrderSummary[]> {
     .orderBy(desc(storeOrders.createdAt))
     .limit(50);
   const items = await itemsFor(rows.map((r) => r.id));
-  return rows.map((o) => toSummary(o, items.get(o.id) ?? []));
+  return rows.map((o) => toOrderSummary(o, items.get(o.id) ?? []));
 }
 
 /** One of my store orders; null when it is not mine or does not exist. */
 export async function getMyStoreOrder(orderId: string): Promise<StoreOrderDetail | null> {
   const user = await requireUser();
-  const [o] = await getDb()
+  const db = getDb();
+  const [o] = await db
     .select()
     .from(storeOrders)
     .where(and(eq(storeOrders.id, orderId), eq(storeOrders.userId, user.id)))
     .limit(1);
   if (!o) return null;
-  const [items, settings] = await Promise.all([itemsFor([o.id]), loadSettings()]);
-  return toDetail(o, items.get(o.id) ?? [], settings.dispatchDays);
+  const [itemMap, settings, returns] = await Promise.all([itemsFor([o.id]), loadSettings(), latestReturnsFor(db, [o.id])]);
+  let items = itemMap.get(o.id) ?? [];
+  if (o.status === "delivered" && items.length > 0) {
+    const mine = await db
+      .select({ productId: storeProductReviews.productId, rating: storeProductReviews.rating })
+      .from(storeProductReviews)
+      .where(and(eq(storeProductReviews.userId, user.id), inArray(storeProductReviews.productId, items.map((i) => i.productId))));
+    const rated = new Map(mine.map((r) => [r.productId, r.rating]));
+    items = items.map((i) => ({ ...i, canReview: !rated.has(i.productId), myRating: rated.get(i.productId) ?? null }));
+  }
+  return toOrderDetail(o, items, { dispatchDays: settings.dispatchDays, returnWindowDays: settings.returnWindowDays, returnRequest: returns.get(o.id) ?? null });
 }
 
 // ─── Admin ───────────────────────────────────────────────────────────
-
-function toAdminRow(p: ProductRow, categoryName: string): AdminStoreProductRow {
-  return {
-    id: p.id,
-    slug: p.slug,
-    sku: p.sku,
-    name: p.name,
-    brand: p.brand,
-    categoryId: p.categoryId,
-    categoryName,
-    pricePaise: p.pricePaise,
-    mrpPaise: p.mrpPaise,
-    stock: p.stock,
-    lowStockAt: p.lowStockAt,
-    stockKind: stockLabel(p.stock, p.lowStockAt).kind,
-    image: p.images[0] ?? null,
-    isActive: p.isActive,
-    isFeatured: p.isFeatured,
-    archivedAt: p.archivedAt,
-    updatedAt: p.updatedAt,
-  };
-}
 
 function productFilterWhere(filter: AdminStoreProductFilter): SQL | undefined {
   const live = isNull(storeProducts.archivedAt);
@@ -617,6 +850,8 @@ function orderFilterWhere(filter: AdminStoreOrderFilter): SQL | undefined {
       return inArray(storeOrders.status, ["placed", "packed", "out_for_delivery"]);
     case "refund_due":
       return eq(storeOrders.paymentStatus, "refund_due");
+    case "to_forward":
+      return and(inArray(storeOrders.status, ["placed", "packed"]), isNull(storeOrders.partnerId));
     default:
       return eq(storeOrders.status, filter);
   }
@@ -626,6 +861,7 @@ const ORDER_FILTERS: AdminStoreOrderFilter[] = [
   "open",
   "all",
   "refund_due",
+  "to_forward",
   "awaiting_payment",
   "placed",
   "packed",
@@ -636,22 +872,24 @@ const ORDER_FILTERS: AdminStoreOrderFilter[] = [
 ];
 
 async function toAdminOrderRows(rows: OrderRow[]): Promise<AdminStoreOrderRow[]> {
-  const items = await itemsFor(rows.map((r) => r.id));
-  return rows.map((o) => ({
-    id: o.id,
-    orderNumber: o.orderNumber,
-    status: o.status as StoreOrderStatus,
-    paymentMode: o.paymentMode as StorePaymentMode,
-    paymentStatus: o.paymentStatus as StorePaymentStatus,
-    totalPaise: o.totalPaise,
-    itemCount: (items.get(o.id) ?? []).reduce((n, i) => n + i.qty, 0),
-    customerName: o.customerName,
-    phone: o.phone,
-    createdAt: o.createdAt,
-  }));
+  const partnerIds = [...new Set(rows.map((r) => r.partnerId).filter((v): v is string => !!v))];
+  const [items, partners] = await Promise.all([
+    itemsFor(rows.map((r) => r.id)),
+    partnerIds.length
+      ? getDb().select({ id: storeFulfilmentPartners.id, name: storeFulfilmentPartners.name }).from(storeFulfilmentPartners).where(inArray(storeFulfilmentPartners.id, partnerIds))
+      : Promise.resolve([]),
+  ]);
+  const names = new Map(partners.map((p) => [p.id, p.name]));
+  return rows.map((o) =>
+    toAdminOrderRow(
+      o,
+      (items.get(o.id) ?? []).reduce((n, i) => n + i.qty, 0),
+      o.partnerId ? (names.get(o.partnerId) ?? null) : null
+    )
+  );
 }
 
-/** /admin/store/orders. Search matches order number, name and phone. Default filter `open`. */
+/** /admin/store/orders. Search matches order number, name, phone and PIN code. Default filter `open`. */
 export async function getAdminStoreOrders(
   opts: { status?: AdminStoreOrderFilter; q?: string; page?: number } = {}
 ): Promise<AdminStoreOrderList> {
@@ -660,46 +898,77 @@ export async function getAdminStoreOrders(
   const status = opts.status ?? "open";
   const q = opts.q?.trim();
   const search = q
-    ? or(ilike(storeOrders.orderNumber, containsPattern(q)), ilike(storeOrders.customerName, containsPattern(q)), ilike(storeOrders.phone, containsPattern(q)))
+    ? or(
+        ilike(storeOrders.orderNumber, containsPattern(q)),
+        ilike(storeOrders.customerName, containsPattern(q)),
+        ilike(storeOrders.phone, containsPattern(q)),
+        ilike(storeOrders.shipPincode, containsPattern(q))
+      )
     : undefined;
   const where = and(search, orderFilterWhere(status));
-  const [[totalRow], countRows] = await Promise.all([
+  const [[totalRow], countRows, partners] = await Promise.all([
     db.select({ n: count() }).from(storeOrders).where(where),
     Promise.all(ORDER_FILTERS.map((f) => db.select({ n: count() }).from(storeOrders).where(and(search, orderFilterWhere(f))))),
+    db
+      .select({ id: storeFulfilmentPartners.id, name: storeFulfilmentPartners.name })
+      .from(storeFulfilmentPartners)
+      .where(eq(storeFulfilmentPartners.isActive, true))
+      .orderBy(asc(storeFulfilmentPartners.name)),
   ]);
   const total = totalRow?.n ?? 0;
   const pg = calculatePagination(total, { page: opts.page, defaultPageSize: 25, maxPageSize: 100 });
   const rows = await db.select().from(storeOrders).where(where).orderBy(desc(storeOrders.createdAt)).limit(pg.pageSize).offset(pg.offset);
   const counts = Object.fromEntries(ORDER_FILTERS.map((f, i) => [f, countRows[i]?.[0]?.n ?? 0])) as Record<AdminStoreOrderFilter, number>;
-  return { rows: await toAdminOrderRows(rows), total, page: pg.page, pageSize: pg.pageSize, totalPages: pg.totalPages, counts };
+  return { rows: await toAdminOrderRows(rows), total, page: pg.page, pageSize: pg.pageSize, totalPages: pg.totalPages, counts, partners };
 }
 
-/** /admin/store/orders/[id]: full order with payments and the next allowed statuses. */
+/** /admin/store/orders/[id]: full order with payments, fulfilment partner, return and audit trail. */
 export async function getAdminStoreOrder(orderId: string): Promise<AdminStoreOrderDetail | null> {
   await requireAdmin();
   const db = getDb();
   const [row] = await db
-    .select({ o: storeOrders, email: consumers.email })
+    .select({ o: storeOrders, email: consumers.email, partner: storeFulfilmentPartners })
     .from(storeOrders)
     .leftJoin(consumers, eq(consumers.userId, storeOrders.userId))
+    .leftJoin(storeFulfilmentPartners, eq(storeFulfilmentPartners.id, storeOrders.partnerId))
     .where(eq(storeOrders.id, orderId))
     .limit(1);
   if (!row) return null;
   const o = row.o;
-  const [items, pays, settings] = await Promise.all([
+  const [items, pays, settings, returns, suggestions, auditRows] = await Promise.all([
     itemsFor([o.id]),
     db.select().from(storePayments).where(eq(storePayments.orderId, o.id)).orderBy(desc(storePayments.createdAt)),
     loadSettings(),
+    latestReturnsFor(db, [o.id]),
+    suggestPartners(db, { pincode: o.shipPincode, state: o.shipState }),
+    db
+      .select()
+      .from(storeAuditLog)
+      .where(and(eq(storeAuditLog.entity, "order"), eq(storeAuditLog.entityId, o.id)))
+      .orderBy(desc(storeAuditLog.createdAt))
+      .limit(30),
   ]);
   const status = o.status as StoreOrderStatus;
   const paymentStatus = o.paymentStatus as StorePaymentStatus;
+  const returnRow = returns.get(o.id) ?? null;
+  const audit: AdminAuditEntry[] = auditRows.map((a) => ({
+    id: a.id,
+    actorUserId: a.actorUserId,
+    action: a.action,
+    entity: a.entity,
+    entityId: a.entityId,
+    data: a.data,
+    createdAt: a.createdAt,
+  }));
   return {
-    ...toDetail(o, items.get(o.id) ?? [], settings.dispatchDays),
+    ...toOrderDetail(o, items.get(o.id) ?? [], { dispatchDays: settings.dispatchDays, returnWindowDays: settings.returnWindowDays, returnRequest: returnRow }),
+    // The seller portal sees the real courier; the household shape always carries null.
+    courier: o.courier,
     userId: o.userId,
     adminNote: o.adminNote,
     latitude: o.latitude,
     longitude: o.longitude,
-    email: row.email,
+    email: o.customerEmail ?? row.email,
     payments: pays.map((p) => ({
       id: p.id,
       razorpayOrderId: p.razorpayOrderId,
@@ -715,6 +984,21 @@ export async function getAdminStoreOrder(orderId: string): Promise<AdminStoreOrd
     nextStatuses: nextAdminStatuses(status),
     canRefund: (paymentStatus === "paid" || paymentStatus === "refund_due") && (status === "cancelled" || status === "returned"),
     updatedAt: o.updatedAt,
+    zoneName: o.zoneName,
+    codToCollectPaise: codAmountToCollect({ paymentMode: o.paymentMode as StorePaymentMode, paymentStatus, totalPaise: o.totalPaise }),
+    fulfilment: {
+      partnerId: o.partnerId,
+      partnerName: row.partner?.name ?? null,
+      partnerEmail: row.partner?.email ?? null,
+      forwardedAt: o.forwardedAt,
+      forwardEmailedAt: o.forwardEmailedAt,
+      partnerRef: o.partnerRef,
+      partnerStatusNote: o.partnerStatusNote,
+      canForward: canForwardStoreOrder(status),
+      suggestions,
+    },
+    adminReturn: returnRow ? toAdminReturn(returnRow, o) : null,
+    audit,
   };
 }
 

@@ -24,7 +24,7 @@ export type StorePaymentStatus = (typeof STORE_PAYMENT_STATUSES)[number];
 
 export type StoreActor = "customer" | "admin" | "system";
 
-export const STORE_STOCK_REASONS = ["restock", "order", "cancel", "adjust"] as const;
+export const STORE_STOCK_REASONS = ["restock", "order", "cancel", "adjust", "return"] as const;
 export type StoreStockReason = (typeof STORE_STOCK_REASONS)[number];
 
 /** Orders still being worked on (not finished, not abandoned). */
@@ -71,17 +71,26 @@ export interface StoreFeeSettings {
 export interface StoreCartTotals {
   subtotalPaise: number;
   deliveryFeePaise: number;
+  /** Coupon discount actually applied (never more than the subtotal). */
+  discountPaise: number;
+  /** subtotal + delivery fee - discount. */
   totalPaise: number;
   itemCount: number;
   /** How much more to add for free delivery; null when already free or never free. */
   freeDeliveryGapPaise: number | null;
 }
 
-/** Subtotal, delivery fee (free above the threshold) and total. An empty bag costs nothing. */
+/**
+ * Subtotal, delivery fee (free above the threshold), coupon discount and total.
+ * The free-delivery threshold looks at the subtotal before the discount, and the
+ * discount comes off the items only, never the delivery fee. An empty bag costs nothing.
+ */
 export function storeCartTotals(
   items: { unitPricePaise: number; qty: number }[],
-  settings: StoreFeeSettings
+  settings: StoreFeeSettings,
+  discountPaise = 0
 ): StoreCartTotals {
+  if (!Number.isInteger(discountPaise) || discountPaise < 0) throw new Error("Store discount must be non-negative integer paise");
   let subtotalPaise = 0;
   let itemCount = 0;
   for (const i of items) {
@@ -92,13 +101,21 @@ export function storeCartTotals(
     itemCount += i.qty;
   }
   if (itemCount === 0) {
-    return { subtotalPaise: 0, deliveryFeePaise: 0, totalPaise: 0, itemCount: 0, freeDeliveryGapPaise: null };
+    return { subtotalPaise: 0, deliveryFeePaise: 0, discountPaise: 0, totalPaise: 0, itemCount: 0, freeDeliveryGapPaise: null };
   }
   const threshold = settings.freeDeliveryAbovePaise;
   const free = threshold != null && subtotalPaise >= threshold;
   const deliveryFeePaise = free ? 0 : Math.max(0, settings.deliveryFeePaise);
   const freeDeliveryGapPaise = !free && threshold != null && deliveryFeePaise > 0 ? threshold - subtotalPaise : null;
-  return { subtotalPaise, deliveryFeePaise, totalPaise: subtotalPaise + deliveryFeePaise, itemCount, freeDeliveryGapPaise };
+  const applied = Math.min(discountPaise, subtotalPaise);
+  return {
+    subtotalPaise,
+    deliveryFeePaise,
+    discountPaise: applied,
+    totalPaise: subtotalPaise + deliveryFeePaise - applied,
+    itemCount,
+    freeDeliveryGapPaise,
+  };
 }
 
 /**
@@ -227,7 +244,7 @@ export type ServiceabilityResult =
   | { ok: true; distanceKm: number | null }
   | { ok: false; reason: "no_location" | "out_of_area"; message: string };
 
-/** Ranchi-only for now (geofence around the service centre); "india" ships everywhere. */
+/** "india" ships everywhere (the PIN code decides fee and estimate); "geofence" keeps to one city. */
 export function storeServiceability(point: Coordinates | null, settings: StoreServiceSettings): ServiceabilityResult {
   if (settings.serviceability === "india") return { ok: true, distanceKm: null };
   if (!point) {
@@ -265,4 +282,392 @@ export function mergeBagLines(items: { productId: string; qty: number }[]): { pr
     byId.set(i.productId, Math.min(STORE_MAX_LINE_QTY, (byId.get(i.productId) ?? 0) + i.qty));
   }
   return [...byId].map(([productId, qty]) => ({ productId, qty }));
+}
+
+// ─── Pan-India shipping address ──────────────────────────────────────
+
+/** States and union territories, as written on a shipping label. */
+export const INDIAN_STATES = [
+  "Andaman and Nicobar Islands",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chandigarh",
+  "Chhattisgarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu and Kashmir",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Ladakh",
+  "Lakshadweep",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Puducherry",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+] as const;
+export type IndianState = (typeof INDIAN_STATES)[number];
+
+const STATE_BY_KEY = new Map<string, IndianState>(INDIAN_STATES.map((s) => [stateKey(s), s]));
+
+function stateKey(v: string): string {
+  return v.toLowerCase().replace(/&/g, "and").replace(/[^a-z]/g, "");
+}
+
+/** The canonical state name for loosely typed input ("jharkhand", "Jammu & Kashmir"), else null. */
+export function normalizeIndianState(v: string | null | undefined): IndianState | null {
+  if (!v) return null;
+  return STATE_BY_KEY.get(stateKey(v)) ?? null;
+}
+
+/** Indian PIN code: six digits, the first never 0. */
+export function isValidPincode(v: string | null | undefined): v is string {
+  return typeof v === "string" && /^[1-9][0-9]{5}$/.test(v);
+}
+
+/** A PIN prefix used by zones and partner coverage: 1 to 6 digits, the first never 0. */
+export function isValidPinPrefix(v: string): boolean {
+  return /^[1-9][0-9]{0,5}$/.test(v);
+}
+
+/** "+91XXXXXXXXXX" for an Indian mobile typed with or without +91 / 0 / spaces, else null. */
+export function normalizeIndianMobile(v: string | null | undefined): string | null {
+  if (!v) return null;
+  let digits = v.replace(/[\s\-().]/g, "");
+  if (digits.startsWith("+")) digits = digits.slice(1);
+  if (!/^[0-9]+$/.test(digits)) return null;
+  if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  else if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  return /^[6-9][0-9]{9}$/.test(digits) ? `+91${digits}` : null;
+}
+
+export interface StoreShipAddress {
+  line1: string;
+  line2?: string | null;
+  landmark?: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+}
+
+/** One-line address for labels and order pages: "Flat 1, Test Society, Near park, Ranchi, Jharkhand 834001". */
+export function formatShipAddress(a: StoreShipAddress): string {
+  const head = [a.line1, a.line2, a.landmark, a.city].map((p) => p?.trim()).filter(Boolean);
+  return [...head, `${a.state} ${a.pincode}`.trim()].join(", ");
+}
+
+// ─── Shipping zones ──────────────────────────────────────────────────
+
+export interface ShippingZoneRule {
+  id: string;
+  name: string;
+  pinPrefixes: readonly string[];
+  states: readonly string[];
+  feePaise: number;
+  freeAbovePaise: number | null;
+  etaMinDays: number;
+  etaMaxDays: number;
+  codAllowed: boolean;
+  isActive: boolean;
+  sort: number;
+}
+
+export interface ShippingDefaults {
+  deliveryFeePaise: number;
+  freeDeliveryAbovePaise: number | null;
+  defaultEtaMinDays: number;
+  defaultEtaMaxDays: number;
+}
+
+export interface ResolvedShipping {
+  /** Null when no zone matched and the store defaults apply. */
+  zoneId: string | null;
+  zoneName: string | null;
+  matchedBy: "pin" | "state" | "default";
+  feePaise: number;
+  freeAbovePaise: number | null;
+  etaMinDays: number;
+  etaMaxDays: number;
+  /** The zone allows cash on delivery (the store-wide COD switch and limit still apply). */
+  codAllowed: boolean;
+}
+
+function longestPrefix(pincode: string, prefixes: readonly string[]): number {
+  let best = 0;
+  for (const raw of prefixes) {
+    const p = raw.trim();
+    if (p && p.length > best && pincode.startsWith(p)) best = p.length;
+  }
+  return best;
+}
+
+/**
+ * Which fee, estimate and COD rule a destination gets: the active zone with the
+ * longest matching PIN prefix, else the first active zone listing the state,
+ * else the store defaults. Ties go to the lower `sort`, then the name.
+ */
+export function resolveShippingZone(
+  dest: { pincode?: string | null; state?: string | null },
+  zones: readonly ShippingZoneRule[],
+  defaults: ShippingDefaults
+): ResolvedShipping {
+  const active = zones.filter((z) => z.isActive).sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name));
+  const fromZone = (z: ShippingZoneRule, matchedBy: "pin" | "state"): ResolvedShipping => ({
+    zoneId: z.id,
+    zoneName: z.name,
+    matchedBy,
+    feePaise: Math.max(0, z.feePaise),
+    freeAbovePaise: z.freeAbovePaise,
+    etaMinDays: z.etaMinDays,
+    etaMaxDays: Math.max(z.etaMinDays, z.etaMaxDays),
+    codAllowed: z.codAllowed,
+  });
+
+  if (isValidPincode(dest.pincode)) {
+    let best: ShippingZoneRule | null = null;
+    let bestLen = 0;
+    for (const z of active) {
+      const len = longestPrefix(dest.pincode, z.pinPrefixes);
+      if (len > bestLen) {
+        best = z;
+        bestLen = len;
+      }
+    }
+    if (best) return fromZone(best, "pin");
+  }
+  const state = normalizeIndianState(dest.state);
+  if (state) {
+    const byState = active.find((z) => z.states.some((s) => normalizeIndianState(s) === state));
+    if (byState) return fromZone(byState, "state");
+  }
+  return {
+    zoneId: null,
+    zoneName: null,
+    matchedBy: "default",
+    feePaise: Math.max(0, defaults.deliveryFeePaise),
+    freeAbovePaise: defaults.freeDeliveryAbovePaise,
+    etaMinDays: defaults.defaultEtaMinDays,
+    etaMaxDays: Math.max(defaults.defaultEtaMinDays, defaults.defaultEtaMaxDays),
+    codAllowed: true,
+  };
+}
+
+/** "2–4 days", "3 days", "1 day", "Today". Counted from dispatch. */
+export function etaLabel(minDays: number, maxDays: number): string {
+  const max = Math.max(minDays, maxDays);
+  if (max <= 0) return "Today";
+  if (minDays === max) return `${max} ${max === 1 ? "day" : "days"}`;
+  return `${minDays}–${max} days`;
+}
+
+// ─── Coupons ─────────────────────────────────────────────────────────
+
+export const STORE_COUPON_KINDS = ["percent", "flat"] as const;
+export type StoreCouponKind = (typeof STORE_COUPON_KINDS)[number];
+
+export interface StoreCouponRule {
+  kind: StoreCouponKind;
+  /** percent: basis points (1000 = 10%). flat: paise. */
+  value: number;
+  minOrderPaise: number;
+  /** Cap on a percent discount; null = no cap. */
+  maxDiscountPaise: number | null;
+  usageLimit: number | null;
+  perUserLimit: number | null;
+  startsAt: Date | null;
+  endsAt: Date | null;
+  isActive: boolean;
+}
+
+/** Codes are compared upper-case with no spaces. */
+export function normalizeCouponCode(v: string): string {
+  return v.trim().toUpperCase().replace(/\s+/g, "");
+}
+
+/**
+ * Paise taken off the subtotal. Percent discounts round down and respect the
+ * cap; no discount is ever more than the subtotal. Integer maths only.
+ */
+export function couponDiscountPaise(coupon: Pick<StoreCouponRule, "kind" | "value" | "maxDiscountPaise">, subtotalPaise: number): number {
+  if (!Number.isInteger(subtotalPaise) || subtotalPaise <= 0) return 0;
+  if (!Number.isInteger(coupon.value) || coupon.value <= 0) return 0;
+  let off: number;
+  if (coupon.kind === "percent") {
+    off = Math.floor((subtotalPaise * Math.min(coupon.value, 10_000)) / 10_000);
+    if (coupon.maxDiscountPaise != null) off = Math.min(off, coupon.maxDiscountPaise);
+  } else {
+    off = coupon.value;
+  }
+  return Math.max(0, Math.min(off, subtotalPaise));
+}
+
+export type CouponRejection = "inactive" | "not_started" | "expired" | "min_order" | "usage_limit" | "per_user_limit" | "no_discount";
+
+export type CouponCheck = { ok: true; discountPaise: number } | { ok: false; reason: CouponRejection; message: string };
+
+/** Whether a coupon applies to this bag right now, and how much it takes off. */
+export function checkStoreCoupon(
+  coupon: StoreCouponRule,
+  ctx: { subtotalPaise: number; now: Date; totalUses: number; userUses: number }
+): CouponCheck {
+  const no = (reason: CouponRejection, message: string): CouponCheck => ({ ok: false, reason, message });
+  if (!coupon.isActive) return no("inactive", "This code is not active");
+  if (coupon.startsAt && ctx.now < coupon.startsAt) return no("not_started", "This code is not active yet");
+  if (coupon.endsAt && ctx.now >= coupon.endsAt) return no("expired", "This code has expired");
+  if (coupon.usageLimit != null && ctx.totalUses >= coupon.usageLimit) return no("usage_limit", "This code has been fully used");
+  if (coupon.perUserLimit != null && ctx.userUses >= coupon.perUserLimit) return no("per_user_limit", "You have already used this code");
+  if (ctx.subtotalPaise < coupon.minOrderPaise) {
+    const rupees = Math.ceil(coupon.minOrderPaise / 100);
+    return no("min_order", `Add items worth ₹${rupees} or more to use this code`);
+  }
+  const discountPaise = couponDiscountPaise(coupon, ctx.subtotalPaise);
+  if (discountPaise <= 0) return no("no_discount", "This code does not apply to your bag");
+  return { ok: true, discountPaise };
+}
+
+// ─── Reviews ─────────────────────────────────────────────────────────
+
+export const STORE_REVIEW_STATUSES = ["pending", "published", "hidden"] as const;
+export type StoreReviewStatus = (typeof STORE_REVIEW_STATUSES)[number];
+
+/** Average to one decimal place; null with no reviews. */
+export function ratingAverage(ratingSum: number, count: number): number | null {
+  if (!Number.isFinite(ratingSum) || count <= 0) return null;
+  return Math.round((ratingSum * 10) / count) / 10;
+}
+
+// ─── Returns ─────────────────────────────────────────────────────────
+
+export const STORE_RETURN_STATUSES = ["requested", "approved", "rejected", "received", "refunded"] as const;
+export type StoreReturnStatus = (typeof STORE_RETURN_STATUSES)[number];
+
+export const STORE_RETURN_STATUS_LABELS: Record<StoreReturnStatus, string> = {
+  requested: "Return requested",
+  approved: "Return approved",
+  rejected: "Return declined",
+  received: "Return received",
+  refunded: "Refunded",
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Last moment a return may be asked for. */
+export function returnDeadline(deliveredAt: Date, windowDays: number): Date {
+  return new Date(deliveredAt.getTime() + Math.max(0, windowDays) * DAY_MS);
+}
+
+export type ReturnEligibility = { ok: true; until: Date } | { ok: false; reason: "not_delivered" | "window_closed" | "returns_off"; message: string };
+
+/** A delivered order can be returned within `windowDays` of delivery (0 switches returns off). */
+export function canRequestReturn(
+  order: { status: StoreOrderStatus; deliveredAt: Date | null },
+  windowDays: number,
+  now: Date = new Date()
+): ReturnEligibility {
+  if (windowDays <= 0) return { ok: false, reason: "returns_off", message: "Returns are not available for this order" };
+  if (order.status !== "delivered" || !order.deliveredAt) {
+    return { ok: false, reason: "not_delivered", message: "You can ask for a return once the order is delivered" };
+  }
+  const until = returnDeadline(order.deliveredAt, windowDays);
+  if (now > until) {
+    return { ok: false, reason: "window_closed", message: `The ${windowDays}-day return window for this order has ended` };
+  }
+  return { ok: true, until };
+}
+
+/** requested → approved | rejected; approved → received | rejected; received → refunded. */
+export function canTransitionReturn(from: StoreReturnStatus, to: StoreReturnStatus): boolean {
+  if (from === "requested") return to === "approved" || to === "rejected";
+  if (from === "approved") return to === "received" || to === "rejected";
+  if (from === "received") return to === "refunded";
+  return false;
+}
+
+export function nextReturnStatuses(from: StoreReturnStatus): StoreReturnStatus[] {
+  return STORE_RETURN_STATUSES.filter((to) => canTransitionReturn(from, to));
+}
+
+// ─── Stock alerts ────────────────────────────────────────────────────
+
+/** True when a stock change took a product from none to some. */
+export function cameBackInStock(stockAfter: number, delta: number): boolean {
+  return delta > 0 && stockAfter > 0 && stockAfter - delta <= 0;
+}
+
+// ─── Fulfilment partners (internal: never household-facing) ──────────
+
+export interface PartnerCoverage {
+  id: string;
+  name: string;
+  coverageStates: readonly string[];
+  coveragePinPrefixes: readonly string[];
+  isActive: boolean;
+  /** Orders already with this partner and not yet delivered; breaks ties. */
+  openOrders?: number;
+}
+
+export type PartnerMatch = "pin" | "state" | "anywhere";
+
+/**
+ * How well a partner covers a destination; 0 = does not cover it.
+ * A matching PIN prefix beats a state match (longer prefix = better); a partner
+ * with no coverage listed takes orders from anywhere, as the last choice.
+ */
+export function partnerCoverageScore(
+  partner: Pick<PartnerCoverage, "coverageStates" | "coveragePinPrefixes">,
+  dest: { pincode?: string | null; state?: string | null }
+): { score: number; matchedBy: PartnerMatch | null } {
+  if (isValidPincode(dest.pincode)) {
+    const len = longestPrefix(dest.pincode, partner.coveragePinPrefixes);
+    if (len > 0) return { score: 1000 + len, matchedBy: "pin" };
+  }
+  const state = normalizeIndianState(dest.state);
+  if (state && partner.coverageStates.some((s) => normalizeIndianState(s) === state)) return { score: 500, matchedBy: "state" };
+  if (partner.coverageStates.length === 0 && partner.coveragePinPrefixes.length === 0) return { score: 1, matchedBy: "anywhere" };
+  return { score: 0, matchedBy: null };
+}
+
+/** Active partners that cover the destination, best first (score, then lighter workload, then name). */
+export function rankFulfilmentPartners<P extends PartnerCoverage>(
+  partners: readonly P[],
+  dest: { pincode?: string | null; state?: string | null }
+): { partner: P; score: number; matchedBy: PartnerMatch }[] {
+  const out: { partner: P; score: number; matchedBy: PartnerMatch }[] = [];
+  for (const partner of partners) {
+    if (!partner.isActive) continue;
+    const { score, matchedBy } = partnerCoverageScore(partner, dest);
+    if (score > 0 && matchedBy) out.push({ partner, score, matchedBy });
+  }
+  return out.sort(
+    (a, b) => b.score - a.score || (a.partner.openOrders ?? 0) - (b.partner.openOrders ?? 0) || a.partner.name.localeCompare(b.partner.name)
+  );
+}
+
+/** An order can be handed to a partner while it is waiting to be packed or shipped. */
+export function canForwardStoreOrder(status: StoreOrderStatus): boolean {
+  return status === "placed" || status === "packed";
+}
+
+/** Cash the delivery agent must collect at the door: the total for an unpaid COD order, else nothing. */
+export function codAmountToCollect(order: { paymentMode: StorePaymentMode; paymentStatus: StorePaymentStatus; totalPaise: number }): number {
+  return order.paymentMode === "cod" && order.paymentStatus === "unpaid" ? order.totalPaise : 0;
 }
