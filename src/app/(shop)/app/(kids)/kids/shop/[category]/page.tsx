@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getStoreCategory } from "@/features/store/queries";
+import { getMyStoreWishlistIds, getStoreCategory } from "@/features/store/queries";
 import { parseAgeBand, parseStoreSort } from "@/features/store/schemas";
 import { KidsBackLink, KidsPageHeader, kidsCard } from "@/features/kids/components/kids-ui";
 import { CoverArt } from "@/components/ui/cover-art";
@@ -26,8 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function StoreCategoryPage({ params, searchParams }: Props) {
   const [{ category }, sp] = await Promise.all([params, searchParams]);
-  const page = await getStoreCategory(category, { age: parseAgeBand(sp.age), sort: parseStoreSort(sp.sort) });
+  const [page, wishlistIds] = await Promise.all([
+    getStoreCategory(category, { age: parseAgeBand(sp.age), sort: parseStoreSort(sp.sort) }),
+    getMyStoreWishlistIds(),
+  ]);
   if (!page) notFound();
+  const wished = new Set(wishlistIds);
   const { settings, products, categories, age, sort } = page;
   const band = storeAgeBand(age);
   const basePath = `/app/kids/shop/${page.category.id}`;
@@ -61,7 +65,7 @@ export default async function StoreCategoryPage({ params, searchParams }: Props)
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {products.map((p) => (
               <li key={p.id}>
-                <StoreProductCard product={p} />
+                <StoreProductCard product={p} wishlisted={wished.has(p.id)} />
               </li>
             ))}
           </ul>

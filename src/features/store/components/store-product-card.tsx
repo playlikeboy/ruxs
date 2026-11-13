@@ -4,6 +4,8 @@ import { cn } from "@/components/ui/cn";
 import { formatINR } from "@/core/money";
 import type { StoreProductCard as Product, StoreStock } from "@/features/store/types";
 import { AddToBagButton } from "./add-to-bag-button";
+import { StoreRatingLine } from "./store-rating";
+import { WishlistButton } from "./wishlist-button";
 
 /** Stock as word plus colour: "Out of stock", "Only 3 left", "In stock". */
 export function StockTag({ stock, className }: { stock: StoreStock; className?: string }) {
@@ -49,8 +51,20 @@ export function StoreProductImage({ src, alt, className }: { src: string | null;
   );
 }
 
-/** Grid card: whole card links to the product; the Add control sits outside the link. */
-export function StoreProductCard({ product }: { product: Product }) {
+/**
+ * Grid card: whole card links to the product; the Add and wishlist controls sit
+ * outside the link. Pass `wishlisted` to show the heart (omit it to hide).
+ */
+export function StoreProductCard({
+  product,
+  wishlisted,
+  refreshOnWishlistChange,
+}: {
+  product: Product;
+  wishlisted?: boolean;
+  /** Wishlist page: reload after a change so removed products drop off. */
+  refreshOnWishlistChange?: boolean;
+}) {
   const href = `/app/kids/shop/p/${product.slug}`;
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-[16px] border border-kids-ink/10 bg-white transition-[border-color,box-shadow] duration-200 hover:border-kids-ink/25 hover:shadow-[0_4px_16px_rgba(23,71,55,0.06)] has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-kids-ink">
@@ -58,6 +72,15 @@ export function StoreProductCard({ product }: { product: Product }) {
         <StoreProductImage src={product.image} alt="" className="h-full w-full" />
         {product.discountPercent > 0 && (
           <span className="absolute left-2 top-2 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-good shadow-xs">{product.discountPercent}% off</span>
+        )}
+        {wishlisted !== undefined && (
+          <WishlistButton
+            productId={product.id}
+            name={product.name}
+            wishlisted={wishlisted}
+            refreshOnChange={refreshOnWishlistChange}
+            className="absolute right-1.5 top-1.5 z-10"
+          />
         )}
       </div>
       <div className="flex flex-1 flex-col p-3">
@@ -67,6 +90,7 @@ export function StoreProductCard({ product }: { product: Product }) {
             {product.name}
           </Link>
         </h3>
+        <StoreRatingLine rating={product.rating} className="mt-1" />
         <div className="mt-1.5">
           <StorePrice pricePaise={product.pricePaise} mrpPaise={product.mrpPaise} discountPercent={product.discountPercent} />
         </div>

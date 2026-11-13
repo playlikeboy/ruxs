@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getStoreHome } from "@/features/store/queries";
+import { getMyStoreWishlistIds, getStoreHome } from "@/features/store/queries";
 import { parseAgeBand } from "@/features/store/schemas";
 import { KidsPageHeader, KidsSection, kidsCard } from "@/features/kids/components/kids-ui";
 import { CoverArt } from "@/components/ui/cover-art";
@@ -11,18 +11,19 @@ import { storeAgeBand } from "@/core/store";
 
 export const metadata: Metadata = {
   title: "RUXs Store · RUXs Kids",
-  description: "DIY kits, robotics, science sets, art supplies and puzzles for children, sold and delivered by RUXs.",
+  description: "DIY kits, robotics, science sets, art supplies and puzzles for children, sold and shipped by RUXs.",
 };
 
 export default async function StoreHomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
-  const home = await getStoreHome({ age: parseAgeBand(sp.age) });
-  const { settings, featured, newArrivals, products, categories, age } = home;
+  const [home, wishlistIds] = await Promise.all([getStoreHome({ age: parseAgeBand(sp.age) }), getMyStoreWishlistIds()]);
+  const { settings, collections, featured, newArrivals, products, categories, age } = home;
+  const wished = new Set(wishlistIds);
   const band = storeAgeBand(age);
   const lead =
     settings.serviceability === "geofence"
       ? `Kits, puzzles and art supplies from RUXs, delivered in ${settings.serviceCity}.`
-      : "Kits, puzzles and art supplies from RUXs, delivered to your door.";
+      : "Kits, puzzles and art supplies, shipped across India by RUXs.";
 
   return (
     <div className="space-y-6">
@@ -33,11 +34,16 @@ export default async function StoreHomePage({ searchParams }: { searchParams: Pr
       <StoreCategoryChips categories={categories} active={null} age={age} />
       <StoreAgeFilter basePath="/app/kids/shop" age={age} />
 
-      {settings.freeDeliveryAbovePaise != null && settings.deliveryFeePaise > 0 && (
-        <p className="text-sm text-kids-ink/70">
-          Delivery {formatINR(settings.deliveryFeePaise)}, free on orders above {formatINR(settings.freeDeliveryAbovePaise)}.
-        </p>
-      )}
+      {settings.serviceability === "geofence"
+        ? settings.freeDeliveryAbovePaise != null &&
+          settings.deliveryFeePaise > 0 && (
+            <p className="text-sm text-kids-ink/70">
+              Delivery {formatINR(settings.deliveryFeePaise)}, free on orders above {formatINR(settings.freeDeliveryAbovePaise)}.
+            </p>
+          )
+        : (
+            <p className="text-sm text-kids-ink/70">Delivery time and charge are shown at checkout for your PIN code.</p>
+          )}
 
       {products.length === 0 ? (
         <div className={`${kidsCard} p-6 text-center`}>
@@ -54,12 +60,25 @@ export default async function StoreHomePage({ searchParams }: { searchParams: Pr
         </div>
       ) : (
         <>
+          {!band &&
+            collections.map((c) => (
+              <KidsSection key={c.id} title={c.title} href={`/app/kids/shop/c/${c.slug}`}>
+                {c.subtitle && <p className="-mt-2 text-sm text-kids-ink/70">{c.subtitle}</p>}
+                <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+                  {c.products.map((p) => (
+                    <li key={p.id} className="w-44 shrink-0 snap-start sm:w-52">
+                      <StoreProductCard product={p} wishlisted={wished.has(p.id)} />
+                    </li>
+                  ))}
+                </ul>
+              </KidsSection>
+            ))}
           {!band && featured.length > 0 && (
             <KidsSection title="Featured">
               <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
                 {featured.map((p) => (
                   <li key={p.id} className="w-44 shrink-0 snap-start sm:w-52">
-                    <StoreProductCard product={p} />
+                    <StoreProductCard product={p} wishlisted={wished.has(p.id)} />
                   </li>
                 ))}
               </ul>
@@ -70,7 +89,7 @@ export default async function StoreHomePage({ searchParams }: { searchParams: Pr
               <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
                 {newArrivals.map((p) => (
                   <li key={p.id} className="w-44 shrink-0 snap-start sm:w-52">
-                    <StoreProductCard product={p} />
+                    <StoreProductCard product={p} wishlisted={wished.has(p.id)} />
                   </li>
                 ))}
               </ul>
@@ -80,7 +99,7 @@ export default async function StoreHomePage({ searchParams }: { searchParams: Pr
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {products.map((p) => (
                 <li key={p.id}>
-                  <StoreProductCard product={p} />
+                  <StoreProductCard product={p} wishlisted={wished.has(p.id)} />
                 </li>
               ))}
             </ul>

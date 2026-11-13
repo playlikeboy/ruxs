@@ -102,8 +102,19 @@ export function StoreCategoryChips({ categories, active, age }: { categories: St
 }
 
 /** Age bands 0–3 … 12+ as links; tapping the active band clears it. */
-export function StoreAgeFilter({ basePath, age, sort }: { basePath: string; age: StoreAgeBandId | null; sort?: StoreSort }) {
-  const keepSort = sort && sort !== "featured" ? sort : null;
+export function StoreAgeFilter({
+  basePath,
+  age,
+  sort,
+  defaultSort = "featured",
+}: {
+  basePath: string;
+  age: StoreAgeBandId | null;
+  sort?: StoreSort | "curated";
+  /** The sort a page uses with no `?sort=` (collections use "curated"). */
+  defaultSort?: StoreSort | "curated";
+}) {
+  const keepSort = sort && sort !== defaultSort ? sort : null;
   return (
     <div role="group" aria-labelledby="store-age-label" className="flex flex-wrap items-center gap-2">
       <span id="store-age-label" className="mr-1 text-sm font-semibold text-kids-ink/70">
@@ -131,7 +142,8 @@ export function StoreAgeFilter({ basePath, age, sort }: { basePath: string; age:
   );
 }
 
-const SORTS: { id: StoreSort; label: string }[] = [
+const SORTS: { id: StoreSort | "curated"; label: string }[] = [
+  { id: "curated", label: "Our picks" },
   { id: "featured", label: "Featured" },
   { id: "new", label: "Newest" },
   { id: "price_asc", label: "Price: low to high" },
@@ -139,14 +151,26 @@ const SORTS: { id: StoreSort; label: string }[] = [
 ];
 
 /** Sort as plain links, so it works before any JavaScript loads. */
-export function StoreSortLinks({ basePath, age, sort }: { basePath: string; age: StoreAgeBandId | null; sort: StoreSort }) {
+export function StoreSortLinks({
+  basePath,
+  age,
+  sort,
+  defaultSort = "featured",
+}: {
+  basePath: string;
+  age: StoreAgeBandId | null;
+  sort: StoreSort | "curated";
+  /** "curated" (collections) adds "Our picks" first and makes it the default. */
+  defaultSort?: StoreSort | "curated";
+}) {
+  const sorts = SORTS.filter((s) => s.id !== "curated" || defaultSort === "curated");
   return (
     <nav aria-label="Sort products" className="-mx-4">
       <ul className="flex gap-1 overflow-x-auto px-4 [scrollbar-width:none]">
-        {SORTS.map((s) => (
+        {sorts.map((s) => (
           <li key={s.id}>
             <Link
-              href={withParams(basePath, { age, sort: s.id === "featured" ? null : s.id })}
+              href={withParams(basePath, { age, sort: s.id === defaultSort ? null : s.id })}
               aria-current={sort === s.id ? "true" : undefined}
               scroll={false}
               className={cn(

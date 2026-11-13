@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, Clock, MapPin, Truck, XCircle } from "lucide-react";
+import { Check, Clock, MapPin, PenLine, RotateCcw, Star, Truck, XCircle } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 import { getMyStoreOrder } from "@/features/store/queries";
 import { KidsBackLink, kidsCard } from "@/features/kids/components/kids-ui";
 import { StoreProductImage } from "@/features/store/components/store-product-card";
 import { StoreStatusPill, paymentLine } from "@/features/store/components/store-status";
-import { CancelStoreOrderButton, PayStoreOrderButton } from "@/features/store/components/store-order-actions";
+import { CancelStoreOrderButton, PayStoreOrderButton, RequestReturnForm } from "@/features/store/components/store-order-actions";
+import type { StoreReturnStatus } from "@/features/store/types";
 import { formatINR } from "@/core/money";
 
 export const metadata: Metadata = { title: "Store order · RUXs Kids" };
@@ -15,6 +16,24 @@ export const metadata: Metadata = { title: "Store order · RUXs Kids" };
 const IST = "Asia/Kolkata";
 const dateTime = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: IST });
 const timeOnly = new Intl.DateTimeFormat("en-IN", { hour: "numeric", minute: "2-digit", timeZone: IST });
+
+const dateOnly = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: IST });
+
+/** Return status as word plus colour, and what happens next. */
+const RETURN_TONE: Record<StoreReturnStatus, string> = {
+  requested: "bg-kids-sunny/60 text-warn",
+  approved: "bg-kids-sky/60 text-kids-ink",
+  received: "bg-kids-sky/60 text-kids-ink",
+  refunded: "bg-kids-mint/70 text-good",
+  rejected: "bg-bad/10 text-bad",
+};
+const RETURN_NEXT: Record<StoreReturnStatus, string> = {
+  requested: "RUXs is reviewing your request. The answer shows here.",
+  approved: "Your return is approved. Keep everything in its box; RUXs will contact you with the next steps.",
+  received: "RUXs has the items back. Your refund is being processed.",
+  refunded: "Your refund has been sent.",
+  rejected: "RUXs could not accept this return.",
+};
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -134,10 +153,18 @@ export default async function StoreOrderPage({ params }: { params: Promise<{ id:
                           <time dateTime={step.at.toISOString()}>{dateTime.format(step.at)}</time>
                         </p>
                       )}
-                      {step.status === "out_for_delivery" && (order.courier || order.trackingNumber) && (
-                        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-kids-ink/70">
-                          <Truck className="h-3.5 w-3.5" aria-hidden="true" />
-                          {[order.courier, order.trackingNumber && `Tracking ${order.trackingNumber}`].filter(Boolean).join(" · ")}
+                      {step.status === "out_for_delivery" && step.done && (
+                        <p className="mt-0.5 flex items-start gap-1.5 text-xs text-kids-ink/70">
+                          <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          <span className="min-w-0 break-words">
+                            Shipped by {order.shippedBy}
+                            {order.trackingNumber && (
+                              <>
+                                {" · Tracking "}
+                                <span className="select-all font-semibold tabular-nums text-kids-ink">{order.trackingNumber}</span>
+                              </>
+                            )}
+                          </span>
                         </p>
                       )}
                     </div>
@@ -145,13 +172,76 @@ export default async function StoreOrderPage({ params }: { params: Promise<{ id:
                 );
               })}
             </ol>
-            {order.status === "placed" && order.dispatchDays > 0 && (
+            {(order.status === "placed" || order.status === "packed" || order.status === "out_for_delivery") && (order.etaLabel || order.dispatchDays > 0) && (
               <p className="mt-3 text-sm text-kids-ink/70">
-                RUXs packs and sends orders within {order.dispatchDays} {order.dispatchDays === 1 ? "day" : "days"}.
+                {order.status === "placed" && order.dispatchDays > 0 && (
+                  <>
+                    RUXs packs and sends orders within {order.dispatchDays} {order.dispatchDays === 1 ? "day" : "days"}.{" "}
+                  </>
+                )}
+                {order.etaLabel &&
+                  (order.etaMaxDays != null && order.etaMaxDays <= 0
+                    ? "It arrives the day it is sent."
+                    : order.status === "out_for_delivery"
+                      ? `It usually arrives ${order.etaLabel} after it is sent.`
+                      : `Once sent, it arrives in ${order.etaLabel}.`)}
               </p>
             )}
           </section>
         )
+      )}
+
+      {(order.returnRequest || order.canRequestReturn) && (
+        <section className={`${kidsCard} p-4`} aria-labelledby="order-return">
+          <h2 id="order-return" className="flex flex-wrap items-center gap-2 font-semibold">
+            <RotateCcw className="h-4 w-4 text-kids-ink/60" aria-hidden="true" /> Return
+            {order.returnRequest && (
+              <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold", RETURN_TONE[order.returnRequest.status])}>
+                {order.returnRequest.statusLabel}
+              </span>
+            )}
+          </h2>
+          {order.returnRequest && (
+            <div className="mt-2 space-y-1.5 text-sm">
+              <p className="text-kids-ink/75">{RETURN_NEXT[order.returnRequest.status]}</p>
+              {order.returnRequest.note && (
+                <p className="rounded-[12px] bg-kids-cream px-3 py-2">
+                  <span className="font-semibold">From RUXs: </span>
+                  {order.returnRequest.note}
+                </p>
+              )}
+              <p className="break-words text-kids-ink/75">
+                <span className="font-semibold text-kids-ink">Your reason: </span>
+                {order.returnRequest.reason}
+              </p>
+              <p className="text-xs text-kids-ink/65">
+                Requested <time dateTime={order.returnRequest.createdAt.toISOString()}>{dateTime.format(order.returnRequest.createdAt)}</time>
+                {order.returnRequest.updatedAt.getTime() !== order.returnRequest.createdAt.getTime() && (
+                  <>
+                    {" · updated "}
+                    <time dateTime={order.returnRequest.updatedAt.toISOString()}>{dateTime.format(order.returnRequest.updatedAt)}</time>
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+          {order.canRequestReturn && (
+            <div className={order.returnRequest ? "mt-3 border-t border-kids-ink/10 pt-3" : "mt-2"}>
+              <p className="mb-3 text-sm text-kids-ink/75">
+                {order.returnRequest ? "You can send a new request" : "Something not right? You can ask to return this order"}
+                {order.returnUntil ? (
+                  <>
+                    {" until "}
+                    <time dateTime={order.returnUntil.toISOString()}>{dateOnly.format(order.returnUntil)}</time>.
+                  </>
+                ) : (
+                  "."
+                )}
+              </p>
+              <RequestReturnForm orderId={order.id} />
+            </div>
+          )}
+        </section>
       )}
 
       <section className={`${kidsCard} p-4`} aria-labelledby="order-items">
@@ -173,6 +263,22 @@ export default async function StoreOrderPage({ params }: { params: Promise<{ id:
                 <p className="text-xs tabular-nums text-kids-ink/65">
                   {item.qty} × {formatINR(item.unitPricePaise)}
                 </p>
+                {item.myRating != null ? (
+                  <p className="mt-1 flex items-center gap-1 text-xs text-kids-ink/70">
+                    <Star className="h-3.5 w-3.5 fill-kids-sunny text-warn" aria-hidden="true" />
+                    You rated this {item.myRating} out of 5
+                  </p>
+                ) : (
+                  item.canReview &&
+                  item.productSlug && (
+                    <Link
+                      href={`/app/kids/shop/p/${item.productSlug}#reviews`}
+                      className="mt-1 inline-flex min-h-10 items-center gap-1.5 rounded-full text-sm font-semibold text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    >
+                      <PenLine className="h-4 w-4" aria-hidden="true" /> Write a review
+                    </Link>
+                  )
+                )}
               </div>
               <span className="shrink-0 text-sm font-bold tabular-nums">{formatINR(item.lineTotalPaise)}</span>
             </li>
@@ -183,6 +289,12 @@ export default async function StoreOrderPage({ params }: { params: Promise<{ id:
             <dt className="text-kids-ink/70">Items</dt>
             <dd className="tabular-nums">{formatINR(order.subtotalPaise)}</dd>
           </div>
+          {order.discountPaise > 0 && (
+            <div className="flex justify-between gap-3 font-medium text-good">
+              <dt>Coupon{order.couponCode ? ` ${order.couponCode}` : ""}</dt>
+              <dd className="tabular-nums">−{formatINR(order.discountPaise)}</dd>
+            </div>
+          )}
           <div className="flex justify-between gap-3">
             <dt className="text-kids-ink/70">Delivery</dt>
             <dd className="tabular-nums">{order.deliveryFeePaise === 0 ? "Free" : formatINR(order.deliveryFeePaise)}</dd>
@@ -200,9 +312,9 @@ export default async function StoreOrderPage({ params }: { params: Promise<{ id:
 
       <section className={`${kidsCard} p-4`} aria-labelledby="order-address">
         <h2 id="order-address" className="flex items-center gap-2 font-semibold">
-          <MapPin className="h-4 w-4 text-kids-ink/60" aria-hidden="true" /> Delivering to {order.customerName}
+          <MapPin className="h-4 w-4 text-kids-ink/60" aria-hidden="true" /> {order.status === "delivered" ? "Delivered to" : "Delivering to"} {order.customerName}
         </h2>
-        <p className="mt-1 text-sm text-kids-ink/75">{order.address}</p>
+        <p className="mt-1 break-words text-sm text-kids-ink/75">{order.address}</p>
         <p className="text-sm tabular-nums text-kids-ink/75">{order.phone}</p>
         {order.notes && <p className="mt-2 text-sm text-kids-ink/70">Note: {order.notes}</p>}
       </section>
